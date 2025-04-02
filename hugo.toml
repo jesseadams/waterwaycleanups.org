@@ -1,0 +1,17 @@
+baseURL = 'https://waterwaycleanups.org/'
+languageCode = 'en-us'
+title = 'WaterwayCleanups.org'
+theme = 'lynx'
+
+[params.author]
+  name = "WaterwayCleanups.org"
+  headline = "Protecting the Rappahannock, Potomac, and Aquia Creek"
+  image = "waterways-cleanup-circle-logo-badge.png"
+
+links = [
+    { link = { href = "https://discord.gg/8TzvRTBqAd", text = "Discord", icon = "discord" } },
+    { link = { href = "https://www.facebook.com/waterwaycleanups", text = "Facebook", icon = "facebook" } },
+    { link = { href = "https://www.instagram.com/waterwaycleanups", text = "Instagram", icon = "instagram" } },
+    { link = { href = "https://www.linkedin.com/company/waterwaycleanups", text = "LinkedIn", icon = "linkedin" } },
+    { link = { href = "https://collect.bankingcrowded.com/collection/fbacead4-04ff-406a-b1fe-8cea2af39eb3", text = "Donate!"} },
+  ]
