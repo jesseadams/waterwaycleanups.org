@@ -7,7 +7,7 @@ preheader_is_light: false
 {{< brick_hero >}}
 
 
-# Cleaning Up Virgina's Waterways
+# Cleaning Up Virginia's Waterways
 
 At Waterway Cleanups, we are dedicated to restoring and preserving our local waterways through community action and education. Together, we can make a significant impact on our environment and future.
 
@@ -16,16 +16,18 @@ At Waterway Cleanups, we are dedicated to restoring and preserving our local wat
 ![](/uploads/waterway-cleanups/waterways-2.png)
 
 
+
 {{< /brick_hero >}}
 
 {{< brick_events >}}
+
 <img src="/uploads/waterway-cleanups/wavey.png" class="wavey" />
 
 <p class="h3">Get Connected</p>
 
 ## Upcoming Community Cleanups
 
-This is a demo of the events page. In ultricies vel enim vel pulvinar. Quisque finibus sem velit, sed consequat mi ullamcorper vitae. Proin finibus tristique sollicitudin.
+Join us at an upcoming event and help protect the Rappahannock, Potomac, Aquia Creek, and beyond—every volunteer makes a difference.
 
 {{< /brick_events >}}
 

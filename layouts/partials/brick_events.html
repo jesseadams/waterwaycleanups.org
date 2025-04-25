@@ -25,15 +25,38 @@
                             {{- if $eventimage -}}<a href="{{ .RelPermalink }}"><div class="img"><img data-src="{{ $eventimage }}" alt="{{ .Title }}" style="cursor: pointer;" onclick="document.location.href='{{ .RelPermalink }}';" /></div></a>{{- end -}}
                         {{- end -}}
                         <h3>{{ .Title | safeHTML }}</h3>
-                        {{ if .Params.date }}<div class="meta">
-                            <div>
-                                <img src="/img/icons/material-symbols/200/rounded/calendar_month-fill.svg"class="black_2_textDark" alt="" />
-                                {{ .Date | time.Format ":date_medium"}}
-                            </div>
+                        <div class="meta">
+                            {{ $rawContent := .RawContent }}
+                            {{ $dateMatch := findRE `\{\{<\s*date_with_icon\s+date="([^"]+)"` $rawContent 1 }}
+                            {{ $dateStr := "" }}
+                            {{ if $dateMatch }}
+                                {{ $dateStr = replaceRE `\{\{<\s*date_with_icon\s+date="([^"]+)".*` "$1" (index $dateMatch 0) }}
+                            {{ else if .Params.date }}
+                                {{ $dateStr = .Date | time.Format "January 2, 2006" }}
+                            {{ else }}
+                                {{ $dateStr = "Upcoming Event" }}
+                            {{ end }}
+
+                            {{ partial "react_date.html" (dict "date" $dateStr "class" "event-date-small") }}
                         </div>
-                        {{ end }}
                         <div class="summary">
-                            <p>{{ substr (.Summary | plainify) 0 190 | safeHTML }}...</p>
+                            {{ $rawContent := .RawContent }}
+                            {{ $afterTabs := split $rawContent "{{< tabs >}}" }}
+                            {{ $eventDetails := "" }}
+                            {{ if gt (len $afterTabs) 1 }}
+                                {{ $tabsContent := index $afterTabs 1 }}
+                                {{ $tabSections := split $tabsContent "##" }}
+                                {{ if gt (len $tabSections) 1 }}
+                                    {{ $eventDetailsSection := index $tabSections 1 }}
+                                    {{ $eventDetails = $eventDetailsSection | replaceRE `(?s)Event Details(.*?)---` "$1" | plainify | strings.TrimSpace }}
+                                {{ end }}
+                            {{ end }}
+                            
+                            {{ if eq $eventDetails "" }}
+                                {{ $eventDetails = .Content | plainify | replaceRE `##[\s\w]+` "" | replaceRE `\s+` " " | strings.TrimSpace }}
+                            {{ end }}
+                            
+                            <p>{{ $eventDetails | truncate 140 }}...</p>
                             <p><a href="{{ .RelPermalink }}" class="button secondary smaller">{{ i18n "Read more" }}</a></p>
                         </div>
                 </li>

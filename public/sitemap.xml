@@ -2,232 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/docs/customizations/colors/</loc>
+    <loc>http://localhost:1313/events/aquia-harbor-neighborhood-cleanup-with-friends-of-the-rappahannock/</loc>
   </url><url>
-    <loc>http://localhost:1313/docs/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/getting-started/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/settings/global/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/</loc>
-  </url><url>
-    <loc>http://localhost:1313/webshop/buy-me-a-coffee/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/customizations/fonts/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/settings/general/</loc>
-  </url><url>
-    <loc>http://localhost:1313/webshop/buy-me-a-beer/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/settings/header/</loc>
-  </url><url>
-    <loc>http://localhost:1313/webshop/buy-me-chocolates/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/settings/footer/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/settings/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/customizations/css/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/customizations/</loc>
-  </url><url>
-    <loc>http://localhost:1313/tags/jamstack/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/performance/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/this-theme-has-a-perfect-google-lighthousenbspscore/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2023-07-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/tags/code/</loc>
-    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/jamstack-has-matured/</loc>
-    <lastmod>2022-10-19T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/artisanal-web-development/</loc>
-    <lastmod>2022-09-30T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/code-is-poetry/</loc>
-    <lastmod>2022-09-24T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/has-webp-landed-yet/</loc>
-    <lastmod>2022-09-11T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/blog/the-stackless-way/</loc>
-    <lastmod>2021-09-14T00:00:00+00:00</lastmod>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/404/</loc>
-  </url><url>
-    <loc>http://localhost:1313/about/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/about/</loc>
-  </url><url>
-    <loc>http://localhost:1313/basic/</loc>
-  </url><url>
-    <loc>http://localhost:1313/basic2/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/blocks/</loc>
-  </url><url>
-    <loc>http://localhost:1313/blog/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/breadcrumbs/</loc>
+    <loc>http://localhost:1313/tags/aquia-creek/</loc>
   </url><url>
     <loc>http://localhost:1313/bricks/</loc>
   </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/button/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/cta/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/cart/</loc>
-  </url><url>
-    <loc>http://localhost:1313/cart/</loc>
-  </url><url>
     <loc>http://localhost:1313/categories/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/checkout/</loc>
-  </url><url>
-    <loc>http://localhost:1313/checkout/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/contact/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/contactbuttons/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/contact-form/</loc>
   </url><url>
     <loc>http://localhost:1313/contact/</loc>
   </url><url>
     <loc>http://localhost:1313/bricks/cta/</loc>
   </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/cta-form/</loc>
-  </url><url>
-    <loc>http://localhost:1313/elements/</loc>
-  </url><url>
     <loc>http://localhost:1313/events/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/faq/</loc>
-  </url><url>
-    <loc>http://localhost:1313/faq/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/features/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/features/</loc>
-  </url><url>
-    <loc>http://localhost:1313/events/first-event/</loc>
-  </url><url>
-    <loc>http://localhost:1313/services/first-service/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/gallery/</loc>
-  </url><url>
-    <loc>http://localhost:1313/get-started/</loc>
-  </url><url>
-    <loc>http://localhost:1313/header-dark/</loc>
-  </url><url>
-    <loc>http://localhost:1313/header-darker/</loc>
-  </url><url>
-    <loc>http://localhost:1313/header-with-title/</loc>
-  </url><url>
-    <loc>http://localhost:1313/header-transparent/</loc>
-  </url><url>
-    <loc>http://localhost:1313/header-with-content/</loc>
-  </url><url>
-    <loc>http://localhost:1313/headers/</loc>
-  </url><url>
-    <loc>http://localhost:1313/demo-hiking/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/image/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/image2/</loc>
-  </url><url>
-    <loc>http://localhost:1313/images/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/intro/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/intro/</loc>
   </url><url>
     <loc>http://localhost:1313/bricks/map/</loc>
   </url><url>
-    <loc>http://localhost:1313/docs/bricks/map/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/map/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/customizations/multiple-languages/</loc>
-  </url><url>
-    <loc>http://localhost:1313/team/</loc>
-  </url><url>
     <loc>http://localhost:1313/404/</loc>
   </url><url>
-    <loc>http://localhost:1313/demo-paragliding/</loc>
+    <loc>http://localhost:1313/tags/potomac/</loc>
   </url><url>
-    <loc>http://localhost:1313/bricks/payment/</loc>
-  </url><url>
-    <loc>http://localhost:1313/payment/</loc>
-  </url><url>
-    <loc>http://localhost:1313/demo-pos/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/posts/</loc>
-  </url><url>
-    <loc>http://localhost:1313/demo-poulterer/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/prices/</loc>
-  </url><url>
-    <loc>http://localhost:1313/privacy-policy/</loc>
-  </url><url>
-    <loc>http://localhost:1313/webshop/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/quote/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/reviews/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/reviews/</loc>
+    <loc>http://localhost:1313/tags/rappahannock/</loc>
   </url><url>
     <loc>http://localhost:1313/events/second-event/</loc>
   </url><url>
-    <loc>http://localhost:1313/services/second-service/</loc>
-  </url><url>
-    <loc>http://localhost:1313/services/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/socialbuttons/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/subpages/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/tabs/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/team/</loc>
-  </url><url>
-    <loc>http://localhost:1313/tags/test/</loc>
+    <loc>http://localhost:1313/tags/</loc>
   </url><url>
     <loc>http://localhost:1313/events/third-event/</loc>
   </url><url>
-    <loc>http://localhost:1313/services/third-service/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/title/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/title2/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/video/</loc>
-  </url><url>
-    <loc>http://localhost:1313/bricks/webshop/</loc>
-  </url><url>
-    <loc>http://localhost:1313/webshop/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/webshop/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/bricks/wide/</loc>
-  </url><url>
-    <loc>http://localhost:1313/docs/shortcodes/youtube/</loc>
+    <loc>http://localhost:1313/</loc>
   </url>
 </urlset>

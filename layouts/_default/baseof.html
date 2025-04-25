@@ -13,7 +13,7 @@
     {{- if .Params.color_name -}}{{- $color = .Params.color_name -}}{{- end -}}
     {{- if .Site.Data.settings.color_name -}}{{- $color = .Site.Data.settings.color_name -}}{{- end -}}
 
-    {{ partial "head-custom.html" . }}
+    {{ partial "head_custom.html" . }}
 
     <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
 
@@ -38,7 +38,7 @@
     {{- if .Site.Data.settings.preheader.active -}}
     <div class="preheader {{ if .Params.preheader_is_light }}light{{ else }}{{ if and (ne .Params.preheader_is_light false) .Site.Data.settings.preheader.is_light }}light{{ end }}{{ end }}">
       <div class="container">
-        <div class="icons">
+        <div class="icons" style="display: none;">
           {{- if (index .Site.Data .Language.Lang).general.contact.phone -}}
             <a href="tel:{{ replace (index .Site.Data .Language.Lang).general.contact.phone ` ` `` }}" class="icon"><img src="/img/phone.svg" alt="Phone icon" class="black_2_textMedium" /> {{ (index .Site.Data .Language.Lang).general.contact.phone }}</a>
           {{- end -}}
@@ -131,43 +131,47 @@
     </header>
 
     {{- block "content" . -}}{{- end -}}
-
-    <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }}">
-      <div>
-        <div class="container">
-          <div>
-            {{ partial "footerlogo.html" . }}
-          </div>
-          <div>
-            <ul>
-              {{ range (index .Site.Data .Language.Lang).footer.menuitems }}
-                <li><a href="{{ .link }}">{{ .title }}</a></li>
-              {{ end }}
-            </ul>  
-          </div>
-          <div>
-            {{ partial "socialbuttons.html" . }}
+    
+    <div style="position: relative;">
+      {{ partial "bobbing_parallax.html" . }}
+      
+      <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }}" style="position: relative; z-index: 1;">
+        <div>
+          <div class="container">
+            <div>
+              {{ partial "footer_logo.html" . }}
+            </div>
+            <div>
+              <ul>
+                {{ range (index .Site.Data .Language.Lang).footer.menuitems }}
+                  <li><a href="{{ .link }}">{{ .title }}</a></li>
+                {{ end }}
+              </ul>  
+            </div>
+            <div>
+              {{ partial "socialbuttons.html" . }}
+            </div>
           </div>
         </div>
-      </div>
-      <div>
-        <div class="container">
-		      <div>{{ markdownify (index .Site.Data .Language.Lang).footer.footer_text }}</div>
-          {{- if gt (len .Site.Languages) 1 -}}
-          <div>
-            <select aria-label="Change language" onchange="if(this.value) document.location.href = '/'+this.value+'/';"><option>Change language</option>{{ range .Site.Languages }}<option value="{{ .Lang }}" {{ if eq page.Language.Lang .Lang }}disabled{{ end }}>{{ .LanguageName }}</option>{{ end }}</select></div>
-          </div>
-          {{- end -}}
-		    </div>
-  		</div>
-		</footer>
+        <div>
+          <div class="container">
+		        <div>{{ markdownify (index .Site.Data .Language.Lang).footer.footer_text }}</div>
+            {{- if gt (len .Site.Languages) 1 -}}
+            <div>
+              <select aria-label="Change language" onchange="if(this.value) document.location.href = '/'+this.value+'/';"><option>Change language</option>{{ range .Site.Languages }}<option value="{{ .Lang }}" {{ if eq page.Language.Lang .Lang }}disabled{{ end }}>{{ .LanguageName }}</option>{{ end }}</select></div>
+            </div>
+            {{- end -}}
+		  </div>
+        </div>
+      </footer>
+    </div>
 
-		{{ if .Site.Data.settings.sticky_header }}
+    {{ if .Site.Data.settings.sticky_header }}
       <script type="text/javascript" src="/js/stickyheader.js"></script>
     {{ end }}
     <script type="text/javascript" src="/js/faq.js"></script>
     <script type="text/javascript" src="/js/lightbox.js"></script>
-		<link rel="stylesheet" href="/css/lightbox.css">
+    <link rel="stylesheet" href="/css/lightbox.css">
     {{ if .Site.Data.settings.customcursor }}
       <script type="text/javascript" src="/js/customcursor.js"></script>
       <link rel="stylesheet" href="/css/customcursor.css">
@@ -184,6 +188,6 @@
     </script>
     {{- end -}}
 
-      </div>
+    </div>
   </body>
 </html>

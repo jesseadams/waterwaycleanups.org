@@ -6,34 +6,26 @@
     <description>Recent content in Tags on </description>
     <generator>Hugo</generator>
     <language>en</language>
-    <lastBuildDate>Tue, 11 Jul 2023 00:00:00 +0000</lastBuildDate>
     <atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>Jamstack</title>
-      <link>http://localhost:1313/tags/jamstack/</link>
-      <pubDate>Tue, 11 Jul 2023 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/tags/jamstack/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Performance</title>
-      <link>http://localhost:1313/tags/performance/</link>
-      <pubDate>Tue, 11 Jul 2023 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/tags/performance/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Code</title>
-      <link>http://localhost:1313/tags/code/</link>
-      <pubDate>Wed, 19 Oct 2022 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/tags/code/</guid>
-      <description></description>
-    </item>
-    <item>
-      <title>Test</title>
-      <link>http://localhost:1313/tags/test/</link>
+      <title>Aquia-Creek</title>
+      <link>http://localhost:1313/tags/aquia-creek/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      <guid>http://localhost:1313/tags/test/</guid>
+      <guid>http://localhost:1313/tags/aquia-creek/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Potomac</title>
+      <link>http://localhost:1313/tags/potomac/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/tags/potomac/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Rappahannock</title>
+      <link>http://localhost:1313/tags/rappahannock/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/tags/rappahannock/</guid>
       <description></description>
     </item>
   </channel>

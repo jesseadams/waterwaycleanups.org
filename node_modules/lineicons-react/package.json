@@ -1,0 +1,72 @@
+{
+  "name": "lineicons-react",
+  "version": "2.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "types": "dist/types/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "pkg:prebuild": "rimraf dist && rimraf scr/svgs",
+    "svgr": "svgr --icon --title-prop --typescript -d src/svgs assets/svgs",
+    "rename": "node ./src/scripts/rename.js",
+    "export": "node ./src/scripts/export.js",
+    "build:svg": "tsc --declaration --emitDeclarationOnly && esbuild src/index.ts --bundle --platform=node --outfile=dist/index.js --tsconfig=tsconfig.json",
+    "build:webfonts": "webpack",
+    "build": " concurrently \"npm run build:webfonts\" \"npm run build:svg\""
+  },
+  "peerDependencies": {
+    "react": ">16.0.0"
+  },
+  "author": "Lineicons <support@lineicons.com> (https://lineicons.com/)",
+  "homepage": "https://lineicons.com/",
+  "license": "MIT",
+  "keywords": [
+    "icons",
+    "lineicons",
+    "line-icons",
+    "svg",
+    "icon-fonts",
+    "fontawesome",
+    "icon-pack",
+    "web-fonts",
+    "ui-icons",
+    "fill-icons",
+    "vector-icons",
+    "react",
+    "react-icons",
+    "iconography",
+    "flat-icons",
+    "simple-line-icons",
+    "brand-icons",
+    "symbol-icons",
+    "web-icons",
+    "icon-set"
+  ],
+  "devDependencies": {
+    "@svgr/cli": "^8.0.1",
+    "@types/react": "^18.2.14",
+    "concurrently": "^8.2.0",
+    "css-loader": "^6.8.1",
+    "esbuild": "^0.18.13",
+    "react": "^18.2.0",
+    "rimraf": "^5.0.1",
+    "style-loader": "^3.3.3",
+    "typescript": "^5.1.6",
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4",
+    "mini-css-extract-plugin": "^2.7.6"
+  },
+  "description": "Lineicons React - Essential UI Icons for React | React Component for [Lineicons](https://lineicons.com)",
+  "directories": {
+    "example": "example"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LineiconsHQ/lineicons-react.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LineiconsHQ/lineicons-react/issues"
+  }
+}

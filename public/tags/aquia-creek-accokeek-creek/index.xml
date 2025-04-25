@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aquia Creek, Accokeek Creek on </title>
+    <link>http://localhost:1313/tags/aquia-creek-accokeek-creek/</link>
+    <description>Recent content in Aquia Creek, Accokeek Creek on </description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <atom:link href="http://localhost:1313/tags/aquia-creek-accokeek-creek/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Aquia Harbor Neighborhood Cleanup (with Friends of the Rappahannock)</title>
+      <link>http://localhost:1313/events/second-event/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/events/second-event/</guid>
+      <description>&lt;p&gt;Signup: &lt;a href=&#34;https://riverfriends.org/product/aquia-cleanup/&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;https://riverfriends.org/product/aquia-cleanup/&lt;/a&gt;&lt;/p&gt;&#xA;&lt;p&gt;May 3, 2025 - Brooke Road Neighborhood Cleanup (with Brooke Ridge HOA), Tags: Aquia Creek, Accokeek Creek, Signup: &lt;a href=&#34;https://www.facebook.com/events/1641320613161232&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;https://www.facebook.com/events/1641320613161232&lt;/a&gt;&lt;/p&gt;&#xA;&#xA;&#xA;&#xA;&lt;div &#xA;  data-react-date&#xA;  data-date=&#34;May 3, 2025&#34; &#xA;  data-class=&#34;large-date&#34;&#xA;  class=&#34;react-date-container&#34;&#xA;&gt;&lt;/div&gt;&#xA;&lt;script src=&#34;http://localhost:1313/js/date-bundle.js&#34;&gt;&lt;/script&gt;  &#xA;&lt;ul class=&#34;tabs&#34;&gt;&lt;li&gt;&lt;a href=&#34;#tab_event-details&#34; onclick=&#34;toggleTab(this); return false;&#34;&gt;Event Details&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&#34;#tab_location&#34; onclick=&#34;toggleTab(this); return false;&#34;&gt;Location&lt;/a&gt;&lt;/li&gt;&lt;li&gt;&lt;a href=&#34;#tab_parking&#34; onclick=&#34;toggleTab(this); return false;&#34;&gt;Parking&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&#xA;&lt;div class=&#34;tabs_container&#34;&gt;&lt;div class=&#34;tab&#34; id=&#34;tab_event-details&#34;&gt;&lt;h2 id=&#34;event-details&#34;&gt;Event Details&lt;/h2&gt;&#xA;&lt;p&gt;Join FOR, Stafford County and the Green Aquia Initiative in helping cleanup the Aquia Harbor on April 26th! Volunteers will meet at Briar Patch Park (21B 1269, Stafford, VA 22554), where there is plenty of parking. Gloves, trash bags and litter grabbers will be provided.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

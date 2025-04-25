@@ -5,8 +5,7 @@
         {{ if or page.Params.date (index page.Params.tags 0) }}
         <div class="meta">
             {{ if page.Params.date }}<div>
-                <img src="/img/icons/material-symbols/200/rounded/calendar_month-fill.svg"class="black_2_textDark" alt="" />
-                {{ page.Date | time.Format ":date_medium"}}
+                {{ partial "event_date.html" (dict "date" (page.Date | time.Format ":date_medium") "class" "event-date") }}
             </div>
             {{ end }}
             {{ if index page.Params.tags 0 }}

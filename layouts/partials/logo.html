@@ -12,7 +12,7 @@
 
 <a href="{{ relLangURL `/` }}#top" class="logo">
     {{ if eq $logo "inline-svg" }}
-        {{ partial "inline-logo.html" . }}
+        {{ partial "inline_logo.html" . }}
     {{ else if $logo }}
         <img src="{{ $logo }}" alt="{{ (index .Site.Data .Language.Lang).general.title }} logo" />
     {{ else }}

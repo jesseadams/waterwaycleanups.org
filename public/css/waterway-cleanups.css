@@ -45,10 +45,20 @@
    .preheader {
       background-color: var(--genoa-green);
       font-size: 16px;
+      text-align: center;
    }
 
    .preheader, .preheader a {
       color: #b9e597;
+   }
+
+   .preheader .container {
+      display: flex;
+      justify-content: center;
+   }
+
+   .preheader .container > div {
+      text-align: center;
    }
 
 /* ===============================
@@ -108,6 +118,10 @@
       font-size: 18px;
    }
 
+   header > .container {
+      padding-bottom: 1.45rem;
+  }
+
 /* ===============================
    5. HERO
    =============================== */
@@ -125,15 +139,12 @@
    .wavey {
       width: 40px;
       margin-bottom: 15px;
-      filter: invert(16%) sepia(67%) saturate(1485%) hue-rotate(90deg) brightness(93%) contrast(22%);
+      /* filter: invert(16%) sepia(67%) saturate(1485%) hue-rotate(90deg) brightness(93%) contrast(22%); */
       display: block;
       margin-left: auto;
       margin-right: auto;
    }
 
-   .posts + .cta {
-      padding: 7rem 0 7rem 0;
-   }
 
 /* ===============================
    6. UTILITIES
@@ -150,6 +161,11 @@
       background: var(--pearl-bush-white);
    }
 
+   .bobber {
+      width: 140px;
+      height: 140px;
+   }
+
 /* ===============================
    7. POSTS
    =============================== */
@@ -163,10 +179,6 @@
 
    .filename__index #hero + .posts {
       padding: 7rem 0 7rem 0;
-   }
-
-   .posts + .cta {
-      
    }
    
 /* ===============================
@@ -226,8 +238,19 @@
    footer.dark > div:last-child a {
       color: var(--text-dark);
    }
-   
+
+   /* ===============================
+   9. CTA
+   =============================== */
+   body .cta {
+      padding: 7rem 0 7rem 0;
+   }
+
+   body .post + .cta {
+      padding: 0 0 7rem 0;
+   }
+
 /* ===============================
-   9. MEDIA QUERIES
+   10. MEDIA QUERIES
    =============================== */
 

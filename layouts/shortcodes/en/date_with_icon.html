@@ -1,0 +1,7 @@
+{{ $date := .Get "date" }}
+{{ $class := .Get "class" | default "" }}
+
+{{ partial "react_date.html" (dict 
+   "date" $date
+   "class" $class
+) }} 
