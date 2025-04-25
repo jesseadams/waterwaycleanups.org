@@ -33,8 +33,8 @@ yarn-error.log*
 tmp/
 temp/
 
-# Optional npm cache directory
+# NPM cache directory
 .npm
 
-# Optional eslint cache
+# eslint cache
 .eslintcache 
