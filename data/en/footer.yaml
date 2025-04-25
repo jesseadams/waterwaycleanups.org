@@ -1,0 +1,30 @@
+logo_image: inline-svg
+menuitems:
+  - title: Our Mission
+    link:  /#mission
+  #- title: Elements
+  #  link:  /elements/
+  #- title: Privacy policy
+  #  link:  /privacy-policy/
+  - title: Upcoming Meetups
+    link:  /#meetups
+  - title: Projects
+    link:  /#projects
+  - title: Sponsors
+    link:  /#sponsors
+  - title: Donate
+    link:  https://collect.bankingcrowded.com/collection/fbacead4-04ff-406a-b1fe-8cea2af39eb3
+socials:
+  - title: Discord
+    link: https://discord.gg/waterwaycleanups
+    logo_image: /uploads/waterway-cleanups/discord.svg
+  - title: Facebook
+    link: https://www.facebook.com/waterwaycleanups
+    logo_image: /img/facebook.svg
+  - title: Instagram
+    link: https://www.instagram.com/waterwaycleanups
+    logo_image: /img/instagram.svg      
+  - title: LinkedIn
+    link: https://www.linkedin.com/company/waterwaycleanups
+    logo_image: /uploads/waterway-cleanups/linkedin.svg   
+footer_text: Copyright © 2025. Waterway Cleanups. All rights reserved.

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bricks on </title>
+    <link>http://localhost:1313/bricks/</link>
+    <description>Recent content in Bricks on </description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <atom:link href="http://localhost:1313/bricks/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>blocks</title>
+      <link>http://localhost:1313/bricks/blocks/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/blocks/</guid>
+      <description>&lt;h2 id=&#34;alternative-services-1&#34;&gt;Alternative services 1&lt;/h2&gt;&#xA;&lt;p&gt;Hugobricks covers all components you would like to have at hand. It is a power engine for your web oriented projects. It has excellent performance in all categories.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/01_hu_8bc7b8f19254b129.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;covers-all-components&#34;&gt;Covers all components&lt;/h3&gt;&#xA;&lt;p&gt;Includes many bricks.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/services/&#34;&gt;&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/02_hu_96e9bc54085bc00f.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;99-google-lighthouse-score&#34;&gt;99+ Google Lighthouse score&lt;/h3&gt;&#xA;&lt;p&gt;Lightning fast website.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/services/&#34;&gt;&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/03_hu_6e18995920d79340.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;themeable-through-css-variables&#34;&gt;Themeable through CSS variables&lt;/h3&gt;&#xA;&lt;p&gt;Easily themeable.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/services/&#34;&gt;&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/04_hu_778a32571fa12b35.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;fully-responsive-on-all-devices&#34;&gt;Fully responsive on all devices&lt;/h3&gt;&#xA;&lt;p&gt;Works on every screen.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Cart</title>
+      <link>http://localhost:1313/bricks/cart/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/cart/</guid>
+      <description>&lt;h1 id=&#34;products-in-your-cart&#34;&gt;Products in your cart&lt;/h1&gt;&#xA;&lt;p&gt;Review the items in your cart below.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Checkout</title>
+      <link>http://localhost:1313/bricks/checkout/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/checkout/</guid>
+      <description>&lt;h1 id=&#34;checkout&#34;&gt;Checkout&lt;/h1&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;Payments are 100% secure and will be handled by either Mollies Paylink service, called Plink, or Paypal.me. In the next screen you will be redirected to a secure checkout process on either useplink.com or paypal.me.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>cta</title>
+      <link>http://localhost:1313/bricks/cta/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/cta/</guid>
+      <description>&lt;h2 id=&#34;join-our-cleanup-efforts&#34;&gt;Join Our Cleanup Efforts&lt;/h2&gt;&#xA;&lt;p&gt;Together, we can make a difference in our waterways. Volunteer today and help protect our environment!&lt;/p&gt;&#xA;&lt;a href=&#34;http://localhost:1313/get-started/&#34; class=&#34;button secondary&#34; title=&#34;Get started now&#34;&gt;Get started now&lt;/a&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/illustrations/cuate/server.svg&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>features</title>
+      <link>http://localhost:1313/bricks/features/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/features/</guid>
+      <description>&lt;h2 id=&#34;the-ultimate-hugo-theme&#34;&gt;The Ultimate Hugo theme&lt;/h2&gt;&#xA;&lt;p&gt;Hugobricks covers all components you would like to have at hand. It is a power engine for your web oriented projects. It has excellent performance in all categories.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/icons/material-symbols/200/rounded/auto_awesome_mosaic.svg&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;covers-all-components&#34;&gt;Covers all components&lt;/h3&gt;&#xA;&lt;p&gt;We aim to provide the following bricks: intro, title, image, cta, contact, team, testimonials, about, pricing, products, product, usps, stats, gallery, quote, faqs, brands, video, blogs, post, related.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/icons/material-symbols/200/rounded/performance_max.svg&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;99-google-lighthouse-score&#34;&gt;99+ Google Lighthouse score&lt;/h3&gt;&#xA;&lt;p&gt;Lightning fast website. Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>intro</title>
+      <link>http://localhost:1313/bricks/intro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/intro/</guid>
+      <description>&lt;h1 id=&#34;the-ultimate-theme-you-need-to-start-your-hugo-website&#34;&gt;The Ultimate Theme You Need To Start Your Hugo Website&lt;/h1&gt;&#xA;&lt;p&gt;Hugobricks is a free website theme built with Hugo and vanilla CSS, providing everything you need to jumpstart your Hugo website and save valuable time.&lt;/p&gt;&#xA;&lt;a href=&#34;http://localhost:1313/get-started/&#34; class=&#34;button&#34; title=&#34;Get started for free&#34;&gt;Get started for free&lt;/a&gt;&#xD;&#xA;&#xD;&#xA;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/brick_intro.png&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>map</title>
+      <link>http://localhost:1313/bricks/map/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/map/</guid>
+      <description>&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/map.png&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;https://www.google.com/maps&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Google Maps&lt;/a&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;contact-us&#34;&gt;Contact us&lt;/h2&gt;&#xA;&lt;p&gt;Usecue BV&lt;br&gt;&#xA;Soetendaal 7&lt;br&gt;&#xA;1081BL Amsterdam&lt;br&gt;&#xA;The Netherlands&lt;/p&gt;&#xA;&#xA;&lt;ul class=&#34;buttons&#34;&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>Payment</title>
+      <link>http://localhost:1313/bricks/payment/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/payment/</guid>
+      <description>&lt;h1 id=&#34;choose-your-payment-method&#34;&gt;Choose your payment method&lt;/h1&gt;&#xA;&lt;p&gt;You will be paying &amp;lsquo;Usecue&amp;rsquo; and you will see your order number as a reference. You will have to pay &lt;span id=&#34;paymenttotal&#34;&gt;&lt;/span&gt;.&lt;/p&gt;&#xA;&lt;div id=&#34;smart-button-container&#34; style=&#34;max-width: 350px;&#34;&gt;&#xA;&#xA;    &lt;input type=&#34;hidden&#34; name=&#34;descriptionInput&#34; id=&#34;description&#34;&gt;&#xA;    &lt;input type=&#34;hidden&#34; name=&#34;amountInput&#34; id=&#34;amount&#34;&gt;&#xA;    &lt;input type=&#34;hidden&#34; name=&#34;invoiceid&#34; id=&#34;invoiceid&#34;&gt;&#xA;&#xA;    &lt;script&gt;&#xA;        window.onload = function() {&#xA;            var amount = (getCartTotal() + getAddonTotal()).toFixed(2); &#xA;            var ordernumber = localStorage.getItem(&#39;ordernumber&#39;);&#xA;            &#xA;            document.getElementById(&#39;description&#39;).value = ordernumber;&#xA;            document.getElementById(&#39;invoiceid&#39;).value = ordernumber;&#xA;            document.getElementById(&#39;amount&#39;).value = amount;&#xA;        }&#xA;    &lt;/script&gt;&#xA;    &lt;div style=&#34;text-align: center; margin-top: 0.625rem;&#34; id=&#34;paypal-button-container&#34;&gt;&lt;/div&gt;&#xA;&lt;/div&gt;&#xA;&#xA;&lt;script src=&#34;https://www.paypal.com/sdk/js?client-id=ARLAOALKgJkpvAynfrxup8sP6NiLzBTpe6leWyLs7QJHnUMsCt8tKKVFWJzLg4zP0jky8IlPddUX2YCt&amp;currency=USD&amp;components=buttons&#34;&gt;&lt;/script&gt;&#xA;&lt;script&gt;&#xA;&#xA;function initPayPalButton() {&#xA;&#xA;var amount = document.querySelector(&#39;#smart-button-container #amount&#39;);&#xA;var description = document.querySelector(&#39;#smart-button-container #description&#39;);&#xA;var invoiceid = document.querySelector(&#39;#smart-button-container #invoiceid&#39;);&#xA;&#xA;var purchase_units = [];&#xA;purchase_units[0] = {};&#xA;purchase_units[0].amount = {};&#xA;&#xA;function validate(event) {&#xA;  return event.value.length &gt; 0;&#xA;}&#xA;&#xA;paypal.Buttons({&#xA;  style: {&#xA;    color: &#39;blue&#39;,&#xA;    shape: &#39;pill&#39;,&#xA;    label: &#39;pay&#39;,&#xA;    layout: &#39;vertical&#39;,&#xA;    &#xA;  },&#xA;&#xA;  onInit: function (data, actions) {&#xA;    &#xA;  },&#xA;&#xA;  onClick: function () {&#xA;    &#xA;    purchase_units[0].description = description.value;&#xA;    purchase_units[0].amount.value = amount.value&#xA;&#xA;    if(invoiceid.value !== &#39;&#39;) {&#xA;      purchase_units[0].invoice_id = invoiceid.value;&#xA;    }&#xA;  },&#xA;&#xA;  createOrder: function (data, actions) {&#xA;    return actions.order.create({&#xA;      purchase_units: purchase_units,&#xA;    });&#xA;  },&#xA;&#xA;  onApprove: function (data, actions) {&#xA;    return actions.order.capture().then(function (details) {&#xA;      alert(&#39;Transaction completed by &#39; + details.payer.name.given_name + &#39;!&#39;);&#xA;    });&#xA;  },&#xA;&#xA;  onError: function (err) {&#xA;    console.log(err);&#xA;  }&#xA;}).render(&#39;#paypal-button-container&#39;);&#xA;}&#xA;initPayPalButton();&#xA;&lt;/script&gt;</description>
+    </item>
+    <item>
+      <title>prices</title>
+      <link>http://localhost:1313/bricks/prices/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/prices/</guid>
+      <description>&lt;h2 id=&#34;our-friendly-pricing&#34;&gt;Our friendly pricing&lt;/h2&gt;&#xA;&lt;p&gt;Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;strong&gt;budget&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;open-source&#34;&gt;Open-source&lt;/h3&gt;&#xA;&lt;p&gt;Full-featured theme/page builder to create super fast &amp;amp; amazing website&lt;/p&gt;&#xA;&lt;h3 id=&#34;0month&#34;&gt;&lt;em&gt;$&lt;/em&gt;&lt;strong&gt;0&lt;/strong&gt;/month&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Hugobricks theme/code&lt;/li&gt;&#xA;&lt;li&gt;All available bricks&lt;/li&gt;&#xA;&lt;li&gt;Regular updates&lt;/li&gt;&#xA;&lt;li&gt;Bug fixes &amp;amp; security patches&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/get-started/&#34;&gt;Get started&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;strong&gt;most popular&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;hosted&#34;&gt;Hosted&lt;/h3&gt;&#xA;&lt;p&gt;Everything in one toolkit – We host your website on our top-notch infrastructure.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>quote</title>
+      <link>http://localhost:1313/bricks/quote/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/quote/</guid>
+      <description>&lt;h2 id=&#34;ready-to-build-your-next-project-with-hugobricks&#34;&gt;&amp;ldquo;Ready to build your next project with Hugobricks?&amp;rdquo;&lt;/h2&gt;&#xA;&lt;p&gt;— Lorem ipsum dolor&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Reviews</title>
+      <link>http://localhost:1313/bricks/reviews/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/reviews/</guid>
+      <description>&lt;h2 id=&#34;what-users-say-about-hugobricks&#34;&gt;What users say about Hugobricks&lt;/h2&gt;&#xA;&lt;p&gt;Don&amp;rsquo;t just take our word for it - hear from some of our satisfied users! Check out some of our testimonials below to see what others are saying about Hugobricks.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Webshop</title>
+      <link>http://localhost:1313/bricks/webshop/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/webshop/</guid>
+      <description>&lt;h1 id=&#34;webshop&#34;&gt;Webshop&lt;/h1&gt;&#xA;&lt;p&gt;This is a demo of the webshop. In ultricies vel enim vel pulvinar. Quisque finibus sem velit, sed consequat mi ullamcorper vitae. Proin finibus tristique sollicitudin.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

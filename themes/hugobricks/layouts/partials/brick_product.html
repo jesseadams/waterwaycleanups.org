@@ -1,0 +1,33 @@
+{{- $inner := page.RawContent -}}
+
+{{- if or (eq $inner "") (eq $inner nil) -}}
+    {{- $inner = "Empty brick found. Consider creating a 'content/bricks/product.md' file." -}}
+    {{- with page.Site.GetPage "bricks/product.md" -}}
+        {{- $inner = .RawContent -}}
+    {{- end -}}
+{{- end -}}
+{{- $webshopData := (index site.Data site.Language.Lang).webshop -}}
+<section class="product">
+    <div class="container twocols">
+        <div class="image">
+            <a href="{{ page.Params.image }}"><div class="img"><img src="{{ page.Params.image }}" alt="{{ page.Title }}"></div></a>
+        </div>
+        <div class="text">
+            <h1>{{ page.Title }}</h1>
+            <h2>
+                {{ $webshopData.currency_symbol }}
+                <span class='productprice'>{{ (index page.Params.variants 0).price | lang.FormatNumber 2 }}</span></h2>
+            <form method="post" onsubmit='return addToCart(this)'>
+            <label for="variant" style="text-transform: capitalize;">{{ page.Params.variant_type }}</label><br>
+                <select id="variant" name="variant" onchange='updateBuyButton(this)' onload='updateBuyButton(this)'>
+                    {{ range $i, $variant := page.Params.variants }}
+                        <option {{ if eq $i 0 }} selected {{ end }} value="{{ .sku }}" data-sku='{{ .sku }}'  data-variantname='{{ .name }}' data-price='{{ .price }}' >{{ .name }}</option>
+                    {{ end }}
+                </select>
+                <script>window.onload = ()=> updateBuyButton(document.getElementById('variant'));</script>
+                <p><input type="submit" value='Add to cart' class='button' data-url='{{ page.RelPermalink }}' data-title='{{ page.Title }}' data-varianttype='{{ page.Params.variant_type }}' data-image='{{ page.Params.image }}'>{{/*  Variant based input dataset assets loaded by Javascript  */}}</p>
+                {{ if strings.Contains (markdownify $inner) "<p>" }}{{- markdownify $inner -}}{{ else }}<p>{{- markdownify $inner -}}</p>{{ end }}
+            </form>
+        </div>
+    </div>
+</section>

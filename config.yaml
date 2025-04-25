@@ -1,0 +1,36 @@
+baseURL: https://www.hugobricks.preview.usecue.com
+theme: hugobricks
+defaultContentLanguage: en
+assetDir: static
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+    extensions:
+      extras:
+        insert:
+          enable: true
+        mark:
+          enable: true
+        subscript:
+          enable: true
+        superscript:
+          enable: true
+
+languages:
+  en:
+    languageName: English
+    contentDir: content/en
+    weight: 1
+    disabled: false
+    permalinks:
+      page:
+        posts: /blog/:slug
+        services: /services/:slug
+        products: /webshop/:slug
+      section:
+        posts: /blog/
+        services: /services/
+        products: /webshop/
+

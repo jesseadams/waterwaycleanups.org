@@ -1,11 +1,109 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>WaterwayCleanups.org</title>
-    <link>https://waterwaycleanups.org/</link>
-    <description>Recent content on WaterwayCleanups.org</description>
+    <title>Virginia Waterway Cleanups on </title>
+    <link>http://localhost:1313/</link>
+    <description>Recent content in Virginia Waterway Cleanups on </description>
     <generator>Hugo</generator>
-    <language>en-us</language>
-    <atom:link href="https://waterwaycleanups.org/index.xml" rel="self" type="application/rss+xml" />
+    <language>en</language>
+    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>blocks</title>
+      <link>http://localhost:1313/bricks/blocks/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/blocks/</guid>
+      <description>&lt;h2 id=&#34;alternative-services-1&#34;&gt;Alternative services 1&lt;/h2&gt;&#xA;&lt;p&gt;Hugobricks covers all components you would like to have at hand. It is a power engine for your web oriented projects. It has excellent performance in all categories.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/01_hu_8bc7b8f19254b129.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;covers-all-components&#34;&gt;Covers all components&lt;/h3&gt;&#xA;&lt;p&gt;Includes many bricks.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/services/&#34;&gt;&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/02_hu_96e9bc54085bc00f.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;99-google-lighthouse-score&#34;&gt;99+ Google Lighthouse score&lt;/h3&gt;&#xA;&lt;p&gt;Lightning fast website.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/services/&#34;&gt;&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/03_hu_6e18995920d79340.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;themeable-through-css-variables&#34;&gt;Themeable through CSS variables&lt;/h3&gt;&#xA;&lt;p&gt;Easily themeable.&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/services/&#34;&gt;&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/gallery/04_hu_778a32571fa12b35.webp&#34; alt=&#34;&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;fully-responsive-on-all-devices&#34;&gt;Fully responsive on all devices&lt;/h3&gt;&#xA;&lt;p&gt;Works on every screen.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Contact us</title>
+      <link>http://localhost:1313/contact/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/contact/</guid>
+      <description>&lt;p&gt;&lt;section class=&#34;title&#34;&gt;&#xA;    &lt;div class=&#34;container small&#34;&gt;&lt;ul class=&#34;breadcrumbs&#34;&gt;&lt;li&gt;&lt;a href=&#34;http://localhost:1313/contact/&#34;&gt;Virginia Waterway …&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&#xA;&lt;h1 id=&#34;contact-us&#34;&gt;Contact us&lt;/h1&gt;&#xA;&lt;p&gt;Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed.&lt;/p&gt;&lt;/div&gt;&#xA;&lt;/section&gt;&#xA;&lt;section class=&#34;contact&#34;&gt;&#xA;    &lt;div class=&#34;container twocols&#34;&gt;&#xA;        &lt;div&gt;&#xA;            &lt;div class=&#34;box&#34;&gt;&lt;img src=&#34;http://localhost:1313/form.php&#34; style=&#34;position: absolute; opacity: 0; pointer-events: none;&#34; /&gt;&#xA;&lt;form id=&#34;contactform&#34; class=&#34;form&#34; method=&#34;POST&#34; action=&#34;http://localhost:1313/form.php&#34;&gt;&lt;h3&gt;Tell us a bit about yourself&lt;/h3&gt;&lt;div&gt;&#xA;                &lt;label class=&#34;inborder&#34; for=&#34;name&#34;&gt;Name&lt;/label&gt;&#xA;                &lt;input type=&#34;text&#34; name=&#34;name&#34; id=&#34;name&#34; class=&#34;form-control&#34;  required&gt;&#xA;            &lt;/div&gt;&lt;div&gt;&#xA;                &lt;label class=&#34;inborder&#34; for=&#34;email&#34;&gt;Email address&lt;/label&gt;&#xA;                &lt;input type=&#34;email&#34; name=&#34;email&#34; id=&#34;email&#34; class=&#34;form-control&#34;  required&gt;&#xA;            &lt;/div&gt;&lt;div&gt;&#xA;                &lt;label class=&#34;inborder&#34; for=&#34;message&#34;&gt;Message&lt;/label&gt;&#xA;                &lt;textarea name=&#34;message&#34; name=&#34;message&#34; id=&#34;message&#34; cols=&#34;30&#34; rows=&#34;10&#34; class=&#34;form-control&#34;  required&gt;&lt;/textarea&gt;&#xA;            &lt;/div&gt;&lt;div class=&#34;checkbox&#34;&gt;&#xA;                &lt;label&gt;&lt;input type=&#34;checkbox&#34; name=&#34;terms&#34; value=&#34;I accept the terms and conditions&#34; required&gt;I accept the terms and conditions&lt;/label&gt;&#xA;            &lt;/div&gt;&lt;div class=&#34;submit&#34;&gt;&#xA;                &lt;div&gt;&lt;input type=&#34;submit&#34; value=&#34;Submit form&#34; class=&#34;button&#34; /&gt;&lt;/div&gt;&#xA;            &lt;/div&gt;&lt;/form&gt;&lt;/div&gt;&#xA;        &lt;/div&gt;&#xA;        &lt;div class=&#34;text&#34;&gt;&lt;p&gt;Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>cta</title>
+      <link>http://localhost:1313/bricks/cta/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/cta/</guid>
+      <description>&lt;h2 id=&#34;join-our-cleanup-efforts&#34;&gt;Join Our Cleanup Efforts&lt;/h2&gt;&#xA;&lt;p&gt;Together, we can make a difference in our waterways. Volunteer today and help protect our environment!&lt;/p&gt;&#xA;&lt;a href=&#34;http://localhost:1313/get-started/&#34; class=&#34;button secondary&#34; title=&#34;Get started now&#34;&gt;Get started now&lt;/a&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/waterway-cleanups/river.png&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Events</title>
+      <link>http://localhost:1313/events/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/events/</guid>
+      <description>&lt;p&gt;&lt;section class=&#34;posts&#34; id=&#34;meetups&#34;&gt;&#xA;    &lt;div class=&#34;container small&#34;&gt;&lt;ul class=&#34;breadcrumbs&#34;&gt;&lt;li&gt;&lt;a href=&#34;http://localhost:1313/events/&#34;&gt;Virginia Waterway …&lt;/a&gt;&lt;/li&gt;&lt;/ul&gt;&#xA;&lt;h1 id=&#34;events&#34;&gt;Events&lt;/h1&gt;&#xA;&lt;p&gt;This is a demo of the events page. In ultricies vel enim vel pulvinar. Quisque finibus sem velit, sed consequat mi ullamcorper vitae. Proin finibus tristique sollicitudin.&lt;/p&gt;&lt;/div&gt;&#xA;    &lt;div class=&#34;container&#34;&gt;&#xA;        &lt;div class=&#34;filter&#34;&gt;&#xA;            &lt;select id=&#34;filter&#34; class=&#34;multiselecttags numbers_true&#34; multiple autocomplete=&#34;off&#34;&gt;&#xA;                &#xA;                    &lt;option value=&#34;chesapeake&#34;&gt;chesapeake&lt;/option&gt;&#xA;                &#xA;                    &lt;option value=&#34;potomac&#34;&gt;potomac&lt;/option&gt;&#xA;                &#xA;                    &lt;option value=&#34;rappahannock&#34;&gt;rappahannock&lt;/option&gt;&#xA;                &#xA;            &lt;/select&gt;&#xA;        &lt;/div&gt;&#xA;        &lt;ul class=&#34;contentitems grid posts&#34; data-pagesize=&#34;3&#34;&gt;&#xA;                            &#xA;                &lt;li class=&#34;item tag_chesapeake&#34;&gt;&lt;a href=&#34;http://localhost:1313/events/first-event/&#34;&gt;&lt;div class=&#34;img&#34;&gt;&lt;img data-src=&#34;http://localhost:1313/uploads/waterway-cleanups/waterways-3_hu_3d9f94cd87f7bf77.jpg&#34; alt=&#34;First Event&#34; style=&#34;cursor: pointer;&#34; onclick=&#34;document.location.href=&#39;\/events\/first-event\/&#39;;&#34; /&gt;&lt;/div&gt;&lt;/a&gt;&lt;h3&gt;First Event&lt;/h3&gt;&#xA;                        &#xA;                        &lt;div class=&#34;summary&#34;&gt;&#xA;                            &lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus cursus egestas arcu, in vestibulum tortor pellentesque vitae. Curabitur dapibus tempor libero id vulputate. Proin sodales, ni...&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>features</title>
+      <link>http://localhost:1313/bricks/features/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/features/</guid>
+      <description>&lt;h2 id=&#34;the-ultimate-hugo-theme&#34;&gt;The Ultimate Hugo theme&lt;/h2&gt;&#xA;&lt;p&gt;Hugobricks covers all components you would like to have at hand. It is a power engine for your web oriented projects. It has excellent performance in all categories.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/icons/material-symbols/200/rounded/auto_awesome_mosaic.svg&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;covers-all-components&#34;&gt;Covers all components&lt;/h3&gt;&#xA;&lt;p&gt;We aim to provide the following bricks: intro, title, image, cta, contact, team, testimonials, about, pricing, products, product, usps, stats, gallery, quote, faqs, brands, video, blogs, post, related.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/img/icons/material-symbols/200/rounded/performance_max.svg&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;99-google-lighthouse-score&#34;&gt;99+ Google Lighthouse score&lt;/h3&gt;&#xA;&lt;p&gt;Lightning fast website. Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>First Event</title>
+      <link>http://localhost:1313/events/first-event/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/events/first-event/</guid>
+      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus cursus egestas arcu, in vestibulum tortor pellentesque vitae. Curabitur dapibus tempor libero id vulputate. Proin sodales, nisi quis laoreet commodo, sapien quam consectetur lorem, ut molestie augue eros in enim. Nam tincidunt lobortis sapien, et molestie urna viverra sollicitudin. In hac habitasse platea dictumst. Donec placerat vestibulum luctus. Sed vel convallis nisi.&lt;/p&gt;&#xA;&lt;p&gt;Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla porta faucibus diam, vitae accumsan odio posuere rhoncus. Nunc pellentesque felis id sapien posuere, et commodo nisi pharetra. Cras pulvinar, urna iaculis pretium facilisis, odio dolor dictum leo, et fringilla libero ante eget elit. Vestibulum quis volutpat ligula. Fusce porta et mi luctus convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nulla id turpis tempor, euismod quam in, sollicitudin nisi. Vivamus a enim bibendum, posuere orci ac, lacinia erat. Morbi varius sapien efficitur, pellentesque elit in, feugiat risus. Vivamus in scelerisque nulla. Interdum et malesuada fames ac ante ipsum primis in faucibus.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>intro</title>
+      <link>http://localhost:1313/bricks/intro/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/intro/</guid>
+      <description>&lt;h1 id=&#34;the-ultimate-theme-you-need-to-start-your-hugo-website&#34;&gt;The Ultimate Theme You Need To Start Your Hugo Website&lt;/h1&gt;&#xA;&lt;p&gt;Hugobricks is a free website theme built with Hugo and vanilla CSS, providing everything you need to jumpstart your Hugo website and save valuable time.&lt;/p&gt;&#xA;&lt;a href=&#34;http://localhost:1313/get-started/&#34; class=&#34;button&#34; title=&#34;Get started for free&#34;&gt;Get started for free&lt;/a&gt;&#xD;&#xA;&#xD;&#xA;&#xA;&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/brick_intro.png&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>map</title>
+      <link>http://localhost:1313/bricks/map/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/map/</guid>
+      <description>&lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/map.png&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;p&gt;&lt;a href=&#34;https://www.google.com/maps&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;Google Maps&lt;/a&gt;&lt;/p&gt;&#xA;&lt;h2 id=&#34;contact-us&#34;&gt;Contact us&lt;/h2&gt;&#xA;&lt;p&gt;Usecue BV&lt;br&gt;&#xA;Soetendaal 7&lt;br&gt;&#xA;1081BL Amsterdam&lt;br&gt;&#xA;The Netherlands&lt;/p&gt;&#xA;&#xA;&lt;ul class=&#34;buttons&#34;&gt;&lt;/ul&gt;</description>
+    </item>
+    <item>
+      <title>Page not found (404)</title>
+      <link>http://localhost:1313/404/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/404/</guid>
+      <description>&lt;section class=&#34;error404&#34;&gt;&#xA;    &lt;div class=&#34;container small&#34;&gt;&#xA;        &lt;p&gt;&lt;img src=&#34;http://localhost:1313/uploads/illustrations/cuate/error.svg&#34; alt=&#34;&#34; class=&#34;is_svg&#34; /&gt;&lt;/p&gt;&#xA;&lt;h1 id=&#34;oops-something-went-wrong&#34;&gt;Oops! Something went wrong!&lt;/h1&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/&#34; class=&#34;button&#34; title=&#34;Back to home&#34;&gt;Back to home&lt;/a&gt;&lt;/p&gt;&#xA;&#xA;    &lt;/div&gt;&#xA;&lt;/section&gt;</description>
+    </item>
+    <item>
+      <title>Payment</title>
+      <link>http://localhost:1313/bricks/payment/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/payment/</guid>
+      <description>&lt;h1 id=&#34;choose-your-payment-method&#34;&gt;Choose your payment method&lt;/h1&gt;&#xA;&lt;p&gt;You will be paying &amp;lsquo;Usecue&amp;rsquo; and you will see your order number as a reference. You will have to pay &lt;span id=&#34;paymenttotal&#34;&gt;&lt;/span&gt;.&lt;/p&gt;&#xA;&lt;div id=&#34;smart-button-container&#34; style=&#34;max-width: 350px;&#34;&gt;&#xA;&#xA;    &lt;input type=&#34;hidden&#34; name=&#34;descriptionInput&#34; id=&#34;description&#34;&gt;&#xA;    &lt;input type=&#34;hidden&#34; name=&#34;amountInput&#34; id=&#34;amount&#34;&gt;&#xA;    &lt;input type=&#34;hidden&#34; name=&#34;invoiceid&#34; id=&#34;invoiceid&#34;&gt;&#xA;&#xA;    &lt;script&gt;&#xA;        window.onload = function() {&#xA;            var amount = (getCartTotal() + getAddonTotal()).toFixed(2); &#xA;            var ordernumber = localStorage.getItem(&#39;ordernumber&#39;);&#xA;            &#xA;            document.getElementById(&#39;description&#39;).value = ordernumber;&#xA;            document.getElementById(&#39;invoiceid&#39;).value = ordernumber;&#xA;            document.getElementById(&#39;amount&#39;).value = amount;&#xA;        }&#xA;    &lt;/script&gt;&#xA;    &lt;div style=&#34;text-align: center; margin-top: 0.625rem;&#34; id=&#34;paypal-button-container&#34;&gt;&lt;/div&gt;&#xA;&lt;/div&gt;&#xA;&#xA;&lt;script src=&#34;https://www.paypal.com/sdk/js?client-id=ARLAOALKgJkpvAynfrxup8sP6NiLzBTpe6leWyLs7QJHnUMsCt8tKKVFWJzLg4zP0jky8IlPddUX2YCt&amp;currency=&amp;components=buttons&#34;&gt;&lt;/script&gt;&#xA;&lt;script&gt;&#xA;&#xA;function initPayPalButton() {&#xA;&#xA;var amount = document.querySelector(&#39;#smart-button-container #amount&#39;);&#xA;var description = document.querySelector(&#39;#smart-button-container #description&#39;);&#xA;var invoiceid = document.querySelector(&#39;#smart-button-container #invoiceid&#39;);&#xA;&#xA;var purchase_units = [];&#xA;purchase_units[0] = {};&#xA;purchase_units[0].amount = {};&#xA;&#xA;function validate(event) {&#xA;  return event.value.length &gt; 0;&#xA;}&#xA;&#xA;paypal.Buttons({&#xA;  style: {&#xA;    color: &#39;blue&#39;,&#xA;    shape: &#39;pill&#39;,&#xA;    label: &#39;pay&#39;,&#xA;    layout: &#39;vertical&#39;,&#xA;    &#xA;  },&#xA;&#xA;  onInit: function (data, actions) {&#xA;    &#xA;  },&#xA;&#xA;  onClick: function () {&#xA;    &#xA;    purchase_units[0].description = description.value;&#xA;    purchase_units[0].amount.value = amount.value&#xA;&#xA;    if(invoiceid.value !== &#39;&#39;) {&#xA;      purchase_units[0].invoice_id = invoiceid.value;&#xA;    }&#xA;  },&#xA;&#xA;  createOrder: function (data, actions) {&#xA;    return actions.order.create({&#xA;      purchase_units: purchase_units,&#xA;    });&#xA;  },&#xA;&#xA;  onApprove: function (data, actions) {&#xA;    return actions.order.capture().then(function (details) {&#xA;      alert(&#39;Transaction completed by &#39; + details.payer.name.given_name + &#39;!&#39;);&#xA;    });&#xA;  },&#xA;&#xA;  onError: function (err) {&#xA;    console.log(err);&#xA;  }&#xA;}).render(&#39;#paypal-button-container&#39;);&#xA;}&#xA;initPayPalButton();&#xA;&lt;/script&gt;</description>
+    </item>
+    <item>
+      <title>prices</title>
+      <link>http://localhost:1313/bricks/prices/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/prices/</guid>
+      <description>&lt;h2 id=&#34;our-friendly-pricing&#34;&gt;Our friendly pricing&lt;/h2&gt;&#xA;&lt;p&gt;Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;strong&gt;budget&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;open-source&#34;&gt;Open-source&lt;/h3&gt;&#xA;&lt;p&gt;Full-featured theme/page builder to create super fast &amp;amp; amazing website&lt;/p&gt;&#xA;&lt;h3 id=&#34;0month&#34;&gt;&lt;em&gt;$&lt;/em&gt;&lt;strong&gt;0&lt;/strong&gt;/month&lt;/h3&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;Hugobricks theme/code&lt;/li&gt;&#xA;&lt;li&gt;All available bricks&lt;/li&gt;&#xA;&lt;li&gt;Regular updates&lt;/li&gt;&#xA;&lt;li&gt;Bug fixes &amp;amp; security patches&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;p&gt;&lt;a href=&#34;http://localhost:1313/get-started/&#34;&gt;Get started&lt;/a&gt;&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;p&gt;&lt;strong&gt;most popular&lt;/strong&gt;&lt;/p&gt;&#xA;&lt;h3 id=&#34;hosted&#34;&gt;Hosted&lt;/h3&gt;&#xA;&lt;p&gt;Everything in one toolkit – We host your website on our top-notch infrastructure.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>quote</title>
+      <link>http://localhost:1313/bricks/quote/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/bricks/quote/</guid>
+      <description>&lt;h2 id=&#34;ready-to-build-your-next-project-with-hugobricks&#34;&gt;&amp;ldquo;Ready to build your next project with Hugobricks?&amp;rdquo;&lt;/h2&gt;&#xA;&lt;p&gt;— Lorem ipsum dolor&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Second event</title>
+      <link>http://localhost:1313/events/second-event/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/events/second-event/</guid>
+      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus cursus egestas arcu, in vestibulum tortor pellentesque vitae. Curabitur dapibus tempor libero id vulputate. Proin sodales, nisi quis laoreet commodo, sapien quam consectetur lorem, ut molestie augue eros in enim. Nam tincidunt lobortis sapien, et molestie urna viverra sollicitudin. In hac habitasse platea dictumst. Donec placerat vestibulum luctus. Sed vel convallis nisi.&lt;/p&gt;&#xA;&lt;p&gt;Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla porta faucibus diam, vitae accumsan odio posuere rhoncus. Nunc pellentesque felis id sapien posuere, et commodo nisi pharetra. Cras pulvinar, urna iaculis pretium facilisis, odio dolor dictum leo, et fringilla libero ante eget elit. Vestibulum quis volutpat ligula. Fusce porta et mi luctus convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nulla id turpis tempor, euismod quam in, sollicitudin nisi. Vivamus a enim bibendum, posuere orci ac, lacinia erat. Morbi varius sapien efficitur, pellentesque elit in, feugiat risus. Vivamus in scelerisque nulla. Interdum et malesuada fames ac ante ipsum primis in faucibus.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Third Event</title>
+      <link>http://localhost:1313/events/third-event/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/events/third-event/</guid>
+      <description>&lt;p&gt;Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus cursus egestas arcu, in vestibulum tortor pellentesque vitae. Curabitur dapibus tempor libero id vulputate. Proin sodales, nisi quis laoreet commodo, sapien quam consectetur lorem, ut molestie augue eros in enim. Nam tincidunt lobortis sapien, et molestie urna viverra sollicitudin. In hac habitasse platea dictumst. Donec placerat vestibulum luctus. Sed vel convallis nisi.&lt;/p&gt;&#xA;&lt;p&gt;Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Nulla porta faucibus diam, vitae accumsan odio posuere rhoncus. Nunc pellentesque felis id sapien posuere, et commodo nisi pharetra. Cras pulvinar, urna iaculis pretium facilisis, odio dolor dictum leo, et fringilla libero ante eget elit. Vestibulum quis volutpat ligula. Fusce porta et mi luctus convallis. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nulla id turpis tempor, euismod quam in, sollicitudin nisi. Vivamus a enim bibendum, posuere orci ac, lacinia erat. Morbi varius sapien efficitur, pellentesque elit in, feugiat risus. Vivamus in scelerisque nulla. Interdum et malesuada fames ac ante ipsum primis in faucibus.&lt;/p&gt;</description>
+    </item>
   </channel>
 </rss>

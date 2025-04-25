@@ -1,0 +1,233 @@
+/* ===============================
+   0. VARIABLES
+   =============================== */
+   :root {  
+      
+   }
+
+/* ===============================
+   1. Base Typography & Spacing
+   =============================== */
+   #hero .inner h1, #hero h2 {
+      line-height: 1.1;
+      color: var(--white);
+      font-size: 3.5rem;
+  }
+
+  #hero .inner {
+      width: 55%;
+  }
+
+  body p {
+      font-size: 18px;
+  }
+
+/* ===============================
+   2. BUTTONS  
+   =============================== */
+   .button:not(.secondary), button:not(.secondary) {
+      color: var(--teal-blue);
+   }
+
+   .bgimage .button, button {
+      color: var(--teal-blue);
+      font-size: 1.1rem;
+  }
+
+   .button.secondary {
+      color: var(--granny-smith-apple-green);
+      background-color: var(--teal-blue);
+   }
+
+/* ===============================
+   3. PRE-HEADER
+   =============================== */
+   .preheader {
+      background-color: var(--genoa-green);
+      font-size: 16px;
+   }
+
+   .preheader, .preheader a {
+      color: #b9e597;
+   }
+
+/* ===============================
+   4. SECTIONS  
+   =============================== */
+   body:not(.transparent_header) header + section.bgimage .container {
+      padding-top: 16rem !important;
+  }
+  
+/* ===============================
+   4. NAVIGATION   
+   =============================== */
+   header.dark {
+      background-color: var(--eden-green);
+   }
+
+   header > .container.has_cta ul {
+      justify-content: flex-end;
+  }
+
+   header > .container.has_cta > div:nth-child(3) {
+      flex: 0;
+   }
+
+   .nav .navnav {
+      padding-right: 30px;
+   }
+
+   header .logo svg {
+      width: 160px;
+   }
+
+   h3, .h3 {
+      font-family: var(--fontSubTitles);
+      font-size: 22px;
+      font-weight: 600;
+      color: var(--teal-blue);
+   }
+
+   h2, .h2 {
+      color: var(--teal-blue);
+   }
+
+   .posts .h3 {
+      margin-bottom: 15px;
+   }
+
+   .h3 + h2 {
+      margin-top: 0;
+   }
+
+   .posts h2 {
+      color: var(--eden-green);
+   }
+
+   header.dark a.logo, body.transparent_header header:not(.sticky) a.logo, header.dark .navnav > ul > li > a, body.transparent_header header:not(.sticky) .navnav > ul > li > a {
+      font-size: 18px;
+   }
+
+/* ===============================
+   5. HERO
+   =============================== */
+   #hero h1 {
+      font-size: 3.5rem;
+   }
+
+   #hero p {
+      color: var(--pearl-bush-white);
+      font-size: 1.5rem;
+      line-height: 1.3;
+      font-weight: 300;
+   }
+
+   .wavey {
+      width: 40px;
+      margin-bottom: 15px;
+      filter: invert(16%) sepia(67%) saturate(1485%) hue-rotate(90deg) brightness(93%) contrast(22%);
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+   }
+
+   .posts + .cta {
+      padding: 7rem 0 7rem 0;
+   }
+
+/* ===============================
+   6. UTILITIES
+   =============================== */
+   section.bgimage .overlay {
+      background: #000000;
+      background: -webkit-linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.63) 91%);
+      background: -moz-linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.63) 91%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.63) 91%);
+      filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#000000", endColorstr="#000000", GradientType=0);
+   }
+
+   .box {
+      background: var(--pearl-bush-white);
+   }
+
+/* ===============================
+   7. POSTS
+   =============================== */
+   .posts {
+      background-color: var(--pearl-bush-white);
+   }
+
+   #hero + .posts {
+     margin-top: 0;
+   }
+
+   .filename__index #hero + .posts {
+      padding: 7rem 0 7rem 0;
+   }
+
+   .posts + .cta {
+      
+   }
+   
+/* ===============================
+   8. FOOTER
+   =============================== */ 
+   footer {
+      position: relative;
+      padding-top: 50px;
+      margin-top: 100px;
+   }
+
+   section.hasbackgroundcolor + footer {
+      margin-top: 9.5rem;
+  }
+
+   footer.dark {
+      background-color: var(--teal-blue);
+   }
+
+   footer .buttons.social .button.icon img {
+      filter: invert(16%) sepia(67%) saturate(1485%) hue-rotate(173deg) brightness(93%) contrast(102%);
+   }
+
+   footer .logo svg {
+      max-width: 160px;
+      height: auto;
+   }
+
+   footer.dark .logo svg path,
+   footer.dark .logo svg text {
+      fill: white;
+   }
+
+   footer:before {
+      content: "";
+      position: absolute;
+      top: -30px;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background:url(../uploads/waterways-cleanups/waves.png) repeat-x;
+      height: 50px;
+   }
+
+   footer.dark select, footer.dark, footer.dark > div:last-child a, footer.dark ul li a {
+      color: var(--granny-smith-apple-green);
+   }
+
+   footer.dark > div:last-child {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+   }
+
+   footer .container > div:first-child:last-child {
+      color: rgba(255, 255, 255, 0.5);
+  }
+
+   footer.dark > div:last-child a {
+      color: var(--text-dark);
+   }
+   
+/* ===============================
+   9. MEDIA QUERIES
+   =============================== */
+

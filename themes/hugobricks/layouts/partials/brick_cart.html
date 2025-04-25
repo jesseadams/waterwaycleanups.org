@@ -1,0 +1,52 @@
+{{- $inner := . -}}
+{{- if or (eq $inner "") (eq $inner nil) -}}
+    {{- $inner = "Empty brick found. Consider creating a 'content/bricks/cart.md' file." -}}
+    {{- with page.Site.GetPage "bricks/cart.md" -}}
+         {{- $inner = .RawContent -}}
+    {{- end -}}
+{{- end -}}
+{{- $webshopData := (index site.Data site.Language.Lang).webshop -}}
+<section class="cart">
+    <div class="container medium">
+        {{- markdownify $inner -}}
+        <!-- HTML cart displaying / table -->
+        <div id="shoppingcart">
+            <table celpadding="0" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                        <th></th>
+                        <th>{{ i18n "Amount" }}</th>
+                        <th>&nbsp;&nbsp;{{ i18n "Price" }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="6" style="text-align: center;">{{ i18n "Your shopping cart is currently empty" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div>{{ $webshopData.currency_symbol }} <span class="carttotal">0.00</span></div>
+            <form action="/checkout/">
+                <div class="submitbutton">
+                    <a href="/webshop" class="gray">{{ i18n "Continue shopping"}}</a>
+                    <input type="submit" class="button" value='{{ i18n "Continue to checkout" }}' />
+                </div>
+            </form>
+        </div>
+        <div style="margin-top: 50px; position: relative; top: 30px;">
+            <ul id="checkout_progress">
+                <li class="current"><span><a href="#">{{ i18n "Cart" }}</a></span></li>
+                <li><span><span>{{ i18n "Checkout" }}</span></span></li>
+                <li><span><span>{{ i18n "Payment" }}</span></span></li>
+            </ul>
+        </div>
+        <script type="text/javascript" src="/js/webshop.js"></script>
+        <script type="text/javascript">
+            const currencySymbol = '{{ $webshopData.currency_symbol }}';
+            updateCartCount();
+            populateCart();
+        </script>
+    </div>
+</section>

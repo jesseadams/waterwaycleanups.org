@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Performance on </title>
+    <link>http://localhost:1313/tags/performance/</link>
+    <description>Recent content in Performance on </description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <lastBuildDate>Tue, 11 Jul 2023 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://localhost:1313/tags/performance/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>This theme has a perfect Google Lighthouse&amp;nbsp;score</title>
+      <link>http://localhost:1313/blog/this-theme-has-a-perfect-google-lighthousenbspscore/</link>
+      <pubDate>Tue, 11 Jul 2023 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/blog/this-theme-has-a-perfect-google-lighthousenbspscore/</guid>
+      <description>&lt;p&gt;This theme has a (near) &lt;a href=&#34;https://pagespeed.web.dev/analysis/https-www-hugobricks-preview-usecue-com/je4uqrt6nj?form_factor=mobile&#34; target=&#34;_blank&#34; rel=&#34;noopener&#34;&gt;perfect Google Lighthouse score&lt;/a&gt;. Some people like fast cars. I like fast websites. But how to get to a perfect Google Lighthouse score? Let me explain.&lt;/p&gt;&#xA;&lt;p&gt;You might feel that it is nearly impossible to get to a perfect 100% score. You minified your Javascript, properly scaled your images and even combined some requests, but that did not help nearly enough. The problem is: you might be looking at it from the wrong angle. I build 100% scoring websites on a daily basis, so obviously it is very well possible to get a perfect score on all your websites with little effort. I will try to explain what we want to achieve and how we can achieve that.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
