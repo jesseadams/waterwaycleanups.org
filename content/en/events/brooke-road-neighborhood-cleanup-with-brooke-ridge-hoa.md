@@ -5,8 +5,8 @@ tags:
   - aquia-creek, acccokeek-creek
 preheader_is_light: false
 ---
- 
-{{< date_with_icon date="May 3, 2025 | 8am-11am" class="large-date" >}}
+
+{{< date_with_icon date="May 3, 2025 | 9am-12pm" class="large-date" >}}
 
 {{< tabs >}}
 
