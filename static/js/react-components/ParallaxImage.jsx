@@ -62,7 +62,7 @@ const ParallaxImage = ({ src, alt, height, width, scale = 1.2, bobbing = false, 
         position: 'absolute',
         top: 0,
         left: 0,
-        overflow: 'hidden'
+        overflow: 'visible'
       }}
     >
       <img 

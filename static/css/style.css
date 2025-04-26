@@ -58,3 +58,7 @@ img {filter: grayscale(0);}
 
 
 /*------------------------ CSS overrides below ------------------------*/
+
+section.two-columns-section {
+    padding-top: 5rem;
+ }

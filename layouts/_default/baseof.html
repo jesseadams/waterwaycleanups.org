@@ -132,7 +132,7 @@
 
     {{- block "content" . -}}{{- end -}}
     
-    <div style="position: relative;">
+    <div style="position: relative;padding-top:10%;overflow:visible;">
       {{ partial "bobbing_parallax.html" . }}
       
       <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }}" style="position: relative; z-index: 1;">
