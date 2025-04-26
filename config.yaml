@@ -29,8 +29,9 @@ languages:
         posts: /blog/:slug
         services: /services/:slug
         products: /webshop/:slug
+        events: /events/:slug
       section:
         posts: /blog/
         services: /services/
         products: /webshop/
-
+        events: /events/
