@@ -1,21 +1,23 @@
-Read more:
-  other: Read more
-Load more posts:
-  other: Load more posts
+Event Details:
+  other: Evebt Details
+Load More Posts:
+  other: Load More Posts
 Filter tags:
-  other: Filter tags
+  other: Filter Tags
 services:
   other: Services
+events:
+  other: Events
 posts:
   other: Blog
 products:
   other: Shop
-First name:
-  other: First name
-Last name:
-  other: Last name
-Email address:
-  other: Email address
+First Name:
+  other: First Name
+Last Name:
+  other: Last Name
+Email Address:
+  other: Email Address
 Address:
   other: Address
 Zipcode:
@@ -26,32 +28,32 @@ Shipping:
   other: Shipping
 Country:
   other: Country
-Gift wrapping:
-  other: Gift wrapping
-Not gift wrapped:
-  other: Not gift wrapped
-Gift wrapped:
-  other: Gift wrapped
+Gift Wrapping:
+  other: Gift Wrapping
+Not Gift Wrapped:
+  other: Not Gift Wrapped
+Gift Wrapped:
+  other: Gift Wrapped
 Message:
   other: Message
-back to cart:
-  other: back to cart
-Payment total:
-  other: Payment total
-Shopping cart:
-  other: Shopping cart
-Proceed to payment:
-  other: Proceed to payment
+Back to Cart:
+  other: Back to Cart
+Payment Total:
+  other: Payment Total
+Shopping Cart:
+  other: Shopping Cart
+Proceed to Payment:
+  other: Proceed to Payment
 Your shopping cart is currently empty:
   other: Your shopping cart is currently empty
 Amount:
   other: Amount
 Price:
   other: Price
-Continue shopping:
-  other: Continue shopping
-Continue to checkout:
-  other: Continue to checkout
+Continue Shopping:
+  other: Continue Shopping
+Continue to Checkout:
+  other: Continue to Checkout
 Cart:
   other: Cart
 Checkout:

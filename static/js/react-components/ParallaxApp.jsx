@@ -2,7 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import ParallaxImage from './ParallaxImage';
 
-// Find all parallax containers on the page
+//* Find all parallax containers on the page
 document.addEventListener('DOMContentLoaded', () => {
   console.log('ParallaxApp starting - looking for containers');
   const parallaxContainers = document.querySelectorAll('[data-react-parallax]');
@@ -19,11 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get bobbing attribute - defaults to false if not specified
     const bobbing = container.getAttribute('data-bobbing') === 'true';
     
-    // Get the container's parent to check for nested containers
+    //* Get the container's parent to check for nested containers
     const parentStyle = window.getComputedStyle(container.parentNode);
     console.log(`Container ${index} parent overflow: ${parentStyle.overflow}`);
     
-    // Create a root using the new API
+    //* Create a root using the new API (18)
     const root = createRoot(container);
     root.render(
       <ParallaxImage 

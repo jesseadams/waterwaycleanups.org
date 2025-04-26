@@ -7,7 +7,7 @@ const ParallaxImage = ({ src, alt, height, width, scale = 1.2, bobbing = false, 
   
   useEffect(() => {
     if (imageRef.current) {
-      // Initialize parallax effect
+      //* Initialize parallax effect
       new SimpleParallax(imageRef.current, {
         delay: speed,
         orientation: 'up',
@@ -18,14 +18,14 @@ const ParallaxImage = ({ src, alt, height, width, scale = 1.2, bobbing = false, 
       });
     }
     
-    // Add bobbing animation only if the bobbing prop is true
+    //* Add bobbing animation only if the bobbing prop is true
     if (bobbing && containerRef.current) {
       const startBobAnimation = () => {
         let animationFrameId;
         
         const bobAnimation = () => {
           const now = Date.now() / 1000;
-          // Increased vertical movement to 2% for more noticeable effect
+          //* Increased vertical movement to 2% for more noticeable effect
           const translateY = Math.sin(now) * 2;
           containerRef.current.style.transform = `translateY(${translateY}%)`;
           animationFrameId = requestAnimationFrame(bobAnimation);
@@ -34,7 +34,7 @@ const ParallaxImage = ({ src, alt, height, width, scale = 1.2, bobbing = false, 
         animationFrameId = requestAnimationFrame(bobAnimation);
         
         return () => {
-          // Cancel animation frame when component unmounts or effect reruns
+          //* Cancel animation frame when component unmounts or effect reruns
           if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
           }
@@ -46,11 +46,11 @@ const ParallaxImage = ({ src, alt, height, width, scale = 1.2, bobbing = false, 
     }
     
     return () => {
-      // Cleanup for parallax if needed
+      //* Cleanup for parallax if needed
     };
   }, [scale, bobbing, speed]);
   
-  // Check if we should preserve original size or use fixed dimensions
+  //* Check if we should preserve original size or use fixed dimensions
   const hasFixedDimensions = width && height && height !== 'auto';
   
   return (
