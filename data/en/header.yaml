@@ -1,10 +1,10 @@
 logo_image: inline-svg
-logo_subtitle: 
+logo_subtitle:
 dark_header: true
 mobile_view_width: 1100
 menuitems:
   - title: Our Mission
-    link: /#hero  
+    link: /#
     #items:
     #  - title: Title
     #    link: /header-with-title/
@@ -18,7 +18,7 @@ menuitems:
     #    link: /header-transparent/
   - title: Upcoming Meetups
     link: /#meetups
-    #items: 
+    #items:
     #  - title: About
     #    link: /about/
     #  - title: Basic page 1
@@ -46,8 +46,8 @@ menuitems:
   #- title: Docs
   #  link: /docs/
   - title: Projects
-    link: /#projects  
-    #items: 
+    link: /#projects
+    #items:
     #  - title: Paragliding
     #    link: /demo-paragliding/
     #  - title: Hiking
@@ -57,7 +57,7 @@ menuitems:
     #  - title: POS software
     #    link: /demo-pos/
   - title: Sponsors
-    link: /#sponsors 
+    link: /#sponsors
 cta:
   active: true
   title: Donate
