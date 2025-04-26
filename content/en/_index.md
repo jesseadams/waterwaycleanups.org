@@ -11,7 +11,7 @@ preheader_is_light: false
 
 At Waterway Cleanups, we are dedicated to restoring and preserving our local waterways through community action and education. Together, we can make a significant impact on our environment and future.
 
-{{< button "Join a Meetup" "/#meetups" >}}
+{{< button "Join a Cleanup" "/#cleanups" >}}
 
 ![](/uploads/waterway-cleanups/waterways-2.png)
 

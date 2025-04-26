@@ -16,8 +16,8 @@ menuitems:
     #    link: /header-darker/
     #  - title: Transparent nav
     #    link: /header-transparent/
-  - title: Upcoming Meetups
-    link: /#meetups
+  - title: Upcoming Cleanups
+    link: /#cleanups
     #items:
     #  - title: About
     #    link: /about/

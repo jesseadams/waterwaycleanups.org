@@ -5,7 +5,7 @@
     {{- end -}}
 {{- end -}}
 {{- $events := where page.Site.RegularPages "Section" "events" -}}
-<section class="posts" id="meetups">
+<section class="posts" id="cleanups">
     {{ if $inner }}<div class="container small">
         {{- markdownify $inner -}}
     </div>{{ end }}
@@ -18,7 +18,7 @@
             </select>
         </div>
         <ul class="contentitems grid posts" data-pagesize="{{ if page.Site.Data.settings.show_all_events }}99{{ else }}{{ page.Site.Data.settings.page_size }}{{ end }}">
-            {{ range $index,$event := $events }}                
+            {{ range $index,$event := $events }}
                 <li class="item{{ range .Params.tags }} tag_{{ . }}{{ end }}">
                         {{- if (resources.GetMatch .Params.image) -}}
                             {{- $eventimage := ((resources.GetMatch .Params.image).Fill `1200x600 jpg Smart q50`).RelPermalink -}}
@@ -51,11 +51,11 @@
                                     {{ $eventDetails = $eventDetailsSection | replaceRE `(?s)Event Details(.*?)---` "$1" | plainify | strings.TrimSpace }}
                                 {{ end }}
                             {{ end }}
-                            
+
                             {{ if eq $eventDetails "" }}
                                 {{ $eventDetails = .Content | plainify | replaceRE `##[\s\w]+` "" | replaceRE `\s+` " " | strings.TrimSpace }}
                             {{ end }}
-                            
+
                             <p>{{ $eventDetails | truncate 140 }}...</p>
                             <p><a href="{{ .RelPermalink }}" class="button secondary smaller">{{ i18n "Read more" }}</a></p>
                         </div>
@@ -68,5 +68,3 @@
         <script src="/js/filter.js" charset="utf-8"></script>
     </div>
 </section>
-
-
