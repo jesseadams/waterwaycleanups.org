@@ -7,7 +7,8 @@
 {{- $events := where page.Site.RegularPages "Section" "events" -}}
 {{- $current_time := now.Format "2006-01-02T15:04:05-07:00" }}
 {{- $upcoming_events := where $events "Params.start_time" "ge" $current_time }}
-{{- $sorted := $upcoming_events.ByParam "start_time" -}}<section class="posts" id="cleanups">
+{{- $sorted := $upcoming_events.ByParam "start_time" -}}
+<section class="posts" id="cleanups">
     {{ if $inner }}<div class="container small">
         {{- markdownify $inner -}}
     </div>{{ end }}
