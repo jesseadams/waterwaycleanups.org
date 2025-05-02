@@ -14,7 +14,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    environment: production
 
     steps:
       - name: Checkout code
@@ -23,7 +22,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions
+          role-to-assume: arn:aws:iam::665666566656:role/github-actions
           aws-region: us-east-1
           role-session-name: github-actions
 
