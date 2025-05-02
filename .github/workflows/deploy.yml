@@ -1,0 +1,47 @@
+name: Deploy Hugo Website
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions
+          aws-region: us-east-1
+          role-session-name: github-actions
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.111.3'
+          extended: true
+
+      - name: Build Hugo site
+        run: hugo --minify
+
+      - name: Deploy to S3
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws s3 sync public/ s3://${{ secrets.S3_BUCKET_NAME }}/
+
+      - name: Invalidate CloudFront Cache
+        if: github.ref == 'refs/heads/main'
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
