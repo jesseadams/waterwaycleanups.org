@@ -5,6 +5,9 @@
     {{- end -}}
 {{- end -}}
 {{- $events := where page.Site.RegularPages "Section" "events" -}}
+{{- $current_time := now.Format "2006-01-02T15:04:05-07:00" }}
+{{- $upcoming_events := where $events "Params.start_time" "ge" $current_time }}
+{{- $sorted := $upcoming_events.ByParam "start_time" -}}
 <section class="posts" id="cleanups">
     {{ if $inner }}<div class="container small">
         {{- markdownify $inner -}}
@@ -18,7 +21,7 @@
             </select>
         </div>
         <ul class="contentitems grid posts" data-pagesize="{{ if page.Site.Data.settings.show_all_events }}99{{ else }}{{ page.Site.Data.settings.page_size }}{{ end }}">
-            {{ range $index,$event := $events }}
+            {{ range $index,$event := $sorted }}
                 <li class="item{{ range .Params.tags }} tag_{{ . }}{{ end }}">
                         {{- if (resources.GetMatch .Params.image) -}}
                             {{- $eventimage := ((resources.GetMatch .Params.image).Fill `1200x600 jpg Smart q50`).RelPermalink -}}

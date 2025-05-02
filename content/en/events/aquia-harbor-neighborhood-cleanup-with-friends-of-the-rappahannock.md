@@ -4,6 +4,8 @@ image: /uploads/waterway-cleanups/waterways-3.png
 tags:
   - aquia-creek
 preheader_is_light: false
+start_time: "2025-04-26T09:00:00-04:00"
+end_time: "2025-04-26T12:00:00-04:00"
 ---
 
 {{< date_with_icon date="April 26, 2025 | 9am-12pm" class="large-date" >}}
