@@ -4,6 +4,8 @@ image: /uploads/waterway-cleanups/waterways-5.png
 tags:
   - rappahannock
 preheader_is_light: false
+start_time: "2025-05-17T09:00:00-04:00"
+end_time: "2025-05-17T12:00:00-04:00"
 ---
  
 {{< date_with_icon date="May 17, 2025 | 9am-12pm" class="large-date" >}}
