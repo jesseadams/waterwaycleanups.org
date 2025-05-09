@@ -1,0 +1,38 @@
+Hi {{firstName}}, let’s keep our waterways clean!
+
+Thanks to supporters like you, we're making a real difference in Virginia's rivers and streams.
+
+On Saturday, May 3rd, we had our first cleanup of the year along Brooke Road in partnership with Brooke Ridge HOA. We had 5 volunteers show up and we were able to remove over 11 bags of trash from Aquia Creek and Accokeek Creek!
+
+Volunteer now: https://waterwaycleanups.org/get-involved
+
+
+Upcoming Events
+===============
+
+1. River Road Cleanup – Saturday, May 18  
+Join us in Fredericksburg as we clean up River Road below Chatham Manor. Gear is provided – just bring water and sturdy shoes.  
+Event led by Friends of the Rappahannock: https://riverfriends.org  
+Event Details: https://waterwaycleanups.org/events/river-road-cleanup-with-friends-of-the-rappahannock/
+
+---
+
+2. Aquia Creek Road Cleanup – Saturday, June 7  
+Meet us in Stafford County as we clean the stretch from Courthouse Road to Aquia Bay Marina. Gear provided. Bring water and sturdy shoes.  
+Event Details: https://waterwaycleanups.org/events/aquia-creek-road-cleanup-june-2025/
+
+---
+
+Every Bag of Trash Counts  
+=========================  
+Your support—whether it’s time, money, or word of mouth—protects our waterways and wildlife.
+
+Donate now: https://collect.bankingcrowded.com/collection/fbacead4-04ff-406a-b1fe-8cea2af39eb3
+
+—
+
+Waterway Cleanups · Stafford, VA  
+Visit our website: https://waterwaycleanups.org  
+You’re receiving this email because you signed up at waterwaycleanups.org.  
+Unsubscribe: {{amazonSESUnsubscribeUrl}}
+
