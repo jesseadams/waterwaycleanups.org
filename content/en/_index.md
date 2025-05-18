@@ -1,5 +1,7 @@
 ---
 title: Virginia Waterway Cleanups
+seo:
+  description: "Join Waterway Cleanups in restoring and preserving Virginia\'s waterways through community action and education. Make a difference in your local environment."
 dark_header: true
 dark_footer: true
 preheader_is_light: false
