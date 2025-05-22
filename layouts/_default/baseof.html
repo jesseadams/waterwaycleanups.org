@@ -58,7 +58,7 @@
           {{- end -}}
         </div>
         <div>
-          {{- if (index .Site.Data .Language.Lang).header.preheader -}}{{ (index .Site.Data .Language.Lang).header.preheader }}{{- end -}}
+          {{- partial "next_event_preheader.html" . -}}
         </div>
       </div>  
     </div>
