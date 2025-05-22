@@ -37,4 +37,6 @@ temp/
 .npm
 
 # eslint cache
-.eslintcache 
+.eslintcache
+
+newsletters/*.csv
