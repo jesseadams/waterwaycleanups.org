@@ -1,4 +1,3 @@
-<img src="/form.php" style="position: absolute; opacity: 0; pointer-events: none;" />
 <form id="{{ if .form_id }}{{ .form_id }}{{ else }}contactform{{ end }}" class="form" method="POST" action="{{ .action }}">
     {{- range .fields -}}
         {{- if eq .input_type `textarea` -}}
