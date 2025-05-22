@@ -1,0 +1,19 @@
+{{- $events := where .Site.RegularPages "Section" "events" -}}
+{{- $current_time := now.Format "2006-01-02T15:04:05-07:00" }}
+{{- $upcoming_events := where $events "Params.start_time" "ge" $current_time }}
+{{- $sorted := $upcoming_events.ByParam "start_time" -}}
+
+{{- if $sorted -}}
+  {{- with index $sorted 0 -}}
+    {{- $start := time .Params.start_time -}}
+    {{- $month := $start.Format "January" -}}
+    {{- $day := $start.Format "2" -}}
+    {{- $time := $start.Format "3:04pm" -}}
+    {{- $weekday := $start.Format "Monday" -}}
+    Upcoming Cleanup - {{ $weekday }}, {{ $month }} {{ $day }} at {{ $time }}
+  {{- else -}}
+    Join us for our next waterway cleanup!
+  {{- end -}}
+{{- else -}}
+  Join us for our next waterway cleanup!
+{{- end -}}
