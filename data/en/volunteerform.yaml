@@ -1,0 +1,24 @@
+action: /api/submit-volunteer
+form_id: volunteerform
+placeholders: false
+fields:
+- name: title
+  input_type: html
+  label: <h3>Volunteer Interest Form</h3>
+  required: true
+- name: first_name
+  input_type: text
+  label: First Name
+  required: true
+- name: last_name
+  input_type: text
+  label: Last Name
+  required: true
+- name: email
+  input_type: email
+  label: Email address
+  required: true
+- name: submit
+  input_type: submit
+  label: Submit
+  required: true

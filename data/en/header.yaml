@@ -58,6 +58,8 @@ menuitems:
     #    link: /demo-pos/
   - title: Sponsors
     link: /#sponsors
+  - title: Volunteer
+    link: /volunteer/
 cta:
   active: true
   title: Donate
