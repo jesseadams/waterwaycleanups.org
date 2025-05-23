@@ -45,8 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
         email: email
       };
       
+      // Show loading state
+      const formElement = volunteerForm;
+      formElement.classList.add('form-loading');
+      
       // Submit to REST API
-      fetch('/api/submit-volunteer', {
+      fetch("https://882dzmsoy5.execute-api.us-east-1.amazonaws.com/prod/submit-volunteer", {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -60,9 +64,16 @@ document.addEventListener('DOMContentLoaded', function() {
         return response.json();
       })
       .then(data => {
-        // Show success message
+        // Show success message from the API response
         const formContainer = volunteerForm.parentElement;
-        formContainer.innerHTML = '<div class="success-message"><h3>Thank you for your interest!</h3><p>We\'ve received your volunteer submission and will be in touch soon.</p></div>';
+        const message = data.message;
+        
+        formContainer.innerHTML = `
+          <div class="success-message">
+            <h3>Success!</h3>
+            <p>${message}</p>
+          </div>
+        `;
       })
       .catch(error => {
         console.error('Error submitting form:', error);
