@@ -20,10 +20,10 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# Create policy for Lambda to interact with SESv2
+# Create policy for Lambda to interact with SESv2 and SNS
 resource "aws_iam_policy" "lambda_ses_policy" {
   name        = "lambda_sesv2_policy"
-  description = "IAM policy for Lambda to interact with SESv2"
+  description = "IAM policy for Lambda to interact with SESv2 and SNS"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -37,6 +37,7 @@ resource "aws_iam_policy" "lambda_ses_policy" {
           "ses:CreateContactList",
           "ses:ListContactLists",
           "ses:BatchPutContactListEntries",
+          "sns:Publish",
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
@@ -69,6 +70,7 @@ resource "aws_lambda_function" "volunteer_lambda" {
       CONTACT_LIST_NAME = var.ses_contact_list_name
       TOPIC_NAME        = var.ses_topic_name
       REGION_NAME       = var.aws_region
+      SNS_TOPIC_ARN     = aws_sns_topic.volunteer_form_topic.arn
     }
   }
 }
