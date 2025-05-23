@@ -38,3 +38,6 @@ temp/
 
 # eslint cache
 .eslintcache 
+
+.terraform*
+lambda.zip

@@ -1,0 +1,77 @@
+/* Volunteer Form Styles */
+
+/* Success message styles */
+.success-message {
+  background-color: #e6f7e6;
+  border: 1px solid #43a047;
+  border-radius: 4px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.success-message h3 {
+  color: #2e7d32;
+  margin-top: 0;
+}
+
+/* Error message styles */
+.error-message {
+  background-color: #ffebee;
+  border: 1px solid #e53935;
+  border-radius: 4px;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.error-message h3 {
+  color: #c62828;
+  margin-top: 0;
+}
+
+/* Form loading state */
+.form-loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.form-loading:after {
+  content: "Submitting...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.8);
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+/* Volunteer form button style overrides */
+form#volunteerform .button {
+  background-color: #156064;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+form#volunteerform .button:hover {
+  background-color: #0e4447;
+}
+
+.error-message .button {
+  background-color: #156064;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+
+.error-message .button:hover {
+  background-color: #0e4447;
+}
