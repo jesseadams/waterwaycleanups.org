@@ -37,4 +37,8 @@ temp/
 .npm
 
 # eslint cache
-.eslintcache 
+.eslintcache
+
+# tailwindcss
+static/css/tailwind-output.css
+static/js/tailwind-output-bundle.js
