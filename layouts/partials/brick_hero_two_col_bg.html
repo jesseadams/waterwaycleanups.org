@@ -1,0 +1,46 @@
+{{- $inner := .Inner -}}
+{{- if or (eq $inner "") (eq $inner nil) -}}
+    {{- if .Params -}}
+        {{- $inner = "Empty brick found. Consider adding content to the brick_hero_two_col_bg shortcode." -}}
+    {{- else -}}
+        {{- $inner = "Empty brick found. Consider adding content to the brick_hero_two_col_bg shortcode." -}}
+    {{- end -}}
+{{- end -}}
+{{- $imagesrc := substr (index (split (index (findRE `!\[[^\]]*?]\(([^\)]*?)\)` $inner 1) 0) "](") 1) 0 -1 -}}
+{{- $raw := (markdownify $inner | chomp) -}}
+{{- $block := findRE "(?is)^<(?:address|article|aside|blockquote|canvas|dd|div|dl|dt|fieldset|figcaption|figure|footer|form|h(?:1|2|3|4|5|6)|header|hgroup|hr|li|main|nav|noscript|ol|output|p|pre|section|table|tfoot|ul|video)\\b" $raw 1 -}}
+{{- if or $block (not $raw) -}}{{- $inner = $raw -}}{{- else -}}{{- $inner = print `<p>` $raw `</p>` -}}{{- end -}}
+{{- $image := index (findRE `(?s)<p><img.*?p>` $inner 1) 0 -}}
+{{- $inner = replace $inner $image "" 1 -}}
+{{ $empty := false }}
+{{- if lt (len $inner) 3 }}{{ $empty = true }}{{ end }}
+{{- $reverse := false -}}
+{{- if and .Params (eq (.Params.reverse | default "false") "true") -}}
+    {{- $reverse = true -}}
+{{- end -}}
+
+<section class="bg-eden-green" id="hero">
+    <div class="container">
+        <div class="flex flex-wrap {{ if $reverse }}md:flex-row-reverse{{ end }}">
+            <!-- Left column with pattern background -->
+            <div class="md:!w-1/2 !mb-5 md:!mb-0">
+                <div class="h-full flex items-center">
+                    <div class="md:!px-12">
+                        {{- $inner | safeHTML -}}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right column for image -->
+            <div class="w-full md:w-1/2 px-4">
+                <div class="h-full flex items-start justify-center">
+                    {{- if $imagesrc -}}
+                    
+                        <img src="{{ $imagesrc }}" alt="" class="max-w-full h-auto rounded-lg">
+                    
+                    {{- end -}}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

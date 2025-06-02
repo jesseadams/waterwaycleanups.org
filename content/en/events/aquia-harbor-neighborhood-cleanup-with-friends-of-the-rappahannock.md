@@ -1,5 +1,7 @@
 ---
 title: Aquia Harbor Neighborhood Cleanup (with Friends of the Rappahannock)
+seo:
+  description: "Join FOR, Stafford County and the Green Aquia Initiative in helping cleanup the Aquia Harbor on April 26th! "
 image: /uploads/waterway-cleanups/waterways-3.png
 tags:
   - aquia-creek

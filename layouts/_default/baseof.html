@@ -8,11 +8,6 @@
 
     <link rel="canonical" href="{{ .Permalink }}" />
 
-    {{/* Trey -- Removing this reference to the favicon image in favor of the new approach
-    <link rel="shortcut icon" href="{{ .Site.Data.settings.favicon_image }}">
-    */}}
-
-    {{/* Trey -- Adding the favicon image for maximum support across devices */}}
     <link rel="icon" type="image/png" href="/uploads/branding/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/uploads/branding/favicon.svg" />
     <link rel="shortcut icon" href="/uploads/branding/favicon.ico" />
@@ -24,16 +19,24 @@
     {{- if .Params.color_name -}}{{- $color = .Params.color_name -}}{{- end -}}
     {{- if .Site.Data.settings.color_name -}}{{- $color = .Site.Data.settings.color_name -}}{{- end -}}
 
+    {{ if .Site.Data.settings.intersectionobserver }}
+    <link rel="stylesheet" href="/css/intersectionobserver.css">
+    {{ end }}
+
     {{ partial "head_custom.html" . }}
-
     <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
+    <link rel="stylesheet" href="/css/lightbox.css">
+    {{ if .Site.Data.settings.customcursor }}
+    <link rel="stylesheet" href="/css/customcursor.css">
+    {{ end }}
 
+    <link rel="stylesheet" href="/css/tailwind-output.css" /> 
+    
   </head>
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} filename_{{ with .File }}{{ .BaseFileName }}{{ end }}">
     <script>
       //* The mobile view width is set in the page as a data attribute
       document.body.setAttribute('data-mobile-width', '{{ (index .Site.Data .Language.Lang).header.mobile_view_width }}');
-      
       function updateSize() {
         var mobileWidth = parseInt(document.body.getAttribute('data-mobile-width')) || 768;
         if(window.innerWidth < mobileWidth) {
@@ -92,11 +95,6 @@
             <span class="itemcount">0</span>
           </a>
           {{- end -}}
-          <!--
-          <a href="/search">
-            <img src="/img/search.svg" alt="Search icon" class="black_2_textDark" />
-          </a>
-           -->
           {{- if gt (len .Site.Languages) 1 -}}
           <div class="navnav languages">
             <ul>
@@ -143,10 +141,10 @@
 
     {{- block "content" . -}}{{- end -}}
     
-    <div style="position: relative;padding-top:10%;overflow:visible;">
+    <div class="bobbing-parallax !relative !overflow-visible !pt-[10%]">
       {{ partial "bobbing_parallax.html" . }}
       
-      <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }}" style="position: relative; z-index: 1;">
+      <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }} relative z-1">
         <div>
           <div class="container">
             <div>
@@ -182,14 +180,8 @@
     {{ end }}
     <script type="text/javascript" src="/js/faq.js"></script>
     <script type="text/javascript" src="/js/lightbox.js"></script>
-    <link rel="stylesheet" href="/css/lightbox.css">
     {{ if .Site.Data.settings.customcursor }}
       <script type="text/javascript" src="/js/customcursor.js"></script>
-      <link rel="stylesheet" href="/css/customcursor.css">
-    {{ end }}
-    {{ if .Site.Data.settings.intersectionobserver }}
-      <script type="text/javascript" src="/js/intersectionobserver.js"></script>
-      <link rel="stylesheet" href="/css/intersectionobserver.css">
     {{ end }}
     {{- if (index .Site.Data .Language.Lang).webshop.show_cart_icon -}}
     <script type="text/javascript" src="/js/webshop.js"></script>
@@ -198,7 +190,6 @@
       populateCart();
     </script>
     {{- end -}}
-
     </div>
   </body>
 </html>

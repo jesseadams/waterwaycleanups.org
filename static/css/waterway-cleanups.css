@@ -8,21 +8,122 @@
 /* ===============================
    1. Base Typography & Spacing
    =============================== */
-   #hero .inner h1, #hero h2 {
+   #hero h1, #hero h2 {
       line-height: 1.1;
-      color: var(--white);
-      font-size: 3.5rem;
-  }
+      color: var(--pearl-bush-white);
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+   }
 
-  #hero .inner {
+   #hero .inner {
       width: 55%;
-  }
+   }
 
-  body p {
+   #hero .breadcrumbs {
+      text-align: left;
+   }
+
+   body, body p {
       font-size: 18px;
-  }
+      line-height: 1.4;
+   }
 
-  /* ===============================
+   h1, .h1 { 
+      font-size: clamp(2.2rem, 4vw, 2.5rem); 
+      color: var(--teal-blue);
+      line-height: 1.1;
+      font-weight: 700;
+      margin-bottom: 0;
+   }
+
+   h2, .h2 { 
+      font-size: clamp(1.9rem, 3.5vw, 2rem); 
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--teal-blue);
+      margin-bottom: 0;
+   }
+
+   h3, .h3 { 
+      font-size: clamp(1.3rem, 3vw, 1.45rem); 
+      font-family: var(--fontSubTitles);
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--teal-blue);
+      margin-bottom: 0;
+   }
+
+   h4, .h4 { 
+      font-size: clamp(1.2rem, 2.5vw, 1.5rem); 
+      line-height: 1.1;
+      margin-bottom: 0;
+   }
+
+   h5, .h5 { 
+      font-size: clamp(1.1rem, 2vw, 1.25rem); 
+      line-height: 1.1;
+      margin-bottom: 0;
+   }
+
+   h6, .h6 { 
+      font-size: clamp(1rem, 1.5vw, 1rem); 
+      line-height: 1.1;
+      margin-bottom: 0;
+   }
+
+   h1 + p, .h1 + p {
+      margin-top: 0;
+   }
+
+   h1 + p, .h1 + p,
+   h2 + p, .h2 + p,
+   h3 + p, .h3 + p,
+   h4 + p, .h4 + p,
+   h5 + p, .h5 + p,
+   h6 + p, .h6 + p {
+      margin-top: 15px;
+   }
+
+   h3 + h2,
+   h3 + .h2,
+   .h3 + .h2,
+   .h3 + h2 {
+      padding-top: 0;
+   }
+
+   .sub-heading {
+      margin-bottom: 10px;
+      line-height: 1.4
+   }
+
+   .h3 + h2 {
+      margin-top: 0;
+   }
+
+   .posts h2 {
+      color: var(--eden-green);
+   }
+
+   .posts .h3 {
+      margin-bottom: 15px;
+   }
+
+   ul {
+      list-style: disc;
+      margin-left: 40px;
+   }
+   
+   ol {
+      list-style: auto;
+      margin-left: 40px;
+   }
+
+   .bg-eden-green h1, 
+   .bg-eden-green .h1, 
+   .bg-eden-green p {
+      color: var(--pearl-bush-white);
+   }
+
+/* ===============================
    2. NAVIGATION   
    =============================== */
    header.dark {
@@ -45,61 +146,44 @@
       width: 160px;
    }
    
-   h1, .h1 {
-      color: var(--teal-blue);
-      margin-bottom: 1.25rem;
-   }
-
-   h1 + p, .h1 + p {
-      margin-top: 0;
-   }
-
-   h2, .h2 {
-      color: var(--teal-blue);
-   }
-
-   h3, .h3 {
-      font-family: var(--fontSubTitles);
-      font-size: 22px;
-      font-weight: 600;
-      color: var(--teal-blue);
-   }
-
-   .posts .h3 {
-      margin-bottom: 15px;
-   }
-
-   .h3 + h2 {
-      margin-top: 0;
-   }
-
-   .posts h2 {
-      color: var(--eden-green);
-   }
-
-   header.dark a.logo, body.transparent_header header:not(.sticky) a.logo, header.dark .navnav > ul > li > a, body.transparent_header header:not(.sticky) .navnav > ul > li > a {
+   header.dark a.logo, 
+   body.transparent_header header:not(.sticky) a.logo, 
+   header.dark .navnav > ul > li > a, body.transparent_header header:not(.sticky) .navnav > ul > li > a {
       font-size: 18px;
    }
 
    header > .container {
       padding-bottom: 1.45rem;
-  }
+   }
+
+   header.dark .navnav > ul > li > a {
+      color: var(--pearl-bush-white);
+   }
+
+   header.dark .navnav > ul > li::after, body.transparent_header header:not(.sticky) .navnav > ul > li::after {
+      background: var(--genoa-green);
+   }
 
 /* ===============================
    3. BUTTONS  
    =============================== */
-   .button:not(.secondary), button:not(.secondary) {
+   .button:not(.secondary), 
+   button:not(.secondary) {
       color: var(--teal-blue);
    }
 
    .bgimage .button, button {
       color: var(--teal-blue);
       font-size: 1.1rem;
-  }
+   }
 
    .button.secondary {
       color: var(--granny-smith-apple-green);
       background-color: var(--teal-blue);
+   }
+
+   .bg-eden-green .button {
+      color: var(--teal-blue);
    }
 
 /* ===============================
@@ -111,7 +195,8 @@
       text-align: center;
    }
 
-   .preheader, .preheader a {
+   .preheader, 
+   .preheader a {
       color: #b9e597;
    }
 
@@ -146,14 +231,14 @@
       }
    }
 
-   section .twocols > div {
+   section.two-columns-section .twocols > div {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
-  }
-
-  section.two-columns-section .container.twocols .image-gallery {
+   }
+   
+   section.two-columns-section .container.twocols .image-gallery {
          text-align: center;
          gap: 0.5rem;
          align-items: center;
@@ -164,44 +249,20 @@
          flex-wrap: wrap;
    }
 
-
    section.two-columns-section .container.twocols .image-gallery li {
       list-style: none;
       padding: 20px;
       max-width: 230px;
-  }
-
-  @media only screen and (max-width: 767px) {
-   section.two-columns-section .container.twocols .image-gallery li {
-      max-width: 33%;
    }
-}
 
 /* ===============================
    6. HERO
    =============================== */
-   #hero h1 {
-      font-size: 3.5rem;
-   }
-
    #hero p {
       color: var(--pearl-bush-white);
       font-size: 1.5rem;
       line-height: 1.3;
       font-weight: 300;
-   }
-
-   .wavey {
-      width: 40px;
-      margin-bottom: 15px;
-      /* filter: invert(16%) sepia(67%) saturate(1485%) hue-rotate(90deg) brightness(93%) contrast(22%); */
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-   }
-
-   .posts + .cta {
-      padding: 7rem 0 7rem 0;
    }
 
 /* ===============================
@@ -222,10 +283,13 @@
    .bobber {
       width: 140px;
       height: 140px;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
    }
 
 /* ===============================
-   8. POSTS
+   8. BRICKS - POSTS
    =============================== */
    .posts {
       background-color: var(--pearl-bush-white);
@@ -233,16 +297,29 @@
 
    #hero + .posts {
      margin-top: 0;
-   }
-
-   .filename__index #hero + .posts {
-      padding: 7rem 0 7rem 0;
+     padding: 7rem 0 7rem 0;
    }
 
    section.posts .filter select {
       background: var(--eden-green);
       color: var(--pearl-bush-white);
-  }
+   }
+
+   .posts + .cta {
+      padding: 7rem 0 7rem 0;
+   }
+
+   .wavey {
+      width: 40px;
+      margin-bottom: 15px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+   }
+
+   section.posts .filter {
+      margin: -2rem 0 2rem 0;
+   }
 
 /* ===============================
    9. FOOTER
@@ -255,7 +332,7 @@
 
    section.hasbackgroundcolor + footer {
       margin-top: 9.5rem;
-  }
+   }
 
    footer.dark {
       background-color: var(--teal-blue);
@@ -282,7 +359,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background:url(../uploads/waterways-cleanups/waves.png) repeat-x;
+      background:url(../uploads/waterway-cleanups/waves-border.png) repeat-x;
       height: 50px;
    }
 
@@ -296,13 +373,254 @@
 
    footer .container > div:first-child:last-child {
       color: rgba(255, 255, 255, 0.5);
-  }
+   }
 
    footer.dark > div:last-child a {
       color: var(--text-dark);
    }
-   
-/* ===============================
-   10. MEDIA QUERIES
+
+   /* ===============================
+   10. TAILWIND
    =============================== */
 
+   body section .absolute {
+      position: absolute;
+   }
+
+   section .twocols > div.justify-start, 
+   section .twocols > div.items-start > div {
+      justify-content: start;
+  }
+
+/* ===============================
+   11. BACKGROUNDS
+   =============================== */
+   .bg-eden-green {
+      background-color: var(--eden-green) !important;
+      --badge-color: var(--eden-green) !important;
+      --badge-bg: var(--eden-green) !important;
+   }
+
+   .bg-teal-blue {
+      background-color: var(--teal-blue) !important;
+      --badge-color: var(--teal-blue) !important;
+      --badge-bg: var(--teal-blue) !important;
+   }
+
+   .bg-genoa-green {
+      background-color: var(--genoa-green) !important;
+      --badge-color: var(--genoa-green) !important;
+      --badge-bg: var(--genoa-green) !important;
+   }
+
+   .bg-granny-smith-apple-green {
+      background-color: var(--granny-smith-apple-green) !important;
+      --badge-color: var(--granny-smith-apple-green) !important;
+      --badge-bg: var(--granny-smith-apple-green) !important;
+   }
+
+   .bg-pearl-bush-white {
+      background-color: var(--pearl-bush-white) !important;
+      --badge-color: var(--pearl-bush-white) !important;
+      --badge-bg: var(--pearl-bush-white) !important;
+   }
+
+   .bg-silver-tree-green { 
+      background-color: var(--silver-tree-green) !important;
+      --badge-color: var(--silver-tree-green) !important;
+      --badge-bg: var(--silver-tree-green) !important;
+   }
+
+/* ===============================
+   12. QUOTE
+   =============================== */
+   .quote-alt {
+      background-color: var(--eden-green);
+   }
+
+   .quote.quote-alt h3 {
+      color: var(--white);
+      line-height: 1.6;
+      font-weight: 200;
+   }
+   
+   .quote.quote-alt h3 {
+      padding-top: 0;
+   }
+
+   .quote.quote-alt .wavey {
+      width: 40px;
+      margin-bottom: 30px;
+   }
+
+   .quote.quote-alt section.bgimage .container {
+      padding-top: 8rem;
+      padding-bottom: 8rem;
+  }
+
+/* ===============================
+   13. BRICKS - IMAGE GALLERY
+   =============================== */
+   .twocols .image-gallery {
+      margin-top: 30px;
+   }
+
+/* ===============================
+   14. TABS
+   =============================== */
+   .tabs_container .tab * {
+      color: var(--textDarker);
+      font-size: 18px;
+   }
+
+   .tabs_container .tab {
+      display: block;
+      text-align: left;
+      user-select: initial;
+      webkit-user-select: initial;
+      -webkit-user-drag: initial;
+      -webkit-user-select: initial;
+      -webkit-user-drag: initial;
+      cursor: initial;
+      appearance: initial;
+   }
+
+/* ===============================
+   14. TEXT COLORS
+   =============================== */
+   .text-eden-green {
+      color: var(--eden-green) !important;
+      --badge-fg: var(--eden-green) !important;
+   }
+
+   .text-teal-blue {
+      color: var(--teal-blue) !important;
+      --badge-fg: var(--teal-blue) !important;
+   }
+
+   .text-genoa-green {
+      color: var(--genoa-green) !important;
+      --badge-fg: var(--genoa-green) !important;
+   }
+
+   .text-granny-smith-apple-green {
+      color: var(--granny-smith-apple-green) !important; 
+      --badge-fg: var(--granny-smith-apple-green) !important;
+   }
+
+   .text-silver-tree-green {
+      color: var(--silver-tree-green) !important;  
+      --badge-fg: var(--silver-tree-green) !important;
+   }
+
+   .text-pearl-bush-white {
+      color: var(--pearl-bush-white) !important;   
+      --badge-fg: var(--pearl-bush-white) !important;
+   }
+
+   .text-white {
+      color: var(--white) !important;  
+      --badge-fg: var(--white) !important;
+   }
+
+/* ===============================
+   15. BRICKS - BLOCKS
+   =============================== */
+   body .innerbody ul.blocks li {
+      aspect-ratio: unset;
+      padding: 3rem;
+   }
+   
+   body .innerbody ul.blocks li a {
+      padding: 0 !important;
+      position: relative;
+   }
+
+   body .innerbody ul.blocks li a.justify-start {
+      justify-content: flex-start;
+   }
+
+   body .innerbody ul.blocks li a.justify-normal {
+      justify-content: normal;
+   }
+
+   body .innerbody ul.blocks li.text-center {
+      text-align: center;
+   }
+
+   body .innerbody ul.blocks li.text-left {
+      text-align: left;
+   }
+   
+   body .innerbody section.blocks:has(+ .bobbing-parallax) {
+      padding-bottom: 0;
+   }
+  
+/* ===============================
+   16. BRICKS - BLOCKS - SMALL
+   =============================== */
+
+   body .innerbody section.small:has(+ .bobbing-parallax) {
+      padding-bottom: 0;
+   }
+
+/* ===============================
+   17. BADGES - DAISYUI
+   =============================== */
+   .custom-badge {
+      line-height: 1;
+   }
+
+/* ===============================
+   18. EVENTS
+   =============================== */
+   section.post .container .meta {
+      margin-top: 15px;
+   }
+
+/* ===============================
+   19. BREADCRUMBS
+   =============================== */
+   body .innerbody .breadcrumbs {
+      margin-top: 0;
+      margin-bottom: 15px;
+   }
+
+/* ===============================
+   999. MEDIA QUERIES
+   =============================== */
+@media only screen and (max-width: 991px) {
+   section.posts .filter {
+      justify-content: center;
+   }
+}
+
+@media only screen and (max-width: 767px) {
+   body:not(.transparent_header) header + section.bgimage .container {
+      padding-top: 12rem !important;
+      padding-bottom: 6rem;
+  }
+
+   #hero .inner {
+      width: 100%;
+   }
+
+   section.two-columns-section .container.twocols .image-gallery li {
+      max-width: 70%;
+      padding: 10px;
+   }
+
+   section.bgimage .container {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+   }
+
+   #hero + .posts {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+   }
+
+   section.posts .filter {
+      justify-content: center;
+   }
+}

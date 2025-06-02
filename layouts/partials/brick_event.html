@@ -10,12 +10,11 @@
             {{ end }}
             {{ if index page.Params.tags 0 }}
             <div>
-                <img src="/img/icons/material-symbols/200/rounded/label-fill.svg"class="black_2_textDark" alt="" />
-                <ul>
+                <div class="flex gap-2 justify-start flex-wrap">
                     {{ range page.Params.tags }}
-                    <li><a href="/blog/?tag={{ . }}">{{ . }}</a>
+                    <a href="/blog/?tag={{ . }}" class="!badge !badge-dash custom-badge bg-eden-green text-granny-smith-apple-green">{{ . }}</a>
                     {{ end }}
-                </ul>
+                </div>
             </div>
             {{ end }}
         </div>

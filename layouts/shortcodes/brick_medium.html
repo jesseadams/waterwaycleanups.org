@@ -1,0 +1,16 @@
+<!-- 
+{{/* 
+
+Usage:
+
+{{< brick_medium class="my-custom-class" >}}
+
+## Heading
+
+Experience the future of web development with Nextplate and Next. Build lightning-fast static sites with ease and flexibility.
+
+{{< /brick_medium >}}
+    
+*/}}
+-->
+{{- partial "brick_medium.html" (dict "inner" .Inner "class" (.Get "class")) -}} 

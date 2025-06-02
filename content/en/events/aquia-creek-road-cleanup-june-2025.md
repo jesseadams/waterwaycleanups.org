@@ -1,5 +1,7 @@
 ---
 title: Aquia Creek Road Cleanup - June 2025
+seo:
+  description: "Join us for a community cleanup day along Aquia Creek Road! Let's work together to protect our waterways and keep our community clean."
 image: /uploads/waterway-cleanups/waterways-1.png
 tags:
   - aquia-creek

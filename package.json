@@ -3,13 +3,18 @@
   "version": "1.0.0",
   "description": "Waterways Cleanup Project",
   "scripts": {
-    "dev": "hugo server",
-    "build": "hugo",
-    "build:react": "webpack --mode production",
-    "watch:react": "webpack --watch --mode development",
-    "start": "npm run build:react && npm run dev"
+    "dev": "concurrently \"hugo server\" \"npm run watch:assets\" \"npm run watch:css\"",
+    "build": "npm run build:css && npm run build:assets && hugo",
+    "build:assets": "webpack --mode production",
+    "build:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.css --minify",
+    "watch:assets": "webpack --watch --mode development",
+    "watch:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.css --watch",
+    "clean": "rm -f static/css/tailwind-output.css static/js/main-bundle.js",
+    "start": "npm run build && hugo server"
   },
   "dependencies": {
+    "@tailwindcss/cli": "^4.1.8",
+    "@tailwindcss/postcss": "^4.1.8",
     "lineicons-react": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -19,7 +24,16 @@
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
+    "autoprefixer": "^10.4.19",
     "babel-loader": "^10.0.0",
+    "concurrently": "^8.2.2",
+    "css-loader": "^6.10.0",
+    "daisyui": "^5.0.43",
+    "mini-css-extract-plugin": "^2.8.1",
+    "postcss": "^8.4.38",
+    "postcss-loader": "^8.1.1",
+    "style-loader": "^3.3.4",
+    "tailwindcss": "^4.1.8",
     "webpack": "^5.99.7",
     "webpack-cli": "^6.0.1"
   }

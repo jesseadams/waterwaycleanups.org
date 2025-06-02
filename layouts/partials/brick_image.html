@@ -1,0 +1,51 @@
+{{- $inner := .Inner -}}
+{{- if or (eq $inner "") (eq $inner nil) -}}
+    {{- $inner = "Empty brick found. Consider creating a 'content/bricks/image.md' file." -}}
+    {{- with page.Site.GetPage "bricks/image.md" -}}
+        {{- $inner = .RawContent -}}
+    {{- end -}}
+{{- end -}}
+
+{{ $inner = markdownify $inner }}
+{{ $image := index (findRE `(?s)<p><img.*?p>` $inner 1) 0 }}
+{{ $inner = replace $inner $image "" 1 }}
+
+{{- $textClass := "" -}}
+{{- $imageClass := "" -}}
+{{- $galleryDir := "" -}}
+{{- with .Params -}}
+    {{- $alignParam := index . "align" | default "" -}}
+    {{- if eq $alignParam "start" -}}
+        {{- $textClass = "items-start justify-start" -}}
+        {{- $imageClass = "items-start justify-start" -}}
+    {{- end -}}
+    {{- $galleryDir = index . "gallery_dir" | default "" -}}
+{{- end -}}
+
+<section class="image">
+    <div class="container twocols">
+        <div class="text {{ $textClass }}">
+            <div>{{ $inner | safeHTML }}</div>
+        </div>
+        <div class="image {{ $imageClass }}">
+            <div>{{- $image | safeHTML -}}</div>
+
+            {{- if ne $galleryDir "" -}}
+                <ul class="image-gallery mt-3 mb-3">
+                    {{ range (readDir (print "/static" $galleryDir)) }}
+                    {{- $image := resources.Get (printf "%s/%s" $galleryDir .Name) -}}
+                    {{- $imageurl := printf "%s/%s" $galleryDir .Name -}}
+                    {{- $imagetitle := index (split .Name ".") 0 -}}
+                    {{- if and $image (eq $image.ResourceType "image") -}}
+                    <li>
+                        <a href="{{ ($image.Fit "1600x1600 Center q50").Permalink }}">
+                        <img src="{{ ($image.Fill "300x300 Center q50").Permalink }}" alt="Image {{ $imagetitle }}" />
+                        </a>
+                    </li>
+                    {{- end -}}
+                    {{ end }}
+                </ul>
+            {{- end -}}
+        </div>
+    </div>
+</section>
