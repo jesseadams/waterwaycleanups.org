@@ -425,6 +425,10 @@
       --badge-bg: var(--pearl-bush-white) !important;
    }
 
+   section.title.bg-pearl-bush-white ul.breadcrumbs li a, section.title.bg-pearl-bush-white ul.breadcrumbs li:before {
+      color: var(--genoa-green);
+   }
+
    .bg-silver-tree-green { 
       background-color: var(--silver-tree-green) !important;
       --badge-color: var(--silver-tree-green) !important;

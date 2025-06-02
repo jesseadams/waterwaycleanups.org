@@ -1,1 +1,11 @@
-{{- partial "brick_two_columns.html" .Inner -}}
+{{- $text_align := "" -}}
+{{- if eq (.Get "text_align") "left" -}}
+  {{- $text_align = "!items-start" -}}
+{{- else if eq (.Get "text_align") "center" -}}
+  {{- $text_align = "!items-center" -}}
+{{- else if eq (.Get "text_align") "right" -}}
+  {{- $text_align = "!items-end" -}}
+{{- else -}}
+  {{- $text_align = .Get "text_align" | default "!items-start" -}}
+{{- end -}}
+{{- partial "brick_two_columns.html" (dict "inner" .Inner "class" (.Get "class") "text_align" $text_align) -}}

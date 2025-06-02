@@ -1,7 +1,7 @@
 ---
 title: Projects
 seo:
-  description: "Explore Waterway Cleanups’ projects and community engagement. Track volunteer impact, trash removed, and hours served to help restore and protect local Virginia waterways."
+  description: "Explore Waterway Cleanups' projects and community engagement. Track volunteer impact, trash removed, and hours served to help restore and protect local Virginia waterways."
 description: 
 dark_header: true
 dark_footer: true
@@ -94,7 +94,7 @@ Focused on <strong>Rappahannock River, Potomac River, and Aquia Creek</strong>, 
 {{< /brick_quote_alt >}}
 
 
-{{< brick_blocks text_align="text-left" vertical_align="justify-start" >}}
+{{< brick_blocks text_align="center" vertical_align="start" >}}
 
 {{< p class="h3 sub-heading text-genoa-green" >}}Measuring Our Impact{{< /p >}}
 
@@ -108,23 +108,17 @@ Waterway Cleanups will track key measurable results to demonstrate the success a
 
 As a brand-new nonprofit organization founded in 2025, we are focused on establishing our credibility and building strong community participation from the ground up. For our first summer series, we expect to engage a minimum of 5 volunteers per cleanup event, for a total of at least 20 volunteers across all events. We will also track volunteer hours, with a goal of a minimum of 60 hours contributed over the season.
 
-[](/services/)
-
 ---
 
 ### Trash Removal
 
 Each event will measure the number of bags of trash collected, with a goal of removing a minimum of 60 bags of litter and debris from our local waterways and surrounding environments. We will also estimate the weight of trash removed, aiming for a minimum of 1,200 pounds of material collected over the course of the project.
 
-[](/services/)
-
 ---
 
 ### Tracking Our Impact
 
 Volunteer participation numbers, hours contributed, bags collected, and pounds of debris removed will all be recorded using a standardized event tracking form. In addition, we will capture before and after photos at cleanup sites to visually demonstrate the environmental improvements achieved through the program.
-
-[](/services/)
 
 {{< /brick_blocks >}}
 

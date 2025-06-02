@@ -1,4 +1,6 @@
-{{- $inner := . -}}
+{{- $inner := .inner -}}
+{{- $class := .class | default "" -}}
+{{- $text_align := .text_align | default "" -}}
 {{- if or (eq $inner "") (eq $inner nil) -}}
     {{- $inner = "Empty brick found. Consider creating a 'content/bricks/brick_two_columns.md' file." -}}
     {{- with page.Site.GetPage "bricks/brick_two_columns.md" -}}
@@ -6,16 +8,16 @@
     {{- end -}}
 {{- end -}}
 {{- $parts := split $inner "---" -}}
-<section class="two-columns-section">
+<section class="two-columns-section {{ $class }}">
     <div class="container twocols">
-        <div class="text">
+        <div class="text {{ $text_align }}">
             {{- if gt (len $parts) 0 -}}
                 {{- markdownify (index $parts 0) -}}
             {{- else -}}
                 {{- markdownify $inner -}}
             {{- end -}}
         </div>
-        <div class="text">
+        <div class="text {{ $text_align }}">
             {{- if gt (len $parts) 1 -}}
                 {{- markdownify (index $parts 1) -}}
             {{- end -}}

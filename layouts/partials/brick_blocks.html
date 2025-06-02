@@ -1,6 +1,36 @@
 {{- $inner := .Inner -}}
-{{- $text_align := .text_align | default "text-left" -}}
-{{- $vertical_align := .vertical_align | default "justify-normal" -}}
+{{- $text_align_input := .text_align | default "left" -}}
+{{- $vertical_align_input := .vertical_align | default "center" -}}
+
+{{- $text_align := "" -}}
+{{- if eq $text_align_input "left" -}}
+    {{- $text_align = "!text-left" -}}
+{{- else if eq $text_align_input "center" -}}
+    {{- $text_align = "!text-center" -}}
+{{- else if eq $text_align_input "right" -}}
+    {{- $text_align = "!text-right" -}}
+{{- else -}}
+    {{- $text_align = "!text-left" -}}
+{{- end -}}
+
+{{- $vertical_align := "" -}}
+{{- if eq $vertical_align_input "start" -}}
+    {{- $vertical_align = "!justify-start" -}}
+{{- else if eq $vertical_align_input "center" -}}
+    {{- $vertical_align = "!justify-center" -}}
+{{- else if eq $vertical_align_input "end" -}}
+    {{- $vertical_align = "!justify-end" -}}
+{{- else if eq $vertical_align_input "between" -}}
+    {{- $vertical_align = "!justify-between" -}}
+{{- else if eq $vertical_align_input "around" -}}
+    {{- $vertical_align = "!justify-around" -}}
+{{- else if eq $vertical_align_input "evenly" -}}
+    {{- $vertical_align = "!justify-evenly" -}}
+{{- else -}}
+    {{- $vertical_align = "!justify-center" -}}
+{{- end -}}
+
+{{- $class := .class | default "" -}}
 {{- if or (eq $inner "") (eq $inner nil) -}}
     {{- $inner = "Empty brick found. Consider creating a 'content/bricks/blocks.md' file." -}}
     {{- with page.Site.GetPage "bricks/features.md" -}}
@@ -8,7 +38,7 @@
     {{- end -}}
 {{- end -}}
 {{- $parts := split $inner "---" -}}
-<section class="blocks">
+<section class="blocks {{ $class }}">
     <div class="container small {{ $text_align }}">
         {{- markdownify (index $parts 0) -}}
     </div>

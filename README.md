@@ -350,7 +350,7 @@ This brick offers a different layout for image and text content.
 
 #### Blocks (`brick_blocks`)
 ```markdown
-{{< brick_blocks text_align="text-left" vertical_align="justify-normal" >}}
+{{< brick_blocks text_align="left" vertical_align="center" >}}
 ## Block Heading
 
 Introduction text for the blocks section.
@@ -376,28 +376,28 @@ Block 3 description text.
 ```
 
 **Parameters:**
-- `text_align` (optional) - Text alignment (default: "text-left", options: "text-center", "text-right")
-- `vertical_align` (optional) - Vertical alignment (default: "justify-normal", options: "justify-start", "justify-end", "justify-center")
+- `text_align` (optional) - Text alignment (default: "left", options: "center", "right")
+- `vertical_align` (optional) - Vertical alignment (default: "center", options: "start", "end", "between", "around", "evenly")
 - Use `---` to separate each block
 - Each block can contain an image, heading, and description
 
 #### Size Variations
-The project includes different size variations for bricks to control content width:
+The project includes different size variations for bricks to control content width. All of these components accept a `class` parameter that allows you to add custom Tailwind CSS classes for styling and layout customization:
 
 **brick_small**
 ```markdown
-{{< brick_small class="custom-class" >}}
+{{< brick_small class="bg-gray-100 py-8 rounded-lg shadow-md" >}}
 ## Small Section
 Content for a small section with a narrow container width.
 {{< /brick_small >}}
 ```
 
 **Parameters:**
-- `class` (optional) - Additional CSS classes to apply to the section
+- `class` (optional) - Additional CSS classes to apply to the section, including any Tailwind utility classes
 
 **brick_medium**
 ```markdown
-{{< brick_medium class="!pb-5 sm:!pb-0 md:!pb-0 !pt-1 !px-5" >}}
+{{< brick_medium class="!pb-5 sm:!pb-0 md:!pb-0 !pt-1 !px-5 bg-green-50" >}}
 ## Medium Section
 Content for a medium section with a moderate container width.
 {{< /brick_medium >}}
@@ -406,10 +406,11 @@ Content for a medium section with a moderate container width.
 **Parameters:**
 - `class` (optional) - Additional CSS classes to apply to the section
 - You can use Tailwind utility classes with `!` prefix to override default styles
+- Example above adds responsive padding and a light green background
 
 **brick_large**
 ```markdown
-{{< brick_large class="bg-gray-100" >}}
+{{< brick_large class="bg-blue-50 border-t border-blue-200 my-12" >}}
 ## Large Section
 Content for a large section with a wide container width.
 {{< /brick_large >}}
@@ -417,6 +418,9 @@ Content for a large section with a wide container width.
 
 **Parameters:**
 - `class` (optional) - Additional CSS classes to apply to the section
+- Example above adds a light blue background, top border, and vertical margin
+
+**Note:** You can add any Tailwind CSS utility classes to customize the appearance of these brick components. This provides a powerful way to adjust spacing, colors, borders, and more without writing custom CSS.
 
 #### Gallery
 ```markdown
@@ -454,43 +458,184 @@ Content for a large section with a wide container width.
 - Separate badge labels with commas
 - Badges will be styled according to the site's design system
 
-### Creating New Pages
+## 🧱 Additional Bricks
 
-To create a new page:
+The Waterway Cleanups theme includes additional bricks beyond the basic ones mentioned above. Here's a comprehensive list of all available bricks and their parameters:
 
-1. Create a markdown file in the appropriate directory (e.g., `content/en/new-page.md`)
-2. Add the required front matter:
-   ```markdown
+### Quote Block (`brick_quote_alt`)
+```markdown
+{{< brick_quote_alt >}}
+"This is a testimonial quote from a volunteer or community member."
+
+**John Smith**  
+Community Volunteer
+
+![](/uploads/background-image.jpg)
+{{< /brick_quote_alt >}}
+```
+
+**Notes:**
+- Background image is optional - if included, it will be used as a background
+- The wavey graphic element is automatically added to the quote
+
+### Image Block (`brick_image`)
+```markdown
+{{< brick_image align="start" gallery_dir="/uploads/gallery-folder" >}}
+## Image Section Title
+Description text for the image section.
+
+![](/uploads/featured-image.jpg)
+{{< /brick_image >}}
+```
+
+**Parameters:**
+- `align` (optional) - Set to "start" to align content to the top (default is center)
+- `gallery_dir` (optional) - Path to a directory of images to display as a gallery below the main image
+
+### Blocks Grid (`brick_blocks`)
+```markdown
+{{< brick_blocks text_align="center" vertical_align="start" class="custom-class" >}}
+# Blocks Section Title
+Description text that appears above the blocks grid.
+
+---
+
+## Block 1 Title
+Block 1 description text.
+
+![](/uploads/block1-icon.png)
+
+[/link-url-for-block]
+
+---
+
+## Block 2 Title
+Block 2 description text.
+
+![](/uploads/block2-icon.png)
+
+[/link-url-for-block]
+{{< /brick_blocks >}}
+```
+
+**Parameters:**
+- `text_align` (optional) - Controls text alignment: "left", "center", or "right" (default: "left")
+- `vertical_align` (optional) - Controls vertical alignment: "start", "center", "end", "between", "around", or "evenly" (default: "center")
+- `class` (optional) - Additional CSS classes to apply to the section
+
+**Notes:**
+- Each block is separated by `---`
+- Include an image to display as an icon for the block
+- Include a link in the format `[/link-url]` to make the entire block clickable
+
+### Events Grid (`brick_events`)
+```markdown
+{{< brick_events >}}
+# Upcoming Cleanup Events
+Join us at one of our upcoming waterway cleanup events.
+{{< /brick_events >}}
+```
+
+**Notes:**
+- Automatically displays upcoming events from the `content/en/events/` directory
+- Events are filtered by date to show only future events
+- Events are sorted by start date
+- Includes built-in tag filtering
+
+### Small, Medium, and Large Content Blocks
+```markdown
+{{< brick_small >}}
+Content for a small width container.
+{{< /brick_small >}}
+
+{{< brick_medium >}}
+Content for a medium width container.
+{{< /brick_medium >}}
+
+{{< brick_large >}}
+Content for a large width container.
+{{< /brick_large >}}
+```
+
+### Parallax Image
+```markdown
+{{< parallax_image src="/uploads/image.jpg" alt="Description" height="500px" scale="1.2" overlay="true" bobbing="false" >}}
+# Optional Content
+Content to overlay on the parallax image
+{{< /parallax_image >}}
+```
+
+**Parameters:**
+- `src` (required) - Path to the image
+- `alt` (optional) - Alt text for the image (default: "Parallax image")
+- `height` (optional) - Height of the parallax section (default: "500px")
+- `scale` (optional) - Scale factor for the parallax effect (default: "1.2")
+- `overlay` (optional) - Adds a dark overlay to improve text readability
+- `bobbing` (optional) - Enables a gentle bobbing animation (default: "false")
+
+**Notes:**
+- Can include optional content to overlay on the parallax image
+
+### Date with Icon
+```markdown
+{{< date_with_icon date="January 15, 2024" >}}
+```
+
+**Parameters:**
+- `date` (required) - The date string to display with an icon
+
+### Volunteer Form
+```markdown
+{{< volunteerform >}}
+```
+
+**Notes:**
+- Embeds the volunteer registration form
+
+### Badges
+```markdown
+{{< badges items="Volunteer,Community,Conservation" >}}
+```
+
+**Parameters:**
+- `items` (required) - Comma-separated list of badge labels
+
+## 📝 Content Tips
+
+When creating new pages or editing existing content, keep these tips in mind:
+
+1. **Structured Markdown**: Use proper markdown heading hierarchy (# for main title, ## for sections, etc.)
+
+2. **Images**: All images should be placed in the `/static/uploads/` directory, organized in subfolders for better management
+
+3. **Shortcodes**: Utilize the available brick shortcodes to maintain consistent styling across the site
+
+4. **Front Matter**: Each content file should include the appropriate front matter:
+   ```yaml
    ---
    title: "Page Title"
-   seo:
-     description: "SEO description for the page"
-   dark_header: true
-   dark_footer: false
+   date: 2023-10-15
+   draft: false
+   tags: ["tag1", "tag2"]
+   image: "/uploads/feature-image.jpg"
    ---
    ```
-3. Add content using brick shortcodes as described above
 
-### Creating New Events
-
-To create a new event:
-
-1. Create a markdown file in `content/en/events/` (e.g., `content/en/events/creek-cleanup-june-2023.md`)
-2. Add the required front matter:
-   ```markdown
+5. **Events**: When creating event pages, include the following front matter:
+   ```yaml
    ---
-   title: "Creek Cleanup - June 2023"
-   date: 2023-06-15T09:00:00-05:00
-   end_date: 2023-06-15T12:00:00-05:00
-   location: "Aquia Creek, Stafford, VA"
-   image: "/uploads/events/creek-cleanup.jpg"
-   event_leader: "Jane Smith"
-   contact_email: "jane@example.com"
-   registration_link: "https://example.com/register"
-   tags: ["river", "community"]
+   title: "Event Title"
+   date: 2023-10-15
+   draft: false
+   tags: ["location", "event-type"]
+   image: "/uploads/event-image.jpg"
+   start_time: "2023-10-15T09:00:00-07:00"
+   end_time: "2023-10-15T12:00:00-07:00"
+   location: "Beach Name, City, State"
    ---
    ```
-3. Add the event description and details using bricks
+
+6. **Brick Composition**: Combine multiple bricks to create engaging, visually appealing pages
 
 ## 🚢 Deployment
 
@@ -510,11 +655,13 @@ The built site will be in the `public/` directory, ready for deployment to any s
 
 ### Tailwind CSS
 
-This project uses Tailwind CSS for styling. You can customize the design by:
+This project uses [Tailwind CSS](https://tailwindcss.com/docs) for styling. You can customize the design by:
 
 1. Editing the `tailwind.config.js` file to modify colors, fonts, and other design tokens
 2. Adding custom CSS in the `static/css/src/` directory
 3. Rebuilding CSS with `npm run build:css`
+
+For more information on Tailwind CSS utility classes and configuration options, refer to the [official Tailwind CSS documentation](https://tailwindcss.com/docs).
 
 ### Hugo Configuration
 

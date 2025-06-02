@@ -4,7 +4,7 @@
   "description": "Waterways Cleanup Project",
   "scripts": {
     "dev": "concurrently \"hugo server\" \"npm run watch:assets\" \"npm run watch:css\"",
-    "build": "npm run build:css && npm run build:assets && hugo",
+    "build": "npm run build:css && npm run build:assets && hugo --minify",
     "build:assets": "webpack --mode production",
     "build:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.css --minify",
     "watch:assets": "webpack --watch --mode development",

@@ -37,7 +37,10 @@ temp/
 .npm
 
 # eslint cache
-.eslintcache
+.eslintcache 
+
+.terraform*
+lambda.zip
 
 # tailwindcss
 static/css/tailwind-output.css

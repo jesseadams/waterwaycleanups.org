@@ -33,7 +33,7 @@
     <link rel="stylesheet" href="/css/tailwind-output.css" /> 
     
   </head>
-  <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} filename_{{ with .File }}{{ .BaseFileName }}{{ end }}">
+  <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">
     <script>
       //* The mobile view width is set in the page as a data attribute
       document.body.setAttribute('data-mobile-width', '{{ (index .Site.Data .Language.Lang).header.mobile_view_width }}');
@@ -61,7 +61,7 @@
           {{- end -}}
         </div>
         <div>
-          {{- if (index .Site.Data .Language.Lang).header.preheader -}}{{ (index .Site.Data .Language.Lang).header.preheader }}{{- end -}}
+          {{- partial "next_event_preheader.html" . -}}
         </div>
       </div>  
     </div>
