@@ -1,26 +1,81 @@
-[![](/hugobricks.jpg)](https://vimeo.com/862118474)
+# Waterway Cleanups
 
-# What is Hugobricks?
+A modern, responsive website for organizing and promoting waterway cleanup events built with Hugo, Tailwind CSS, and React components using the Hugobricks theme.
 
-[View DEMO website](https://www.hugobricks.preview.usecue.com/)
+## 📋 Project Overview
 
-Hugobricks is a free website theme for Hugo. It makes building Hugo websites child's play due to its stackable (LEGO-like) content bricks. Stack an intro brick on top of some image bricks and a pricing table and build a complete website in seconds!
+This project provides a complete solution for environmental organizations to:
+- Showcase upcoming cleanup events
+- Allow volunteers to register
+- Share success stories and impact metrics
+- Educate visitors about waterway conservation
 
-In the past you may have chosen a Wordpress theme and adjusted the images, colors and fonts to the needs of your client. In combination with tools like Gutenberg blocks and page builders like Elementor there was little that could compete with the development speed and flexibility that Wordpress offered. With Hugobricks we bring these advantages to the Jamstack eco-system. If you choose for the Hugobricks theme you get not just a head start, tremendous flexibility and lots of ready to use and reusable components, but also a lightning fast and unbreakable architecture. What are you waiting for? The future is here!
-
-## Quick Start Guide
+## 🚀 Quick Start Guide
 
 ### Prerequisites
 - [Hugo](https://gohugo.io/installation/) (Extended version recommended)
-- [Node.js](https://nodejs.org/) (for React components)
+- [Node.js](https://nodejs.org/) (v18+ for React components)
 - [npm](https://www.npmjs.com/) (comes with Node.js)
+
+#### Installing Hugo
+
+##### On macOS:
+```bash
+brew install hugo
+```
+
+##### On Windows:
+```bash
+choco install hugo-extended
+```
+
+##### On Linux:
+```bash
+# Debian/Ubuntu
+sudo apt install hugo
+
+# Snap
+sudo snap install hugo
+```
+
+Verify installation:
+```bash
+hugo version
+```
+
+#### Installing Node.js and npm
+
+##### On macOS:
+```bash
+brew install node
+```
+
+##### On Windows:
+Download and install from [Node.js website](https://nodejs.org/)
+
+##### On Linux:
+```bash
+# Debian/Ubuntu
+sudo apt install nodejs npm
+
+# Using NVM (recommended)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+nvm install --lts
+```
+
+Verify installation:
+```bash
+node --version
+npm --version
+```
 
 ### Installation
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/waterways-cleanup.git
-   cd waterways-cleanup
+   mkdir waterwaycleanups.org
+   cd waterwaycleanups.org
+   git clone https://github.com/jesseadams/waterwaycleanups.org.git .
    ```
 
 2. Install dependencies:
@@ -30,9 +85,57 @@ In the past you may have chosen a Wordpress theme and adjusted the images, color
 
 3. Start the development server:
    ```bash
-   hugo server
+   npm run start
    ```
-   This will launch the website at http://localhost:1313/
+   This will build the assets and launch the website at http://localhost:1313/
+
+## 🧩 Project Structure
+
+- `content/en/` - Main content files organized by language
+  - `_index.md` - Homepage content
+  - `events.md` - Events listing page
+  - `events/` - Individual event listings for cleanups
+  - `contact.md` - Contact page
+  - `projects.md` - Projects information page
+  - `404.md` - Custom 404 error page
+  - `bricks/` - Reusable brick content components
+    - `cta.md` - Call to action component
+    - `title.md` - Title component
+    - `reviews.md` - Reviews component
+- `layouts/` - Custom layout templates
+  - `shortcodes/` - Brick shortcodes specific to this project
+- `static/` - Static assets (images, CSS, JS)
+  - `js/react-components/` - React component source files
+  - `css/src/` - Tailwind CSS source files
+- `themes/` - Contains the Hugobricks theme
+- `data/` - Configuration data files
+- `i18n/` - Internationalization files
+
+## ⚙️ Development Workflow
+
+### Available Scripts
+
+- `npm run dev` - Start the Hugo development server with asset watching
+- `npm run build` - Build the Hugo site for production
+- `npm run build:assets` - Build frontend assets with Webpack
+- `npm run watch:assets` - Watch and rebuild frontend assets during development
+- `npm run build:css` - Build and minify Tailwind CSS
+- `npm run watch:css` - Watch and rebuild Tailwind CSS during development
+- `npm run start` - Build assets and start Hugo server
+- `npm run clean` - Clean generated assets
+
+### Recommended Development Workflow
+
+For the most efficient development experience that watches all file changes (content, layouts, CSS, JavaScript, and React components):
+
+```bash
+npm run dev
+```
+
+This single command will:
+- Start the Hugo development server with live reload
+- Watch and rebuild frontend assets when changed
+- Update the browser automatically when any files are modified
 
 ### Working with React Components
 
@@ -42,216 +145,536 @@ This project includes React components for interactive elements like the paralla
 
 2. Build the React components:
    ```bash
-   npm run build
+   npm run build:assets
    ```
    This runs webpack to bundle the React components into JS files that Hugo can use
 
 3. For automatic rebuilding during development:
    ```bash
-   npm run watch
+   npm run watch:assets
    ```
    This will rebuild components whenever you save changes
 
-### Creating Content with Bricks
+## 📄 Content Pages
 
-Content in Hugobricks is created using "bricks" - reusable content components. To create a new page:
+The site consists of the following main pages:
 
-1. Create a markdown file in the `content/` directory
-2. Use brick shortcodes in your content:
+### Homepage (`content/en/_index.md`)
+The main landing page featuring:
+- Hero section with call-to-action
+- Upcoming events listing
+- Sponsors and partners gallery
+- Call-to-action for donations
 
+### Events Page (`content/en/events.md`)
+A comprehensive listing of all cleanup events with:
+- Filtering options
+- Event details
+- Registration links
+
+### Individual Event Pages (`content/en/events/[event-name].md`)
+Detailed pages for each cleanup event including:
+- Event date and time
+- Location information
+- Equipment needed
+- Registration details
+- Event leader contact information
+
+### Contact Page (`content/en/contact.md`)
+Contact form and organization information including:
+- Email contact form
+- Physical address
+- Social media links
+
+### Projects Page (`content/en/projects.md`)
+Showcase of completed and ongoing cleanup projects with:
+- Project descriptions
+- Impact metrics
+- Photo galleries
+- Testimonials
+
+### 404 Page (`content/en/404.md`)
+Custom error page to help users navigate when they reach a non-existent page.
+
+## 🧱 Content Creation with Bricks
+
+Content in this project is created using "bricks" - reusable content components. To create a new page:
+
+1. Create a markdown file in the `content/en/` directory
+2. Use brick shortcodes in your content as shown below
+
+### Available Bricks
+
+The project includes various brick types that can be used in your content:
+
+#### Hero Section (`brick_hero`)
 ```markdown
----
-title: Page title
----
-{{< brick_title >}}
+{{< brick_hero >}}
+# Join Our Mission
+Help us keep our waterways clean
 
-# Title 1
-Your first paragraph with some lorem ipsum dolor sit amet.
+![](/uploads/waterway-cleanups/hero.jpg)
 
-{{< /brick_title >}}
-
-{{< brick_parallax_image src="/uploads/waterway-cleanups/waterways-3.png" alt="Waterway Cleanup" >}}
-## Join Our Next Cleanup
-Sign up today to make a difference
-{{< /brick_parallax_image >}}
-
-{{< brick_cta >}}
-{{< /brick_cta >}}
+{{< button "Join a Cleanup" "/events" >}}
+{{< /brick_hero >}}
 ```
 
-3. See the [Bricks Documentation](https://www.hugobricks.preview.usecue.com/docs/bricks/) for a complete list of available bricks and their options
+**Notes:**
+- The hero image is included as a Markdown image within the content
+- The hero section will automatically create a parallax effect with the image
+- Text content can include headings, paragraphs, and buttons
 
-## What's included in Hugobricks?
+#### Hero Two Columns with Background (`brick_hero_two_col_bg`)
+```markdown
+{{< brick_hero_two_col_bg reverse="true" >}}
+# Section Title
+Content text goes here with a call to action.
 
-Hugobricks is a comprehensive starter theme that includes everything you need to get started with your Hugo project.
+{{< button "Button Text" "/link" >}}
 
-- 10+ Pre-build pages
-- 99+ Google Pagespeed Score
-- Built with Hugo and CSS variables for easy styling
-- Fully responsive on all devices
-- SEO-optimized for better search engine rankings
-- React components for interactive elements
-- Automated build tools with webpack
+![](/uploads/image.jpg)
+{{< /brick_hero_two_col_bg >}}
+```
 
-## Available Bricks
+**Parameters:**
+- `reverse` (optional) - When set to "true", reverses the column order (default: false)
+- The image is included as a Markdown image within the content
 
-The following bricks are available for use in the content:
+#### Two-Column Layout (`brick_two_columns`)
+```markdown
+{{< brick_two_columns >}}
+## Left Column
+Content for the left column goes here.
+---
+## Right Column
+Content for the right column goes here.
+{{< /brick_two_columns >}}
+```
 
-- Title (`brick_title`) - Section headings with various layouts
-- Text (`brick_text`) - Text content with customizable columns
-- Images (`brick_images`) - Image galleries and grid layouts
-- Parallax Images (`brick_parallax_image`) - Scrolling parallax effect images
-- Hero Sections (`brick_hero`) - Large header sections with background images
-- Call to Action (`brick_cta`) - CTA buttons and sections
-- Events (`brick_events`) - Event listings with filtering
-- Maps (`brick_map`) - Interactive maps
-- Forms (`brick_form`) - Contact and submission forms
-- Pricing (`brick_pricing`) - Pricing tables
-- Testimonials (`brick_testimonials`) - Customer reviews and quotes
+**Notes:**
+- Use the `---` separator to split content between left and right columns
+- Each column can contain any markdown content including headings, text, and images
 
-For full documentation and examples of each brick, see the [Brick Documentation](https://www.hugobricks.preview.usecue.com/docs/bricks/).
+#### Events Listing (`brick_events`)
+```markdown
+{{< brick_events >}}
+<p class="h3">Upcoming Events</p>
+## Join Us at These Cleanups
+Every volunteer makes a difference in our community.
+{{< /brick_events >}}
+```
 
-## Deployment
+**Notes:**
+- This brick automatically displays upcoming events from the `content/en/events/` directory
+- Events are sorted by date
+- The content inside the brick is displayed above the event listings
+
+#### Parallax Image (`parallax_image`)
+```markdown
+{{< parallax_image src="/uploads/waterway-cleanups/parallax.jpg" height="400px" scale="1.2" overlay="true" bobbing="false" >}}
+# Scrolling Text Over Image
+This text will scroll with a parallax effect
+{{< /parallax_image >}}
+```
+
+**Parameters:**
+- `src` (required) - Image path
+- `alt` (optional) - Alt text for the image (default: "Parallax image")
+- `height` (optional) - Height of the parallax section (default: "500px")
+- `scale` (optional) - Scale factor for the parallax effect (default: "1.2")
+- `overlay` (optional) - Whether to add a dark overlay (default: false)
+- `bobbing` (optional) - Enable slight up/down animation (default: false)
+
+#### Date with Icon (`date_with_icon`)
+```markdown
+Event Date: {{< date_with_icon date="2023-06-15" class="text-primary" >}}
+```
+
+**Parameters:**
+- `date` (required) - Date in YYYY-MM-DD format
+- `class` (optional) - Additional CSS classes to apply
+
+#### Call to Action (`brick_cta`)
+```markdown
+{{< brick_cta >}}{{< /brick_cta >}}
+```
+
+**Notes:**
+- This brick pulls content from `content/en/bricks/cta.md`
+- You don't need to add content inside the shortcode
+
+#### Image (`brick_image`)
+```markdown
+{{< brick_image align="start" gallery_dir="/uploads/gallery/" >}}
+## Section With Image
+Content to appear alongside the image.
+
+![](/uploads/waterway-cleanups/image.jpg)
+
+This brick can include both text and an image in a flexible layout.
+{{< /brick_image >}}
+```
+
+**Parameters:**
+- `align` (optional) - Image alignment (default: none, options: "start")
+- `gallery_dir` (optional) - Directory containing gallery images to display below the main image
+- The main image is included as a Markdown image within the content
+
+#### Image Alt Layout (`brick_image2`)
+```markdown
+{{< brick_image2 align="start" >}}
+## Section With Alternative Image Layout
+Content to appear alongside the image.
+
+![](/uploads/waterway-cleanups/image.jpg)
+
+This brick offers a different layout for image and text content.
+{{< /brick_image2 >}}
+```
+
+**Parameters:**
+- `align` (optional) - Image alignment (default: none, options: "start")
+- The main image is included as a Markdown image within the content
+
+#### Quote (`brick_quote_alt`)
+```markdown
+{{< brick_quote_alt >}}
+"This is a testimonial or important quote from a volunteer or partner."
+— John Doe, Volunteer
+{{< /brick_quote_alt >}}
+```
+
+**Notes:**
+- Format the quote with the quotation marks and attribution as shown
+- The brick will apply appropriate styling to the quote
+
+#### Blocks (`brick_blocks`)
+```markdown
+{{< brick_blocks text_align="left" vertical_align="center" >}}
+## Block Heading
+
+Introduction text for the blocks section.
+
+---
+
+![](/uploads/gallery/01.jpg)
+### Block 1 Title
+Block 1 description text.
+
+---
+
+![](/uploads/gallery/02.jpg)
+### Block 2 Title
+Block 2 description text.
+
+---
+
+![](/uploads/gallery/03.jpg)
+### Block 3 Title
+Block 3 description text.
+{{< /brick_blocks >}}
+```
+
+**Parameters:**
+- `text_align` (optional) - Text alignment (default: "left", options: "center", "right")
+- `vertical_align` (optional) - Vertical alignment (default: "center", options: "start", "end", "between", "around", "evenly")
+- Use `---` to separate each block
+- Each block can contain an image, heading, and description
+
+#### Size Variations
+The project includes different size variations for bricks to control content width. All of these components accept a `class` parameter that allows you to add custom Tailwind CSS classes for styling and layout customization:
+
+**brick_small**
+```markdown
+{{< brick_small class="bg-gray-100 py-8 rounded-lg shadow-md" >}}
+## Small Section
+Content for a small section with a narrow container width.
+{{< /brick_small >}}
+```
+
+**Parameters:**
+- `class` (optional) - Additional CSS classes to apply to the section, including any Tailwind utility classes
+
+**brick_medium**
+```markdown
+{{< brick_medium class="!pb-5 sm:!pb-0 md:!pb-0 !pt-1 !px-5 bg-green-50" >}}
+## Medium Section
+Content for a medium section with a moderate container width.
+{{< /brick_medium >}}
+```
+
+**Parameters:**
+- `class` (optional) - Additional CSS classes to apply to the section
+- You can use Tailwind utility classes with `!` prefix to override default styles
+- Example above adds responsive padding and a light green background
+
+**brick_large**
+```markdown
+{{< brick_large class="bg-blue-50 border-t border-blue-200 my-12" >}}
+## Large Section
+Content for a large section with a wide container width.
+{{< /brick_large >}}
+```
+
+**Parameters:**
+- `class` (optional) - Additional CSS classes to apply to the section
+- Example above adds a light blue background, top border, and vertical margin
+
+**Note:** You can add any Tailwind CSS utility classes to customize the appearance of these brick components. This provides a powerful way to adjust spacing, colors, borders, and more without writing custom CSS.
+
+#### Gallery
+```markdown
+{{< gallery dir="/uploads/gallery-folder/" >}}
+```
+
+**Parameters:**
+- `dir` (required) - Directory containing images
+- This automatically creates a gallery from all images in the specified directory
+
+#### Button
+```markdown
+{{< button "Text" "/link" >}}
+```
+
+**Parameters:**
+- First parameter (required) - Button text
+- Second parameter (required) - Button URL/link
+
+#### Button2 (Alternative Style)
+```markdown
+{{< button2 "Text" "/link" >}}
+```
+
+**Parameters:**
+- First parameter (required) - Button text
+- Second parameter (required) - Button URL/link
+
+#### Badges
+```markdown
+{{< badges "Badge 1, Badge 2, Badge 3" >}}
+```
+
+**Notes:**
+- Separate badge labels with commas
+- Badges will be styled according to the site's design system
+
+## 🧱 Additional Bricks
+
+The Waterway Cleanups theme includes additional bricks beyond the basic ones mentioned above. Here's a comprehensive list of all available bricks and their parameters:
+
+### Quote Block (`brick_quote_alt`)
+```markdown
+{{< brick_quote_alt >}}
+"This is a testimonial quote from a volunteer or community member."
+
+**John Smith**  
+Community Volunteer
+
+![](/uploads/background-image.jpg)
+{{< /brick_quote_alt >}}
+```
+
+**Notes:**
+- Background image is optional - if included, it will be used as a background
+- The wavey graphic element is automatically added to the quote
+
+### Image Block (`brick_image`)
+```markdown
+{{< brick_image align="start" gallery_dir="/uploads/gallery-folder" >}}
+## Image Section Title
+Description text for the image section.
+
+![](/uploads/featured-image.jpg)
+{{< /brick_image >}}
+```
+
+**Parameters:**
+- `align` (optional) - Set to "start" to align content to the top (default is center)
+- `gallery_dir` (optional) - Path to a directory of images to display as a gallery below the main image
+
+### Blocks Grid (`brick_blocks`)
+```markdown
+{{< brick_blocks text_align="center" vertical_align="start" class="custom-class" >}}
+# Blocks Section Title
+Description text that appears above the blocks grid.
+
+---
+
+## Block 1 Title
+Block 1 description text.
+
+![](/uploads/block1-icon.png)
+
+[/link-url-for-block]
+
+---
+
+## Block 2 Title
+Block 2 description text.
+
+![](/uploads/block2-icon.png)
+
+[/link-url-for-block]
+{{< /brick_blocks >}}
+```
+
+**Parameters:**
+- `text_align` (optional) - Controls text alignment: "left", "center", or "right" (default: "left")
+- `vertical_align` (optional) - Controls vertical alignment: "start", "center", "end", "between", "around", or "evenly" (default: "center")
+- `class` (optional) - Additional CSS classes to apply to the section
+
+**Notes:**
+- Each block is separated by `---`
+- Include an image to display as an icon for the block
+- Include a link in the format `[/link-url]` to make the entire block clickable
+
+### Events Grid (`brick_events`)
+```markdown
+{{< brick_events >}}
+# Upcoming Cleanup Events
+Join us at one of our upcoming waterway cleanup events.
+{{< /brick_events >}}
+```
+
+**Notes:**
+- Automatically displays upcoming events from the `content/en/events/` directory
+- Events are filtered by date to show only future events
+- Events are sorted by start date
+- Includes built-in tag filtering
+
+### Small, Medium, and Large Content Blocks
+```markdown
+{{< brick_small >}}
+Content for a small width container.
+{{< /brick_small >}}
+
+{{< brick_medium >}}
+Content for a medium width container.
+{{< /brick_medium >}}
+
+{{< brick_large >}}
+Content for a large width container.
+{{< /brick_large >}}
+```
+
+### Parallax Image
+```markdown
+{{< parallax_image src="/uploads/image.jpg" alt="Description" height="500px" scale="1.2" overlay="true" bobbing="false" >}}
+# Optional Content
+Content to overlay on the parallax image
+{{< /parallax_image >}}
+```
+
+**Parameters:**
+- `src` (required) - Path to the image
+- `alt` (optional) - Alt text for the image (default: "Parallax image")
+- `height` (optional) - Height of the parallax section (default: "500px")
+- `scale` (optional) - Scale factor for the parallax effect (default: "1.2")
+- `overlay` (optional) - Adds a dark overlay to improve text readability
+- `bobbing` (optional) - Enables a gentle bobbing animation (default: "false")
+
+**Notes:**
+- Can include optional content to overlay on the parallax image
+
+### Date with Icon
+```markdown
+{{< date_with_icon date="January 15, 2024" >}}
+```
+
+**Parameters:**
+- `date` (required) - The date string to display with an icon
+
+### Volunteer Form
+```markdown
+{{< volunteerform >}}
+```
+
+**Notes:**
+- Embeds the volunteer registration form
+
+### Badges
+```markdown
+{{< badges items="Volunteer,Community,Conservation" >}}
+```
+
+**Parameters:**
+- `items` (required) - Comma-separated list of badge labels
+
+## 📝 Content Tips
+
+When creating new pages or editing existing content, keep these tips in mind:
+
+1. **Structured Markdown**: Use proper markdown heading hierarchy (# for main title, ## for sections, etc.)
+
+2. **Images**: All images should be placed in the `/static/uploads/` directory, organized in subfolders for better management
+
+3. **Shortcodes**: Utilize the available brick shortcodes to maintain consistent styling across the site
+
+4. **Front Matter**: Each content file should include the appropriate front matter:
+   ```yaml
+   ---
+   title: "Page Title"
+   date: 2023-10-15
+   draft: false
+   tags: ["tag1", "tag2"]
+   image: "/uploads/feature-image.jpg"
+   ---
+   ```
+
+5. **Events**: When creating event pages, include the following front matter:
+   ```yaml
+   ---
+   title: "Event Title"
+   date: 2023-10-15
+   draft: false
+   tags: ["location", "event-type"]
+   image: "/uploads/event-image.jpg"
+   start_time: "2023-10-15T09:00:00-07:00"
+   end_time: "2023-10-15T12:00:00-07:00"
+   location: "Beach Name, City, State"
+   ---
+   ```
+
+6. **Brick Composition**: Combine multiple bricks to create engaging, visually appealing pages
+
+## 🚢 Deployment
 
 To build the site for production:
 
 ```bash
-npm run build   # Build React components
-hugo            # Build the Hugo site
+npm run build
 ```
 
-The built site will be in the `public/` directory, ready for deployment to any static hosting service.
+The built site will be in the `public/` directory, ready for deployment to any static hosting service like:
+- Netlify
+- Vercel
+- GitHub Pages
+- AWS S3 + CloudFront
 
-## Working with Layouts
+## 🎨 Customization
 
-Hugo uses a template inheritance system where layouts define the structure of your pages. Understanding how to work with layouts is crucial for customizing your site beyond the brick system.
+### Tailwind CSS
 
-### Layout Directory Structure
+This project uses [Tailwind CSS](https://tailwindcss.com/docs) for styling. You can customize the design by:
 
-The Hugobricks theme layouts are organized as follows:
+1. Editing the `tailwind.config.js` file to modify colors, fonts, and other design tokens
+2. Adding custom CSS in the `static/css/src/` directory
+3. Rebuilding CSS with `npm run build:css`
 
-- `themes/hugobricks/layouts/` - Base theme layouts
-  - `_default/` - Default templates for list and single pages
-  - `partials/` - Reusable template parts included in other templates
-  - `shortcodes/` - Brick shortcode definitions
-  - Other folders for specific content types (posts, products, etc.)
+For more information on Tailwind CSS utility classes and configuration options, refer to the [official Tailwind CSS documentation](https://tailwindcss.com/docs).
 
-### How to Override Theme Layouts
+### Hugo Configuration
 
-To customize layouts from the Hugobricks theme:
+The main Hugo configuration is in `config.yaml`. You can modify:
+- Site title and description
+- Menu items
+- Social media links
+- Other site-wide settings
 
-1. **Create matching files in your site's layouts directory**
+## 📝 License and Credits
 
-   Hugo follows the "most specific wins" rule. Files in your project's `layouts/` directory take precedence over theme layouts.
+This project is based on the Hugobricks theme, which is inspired by the many [Gutenberg Block Plugins](https://wpastra.com/plugins/wordpress-gutenberg-block-plugins/) available online and https://bricksbuilder.io/. The design is based on the MIT licensed [Hugoplate from Zeon Studio](https://github.com/zeon-studio/hugoplate.git). 
 
-   ```bash
-   # Example: Override the default single page template
-   mkdir -p layouts/_default
-   cp themes/hugobricks/layouts/_default/single.html layouts/_default/
-   ```
+The Hugobricks theme is available on GitHub at [jhvanderschee/hugobricks](https://github.com/jhvanderschee/hugobricks).
 
-2. **Modify the copied file** to implement your customizations
-
-3. **For partial overrides**, copy only the specific partial files you need to modify:
-
-   ```bash
-   # Example: Override just the header partial
-   mkdir -p layouts/partials
-   cp themes/hugobricks/layouts/partials/header.html layouts/partials/
-   ```
-
-### Extending Theme Layouts
-
-Instead of completely overriding a layout, you can extend it:
-
-1. **Create a new layout file** in your site's `layouts/` directory
-
-2. **Use the `partial` function** to include parts from the original theme:
-
-   ```html
-   <!-- Example: layouts/_default/single.html -->
-   {{ define "main" }}
-     <!-- Your custom content -->
-     <div class="custom-container">
-       {{ .Content }}
-     </div>
-     
-     <!-- Include a partial from the theme -->
-     {{ partial "related-posts.html" . }}
-   {{ end }}
-   ```
-
-3. **Use block definitions** to extend base templates:
-
-   ```html
-   <!-- Extend a base template but override specific blocks -->
-   {{ define "main" }}
-     <!-- This replaces the "main" block in the parent template -->
-     <h1>Custom Header</h1>
-     {{ .Content }}
-   {{ end }}
-   ```
-
-### Creating New Layout Types
-
-To create completely new layout types:
-
-1. **Create new template files** in the appropriate directory:
-
-   ```bash
-   # For a new content type "projects"
-   mkdir -p layouts/projects
-   touch layouts/projects/single.html
-   touch layouts/projects/list.html
-   ```
-
-2. **Use front matter** in your content files to specify which layout to use:
-
-   ```yaml
-   ---
-   title: My Project
-   layout: projects/single
-   ---
-   ```
-
-## Hugobricks workflow
-
-Hugobricks aims to enhance the Hugo web framework by providing a variety of pre-made bricks for straightforward website-building. Our companion project, [hugocodex](https://hugocodex.org), guides beginners in starting a Hugo project from scratch. For those who already have experience with Hugo and want to use it for rapid prototyping and iterating, Hugobricks offers premade websites and customizable components powered by Hugo. Cloning this repository allows you to start building lightning-fast static sites with flexibility and ease with and already working website. Here is an example of two bricks (title and cta):
-
-```
----
-title: Page title
----
-{{< brick_title >}}
-
-# Title 1
-Your first paragraph with some lorem ipsum dolor sit amet.
-
-{{< /brick_title >}}
-{{< brick_cta >}}
-
-{{< /brick_cta >}}
-```
-
-## Customizing Bricks
-
-To customize existing bricks or create new ones:
-
-1. Brick templates are located in `layouts/shortcodes/` directory
-2. Partial templates used by bricks are in `layouts/partials/` directory
-3. CSS styles are in `static/css/` directory
-
-## Hugobricks under the Hood
-
-Hugobricks is build with the regular [Hugo](https://gohugo.io/overview/introduction/) building blocks, like [shortcodes](https://gohugo.io/content-management/shortcodes/#what-a-shortcode-is), [partials](https://gohugo.io/templates/partials/) and [layouts](https://gohugo.io/templates/base/). Hugobricks takes advantage of these things to allow content re-use, pivot around content and layouts, and calling the required styling and functional logic.
-
-## Hugobricks Feedback 
-
-Make your wishlist. Missing a given Hugobrick? [Let us know.](https://github.com/jhvanderschee/hugobricks/issues/5)
-
-
-## Credits and licenses
-
-The functionality is inspired by the many [Gutenberg Block Plugins](https://wpastra.com/plugins/wordpress-gutenberg-block-plugins/) that are available online. The design is based on the MIT licensed [Hugoplate from Zeon Studio](https://github.com/zeon-studio/hugoplate.git). The fonts and icons are Apache Licensed and come from [Google Fonts](https://fonts.google.com) and [Google Material Symbols](https://fonts.google.com/icons). The illustrations are free to use but require [an attribution to Storyset](https://storyset.com/terms). The avatars are CC0 licensed and come from [Pravatar](https://www.pravatar.cc/images). The paragliding photos are provided by and property of the [Flyspot Airsports & Travel Agency](https://flyspot.com.tr/) and cannot be used elsewhere without written permission of Flyspot. All other photos come from [Unsplash](https://unsplash.com/license) and are free to use. The social media icons (Facebook, Instagram, etc) belong to the respective social networks/their owners.
-
-
+For complete licensing information on fonts, icons, and images, see the original [Hugobricks documentation](https://www.hugobricks.preview.usecue.com/).

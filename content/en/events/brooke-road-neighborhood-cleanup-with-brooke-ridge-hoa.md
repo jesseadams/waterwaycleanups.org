@@ -1,5 +1,7 @@
 ---
 title: Brooke Road Neighborhood Cleanup (with Brooke Ridge HOA)
+seo:
+  description: "Join us for a community cleanup day along Brooke Road! Let's work together to protect our waterways and keep our community clean."
 image: /uploads/waterway-cleanups/waterways-7.png
 tags:
   - aquia-creek

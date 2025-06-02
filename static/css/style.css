@@ -9,9 +9,9 @@
 /*------------------------*/
 
 :root {
-    --textDarker: #1e282d;
-    --textDark: rgba(38, 50, 56, 1);
-    --textMedium: rgba(38, 50, 56, 0.7);
+    --textDarker: rgba(47, 46, 42, 0.9);
+    --textDark: rgba(47, 46, 42, 0.9);
+    --textMedium: rgba(47, 46, 42, 0.9);
     --borderMedium: rgba(38, 50, 56, 0.2); 
     --borderLight: rgba(38, 50, 56, 0.075);
 

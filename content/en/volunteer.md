@@ -1,7 +1,14 @@
 ---
 title: Volunteer With Us
+seo:
+  description: "Help clean local Virginia waterways, join events, and connect with eco-conscious volunteers. Sign up to volunteer with Waterway Cleanups today!"
+description: 
+dark_header: true
+dark_footer: true
+preheader_is_light: false
+layout: default
 ---
-{{< brick_title >}}
+{{< brick_title class="bg-pearl-bush-white" >}}
 
 {{< breadcrumbs >}}
 
@@ -11,9 +18,9 @@ Join our team of dedicated volunteers who help keep our waterways clean and heal
 
 {{< /brick_title >}}
 
-{{< brick_two_columns >}}
+{{< brick_two_columns text_align="left" >}}
 
-### Why Volunteer With Us
+### Why Volunteer With Us?
 
 Volunteering with Waterway Cleanups is a rewarding way to make a direct impact on our environment. Our volunteers:
 

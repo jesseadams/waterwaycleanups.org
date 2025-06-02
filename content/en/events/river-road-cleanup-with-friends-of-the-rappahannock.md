@@ -1,5 +1,7 @@
 ---
 title: River Road Cleanup (with Friends of the Rappahannock)
+seo:
+  description: "Join FOR and Stafford County in cleaning up along River Road on May 17th! Volunteers can park and meet at Chatham Manor (120 Chatham Ln, Fredericksburg, VA 22405)."
 image: /uploads/waterway-cleanups/waterways-5.png
 tags:
   - rappahannock
