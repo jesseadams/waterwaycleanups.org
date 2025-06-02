@@ -1,0 +1,16 @@
+<!-- 
+{{/* 
+
+Usage:
+
+{{< brick_large class="my-custom-class" >}}
+
+## Heading
+
+Experience the future of web development with Nextplate and Next. Build lightning-fast static sites with ease and flexibility.
+
+{{< /brick_large >}}
+    
+*/}}
+-->
+{{- partial "brick_large.html" (dict "inner" .Inner "class" (.Get "class")) -}} 

@@ -1,6 +1,5 @@
-<!-- Bobbing parallax image partial -->
-<div class="parallax-section" style="position: relative; overflow: visible; z-index: 0;">
-  <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);height: 100%;overflow:visible;top:-50%;">
+<div class="parallax-section !relative !overflow-visible !z-0">
+  <div class="!absolute !left-1/2 !-translate-x-1/2 !-translate-y-1/2 !h-full !overflow-visible !top-[-50%]">
     <div data-react-parallax 
          data-src="/uploads/waterway-cleanups/bobber.png" 
          data-alt="Bobber" 
@@ -9,8 +8,7 @@
          data-scale="1.6" 
          data-bobbing="true"
          data-speed="0.5"
-         class="react-parallax-container" 
-         style="width: 200px; height: 200px; top:-10px;position: relative;height: 100%;overflow:visible;">
+         class="react-parallax-container !w-[200px] !top-[-10px] !relative !h-full !overflow-visible">
     </div>
     <script src="/js/parallax-bundle.js"></script>
   </div>

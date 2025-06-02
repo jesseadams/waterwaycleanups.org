@@ -1,0 +1,6 @@
+<div class="flex !my-4 gap-2 justify-start flex-wrap">
+  {{- $badges := split (.Get 0) "," -}}
+  {{- range $badge := $badges -}}
+    <div class="!badge !badge-dash custom-badge bg-eden-green text-granny-smith-apple-green">{{ $badge | strings.TrimSpace }}</div>
+  {{- end -}}
+</div>

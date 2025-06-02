@@ -2,10 +2,6 @@ logo_image: inline-svg
 menuitems:
   - title: Our Mission
     link:  /#
-  #- title: Elements
-  #  link:  /elements/
-  #- title: Privacy policy
-  #  link:  /privacy-policy/
   - title: Upcoming Cleanups
     link:  /#cleanups
   - title: Projects

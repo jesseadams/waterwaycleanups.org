@@ -26,7 +26,7 @@ At Waterway Cleanups, we are dedicated to restoring and preserving our local wat
 Join us at an upcoming event and help protect the Rappahannock, Potomac, Aquia Creek, and beyond—every volunteer makes a difference.
 {{< /brick_events >}}
 
-{{< brick_two_columns >}}
+{{< brick_two_columns text_align="center" >}}
 ## Sponsors
 {{< gallery dir="/uploads/sponsors/" >}} 
 ---

@@ -14,7 +14,8 @@
 {{ $empty := false }}
 {{- if lt (len $inner) 3 }}{{ $empty = true }}{{ end }}
 {{- if $imagesrc -}}
-<section class="title bgimage hasbackgroundcolor" id="hero" style="position: relative; overflow: hidden;">
+
+<section class="title bgimage hasbackgroundcolor relative overflow-hidden" id="hero">
     {{ $resource := resources.GetMatch $imagesrc }}
     {{ $processedImage := "" }}
     {{ if $resource }}
@@ -28,13 +29,12 @@
         {{ $imagePath = $imagesrc }}
     {{ end }}
     
-    <!-- React Parallax -->
-    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+    <div class="absolute inset-0 z-0 h-full w-full">
         {{ partial "react_parallax.html" (dict "src" $imagePath "alt" "Waterway Cleanups" "height" "120%" "scale" "1.2" "bobbing" "false") }}
     </div>
     
-    {{ if not $empty }}<div class="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;"></div>{{ end }}
-    <div class="container" style="position: relative; z-index: 2;">
+    {{ if not $empty }}<div class="overlay absolute inset-0 z-1 h-full w-full"></div>{{ end }}
+    <div class="container relative z-2">
         <div class="inner"> 
             {{ $inner | safeHTML }}
         </div>

@@ -1,0 +1,67 @@
+{{- $inner := .Inner -}}
+{{- $text_align_input := .text_align | default "left" -}}
+{{- $vertical_align_input := .vertical_align | default "center" -}}
+
+{{- $text_align := "" -}}
+{{- if eq $text_align_input "left" -}}
+    {{- $text_align = "!text-left" -}}
+{{- else if eq $text_align_input "center" -}}
+    {{- $text_align = "!text-center" -}}
+{{- else if eq $text_align_input "right" -}}
+    {{- $text_align = "!text-right" -}}
+{{- else -}}
+    {{- $text_align = "!text-left" -}}
+{{- end -}}
+
+{{- $vertical_align := "" -}}
+{{- if eq $vertical_align_input "start" -}}
+    {{- $vertical_align = "!justify-start" -}}
+{{- else if eq $vertical_align_input "center" -}}
+    {{- $vertical_align = "!justify-center" -}}
+{{- else if eq $vertical_align_input "end" -}}
+    {{- $vertical_align = "!justify-end" -}}
+{{- else if eq $vertical_align_input "between" -}}
+    {{- $vertical_align = "!justify-between" -}}
+{{- else if eq $vertical_align_input "around" -}}
+    {{- $vertical_align = "!justify-around" -}}
+{{- else if eq $vertical_align_input "evenly" -}}
+    {{- $vertical_align = "!justify-evenly" -}}
+{{- else -}}
+    {{- $vertical_align = "!justify-center" -}}
+{{- end -}}
+
+{{- $class := .class | default "" -}}
+{{- if or (eq $inner "") (eq $inner nil) -}}
+    {{- $inner = "Empty brick found. Consider creating a 'content/bricks/blocks.md' file." -}}
+    {{- with page.Site.GetPage "bricks/features.md" -}}
+        {{- $inner = .RawContent -}}
+    {{- end -}}
+{{- end -}}
+{{- $parts := split $inner "---" -}}
+<section class="blocks {{ $class }}">
+    <div class="container small {{ $text_align }}">
+        {{- markdownify (index $parts 0) -}}
+    </div>
+    <div class="container">
+        <ul class="grid blocks">
+            {{- range after 1 $parts -}}
+                {{- $i := markdownify . -}}
+                {{- $image := index (findRE `(?s)<p><img.*?p>` $i 1) 0 -}}
+                {{- $imagesrc := index (split $image `"`) 1 -}}
+                {{- $i = replace $i $image "" 1 -}}
+                
+                {{- $link := index (findRE `(?s)<p><a href=.*?\<\/a></p>` $i 1) 0 -}}
+                {{- $href := index (split $link `"`) 1 -}}
+                {{- $i = replace $i $link "" 1 -}}
+                <li class="{{ if $image }}hasimage {{ $text_align }}{{ else }}box {{ $text_align }}{{ end }}">
+                    <a class="{{ $vertical_align }}" {{ if $href -}}href="{{ $href | safeHTML }}"{{- end -}}>
+                    {{ if $image }}<div class="img"><img src="{{- $imagesrc -}}" alt="" /></div>{{ end }}
+                    {{- $i | safeHTML -}}
+                    </a>
+                </li>
+            {{- end -}}
+        </ul>
+    </div>
+</section>
+
+

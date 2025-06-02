@@ -17,6 +17,9 @@ markup:
           enable: true
         superscript:
           enable: true
+    parser:
+      attribute:
+        block: true
 
 languages:
   en:
@@ -30,8 +33,10 @@ languages:
         services: /services/:slug
         products: /webshop/:slug
         events: /events/:slug
+        projects: /projects/:slug
       section:
         posts: /blog/
         services: /services/
         products: /webshop/
         events: /events/
+        projects: /projects/

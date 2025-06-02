@@ -5,57 +5,10 @@ mobile_view_width: 1100
 menuitems:
   - title: Our Mission
     link: /#
-    #items:
-    #  - title: Title
-    #    link: /header-with-title/
-    #  - title: Content block
-    #    link: /header-with-content/
-    #  - title: Dark preheader
-    #    link: /header-dark/
-    # - title: Dark nav
-    #    link: /header-darker/
-    #  - title: Transparent nav
-    #    link: /header-transparent/
   - title: Upcoming Cleanups
     link: /#cleanups
-    #items:
-    #  - title: About
-    #    link: /about/
-    #  - title: Basic page 1
-    #    link: /basic/
-    #  - title: Basic page 2
-    #    link: /basic2/
-    #  - title: Images
-    #    link: /images/
-    #  - title: Our team
-    #    link: /team/
-    #  - title: Services
-    #    link: /services/
-    #  - title: Blog
-    #    link: /blog/
-    #  - title: Contact us
-    #    link: /contact/
-    #  - title: F.A.Q.
-    #    link: /faq/
-    #  - title: Webshop
-    #    link: /webshop/
-    #  - title: 404 Page
-    #    link: /404.html
-  #- title: Elements
-  #  link: /elements/
-  #- title: Docs
-  #  link: /docs/
   - title: Projects
-    link: /#projects
-    #items:
-    #  - title: Paragliding
-    #    link: /demo-paragliding/
-    #  - title: Hiking
-    #    link: /demo-hiking/
-    #  - title: Poulterer
-    #    link: /demo-poulterer/
-    #  - title: POS software
-    #    link: /demo-pos/
+    link: /projects/
   - title: Sponsors
     link: /#sponsors
   - title: Volunteer

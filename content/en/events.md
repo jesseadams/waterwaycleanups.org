@@ -1,5 +1,7 @@
 ---
 title: Events
+seo:
+  description: "Waterway Cleanups Events"
 dark_header: true
 dark_footer: true
 preheader_is_light: false
