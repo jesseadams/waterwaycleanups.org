@@ -45,3 +45,7 @@ lambda.zip
 # tailwindcss
 static/css/tailwind-output.css
 static/js/tailwind-output-bundle.js
+*-bundle.js
+
+# minified files
+*.min.css

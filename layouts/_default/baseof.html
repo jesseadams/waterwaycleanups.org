@@ -18,16 +18,12 @@
     {{- $color := "style" -}}
     {{- if .Params.color_name -}}{{- $color = .Params.color_name -}}{{- end -}}
     {{- if .Site.Data.settings.color_name -}}{{- $color = .Site.Data.settings.color_name -}}{{- end -}}
-
-    {{ if .Site.Data.settings.intersectionobserver }}
-    <link rel="stylesheet" href="/css/intersectionobserver.css">
-    {{ end }}
-
     {{ partial "head_custom.html" . }}
+
+    {{ if eq hugo.Environment "production" }}
+    <link href="/css/{{ $color }}.min.css?version={{ now }}" rel="stylesheet">
+    {{ else }}
     <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
-    <link rel="stylesheet" href="/css/lightbox.css">
-    {{ if .Site.Data.settings.customcursor }}
-    <link rel="stylesheet" href="/css/customcursor.css">
     {{ end }}
 
     <link rel="stylesheet" href="/css/tailwind-output.css" /> 

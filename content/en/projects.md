@@ -76,7 +76,7 @@ Through this program, we aim not only to clean our waters but to inspire a movem
 
 {{< badges "Waterway Cleanups, Pollution Mitigation, Awareness, Wildlife Protection" >}}
 
-![](/uploads/gallery/05.jpg)
+![](/uploads/waterway-cleanups/fredericksburg-va-park-steward-program-wetlands-in-dixcon-park-waterway-cleanups-virginia.jpg)
 
 This is Waterway Cleanups's inaugural seasonal program dedicated to reducing pollution in Stafford County, Virginia's rivers, streams, and creeks. 
 

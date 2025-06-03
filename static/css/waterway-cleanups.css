@@ -590,6 +590,10 @@
       margin-bottom: 15px;
    }
 
+   body .innerbody ul.breadcrumbs li {
+      font-size: 1.1rem;
+  }
+
 /* ===============================
    999. MEDIA QUERIES
    =============================== */
