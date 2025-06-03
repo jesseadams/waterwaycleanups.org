@@ -9,7 +9,11 @@ echo "Building assets with production settings..."
 export NODE_ENV=production
 npm run build:assets
 
+echo "Minifying non-tailwind CSS files..."
+npm run minify:css
+
 echo "Building Hugo items..."
+export HUGO_ENV=production
 hugo --minify
 
 echo "✅ Production build completed."

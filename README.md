@@ -119,10 +119,10 @@ npm --version
 - `npm run build` - Build the Hugo site for production
 - `npm run build:assets` - Build frontend assets with Webpack
 - `npm run watch:assets` - Watch and rebuild frontend assets during development
-- `npm run build:css` - Build and minify Tailwind CSS
-- `npm run watch:css` - Watch and rebuild Tailwind CSS during development
-- `npm run start` - Build assets and start Hugo server
-- `npm run clean` - Clean generated assets
+- `npm run minify:css` - Minify standalone CSS files not processed by Webpack
+- `npm run clean` - Clean generated assets (CSS and JS bundle files)
+- `npm run serve` - Run the Hugo server in production mode
+- `npm run start` - Build assets and start Hugo server in production mode
 
 ### Recommended Development Workflow
 
@@ -154,6 +154,20 @@ This project includes React components for interactive elements like the paralla
    npm run watch:assets
    ```
    This will rebuild components whenever you save changes
+
+### CSS Processing
+
+The project uses multiple CSS processing pipelines:
+
+1. **Tailwind CSS** - Processed through Webpack and PostCSS
+   - Source: `static/css/src/tailwind.css`
+   - Output: `static/css/tailwind-output.css` and `static/css/tailwind-output.min.css` (production)
+
+2. **Standalone CSS** - Various CSS files that may need separate minification
+   - Main standalone style: `static/css/style.css` → `static/css/style.min.css` 
+   - To minify: `npm run minify:css`
+
+3. **Component-specific CSS** - Various CSS files like `bricks.css`, `header-footer.css`, etc.
 
 ## 📄 Content Pages
 
@@ -639,17 +653,46 @@ When creating new pages or editing existing content, keep these tips in mind:
 
 ## 🚢 Deployment
 
-To build the site for production:
+### Local Production Build
+
+To build the site for production locally:
 
 ```bash
 npm run build
 ```
 
-The built site will be in the `public/` directory, ready for deployment to any static hosting service like:
-- Netlify
-- Vercel
-- GitHub Pages
-- AWS S3 + CloudFront
+This command:
+1. Sets NODE_ENV to production
+2. Builds frontend assets with Webpack in production mode
+3. Sets HUGO_ENV to production
+4. Builds the Hugo site with minification
+
+The built site will be in the `public/` directory, ready for deployment.
+
+### Testing Production Build Locally
+
+To test the production build locally:
+
+```bash
+npm run serve
+```
+
+This runs the Hugo server with the production environment settings.
+
+### Continuous Integration/Deployment
+
+This project uses GitHub Actions for CI/CD. The workflow:
+
+1. Builds on every push to main and pull request
+2. Automatically deploys to AWS S3 and invalidates CloudFront cache when merged to main
+3. Runs a daily scheduled build to ensure content is up-to-date
+
+The deployment process:
+1. Cleans build artifacts
+2. Builds frontend assets with webpack
+3. Minifies standalone CSS files
+4. Builds the Hugo site with minification
+5. Deploys to S3 and invalidates CloudFront
 
 ## 🎨 Customization
 

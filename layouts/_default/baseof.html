@@ -22,11 +22,11 @@
 
     {{ if eq hugo.Environment "production" }}
     <link href="/css/{{ $color }}.min.css?version={{ now }}" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tailwind-output.min.css" /> 
     {{ else }}
     <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
-    {{ end }}
-
     <link rel="stylesheet" href="/css/tailwind-output.css" /> 
+    {{ end }} 
     
   </head>
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">

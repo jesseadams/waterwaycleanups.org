@@ -49,3 +49,7 @@ static/js/tailwind-output-bundle.js
 
 # minified files
 *.min.css
+
+# scripts
+scripts/
+

@@ -4,12 +4,13 @@
   "description": "Waterways Cleanup Project",
   "scripts": {
     "dev": "concurrently \"HUGO_ENV=development hugo server\" \"npm run watch:assets\"",
-    "build": "npm run build:assets && HUGO_ENV=production hugo --minify",
-    "build:assets": "webpack --mode production && npm run minify:css",
-    "watch:assets": "webpack --watch --mode development",
+    "build": "NODE_ENV=production npm run build:assets && HUGO_ENV=production hugo --minify",
+    "build:assets": "webpack --mode production",
+    "watch:assets": "NODE_ENV=development webpack --watch --mode development",
     "minify:css": "cleancss -o static/css/style.min.css static/css/style.css",
-    "clean": "rm -f static/css/tailwind-output.css static/css/tailwind-output.min.css static/css/style.min.css static/js/*-bundle.js",
-    "start": "npm run build && HUGO_ENV=production hugo server"
+    "clean": "rm -f static/css/tailwind-output*.css static/css/style.min.css static/js/*-bundle.js",
+    "serve": "HUGO_ENV=production hugo server",
+    "start": "npm run build && npm run serve"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.8",
@@ -29,6 +30,7 @@
     "concurrently": "^8.2.2",
     "css-loader": "^6.10.0",
     "css-minimizer-webpack-plugin": "^7.0.2",
+    "cssnano": "^7.0.7",
     "daisyui": "^5.0.43",
     "mini-css-extract-plugin": "^2.8.1",
     "postcss": "^8.4.38",

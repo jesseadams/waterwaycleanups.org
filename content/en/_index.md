@@ -7,6 +7,9 @@ dark_footer: true
 preheader_is_light: false
 ---
 {{< brick_hero >}}
+
+{{< p class="h3 sub-heading text-granny-smith-apple-green" >}}Our Mission{{< /p >}}
+
 # Cleaning Up Virginia's Waterways
 
 At Waterway Cleanups, we are dedicated to restoring and preserving our local waterways through community action and education. Together, we can make a significant impact on our environment and future.
