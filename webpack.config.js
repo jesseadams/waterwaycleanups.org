@@ -1,5 +1,6 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const fs = require('fs');
 
 //* Ensure tmp directory exists
@@ -32,6 +33,9 @@ function safeCopyFile(src, dest) {
   }
 }
 
+//* Determine if we're in production mode
+const isProduction = process.env.NODE_ENV === 'production';
+
 module.exports = [
   {
     entry: {
@@ -60,14 +64,21 @@ module.exports = [
           use: [
             MiniCssExtractPlugin.loader,
             'css-loader',
-            'postcss-loader'
+            {
+              loader: 'postcss-loader',
+              options: {
+                postcssOptions: {
+                  config: path.resolve(__dirname, 'postcss.config.js'),
+                },
+              },
+            }
           ]
         }
       ]
     },
     plugins: [
       new MiniCssExtractPlugin({
-        filename: '../css/[name].css'
+        filename: `../css/[name]${isProduction ? '.min' : ''}.css`
       }),
       {
         apply: (compiler) => {
@@ -117,9 +128,16 @@ module.exports = [
         }
       }
     ],
+    optimization: {
+      minimize: isProduction,
+      minimizer: [
+        '...',
+        new CssMinimizerPlugin(),
+      ],
+    },
     resolve: {
       extensions: ['.js', '.jsx']
     },
-    mode: process.env.NODE_ENV === 'production' ? 'production' : 'development'
+    mode: isProduction ? 'production' : 'development'
   }
 ]; 

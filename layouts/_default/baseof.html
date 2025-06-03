@@ -18,21 +18,18 @@
     {{- $color := "style" -}}
     {{- if .Params.color_name -}}{{- $color = .Params.color_name -}}{{- end -}}
     {{- if .Site.Data.settings.color_name -}}{{- $color = .Site.Data.settings.color_name -}}{{- end -}}
-
-    {{ if .Site.Data.settings.intersectionobserver }}
-    <link rel="stylesheet" href="/css/intersectionobserver.css">
-    {{ end }}
-
     {{ partial "head_custom.html" . }}
-    <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
-    <link rel="stylesheet" href="/css/lightbox.css">
-    {{ if .Site.Data.settings.customcursor }}
-    <link rel="stylesheet" href="/css/customcursor.css">
-    {{ end }}
 
+    {{ if eq hugo.Environment "production" }}
+    <link href="/css/{{ $color }}.min.css?version={{ now }}" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tailwind-output.min.css" /> 
+    {{ else }}
+    <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
     <link rel="stylesheet" href="/css/tailwind-output.css" /> 
+    {{ end }} 
     
   </head>
+  <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">
     <script>
       //* The mobile view width is set in the page as a data attribute
@@ -142,8 +139,10 @@
     {{- block "content" . -}}{{- end -}}
     
     <div class="bobbing-parallax !relative !overflow-visible !pt-[10%]">
+    <div class="bobbing-parallax !relative !overflow-visible !pt-[10%]">
       {{ partial "bobbing_parallax.html" . }}
       
+      <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }} relative z-1">
       <footer class="{{ if .Params.dark_footer }}dark{{ else }}{{ if and (ne .Params.dark_footer false) .Site.Data.settings.dark_footer }}dark{{ end }}{{ end }} relative z-1">
         <div>
           <div class="container">

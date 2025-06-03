@@ -9,15 +9,26 @@
    1. Base Typography & Spacing
    =============================== */
    #hero h1, #hero h2 {
+   #hero h1, #hero h2 {
       line-height: 1.1;
+      color: var(--pearl-bush-white);
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+   }
       color: var(--pearl-bush-white);
       font-size: clamp(2.5rem, 5vw, 3.5rem);
    }
 
    #hero .inner {
+   #hero .inner {
       width: 55%;
    }
+   }
 
+   #hero .breadcrumbs {
+      text-align: left;
+   }
+
+   body, body p {
    #hero .breadcrumbs {
       text-align: left;
    }
@@ -122,7 +133,106 @@
    .bg-eden-green p {
       color: var(--pearl-bush-white);
    }
+      line-height: 1.4;
+   }
 
+   h1, .h1 { 
+      font-size: clamp(2.2rem, 4vw, 2.5rem); 
+      color: var(--teal-blue);
+      line-height: 1.1;
+      font-weight: 700;
+      margin-bottom: 0;
+   }
+
+   h2, .h2 { 
+      font-size: clamp(1.9rem, 3.5vw, 2rem); 
+      font-weight: 700;
+      line-height: 1.3;
+      color: var(--teal-blue);
+      margin-bottom: 0;
+   }
+
+   h3, .h3 { 
+      font-size: clamp(1.3rem, 3vw, 1.45rem); 
+      font-family: var(--fontSubTitles);
+      font-weight: 600;
+      line-height: 1.3;
+      color: var(--teal-blue);
+      margin-bottom: 0;
+   }
+
+   h4, .h4 { 
+      font-size: clamp(1.2rem, 2.5vw, 1.5rem); 
+      line-height: 1.1;
+      margin-bottom: 0;
+   }
+
+   h5, .h5 { 
+      font-size: clamp(1.1rem, 2vw, 1.25rem); 
+      line-height: 1.1;
+      margin-bottom: 0;
+   }
+
+   h6, .h6 { 
+      font-size: clamp(1rem, 1.5vw, 1rem); 
+      line-height: 1.1;
+      margin-bottom: 0;
+   }
+
+   h1 + p, .h1 + p {
+      margin-top: 0;
+   }
+
+   h1 + p, .h1 + p,
+   h2 + p, .h2 + p,
+   h3 + p, .h3 + p,
+   h4 + p, .h4 + p,
+   h5 + p, .h5 + p,
+   h6 + p, .h6 + p {
+      margin-top: 15px;
+   }
+
+   h3 + h2,
+   h3 + .h2,
+   .h3 + .h2,
+   .h3 + h2 {
+      padding-top: 0;
+   }
+
+   .sub-heading {
+      margin-bottom: 10px;
+      line-height: 1.4
+   }
+
+   .h3 + h2 {
+      margin-top: 0;
+   }
+
+   .posts h2 {
+      color: var(--eden-green);
+   }
+
+   .posts .h3 {
+      margin-bottom: 15px;
+   }
+
+   ul {
+      list-style: disc;
+      margin-left: 40px;
+   }
+   
+   ol {
+      list-style: auto;
+      margin-left: 40px;
+   }
+
+   .bg-eden-green h1, 
+   .bg-eden-green .h1, 
+   .bg-eden-green p {
+      color: var(--pearl-bush-white);
+   }
+
+/* ===============================
 /* ===============================
    2. NAVIGATION   
    =============================== */
@@ -149,11 +259,23 @@
    header.dark a.logo, 
    body.transparent_header header:not(.sticky) a.logo, 
    header.dark .navnav > ul > li > a, body.transparent_header header:not(.sticky) .navnav > ul > li > a {
+   header.dark a.logo, 
+   body.transparent_header header:not(.sticky) a.logo, 
+   header.dark .navnav > ul > li > a, body.transparent_header header:not(.sticky) .navnav > ul > li > a {
       font-size: 18px;
    }
 
    header > .container {
       padding-bottom: 1.45rem;
+   }
+   }
+
+   header.dark .navnav > ul > li > a {
+      color: var(--pearl-bush-white);
+   }
+
+   header.dark .navnav > ul > li::after, body.transparent_header header:not(.sticky) .navnav > ul > li::after {
+      background: var(--genoa-green);
    }
 
    header.dark .navnav > ul > li > a {
@@ -169,6 +291,8 @@
    =============================== */
    .button:not(.secondary), 
    button:not(.secondary) {
+   .button:not(.secondary), 
+   button:not(.secondary) {
       color: var(--teal-blue);
    }
 
@@ -176,10 +300,15 @@
       color: var(--teal-blue);
       font-size: 1.1rem;
    }
+   }
 
    .button.secondary {
       color: var(--granny-smith-apple-green);
       background-color: var(--teal-blue);
+   }
+
+   .bg-eden-green .button {
+      color: var(--teal-blue);
    }
 
    .bg-eden-green .button {
@@ -195,6 +324,8 @@
       text-align: center;
    }
 
+   .preheader, 
+   .preheader a {
    .preheader, 
    .preheader a {
       color: #b9e597;
@@ -232,10 +363,14 @@
    }
 
    section.two-columns-section .twocols > div {
+   section.two-columns-section .twocols > div {
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
       align-items: center;
+   }
+   
+   section.two-columns-section .container.twocols .image-gallery {
    }
    
    section.two-columns-section .container.twocols .image-gallery {
@@ -253,6 +388,7 @@
       list-style: none;
       padding: 20px;
       max-width: 230px;
+   }
    }
 
 /* ===============================
@@ -286,9 +422,13 @@
       overflow: visible;
       position: relative;
       z-index: 1;
+      overflow: visible;
+      position: relative;
+      z-index: 1;
    }
 
 /* ===============================
+   8. BRICKS - POSTS
    8. BRICKS - POSTS
    =============================== */
    .posts {
@@ -298,11 +438,29 @@
    #hero + .posts {
      margin-top: 0;
      padding: 7rem 0 7rem 0;
+     padding: 7rem 0 7rem 0;
    }
 
    section.posts .filter select {
       background: var(--eden-green);
       color: var(--pearl-bush-white);
+   }
+   }
+
+   .posts + .cta {
+      padding: 7rem 0 7rem 0;
+   }
+
+   .wavey {
+      width: 40px;
+      margin-bottom: 15px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+   }
+
+   section.posts .filter {
+      margin: -2rem 0 2rem 0;
    }
 
    .posts + .cta {
@@ -333,6 +491,7 @@
    section.hasbackgroundcolor + footer {
       margin-top: 9.5rem;
    }
+   }
 
    footer.dark {
       background-color: var(--teal-blue);
@@ -360,6 +519,7 @@
       width: 100%;
       height: 100%;
       background:url(../uploads/waterway-cleanups/waves-border.png) repeat-x;
+      background:url(../uploads/waterway-cleanups/waves-border.png) repeat-x;
       height: 50px;
    }
 
@@ -374,10 +534,14 @@
    footer .container > div:first-child:last-child {
       color: rgba(255, 255, 255, 0.5);
    }
+   }
 
    footer.dark > div:last-child a {
       color: var(--text-dark);
    }
+
+   /* ===============================
+   10. TAILWIND
 
    /* ===============================
    10. TAILWIND
@@ -589,6 +753,10 @@
       margin-top: 0;
       margin-bottom: 15px;
    }
+
+   body .innerbody ul.breadcrumbs li {
+      font-size: 1.1rem;
+  }
 
 /* ===============================
    999. MEDIA QUERIES
