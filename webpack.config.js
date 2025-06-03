@@ -43,7 +43,14 @@ module.exports = [
       parallax: './static/js/react-components/ParallaxApp.jsx',
       date: './static/js/react-components/DateApp.jsx'
     },
+    entry: {
+      'tailwind-output': './static/css/src/tailwind.css',
+      parallax: './static/js/react-components/ParallaxApp.jsx',
+      date: './static/js/react-components/DateApp.jsx'
+    },
     output: {
+      filename: '[name]-bundle.js',
+      path: path.resolve(__dirname, 'tmp/webpack/js'),
       filename: '[name]-bundle.js',
       path: path.resolve(__dirname, 'tmp/webpack/js'),
     },
@@ -124,6 +131,7 @@ module.exports = [
             if (filesChanged) {
               console.log('Files updated successfully');
             }
+          });
           });
         }
       }
