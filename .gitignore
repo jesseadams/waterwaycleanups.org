@@ -52,3 +52,9 @@ static/js/tailwind-output-bundle.js
 
 # scripts
 scripts/
+
+#maps
+*.map
+
+# chunks
+static/js/*-chunk*.js
