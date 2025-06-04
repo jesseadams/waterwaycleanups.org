@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const date = container.getAttribute('data-date');
     const className = container.getAttribute('data-class') || '';
     
-    //* Create a root using the React 18 API - updated to 17 to clear console warnings
+    //* Create a root using the React 18 API
     const root = createRoot(container);
     root.render(
       <DateIcon 

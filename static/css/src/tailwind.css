@@ -1,4 +1,5 @@
+/* Base Tailwind import */
 @import "tailwindcss";
-@plugin "daisyui";
 
-/* Custom styles can go here */ 
+/* Import DaisyUI properly */
+@plugin "daisyui";
