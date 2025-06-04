@@ -6,6 +6,7 @@ tags:
 preheader_is_light: false
 start_time: "2025-10-18T09:00:00-04:00"
 end_time: "2025-10-18T12:00:00-04:00"
+url: "/events/friends-of-the-rappahannock-big-fall-cleanup"
 ---
 
 {{< date_with_icon date="October 18, 2025 | 9am-12pm" class="large-date" >}}
