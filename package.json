@@ -9,7 +9,7 @@
     "build:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.min.css --minify",
     "watch:assets": "webpack --watch --mode development",
     "watch:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.css --watch",
-    "clean": "rm -f static/css/tailwind-output.css static/css/tailwind-output.min.css static/js/main-bundle.js",
+    "clean": "rm -rf static/css/tailwind-output*.css static/css/*.map static/js/main-bundle*.js static/js/*-bundle*.js static/js/*.LICENSE.txt static/js/*.map static/js/*chunk*.js",
     "start": "npm run build && hugo server",
     "minify:css": "./node_modules/.bin/postcss ./static/css/*.css --use cssnano -d ./static/css/ --no-map"
   },
