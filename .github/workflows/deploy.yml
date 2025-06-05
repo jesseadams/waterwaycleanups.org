@@ -37,17 +37,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build assets (Tailwind CSS and Webpack)
-        run: npm run build:css && npm run build:assets
-
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
           hugo-version: "0.147.1"
           extended: true
 
-      - name: Build Hugo site
-        run: hugo --minify
+      - name: Build site for production
+        run: npm run build
 
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
