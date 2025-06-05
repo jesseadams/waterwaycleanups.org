@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdCalendarToday } from 'react-icons/md';
 
 const DateIcon = ({ date, className }) => {
   //* Parse date to get components if it's a valid date string - this will allow formatting the date differently if needed
@@ -16,7 +17,7 @@ const DateIcon = ({ date, className }) => {
 
   return (
     <div className={`date-icon-container ${className || ''}`}>
-      <i className="lni lni-calendar"></i>
+      <MdCalendarToday />
       <span>{formattedDate}</span>
     </div>
   );
