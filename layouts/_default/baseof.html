@@ -18,16 +18,19 @@
     {{- $color := "style" -}}
     {{- if .Params.color_name -}}{{- $color = .Params.color_name -}}{{- end -}}
     {{- if .Site.Data.settings.color_name -}}{{- $color = .Site.Data.settings.color_name -}}{{- end -}}
-    
-    {{ partial "head_custom.html" . }}
 
-    {{ if eq hugo.Environment "production" }}
-    <link rel="stylesheet" href="/css/tailwind-output.min.css" />
-    <link href="/css/{{ $color }}.min.css?version={{ now }}" rel="stylesheet">
-    {{ else }}
-    <link rel="stylesheet" href="/css/tailwind-output.css" />
-    <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
+    {{ if .Site.Data.settings.intersectionobserver }}
+    <link rel="stylesheet" href="/css/intersectionobserver.css">
     {{ end }}
+
+    {{ partial "head_custom.html" . }}
+    <link href="/css/{{ $color }}.css?version={{ now }}" rel="stylesheet">
+    <link rel="stylesheet" href="/css/lightbox.css">
+    {{ if .Site.Data.settings.customcursor }}
+    <link rel="stylesheet" href="/css/customcursor.css">
+    {{ end }}
+
+    <link rel="stylesheet" href="/css/tailwind-output.css" /> 
     
   </head>
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">
