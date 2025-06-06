@@ -120,8 +120,6 @@ module.exports = [
     resolve: {
       extensions: ['.js', '.jsx']
     },
-    
-    devtool: process.env.NODE_ENV === 'production' ? false : 'eval-source-map',
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development'
   }
 ]; 

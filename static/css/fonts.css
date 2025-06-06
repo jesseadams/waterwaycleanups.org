@@ -1,1 +1,7 @@
-@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap");:root{--fontTitles:"Hanken Grotesk",sans-serif;--fontBody:"Source Sans 3",sans-serif;--fontSubTitles:"Merriweather",serif}
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,100..900;1,100..900&family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
+
+:root {
+    --fontTitles: "Hanken Grotesk", sans-serif;
+    --fontBody: "Source Sans 3", sans-serif;
+    --fontSubTitles: "Merriweather", serif;
+  }
