@@ -1,7 +1,7 @@
 ---
 title: Aquia Creek Road Cleanup - June 2025
 seo:
-  description: "Join us for a community cleanup day along Aquia Creek Road! Let's work together to protect our waterways and keep our community clean."
+  description: "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean."
 image: /uploads/waterway-cleanups/waterways-1.png
 tags:
   - aquia-creek
@@ -14,13 +14,17 @@ end_time: "2025-06-07T12:00:00-04:00"
 {{< tabs >}}
 ## Event Details
 
-Join us for a community cleanup day along Aquia Creek Road! Let's work together to protect our waterways and keep our community clean.
+Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean.
 
 ---
 ## Location
 
-Aquia Bay Marina<br />
-Stafford, VA 22554
+60 Potomac Run Rd<br />
+Fredericksburg, VA 22405-5914, United States<br /> <br />
+
+Exact coordinates for parking:<br />
+https://www.google.com/maps/place/38%C2%B021'21.0%22N+77%C2%B025'28.8%22W/@38.3558343,-77.4253104,19z/data=!3m1!4b1!4m4!3m3!8m2!3d38.3558333!4d-77.4246667?entry=ttu&g_ep=EgoyMDI1MDYwNC4wIKXMDSoASAFQAw%3D%3D
+
 ---
 ## What We Provide
 
