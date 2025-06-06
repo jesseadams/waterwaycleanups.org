@@ -4,7 +4,7 @@ seo:
   description: "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean."
 image: /uploads/waterway-cleanups/waterways-1.png
 tags:
-  - aquia-creek
+  - potomac-creek
 preheader_is_light: false
 start_time: "2025-06-07T09:00:00-04:00"
 end_time: "2025-06-07T12:00:00-04:00"
