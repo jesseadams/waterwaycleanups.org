@@ -1,5 +1,5 @@
 ---
-title: Aquia Creek Road Cleanup - June 2025
+title: Potomac Run Road Cleanup - June 2025
 seo:
   description: "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean."
 image: /uploads/waterway-cleanups/waterways-1.png
