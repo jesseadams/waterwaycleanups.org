@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "userPoolId": "us-east-1_xxxxxxxxx",
+    "userPoolClientId": "xxxxxxxxxxxxxxxxxxxx",
+    "region": "us-east-1",
+    "identityPoolId": "",
+    "userPoolEndpoint": "cognito-idp.us-east-1.amazonaws.com",
+    "oAuthDomain": "your-domain-name.auth.us-east-1.amazoncognito.com",
+    "redirectSignIn": "http://localhost:3000",
+    "redirectSignOut": "http://localhost:3000"
+  },
+  "api": {
+    "sesv2": {
+      "endpoint": "",
+      "region": "us-east-1"
+    }
+  },
+  "storage": {
+    "templates": {
+      "bucketName": "",
+      "region": "us-east-1"
+    }
+  },
+  "lastDeployment": {
+    "timestamp": "YYYY-MM-DDThh:mm:ssZ",
+    "environment": "dev"
+  }
+}

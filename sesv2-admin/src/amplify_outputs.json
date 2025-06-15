@@ -1,0 +1,28 @@
+{
+  "auth": {
+    "userPoolId": "us-east-1_Po9kozmnu",
+    "userPoolClientId": "73vlcl4jnb28h5o5ricvf0hg89",
+    "region": "us-east-1",
+    "identityPoolId": "",
+    "userPoolEndpoint": "cognito-idp.us-east-1.amazonaws.com",
+    "oAuthDomain": "ses-admin-portal.auth.us-east-1.amazoncognito.com",
+    "redirectSignIn": "http://localhost:3000",
+    "redirectSignOut": "http://localhost:3000"
+  },
+  "api": {
+    "sesv2": {
+      "endpoint": "",
+      "region": "us-east-1"
+    }
+  },
+  "storage": {
+    "templates": {
+      "bucketName": "",
+      "region": "us-east-1"
+    }
+  },
+  "lastDeployment": {
+    "timestamp": "2025-06-09T14:30:00Z",
+    "environment": "dev"
+  }
+}

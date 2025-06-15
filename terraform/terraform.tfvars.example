@@ -1,0 +1,9 @@
+# Example terraform variables file
+# Create a copy of this file named "terraform.tfvars" and fill in your values
+# Do not commit the actual terraform.tfvars file to git
+
+# AWS account ID without hyphens
+aws_account_id = "XXXXXXXXXX"
+
+# CloudFront distribution ID
+cloudfront_distribution_id = "XXXXXXXXXXXX"

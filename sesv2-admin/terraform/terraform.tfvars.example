@@ -1,0 +1,26 @@
+# Example Terraform variables - copy to terraform.tfvars and customize
+# DO NOT commit terraform.tfvars to source control as it may contain sensitive information
+
+# AWS Region
+region = "us-east-1"
+
+# Cognito User Pool Configuration
+user_pool_name = "ses-admin-user-pool"
+app_client_name = "ses-admin-client"
+domain_prefix = "ses-admin-portal"
+
+# Application URLs - Note: these URLs must match exactly with what's used in the application
+callback_urls = ["http://localhost:3000/", "http://localhost:3000"]
+logout_urls = ["http://localhost:3000/", "http://localhost:3000"]
+
+# Admin User
+default_admin_email = "admin@example.com"
+default_admin_temp_password = "ChangeMe123!"  # Change this in your actual tfvars file
+
+# Google SSO Configuration
+# Get these values from Google Cloud Console -> APIs & Services -> Credentials
+google_client_id = "your-google-client-id.apps.googleusercontent.com"
+google_client_secret = "your-google-client-secret"
+
+# Optional: Restrict to specific Google Workspace domains
+google_authorized_domains = ["yourcompany.com"]

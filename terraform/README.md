@@ -16,15 +16,60 @@ This configuration creates the following resources:
 - API Gateway endpoint to accept form submissions
 - SES Contact List for storing volunteer information
 - IAM roles and permissions for Lambda to access SES
+- S3 bucket for storing Terraform state (with versioning and encryption)
+- DynamoDB table for Terraform state locking
+
+## Remote State Management
+
+This project uses Terraform remote state management with:
+- **S3 Bucket** for storing the Terraform state files securely
+- **DynamoDB Table** for state locking to prevent concurrent modifications
+
+The state resources are defined in `state_resources.tf` and the backend configuration is in `backend.tf`.
 
 ## Deployment Instructions
+
+### First Deployment (Setting Up Remote State)
+
+On first deployment, you need to create the state management infrastructure:
 
 1. Navigate to the terraform directory:
    ```bash
    cd terraform
    ```
 
-2. Initialize Terraform:
+2. Initialize Terraform (without remote backend):
+   ```bash
+   terraform init -backend=false
+   ```
+
+3. Create state resources first:
+   ```bash
+   terraform apply -auto-approve -target=aws_s3_bucket.terraform_state -target=aws_s3_bucket_versioning.terraform_state_versioning -target=aws_s3_bucket_server_side_encryption_configuration.terraform_state_encryption -target=aws_s3_bucket_public_access_block.terraform_state_public_access_block -target=aws_dynamodb_table.terraform_locks
+   ```
+
+4. Initialize Terraform with remote backend:
+   ```bash
+   terraform init -force-copy
+   ```
+
+5. Apply the entire configuration:
+   ```bash
+   terraform apply
+   ```
+
+6. After successful deployment, Terraform will output the API Gateway endpoint URL.
+
+### Subsequent Deployments
+
+For all subsequent deployments (after remote state is set up):
+
+1. Navigate to the terraform directory:
+   ```bash
+   cd terraform
+   ```
+
+2. Initialize Terraform (will use the S3 backend):
    ```bash
    terraform init
    ```
@@ -38,8 +83,6 @@ This configuration creates the following resources:
    ```bash
    terraform apply
    ```
-
-5. After successful deployment, Terraform will output the API Gateway endpoint URL.
 
 ## Troubleshooting
 
