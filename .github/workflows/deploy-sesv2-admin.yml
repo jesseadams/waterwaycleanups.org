@@ -40,17 +40,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
-      - name: Build application
-        run: npm run build
-        env:
-          CI: false # Prevents treating warnings as errors
-      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
           aws-region: us-east-1
           role-session-name: github-actions
+      
+      - name: Retrieve parameters from SSM
+        run: |
+          ./get-params-from-ssm.sh prod
+          # Display parameter names (but not values for security)
+          grep -v "^#" .env | cut -d= -f1 || true
+      
+      - name: Build application
+        run: npm run build
+        env:
+          CI: false # Prevents treating warnings as errors
       
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
