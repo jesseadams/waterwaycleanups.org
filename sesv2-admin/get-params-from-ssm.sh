@@ -30,3 +30,5 @@ echo "# Generated at: $(date)" >> "$ENV_FILE"
 echo "$PARAMS" | jq -r '.[] | "\(.[0] | split("/") | last)=\(.[1])"' >> "$ENV_FILE"
 
 echo "Environment file has been created at $ENV_FILE"
+
+cat $ENV_FILE
