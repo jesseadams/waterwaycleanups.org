@@ -1,9 +1,18 @@
 # CloudFront distribution for the website
 resource "aws_cloudfront_distribution" "website_distribution" {
+  # Main website origin
   origin {
     domain_name              = "waterwaycleanups.org.s3.us-east-1.amazonaws.com"
     origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
     origin_id                = "s3"
+    origin_path              = ""
+  }
+
+  # SESv2-admin origin
+  origin {
+    domain_name              = "${aws_s3_bucket.sesv2_admin_bucket.bucket}.s3.us-east-1.amazonaws.com"
+    origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
+    origin_id                = "sesv2-admin"
     origin_path              = ""
   }
 
@@ -22,10 +31,29 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     target_origin_id       = "s3"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
-    
+
     # Using cache policy instead of forwarded_values
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-    
+
+    # CloudFront function for appending index.html to directory requests
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = "arn:aws:cloudfront::767072126027:function/Append-index-html"
+    }
+  }
+
+  # SESv2-admin cache behavior
+  ordered_cache_behavior {
+    path_pattern           = "/sesv2-admin/*"
+    allowed_methods        = ["HEAD", "GET"]
+    cached_methods         = ["HEAD", "GET"]
+    target_origin_id       = "sesv2-admin"
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Using cache policy instead of forwarded_values
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+
     # CloudFront function for appending index.html to directory requests
     function_association {
       event_type   = "viewer-request"

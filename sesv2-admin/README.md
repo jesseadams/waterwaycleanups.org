@@ -179,3 +179,40 @@ This application follows AWS security best practices for credential management u
 - Email sending requires verified identities in SES
 - Contact lists must be created before adding contacts
 - For production use, secure the Google client secret and consider using AWS Secrets Manager
+
+## Deployment
+
+This application is deployed to its own dedicated S3 bucket (separate from the main website) and is served through the CloudFront distribution with a path-based behavior:
+
+### Infrastructure Setup
+
+The application is deployed to a dedicated S3 bucket with the following setup:
+- Bucket name: `waterwaycleanups-sesv2-admin`
+- CloudFront path pattern: `/sesv2-admin/*`
+- All resources are managed by Terraform
+
+### Deployment Process
+
+Deployment is handled automatically via GitHub Actions CI/CD pipeline:
+
+1. When changes are pushed to the main branch, the GitHub workflow:
+   - Builds the application
+   - Uploads the files to the dedicated S3 bucket
+   - Invalidates the CloudFront cache if needed
+
+2. After deployment, the admin interface will be available at:
+   ```
+   https://waterwaycleanups.org/sesv2-admin/
+   ```
+
+3. To manually deploy, you can use the AWS CLI:
+   ```bash
+   # Build the application
+   npm run build
+   
+   # Upload to S3
+   aws s3 sync build/ s3://waterwaycleanups-sesv2-admin/ --delete
+   
+   # Invalidate CloudFront (if needed)
+   aws cloudfront create-invalidation --distribution-id [YOUR_DISTRIBUTION_ID] --paths "/sesv2-admin/*"
+   ```
