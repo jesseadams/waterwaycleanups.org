@@ -1,3 +1,12 @@
+# CloudFront function for SPA routing
+resource "aws_cloudfront_function" "spa_routing" {
+  name    = "SPA-Routing-Function"
+  runtime = "cloudfront-js-2.0"
+  comment = "Handle SPA routing for React apps"
+  publish = true
+  code    = file("${path.module}/spa_cloudfront_function.js")
+}
+
 # CloudFront distribution for the website
 resource "aws_cloudfront_distribution" "website_distribution" {
   # Main website origin
@@ -38,7 +47,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     # CloudFront function for appending index.html to directory requests
     function_association {
       event_type   = "viewer-request"
-      function_arn = "arn:aws:cloudfront::767072126027:function/Append-index-html"
+      function_arn = aws_cloudfront_function.spa_routing.arn
     }
   }
 
@@ -54,10 +63,10 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     # Using cache policy instead of forwarded_values
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
 
-    # CloudFront function for appending index.html to directory requests
+    # CloudFront function for SPA routing
     function_association {
       event_type   = "viewer-request"
-      function_arn = "arn:aws:cloudfront::767072126027:function/Append-index-html"
+      function_arn = aws_cloudfront_function.spa_routing.arn
     }
   }
 
