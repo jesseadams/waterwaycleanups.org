@@ -52,13 +52,17 @@ jobs:
           ./get-params-from-ssm.sh prod
           # Display parameter names (but not values for security)
           grep -v "^#" .env | cut -d= -f1 || true
-      
-      - name: Debug environment variables
+
+      # Export environment variables for subsequent steps
+      - name: Export environment variables
         run: |
-          # Export all variables from .env to make them available
-          export $(grep -v '^#' .env | xargs)
-          # Run the debug script to verify all variables are available
-          node debug-env.js
+          # Create a list of export commands for GitHub Actions to use in subsequent steps
+          grep -v '^#' .env | sed 's/^/echo "/' | sed 's/$/\" >> $GITHUB_ENV/' | sh
+          
+      - name: Verify environment variables
+        run: |
+          # Run the verification script to ensure all required variables are available
+          node verify-build-env.js
 
       - name: Build application
         run: |

@@ -3,11 +3,32 @@
  * This is the standard configuration file for Amplify Gen 2
  * 
  * All configuration values should come from environment variables defined in .env
+ * We're using window.env which is created during build time to access these variables
  */
+
+// No need to import env.js, we're using env-config.js which is loaded in index.html
+
+// Add type definitions for window.ENV_CONFIG
+declare global {
+  interface Window {
+    ENV_CONFIG: {
+      REACT_APP_AWS_REGION?: string;
+      REACT_APP_COGNITO_USER_POOL_ID?: string;
+      REACT_APP_COGNITO_APP_CLIENT_ID?: string;
+      REACT_APP_COGNITO_DOMAIN?: string;
+      REACT_APP_COGNITO_IDENTITY_POOL_ID?: string;
+      REACT_APP_REDIRECT_URL?: string;
+      REACT_APP_S3_BUCKET?: string;
+      REACT_APP_S3_PREFIX?: string;
+      REACT_APP_S3_REGION?: string;
+    };
+  }
+}
 
 // Define environment variable accessor with better error messaging
 const getEnvVar = (name: string, required = true): string => {
-  const value = process.env[name];
+  // First try window.ENV_CONFIG (runtime), then fall back to process.env (build time)
+  const value = (window.ENV_CONFIG && window.ENV_CONFIG[name as keyof typeof window.ENV_CONFIG]) || process.env[name];
   if (required && !value) {
     console.error(`Missing required environment variable: ${name}`);
   }

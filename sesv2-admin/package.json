@@ -30,8 +30,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "node generate-env-config.js",
     "build": "react-scripts build",
-    "build:ci": "node ci-build.js",
+    "build:ci": "node generate-env-config.js && node ci-build.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
