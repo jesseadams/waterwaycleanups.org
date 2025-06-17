@@ -53,8 +53,17 @@ jobs:
           # Display parameter names (but not values for security)
           grep -v "^#" .env | cut -d= -f1 || true
       
+      - name: Debug environment variables
+        run: |
+          # Export all variables from .env to make them available
+          export $(grep -v '^#' .env | xargs)
+          # Run the debug script to verify all variables are available
+          node debug-env.js
+
       - name: Build application
-        run: npm run build
+        run: |
+          # Use the custom CI build script which will automatically load .env variables
+          npm run build:ci
         env:
           CI: false # Prevents treating warnings as errors
       
