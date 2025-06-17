@@ -7,7 +7,7 @@ import amplifyConfig from '../../amplifyconfiguration';
 
 // Google SSO button component
 const GoogleSignInButton = () => {
-  const { tokens } = useTheme();
+  useTheme();
   
   // Using the latest Amplify v6 Google sign-in pattern
   const signInWithGoogle = async () => {
@@ -91,7 +91,7 @@ const GoogleSignInButton = () => {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { tokens } = useTheme();
+  useTheme();
 
   // Custom login form styling
   const formComponents = {

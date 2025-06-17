@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { listContactLists, listContacts, listEmailTemplates, sendEmail, getContact, getEmailTemplate, testRenderEmailTemplate, getContactList } from '../../utils/sesv2';
-import TemplatePreview from '../templates/TemplatePreview';
 
 // Tab enum for cleaner state management
 enum TabType {
@@ -19,7 +18,7 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [isUsingTemplate, setIsUsingTemplate] = useState<boolean>(true);
   const [globalTemplateData, setGlobalTemplateData] = useState<string>('{}');
-  const [sendingProgress, setSendingProgress] = useState<{total: number, sent: number, failed: number} | null>(null);
+  const [sendingProgess, setSendingProgress] = useState<{total: number, sent: number, failed: number} | null>(null);
   const [customEmail, setCustomEmail] = useState({
     subject: '',
     htmlBody: '<html><body><p>Your email content here.</p></body></html>',
