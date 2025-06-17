@@ -6,6 +6,12 @@ function handler(event) {
     if (uri.startsWith('/sesv2-admin')) {
         // For the SESv2 admin app
         
+        // Handle root path for the admin app
+        if (uri === '/sesv2-admin' || uri === '/sesv2-admin/') {
+            request.uri = '/sesv2-admin/index.html';
+            return request;
+        }
+        
         // Check if requesting a file with extension (e.g., .js, .css, .png)
         if (/\.[a-zA-Z0-9]+$/.test(uri)) {
             // Request is for a file with extension, keep it as is
@@ -14,6 +20,10 @@ function handler(event) {
         
         // If it's not a file request, always serve index.html for SPA routing
         request.uri = '/sesv2-admin/index.html';
+    } else if (uri.startsWith('/static/') || uri === '/favicon.ico' || uri === '/manifest.json' || 
+              uri === '/logo192.png' || uri === '/logo512.png' || uri === '/robots.txt') {
+        // Rewrite requests for the React app's assets to the sesv2-admin folder
+        request.uri = '/sesv2-admin' + uri;
     } else {
         // For the main app
         

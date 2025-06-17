@@ -45,7 +45,7 @@ const root = ReactDOM.createRoot(
 );
 root.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/sesv2-admin">
       <App />
     </BrowserRouter>
   </React.StrictMode>
