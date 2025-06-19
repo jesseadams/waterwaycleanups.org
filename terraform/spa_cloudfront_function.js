@@ -6,8 +6,20 @@ function handler(event) {
     if (uri.startsWith('/sesv2-admin')) {
         // For the SESv2 admin app
         
-        // Handle root path for the admin app
-        if (uri === '/sesv2-admin' || uri === '/sesv2-admin/') {
+        // Handle root path for the admin app and ensure trailing slash for proper React Router basename handling
+        if (uri === '/sesv2-admin') {
+            // Redirect to add trailing slash to ensure proper basename handling
+            var response = {
+                statusCode: 301,
+                statusDescription: 'Moved Permanently',
+                headers: {
+                    'location': { value: '/sesv2-admin/' }
+                }
+            };
+            return response;
+        }
+        
+        if (uri === '/sesv2-admin/') {
             request.uri = '/sesv2-admin/index.html';
             return request;
         }
