@@ -22,10 +22,6 @@ jobs:
       id-token: write
       contents: read
     
-    defaults:
-      run:
-        working-directory: ./sesv2-admin
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -38,6 +34,7 @@ jobs:
           cache-dependency-path: sesv2-admin/package-lock.json
       
       - name: Install dependencies
+        working-directory: ./sesv2-admin
         run: npm ci
       
       - name: Configure AWS credentials
@@ -47,7 +44,34 @@ jobs:
           aws-region: us-east-1
           role-session-name: github-actions
       
+      # Step 1: Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.5.7
+
+      # Step 2: Apply Terraform changes for multi-SPA setup
+      - name: Terraform Init and Apply
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./terraform
+        run: |
+          terraform init
+          terraform apply -auto-approve
+          
+      # Step 3: Update CloudFront Function directly
+      - name: Update CloudFront Function
+        if: github.ref == 'refs/heads/main'
+        working-directory: ./terraform
+        run: |
+          ETAG=$(aws cloudfront describe-function --name SPA-Routing-Function --query "ETag" --output text)
+          aws cloudfront update-function \
+            --name SPA-Routing-Function \
+            --function-code fileb://spa_cloudfront_function.js \
+            --if-match $ETAG
+      
+      # Continue with the SESv2 admin app deployment
       - name: Retrieve parameters from SSM
+        working-directory: ./sesv2-admin
         run: |
           ./get-params-from-ssm.sh prod
           # Display parameter names (but not values for security)
@@ -55,16 +79,19 @@ jobs:
 
       # Export environment variables for subsequent steps
       - name: Export environment variables
+        working-directory: ./sesv2-admin
         run: |
           # Create a list of export commands for GitHub Actions to use in subsequent steps
           grep -v '^#' .env | sed 's/^/echo "/' | sed 's/$/\" >> $GITHUB_ENV/' | sh
           
       - name: Verify environment variables
+        working-directory: ./sesv2-admin
         run: |
           # Run the verification script to ensure all required variables are available
           node verify-build-env.js
 
       - name: Build application
+        working-directory: ./sesv2-admin
         run: |
           # Use the custom CI build script which will automatically load .env variables
           npm run build:ci
@@ -73,6 +100,7 @@ jobs:
       
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
+        working-directory: ./sesv2-admin
         run: |
           aws s3 sync build/ s3://waterwaycleanups-sesv2-admin/ --delete
       
@@ -80,7 +108,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           CLOUDFRONT_DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'waterwaycleanups.org')]].Id" --output text)
-          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/sesv2-admin/*"
+          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*" "/sesv2-admin/*" "/sesv2-admin"
       
       - name: Slack Notification
         uses: slackapi/slack-github-action@v2.1.0

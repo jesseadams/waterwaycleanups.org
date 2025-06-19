@@ -32,42 +32,8 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
-  # Default cache behavior for the main application
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-main"
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    # Using cache policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-
-    # CloudFront function for SPA routing
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_routing.arn
-    }
-  }
-
-  # SESv2-admin cache behavior for /sesv2-admin/* paths
-  ordered_cache_behavior {
-    path_pattern           = "/sesv2-admin/*"
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-admin"
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    # Using cache policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-
-    # CloudFront function for SPA routing
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_routing.arn
-    }
-  }
+  # These two cache behaviors must come before the default one
+  # They handle the admin app paths and must be evaluated first
 
   # SESv2-admin cache behavior for /sesv2-admin path (no trailing slash)
   ordered_cache_behavior {
@@ -88,7 +54,45 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     }
   }
 
-  # Custom error responses for main app
+  # SESv2-admin cache behavior for /sesv2-admin/* paths (with trailing slash and subpaths)
+  ordered_cache_behavior {
+    path_pattern           = "/sesv2-admin/*"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-admin"
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Using cache policy
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+
+    # CloudFront function for SPA routing
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_routing.arn
+    }
+  }
+
+  # Default cache behavior for the main application
+  # This comes last and handles all paths not matched above
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-main"
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Using cache policy
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+
+    # CloudFront function for SPA routing
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_routing.arn
+    }
+  }
+
+  # Custom error responses
   custom_error_response {
     error_code            = 403
     response_code         = 200
