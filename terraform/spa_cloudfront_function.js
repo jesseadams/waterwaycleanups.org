@@ -2,51 +2,21 @@ function handler(event) {
     var request = event.request;
     var uri = request.uri;
     
-    // Check if the request is for the SESv2 admin app
-    if (uri.startsWith('/sesv2-admin')) {
-        // Strip the /sesv2-admin prefix since the files are stored at the root of the sesv2-admin bucket
-        // but we access them through the /sesv2-admin path pattern
-        var adminPath = uri.replace('/sesv2-admin', '');
-        
-        // Handle empty path - redirect to add trailing slash for consistency
-        if (adminPath === '') {
-            return {
-                statusCode: 301,
-                statusDescription: 'Moved Permanently',
-                headers: {
-                    'location': { value: '/sesv2-admin/' }
-                }
-            };
-        }
-        
-        // Handle root path with trailing slash
-        if (adminPath === '/') {
-            request.uri = '/index.html';
-            return request;
-        }
-        
-        // Check if requesting a file with extension (e.g., .js, .css, .png)
-        if (/\.[a-zA-Z0-9]+$/.test(adminPath)) {
-            // Direct file request, keep the path but remove /sesv2-admin prefix
-            request.uri = adminPath;
-            return request;
-        }
-        
-        // For all other paths in the admin app - serve index.html for SPA routing
-        request.uri = '/index.html';
-        return request;
-    } 
-    
-    // For the main app (non /sesv2-admin paths)
-    
-    // Check if requesting a file with extension
+    // Check if this is a direct file request (has an extension)
     if (/\.[a-zA-Z0-9]+$/.test(uri)) {
-        // Direct file request, keep it as is
+        // Already requesting a specific file, leave the URI as is
         return request;
     }
     
-    // Add trailing slash for consistent behavior if needed
-    if (uri !== '/' && !uri.endsWith('/')) {
+    // For SPA routes, serve the appropriate index.html
+    // The origin selection is already handled by the cache behavior path patterns
+    // We just need to rewrite the URI to index.html for non-file requests
+    
+    // If we have a trailing slash or it's the root path, append index.html
+    if (uri === '/' || uri === '/sesv2-admin/' || uri === '/sesv2-admin') {
+        request.uri = uri.endsWith('/') ? uri + 'index.html' : uri + '/index.html';
+    } else if (!uri.endsWith('/')) {
+        // For consistent behavior, add a trailing slash for SPA routes
         return {
             statusCode: 301,
             statusDescription: 'Moved Permanently',
@@ -54,9 +24,10 @@ function handler(event) {
                 'location': { value: uri + '/' }
             }
         };
+    } else {
+        // For all other paths with trailing slash, serve index.html from that path
+        request.uri = uri + 'index.html';
     }
     
-    // Serve index.html for all other requests in the main app (SPA routing)
-    request.uri = '/index.html';
     return request;
 }

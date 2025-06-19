@@ -13,16 +13,14 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   origin {
     domain_name              = "waterwaycleanups.org.s3.us-east-1.amazonaws.com"
     origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
-    origin_id                = "s3"
-    origin_path              = ""
+    origin_id                = "s3-main"
   }
 
   # SESv2-admin origin
   origin {
     domain_name              = "${aws_s3_bucket.sesv2_admin_bucket.bucket}.s3.us-east-1.amazonaws.com"
     origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
-    origin_id                = "sesv2-admin"
-    origin_path              = ""  # No origin_path as we want the root of this bucket
+    origin_id                = "s3-admin"
   }
 
   # Aliases (CNAMEs)
@@ -34,33 +32,15 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
+  # Default cache behavior for the main application
   default_cache_behavior {
-    allowed_methods        = ["HEAD", "GET"]
-    cached_methods         = ["HEAD", "GET"]
-    target_origin_id       = "s3"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-main"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
-    # Using cache policy instead of forwarded_values
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-
-    # CloudFront function for appending index.html to directory requests
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_routing.arn
-    }
-  }
-
-  # SESv2-admin cache behavior
-  ordered_cache_behavior {
-    path_pattern           = "/sesv2-admin/*"
-    allowed_methods        = ["HEAD", "GET", "OPTIONS"]  # Added OPTIONS for CORS
-    cached_methods         = ["HEAD", "GET"]
-    target_origin_id       = "sesv2-admin"
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    # Using cache policy instead of forwarded_values
+    # Using cache policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
 
     # CloudFront function for SPA routing
@@ -70,16 +50,35 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     }
   }
 
-  # Handle direct /sesv2-admin (no trailing slash)
+  # SESv2-admin cache behavior for /sesv2-admin/* paths
   ordered_cache_behavior {
-    path_pattern           = "/sesv2-admin"
-    allowed_methods        = ["HEAD", "GET", "OPTIONS"]
-    cached_methods         = ["HEAD", "GET"]
-    target_origin_id       = "sesv2-admin"
+    path_pattern           = "/sesv2-admin/*"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-admin"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
-    # Using cache policy instead of forwarded_values
+    # Using cache policy
+    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+
+    # CloudFront function for SPA routing
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.spa_routing.arn
+    }
+  }
+
+  # SESv2-admin cache behavior for /sesv2-admin path (no trailing slash)
+  ordered_cache_behavior {
+    path_pattern           = "/sesv2-admin"
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "s3-admin"
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+
+    # Using cache policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
 
     # CloudFront function for SPA routing
