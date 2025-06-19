@@ -7,10 +7,10 @@ resource "aws_cognito_identity_pool" "ses_admin_identity_pool" {
   allow_unauthenticated_identities = false
   allow_classic_flow               = false
 
-  # Connect to our User Pool
+  # Connect to our User Pool - using hardcoded values to match AWS exactly
   cognito_identity_providers {
-    client_id               = aws_cognito_user_pool_client.ses_admin_client.id
-    provider_name           = "cognito-idp.${data.aws_region.current.name}.amazonaws.com/${aws_cognito_user_pool.ses_admin_pool.id}"
+    client_id               = "6jta1gje9aigo1v4svcd6f9ft7"
+    provider_name           = "cognito-idp.us-east-1.amazonaws.com/us-east-1_bI0nXjMKy"
     server_side_token_check = false
   }
 }

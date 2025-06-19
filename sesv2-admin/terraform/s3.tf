@@ -3,9 +3,9 @@ resource "aws_s3_bucket" "email_images" {
   bucket = "waterway-cleanups-newsletter-photos"
   
   tags = {
-    Name        = "Email Template Images"
+    Name        = "Waterway Cleanups Newsletter Photos"
     Environment = "Production"
-    Purpose     = "Store images used in email templates"
+    ManagedBy   = "Terraform"
   }
 }
 
