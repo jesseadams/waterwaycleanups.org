@@ -20,17 +20,17 @@ resource "aws_s3_bucket_policy" "website_bucket_policy" {
         Action    = "s3:GetObject"
         Condition = {
           StringEquals = {
-            "AWS:SourceArn" = "arn:aws:cloudfront::767072126027:distribution/E29TF2NHYH1VYQ"
+            "AWS:SourceArn" = aws_cloudfront_distribution.website_distribution.arn
           }
         }
         Effect    = "Allow"
         Principal = {
           Service = "cloudfront.amazonaws.com"
         }
-        Resource  = "arn:aws:s3:::waterwaycleanups.org/*"
+        Resource  = "${aws_s3_bucket.website_bucket.arn}/*"
         Sid       = "AllowCloudFrontServicePrincipal"
       },
     ]
-    Version   = "2008-10-17"
+    Version   = "2012-10-17"
   })
 }
