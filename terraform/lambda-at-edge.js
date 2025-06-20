@@ -6,7 +6,7 @@ exports.handler = (event, context, callback) => {
     const headers = request.headers;
     const uri = request.uri;
     
-    // Enhanced logging with full request details
+    // Log the original request
     console.log('Lambda@Edge Processing Request:', {
         uri: uri,
         method: request.method,
@@ -19,46 +19,52 @@ exports.handler = (event, context, callback) => {
     const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(uri);
     console.log('Has file extension:', hasFileExtension);
     
-    // Handle base /sesv2-admin path (without trailing slash)
-    if (uri === '/sesv2-admin') {
-        console.log('Redirecting /sesv2-admin to /sesv2-admin/');
-        // Redirect to add trailing slash for consistency
-        const response = {
-            status: '301',
-            statusDescription: 'Moved Permanently',
-            headers: {
-                'location': [{
-                    key: 'Location',
-                    value: '/sesv2-admin/'
-                }],
-                'cache-control': [{
-                    key: 'Cache-Control',
-                    value: 'max-age=3600'
-                }],
-            },
-        };
-        callback(null, response);
-        return;
-    }
-    
-    // Default SPA behavior - serve index.html for non-file paths
-    if (!hasFileExtension) {
-        // This could be a SPA route, serve index.html
-        const oldUri = request.uri;
-        
-        if (uri === '/') {
-            request.uri = '/index.html';
-        } else {
-            // Preserve the trailing slash behavior but serve index.html
-            request.uri = '/index.html';
+    try {
+        // Handle /sesv2-admin path (without trailing slash)
+        if (uri === '/sesv2-admin') {
+            console.log('Redirecting /sesv2-admin to /sesv2-admin/');
+            // Redirect to add trailing slash for consistency
+            const response = {
+                status: '301',
+                statusDescription: 'Moved Permanently',
+                headers: {
+                    'location': [{
+                        key: 'Location',
+                        value: '/sesv2-admin/'
+                    }],
+                    'cache-control': [{
+                        key: 'Cache-Control',
+                        value: 'max-age=3600'
+                    }],
+                },
+            };
+            callback(null, response);
+            return;
         }
         
-        console.log('SPA route detected, changing URI:', {
-            from: oldUri,
-            to: request.uri
-        });
-    } else {
-        console.log('File request, keeping URI unchanged:', uri);
+        // For requests to /sesv2-admin/* path, we don't need to do anything
+        // because the path pattern in CloudFront is already routing to the correct origin
+        
+        // For main app requests
+        if (!uri.startsWith('/sesv2-admin')) {
+            // Default SPA behavior for the main app - serve index.html for non-file paths
+            if (!hasFileExtension) {
+                const oldUri = request.uri;
+                request.uri = '/index.html'; // Always serve index.html for SPA routes
+                
+                console.log('Main app SPA route detected, changing URI:', {
+                    from: oldUri,
+                    to: request.uri
+                });
+            } else {
+                console.log('Main app file request, keeping URI unchanged:', uri);
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error processing request:', error);
+        // In case of error, just pass the request through unchanged
+        // to avoid breaking the site entirely
     }
     
     // Log the final request before returning

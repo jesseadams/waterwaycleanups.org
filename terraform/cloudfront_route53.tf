@@ -32,8 +32,15 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
-    # Using cache policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+    # Using minimal caching for SPA routes
+    cache_policy_id = aws_cloudfront_cache_policy.spa_minimal_cache.id
+    
+    # Lambda@Edge function for the admin app path
+    lambda_function_association {
+      event_type   = "origin-request"
+      lambda_arn   = "${aws_lambda_function.spa_router.arn}:${aws_lambda_function.spa_router.version}"
+      include_body = false
+    }
   }
 
   # Default cache behavior for all requests
@@ -44,8 +51,8 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
-    # Using cache policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+    # Using minimal caching for SPA routes
+    cache_policy_id = aws_cloudfront_cache_policy.spa_minimal_cache.id
     
     # Lambda@Edge function for origin-request
     lambda_function_association {
@@ -55,20 +62,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     }
   }
 
-  # Custom error responses
-  custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 10
-  }
-  
-  custom_error_response {
-    error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 10
-  }
+  # We're removing custom error responses since Lambda@Edge will handle routing
 
   restrictions {
     geo_restriction {
@@ -85,6 +79,33 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   # Prevent accidental deletion
   lifecycle {
     prevent_destroy = true
+  }
+}
+
+# Custom cache policy for SPA routes
+resource "aws_cloudfront_cache_policy" "spa_minimal_cache" {
+  name        = "SPA-Minimal-Cache-Policy"
+  comment     = "Policy for Single Page Applications with minimal caching"
+  
+  default_ttl = 0
+  min_ttl     = 0
+  max_ttl     = 60
+  
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = "none"
+    }
+    
+    headers_config {
+      header_behavior = "none"
+    }
+    
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+
+    enable_accept_encoding_brotli = true
+    enable_accept_encoding_gzip   = true
   }
 }
 

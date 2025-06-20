@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script to test Lambda@Edge routing between main app and sesv2-admin app
-# This makes HTTP requests and checks responses to verify the routing is working correctly
+# This makes HTTP requests and displays response headers to verify the routing is working correctly
 
 echo "Testing Lambda@Edge routing for multiple SPAs..."
 echo "-----------------------------------------"
@@ -9,56 +9,64 @@ echo "-----------------------------------------"
 # CloudFront domain - replace with your actual domain
 DOMAIN="waterwaycleanups.org"
 
-echo "Testing main app route (/)..."
-MAIN_RESPONSE=$(curl -s "https://$DOMAIN/" | grep -o "<title>.*</title>" | head -1)
-echo "Main app title: $MAIN_RESPONSE"
-echo
+# Function to make a request and check response headers
+make_request() {
+  local url=$1
+  local description=$2
+  
+  echo -e "\nTesting $description: $url"
+  echo "--------------------------------"
+  
+  # Make the request and capture headers
+  RESPONSE_HEADERS=$(curl -s -I "$url")
+  HTTP_STATUS=$(echo "$RESPONSE_HEADERS" | grep -i "^HTTP" | head -1)
+  
+  # Print status code
+  echo "Status: $HTTP_STATUS"
+  
+  # Check for specific headers
+  CACHE_HEADER=$(echo "$RESPONSE_HEADERS" | grep -i "X-Cache:")
+  CACHE_HIT=$(echo "$RESPONSE_HEADERS" | grep -i "X-Cache-Hit:")
+  CONTENT_TYPE=$(echo "$RESPONSE_HEADERS" | grep -i "Content-Type:")
+  
+  echo "X-Cache: ${CACHE_HEADER:-Not present}"
+  echo "Content-Type: ${CONTENT_TYPE:-Not present}"
+  
+  # Check for any error indicators in headers
+  if [[ "$CACHE_HEADER" == *"Error"* ]]; then
+    echo -e "\n⚠️  WARNING: X-Cache Error detected! This suggests a CloudFront configuration issue."
+    echo "Check your Lambda@Edge function and CloudFront error responses."
+  fi
+  
+  # Make another request to get the body and check title
+  BODY=$(curl -s "$url")
+  TITLE=$(echo "$BODY" | grep -o "<title>.*</title>" | head -1)
+  echo "Page title: $TITLE"
+}
 
-echo "Testing SESv2 admin app route (/sesv2-admin/)..."
-ADMIN_RESPONSE=$(curl -s "https://$DOMAIN/sesv2-admin/" | grep -o "<title>.*</title>" | head -1)
-echo "Admin app title: $ADMIN_RESPONSE"
-echo
+# Test main routes
+make_request "https://$DOMAIN/" "main app root route"
+make_request "https://$DOMAIN/about/" "main app non-root route"
+make_request "https://$DOMAIN/static/css/style.css" "main app static asset"
 
-echo "Testing SESv2 admin app route without trailing slash (/sesv2-admin)..."
-curl -s -I "https://$DOMAIN/sesv2-admin" | grep -E "HTTP|Location"
-echo
+# Test admin routes
+make_request "https://$DOMAIN/sesv2-admin/" "admin app root route"
+make_request "https://$DOMAIN/sesv2-admin/settings/" "admin app non-root route"
+make_request "https://$DOMAIN/sesv2-admin" "admin app without trailing slash (should redirect)"
 
-if [[ "$MAIN_RESPONSE" == "$ADMIN_RESPONSE" ]]; then
-  echo "⚠️  WARNING: Both applications are returning the same title. This suggests Lambda@Edge routing may not be working correctly."
-  echo "The SESv2 admin app should be loaded from a different origin and should have a different title."
-else
-  echo "✅ Success! The applications are returning different content as expected."
-fi
-
-echo "-----------------------------------------"
+echo -e "\n-----------------------------------------"
 echo "Debug Information:"
-echo
 
-echo "1. Testing SESv2 admin static assets:"
-curl -s -I "https://$DOMAIN/sesv2-admin/static/js/main.js" 2>/dev/null | grep -E "HTTP|Content-Type|Content-Length" || echo "File not found"
-echo
-
-echo "2. Testing CloudFront origin selection with verbose curl:"
+echo -e "\n1. Testing CloudFront origin selection with verbose curl:"
 echo "Main app (/)"
-curl -s -v "https://$DOMAIN/" 2>&1 | grep -E "Host:|> GET|< HTTP"
+curl -s -v "https://$DOMAIN/" 2>&1 | grep -E "Host:|> GET|< HTTP|< x-cache"
 echo
 
 echo "SESv2 admin app (/sesv2-admin/)"
-curl -s -v "https://$DOMAIN/sesv2-admin/" 2>&1 | grep -E "Host:|> GET|< HTTP"
-echo
+curl -s -v "https://$DOMAIN/sesv2-admin/" 2>&1 | grep -E "Host:|> GET|< HTTP|< x-cache"
 
-echo "3. Lambda@Edge Log Check Instructions:"
-echo "To verify that the Lambda@Edge function is working correctly:"
-echo "  1. Log into AWS Console"
-echo "  2. Go to CloudWatch Logs in us-east-1 region"
-echo "  3. Look for log groups named like /aws/lambda/us-east-1.spa-router"
-echo "  4. Check the latest log streams for request processing"
-
-echo "-----------------------------------------"
-echo "If you're still experiencing issues:"
-echo "1. Remember Lambda@Edge changes can take up to 15 minutes to propagate"
-echo "2. Check that both S3 buckets have the appropriate files"
-echo "3. Verify that the CloudFront distribution cache has been invalidated"
-echo "4. Ensure bucket policies allow CloudFront to access the objects"
-echo "5. Check CloudFront logs for any access denied errors"
-echo "6. Verify the Lambda@Edge function version is correctly associated with CloudFront"
+echo -e "\n-----------------------------------------"
+echo "Lambda@Edge Log Check Instructions:"
+echo "  1. Run the check-lambdaedge-logs.sh script to check logs across all regions"
+echo "  2. If no logs are found, wait a few minutes for logs to propagate"
+echo "  3. See README-LAMBDA-EDGE-LOGS.md for more detailed information"
