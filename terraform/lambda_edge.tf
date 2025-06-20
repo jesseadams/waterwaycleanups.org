@@ -19,6 +19,33 @@ resource "aws_iam_role" "lambda_edge_role" {
   })
 }
 
+# CloudWatch Logs policy for Lambda@Edge
+resource "aws_iam_policy" "lambda_edge_logs_policy" {
+  name        = "lambda_edge_logs_policy"
+  description = "IAM policy for Lambda@Edge to write logs to CloudWatch Logs"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Effect   = "Allow",
+        Resource = "arn:aws:logs:*:*:*"
+      }
+    ]
+  })
+}
+
+# Attach CloudWatch Logs policy to Lambda@Edge role
+resource "aws_iam_role_policy_attachment" "lambda_edge_logs_attachment" {
+  role       = aws_iam_role.lambda_edge_role.name
+  policy_arn = aws_iam_policy.lambda_edge_logs_policy.arn
+}
+
 # Basic Lambda execution policy
 resource "aws_iam_role_policy_attachment" "lambda_edge_basic" {
   role       = aws_iam_role.lambda_edge_role.name
@@ -46,7 +73,7 @@ resource "aws_lambda_function" "spa_router" {
 resource "null_resource" "lambda_edge_zip" {
   triggers = {
     # Re-run whenever the Lambda code changes
-    lambda_hash = filemd5("${path.module}/lambda-at-edge.js")
+    lambda_hash = filebase64sha256("${path.module}/lambda-at-edge.js")
   }
 
   provisioner "local-exec" {

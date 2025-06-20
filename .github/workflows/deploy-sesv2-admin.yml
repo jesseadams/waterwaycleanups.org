@@ -35,7 +35,9 @@ jobs:
       
       - name: Install dependencies
         working-directory: ./sesv2-admin
-        run: npm ci
+        run: |
+          npm ci
+          npm install -g jq
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,12 +52,14 @@ jobs:
         with:
           terraform_version: 1.5.7
 
-      # Step 2: Create Lambda deployment package
+      # Step 2: Create Lambda deployment package with enhanced logging
       - name: Create Lambda deployment package
         if: github.ref == 'refs/heads/main'
         working-directory: ./terraform
         run: |
           zip lambda-at-edge.zip lambda-at-edge.js
+          echo "Lambda package contents:"
+          unzip -l lambda-at-edge.zip
           
       # Step 3: Apply Terraform changes including Lambda@Edge
       - name: Terraform Init and Apply
@@ -64,6 +68,26 @@ jobs:
         run: |
           terraform init
           terraform apply -auto-approve
+      
+      # Step 4: Check for updated Lambda function execution
+      - name: Trigger Lambda@Edge and wait for propagation
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Waiting 2 minutes for Lambda@Edge to start propagation..."
+          sleep 120
+          
+          # Make an HTTP request to trigger the Lambda@Edge function
+          echo "Making HTTP requests to trigger Lambda@Edge function..."
+          curl -s -o /dev/null -w "Main site status: %{http_code}\n" https://waterwaycleanups.org/
+          curl -s -o /dev/null -w "Admin site status: %{http_code}\n" https://waterwaycleanups.org/sesv2-admin/
+          
+          # Check for logs in us-east-1 (primary region)
+          echo "Checking for Lambda@Edge logs in us-east-1..."
+          chmod +x ./terraform/check-lambdaedge-logs.sh
+          ./terraform/check-lambdaedge-logs.sh spa-router 1
+          
+          # Continue regardless of log check result
+          echo "Lambda@Edge deployment continues - logs may appear later in CloudWatch"
       
       # Continue with the SESv2 admin app deployment
       - name: Retrieve parameters from SSM

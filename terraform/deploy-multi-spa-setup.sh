@@ -29,7 +29,9 @@ echo ""
 echo "NOTE: Lambda@Edge deployments can take up to 15 minutes to propagate globally."
 echo "If you experience issues, wait a bit and try again."
 echo ""
-echo "For troubleshooting, check CloudWatch Logs in the us-east-1 region."
-echo "Look for log groups named /aws/lambda/us-east-1.spa-router"
+echo "To check for Lambda@Edge logs, run:"
+echo "./check-lambdaedge-logs.sh"
+echo ""
+echo "For more information on Lambda@Edge logs, see README-LAMBDA-EDGE-LOGS.md"
 
 exit 0
