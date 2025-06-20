@@ -11,7 +11,6 @@ exports.handler = (event, context, callback) => {
         uri: uri,
         method: request.method,
         originId: request.origin ? request.origin.s3.id : 'unknown',
-        headers: JSON.stringify(headers),
         clientIp: request.clientIp || 'unknown'
     });
     
@@ -38,25 +37,34 @@ exports.handler = (event, context, callback) => {
             return;
         }
         
-        // For requests to /sesv2-admin/* path
+        // For requests to /sesv2-admin/* path 
         if (uri.startsWith('/sesv2-admin/')) {
-            // Handle static assets for sesv2-admin app
-            // We need to strip the /sesv2-admin prefix since that's not in the bucket
-            if (uri.includes('.')) {
-                // This is likely a static asset
-                const newUri = uri.replace('/sesv2-admin/', '/');
+            console.log('Processing SESv2 admin path:', uri);
+            
+            // Get the part after /sesv2-admin/
+            const pathSuffix = uri.replace('/sesv2-admin/', '');
+            
+            // If it's a file request (contains a dot or is a known static asset path)
+            if (pathSuffix.includes('.') || 
+                pathSuffix.startsWith('static/') || 
+                pathSuffix === 'env-config.js' ||
+                pathSuffix.startsWith('assets/')) {
+                
+                // This is a static asset - rewrite the path to the root of the bucket
+                const newUri = '/' + pathSuffix;
                 console.log('Rewriting SESv2 admin asset path:', {
                     from: uri,
-                    to: newUri
+                    to: newUri,
+                    pathSuffix: pathSuffix
                 });
                 request.uri = newUri;
-                return callback(null, request);
             } else {
-                // This is a SPA route, serve index.html
+                // This is a SPA route - serve index.html
                 console.log('Serving SESv2 admin index.html for SPA route:', uri);
                 request.uri = '/index.html';
-                return callback(null, request);
             }
+            
+            return callback(null, request);
         }
         
         // For main app requests
@@ -78,16 +86,13 @@ exports.handler = (event, context, callback) => {
         }
         
     } catch (error) {
-        console.error('Error processing request:', error);
+        console.error('Error processing request:', error.message, error.stack);
         // In case of error, just pass the request through unchanged
         // to avoid breaking the site entirely
     }
     
     // Log the final request before returning
-    console.log('Final request:', {
-        uri: request.uri,
-        origin: request.origin ? JSON.stringify(request.origin) : 'default'
-    });
+    console.log('Final request URI:', request.uri);
     
     callback(null, request);
 };
