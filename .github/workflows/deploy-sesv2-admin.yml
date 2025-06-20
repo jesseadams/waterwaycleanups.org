@@ -37,7 +37,7 @@ jobs:
         working-directory: ./sesv2-admin
         run: |
           npm ci
-          npm install -g jq
+          sudo apt-get update && sudo apt-get install -y jq
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -69,26 +69,6 @@ jobs:
           terraform init
           terraform apply -auto-approve
       
-      # Step 4: Check for updated Lambda function execution
-      - name: Trigger Lambda@Edge and wait for propagation
-        if: github.ref == 'refs/heads/main'
-        run: |
-          echo "Waiting 2 minutes for Lambda@Edge to start propagation..."
-          sleep 120
-          
-          # Make an HTTP request to trigger the Lambda@Edge function
-          echo "Making HTTP requests to trigger Lambda@Edge function..."
-          curl -s -o /dev/null -w "Main site status: %{http_code}\n" https://waterwaycleanups.org/
-          curl -s -o /dev/null -w "Admin site status: %{http_code}\n" https://waterwaycleanups.org/sesv2-admin/
-          
-          # Check for logs in us-east-1 (primary region)
-          echo "Checking for Lambda@Edge logs in us-east-1..."
-          chmod +x ./terraform/check-lambdaedge-logs.sh
-          ./terraform/check-lambdaedge-logs.sh spa-router 1
-          
-          # Continue regardless of log check result
-          echo "Lambda@Edge deployment continues - logs may appear later in CloudWatch"
-      
       # Continue with the SESv2 admin app deployment
       - name: Retrieve parameters from SSM
         working-directory: ./sesv2-admin
@@ -118,17 +98,39 @@ jobs:
         env:
           CI: false # Prevents treating warnings as errors
       
+      # Deploy to S3 - important: files go at the root of the bucket
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         working-directory: ./sesv2-admin
         run: |
           aws s3 sync build/ s3://waterwaycleanups-sesv2-admin/ --delete
+          echo "Verifying deployment:"
+          aws s3 ls s3://waterwaycleanups-sesv2-admin/ --recursive | head -5
       
       - name: Invalidate CloudFront cache
         if: github.ref == 'refs/heads/main'
         run: |
           CLOUDFRONT_DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'waterwaycleanups.org')]].Id" --output text)
           aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*" "/sesv2-admin/*" "/sesv2-admin"
+      
+      # Step to help debug by making requests to trigger Lambda@Edge
+      - name: Trigger Lambda@Edge for testing
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "Waiting 30 seconds for cache invalidation to propagate..."
+          sleep 30
+          
+          # Make requests to trigger the Lambda@Edge function
+          echo "Testing admin SPA route:"
+          curl -s -I https://waterwaycleanups.org/sesv2-admin/ | grep -E "HTTP|X-Cache|Content-Type"
+          
+          # Get a list of JS files in the admin app's build folder
+          ASSET_FILE=$(find sesv2-admin/build -name "*.js" -type f | head -1 | sed 's|sesv2-admin/build/|sesv2-admin/|')
+          
+          if [ -n "$ASSET_FILE" ]; then
+            echo "Testing static asset route: $ASSET_FILE"
+            curl -s -I "https://waterwaycleanups.org/$ASSET_FILE" | grep -E "HTTP|X-Cache|Content-Type"
+          fi
       
       - name: Slack Notification
         uses: slackapi/slack-github-action@v2.1.0

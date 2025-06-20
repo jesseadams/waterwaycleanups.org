@@ -13,28 +13,34 @@ Key components:
 
 1. **Two S3 Buckets** - Each SPA has its own bucket:
    - `waterwaycleanups.org` - Main website
-   - `waterwaycleanups-sesv2-admin` - SESv2 admin app
+   - `waterwaycleanups-sesv2-admin` - SESv2 admin app (Files at the root - **not** in a `/sesv2-admin/` folder)
 
 2. **CloudFront Distribution**:
    - Configured with both origins
    - Path pattern `/sesv2-admin/*` routes to the admin app bucket
    - Default behavior routes to the main website bucket
-   - Lambda@Edge function handles SPA routing for both applications
+   - Lambda@Edge function handles SPA routing and path translation
 
-3. **Lambda@Edge Function** - Handles SPA routing:
+3. **Lambda@Edge Function**:
    - Runs at the `origin-request` event
+   - Handles SPA routing by serving index.html for non-file paths
+   - For admin app static assets, transforms `/sesv2-admin/static/...` to `/static/...`
    - Redirects `/sesv2-admin` to `/sesv2-admin/` for consistency
-   - Serves `index.html` for non-file requests to support client-side routing
 
 ## How the Lambda@Edge Function Works
 
 The Lambda@Edge function (`lambda-at-edge.js`) receives CloudFront requests at the origin-request phase and:
 
-1. If the request is for a file (has an extension), it passes the request through unchanged
-2. If the request is for `/sesv2-admin` (without trailing slash), it redirects to `/sesv2-admin/` 
-3. For other non-file requests, it serves `index.html` to support SPA routing
+1. For files under `/sesv2-admin/`:
+   - Transforms the path by removing the `/sesv2-admin/` prefix
+   - Because the files in the S3 bucket are at the root level, not in a subfolder
 
-This approach allows us to host both SPAs on a single domain while maintaining proper routing for each app.
+2. For SPA routes:
+   - Serves index.html to support client-side routing
+   - Works for both apps with appropriate path handling
+
+3. For the `/sesv2-admin` base path:
+   - Issues a 301 redirect to `/sesv2-admin/` for proper basename handling
 
 ## CloudFront Configuration
 
@@ -46,20 +52,15 @@ The CloudFront distribution has:
 
 2. **Two Cache Behaviors**:
    - Ordered cache behavior for `/sesv2-admin/*` - Routes to the admin app bucket
-   - Default cache behavior - Routes to the main website bucket and attaches the Lambda@Edge function
+   - Default cache behavior - Routes to the main website bucket
 
-## CI/CD Pipeline
+3. **Custom Cache Policy**:
+   - Minimal caching (0-60 seconds) to prevent stale content
+   - Supports brotli and gzip encoding
 
-The GitHub Actions workflow `.github/workflows/deploy-sesv2-admin.yml` handles:
+## React Router Configuration
 
-1. Creating and uploading the Lambda@Edge function
-2. Applying all Terraform changes
-3. Building and deploying the SESv2 admin app to its S3 bucket
-4. Invalidating the CloudFront cache
-
-## SPA Configuration
-
-The SESv2 admin React app is configured with:
+The SESv2 admin React app is correctly configured with:
 
 ```jsx
 <BrowserRouter basename="/sesv2-admin">
@@ -69,54 +70,52 @@ The SESv2 admin React app is configured with:
 
 This ensures all routes within the admin app are properly prefixed.
 
-## Folder Structure
+## Directory Structure for S3 Buckets
 
-- `terraform/lambda-at-edge.js` - The Lambda@Edge function code
-- `terraform/lambda_edge.tf` - Terraform configuration for the Lambda@Edge function
-- `terraform/cloudfront_route53.tf` - CloudFront distribution configuration
-- `terraform/sesv2_admin_bucket.tf` - S3 bucket for the SESv2 admin app
+### waterwaycleanups.org bucket (main website)
+```
+/index.html
+/static/css/...
+/static/js/...
+/images/...
+/about/...
+```
+
+### waterwaycleanups-sesv2-admin bucket (admin app)
+```
+/index.html  <- NOT in a /sesv2-admin/ folder
+/static/css/...
+/static/js/...
+/assets/...
+```
 
 ## Deployment Process
 
-The full deployment process is:
-
-1. Create a Lambda deployment package:
+1. **Main App Deployment**:
    ```bash
-   cd terraform
-   zip lambda-at-edge.zip lambda-at-edge.js
+   aws s3 sync ./public/ s3://waterwaycleanups.org/ --delete
    ```
 
-2. Apply Terraform changes:
-   ```bash
-   cd terraform
-   terraform init
-   terraform apply
-   ```
-
-3. Deploy the SESv2 admin app:
+2. **SESv2 Admin App Deployment**:
    ```bash
    cd sesv2-admin
    npm run build
    aws s3 sync build/ s3://waterwaycleanups-sesv2-admin/ --delete
    ```
 
-4. Invalidate the CloudFront cache:
+3. **CloudFront Cache Invalidation**:
    ```bash
    DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'waterwaycleanups.org')]].Id" --output text)
-   aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*" "/sesv2-admin/*" "/sesv2-admin"
+   aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/sesv2-admin/*" "/sesv2-admin" "/*"
    ```
 
 ## Troubleshooting
 
-1. **Lambda@Edge Logs**: Lambda@Edge function logs are stored in CloudWatch Logs in the us-east-1 region. Check these logs for any errors in the routing logic.
+If you encounter 403 errors for static assets:
 
-2. **CloudFront Cache**: Remember that CloudFront caches responses. If changes aren't visible, invalidate the cache.
+1. Check Lambda@Edge logs across all regions using the `check-lambdaedge-logs.sh` script
+2. Make sure the static assets are at the root of the admin bucket (not in a `/sesv2-admin/` folder)
+3. Verify the Lambda@Edge function is correctly transforming the paths
+4. Try a full CloudFront cache invalidation and wait 5-15 minutes
 
-3. **S3 Bucket Contents**: Verify that both S3 buckets contain the correct files.
-
-4. **Lambda@Edge Deployment**: Lambda@Edge functions require some time to propagate to all CloudFront edge locations. Allow up to 15 minutes for changes to take effect globally.
-
-5. **403 or 404 Errors**: Check that:
-   - S3 bucket policies allow CloudFront to access the objects
-   - The path in the request is correctly structured
-   - The Lambda@Edge function is correctly handling SPA routes
+For more details on accessing Lambda@Edge logs, see the `README-LAMBDA-EDGE-LOGS.md` file.

@@ -15,10 +15,6 @@ exports.handler = (event, context, callback) => {
         clientIp: request.clientIp || 'unknown'
     });
     
-    // Check if this is a direct file request (has an extension)
-    const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(uri);
-    console.log('Has file extension:', hasFileExtension);
-    
     try {
         // Handle /sesv2-admin path (without trailing slash)
         if (uri === '/sesv2-admin') {
@@ -42,12 +38,32 @@ exports.handler = (event, context, callback) => {
             return;
         }
         
-        // For requests to /sesv2-admin/* path, we don't need to do anything
-        // because the path pattern in CloudFront is already routing to the correct origin
+        // For requests to /sesv2-admin/* path
+        if (uri.startsWith('/sesv2-admin/')) {
+            // Handle static assets for sesv2-admin app
+            // We need to strip the /sesv2-admin prefix since that's not in the bucket
+            if (uri.includes('.')) {
+                // This is likely a static asset
+                const newUri = uri.replace('/sesv2-admin/', '/');
+                console.log('Rewriting SESv2 admin asset path:', {
+                    from: uri,
+                    to: newUri
+                });
+                request.uri = newUri;
+                return callback(null, request);
+            } else {
+                // This is a SPA route, serve index.html
+                console.log('Serving SESv2 admin index.html for SPA route:', uri);
+                request.uri = '/index.html';
+                return callback(null, request);
+            }
+        }
         
         // For main app requests
         if (!uri.startsWith('/sesv2-admin')) {
-            // Default SPA behavior for the main app - serve index.html for non-file paths
+            // Check if this is a direct file request (has an extension)
+            const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(uri);
+            
             if (!hasFileExtension) {
                 const oldUri = request.uri;
                 request.uri = '/index.html'; // Always serve index.html for SPA routes
