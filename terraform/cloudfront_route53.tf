@@ -1,12 +1,3 @@
-# CloudFront function for SPA routing
-resource "aws_cloudfront_function" "spa_routing" {
-  name    = "SPA-Routing-Function"
-  runtime = "cloudfront-js-2.0"
-  comment = "Handle SPA routing for React apps"
-  publish = true
-  code    = file("${path.module}/spa_cloudfront_function.js")
-}
-
 # CloudFront distribution for the website
 resource "aws_cloudfront_distribution" "website_distribution" {
   # Main website origin
@@ -32,24 +23,6 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_root_object = "index.html"
   price_class         = "PriceClass_100"
 
-  # Default cache behavior for the main application
-  default_cache_behavior {
-    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
-    cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-main"
-    compress               = true
-    viewer_protocol_policy = "redirect-to-https"
-
-    # Using cache policy
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-
-    # CloudFront function for SPA routing
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_routing.arn
-    }
-  }
-
   # SESv2-admin cache behavior for /sesv2-admin/* paths
   ordered_cache_behavior {
     path_pattern           = "/sesv2-admin/*"
@@ -61,34 +34,28 @@ resource "aws_cloudfront_distribution" "website_distribution" {
 
     # Using cache policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-
-    # CloudFront function for SPA routing
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_routing.arn
-    }
   }
 
-  # SESv2-admin cache behavior for /sesv2-admin path (no trailing slash)
-  ordered_cache_behavior {
-    path_pattern           = "/sesv2-admin"
+  # Default cache behavior for all requests
+  default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-admin"
+    target_origin_id       = "s3-main"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
 
     # Using cache policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-
-    # CloudFront function for SPA routing
-    function_association {
-      event_type   = "viewer-request"
-      function_arn = aws_cloudfront_function.spa_routing.arn
+    
+    # Lambda@Edge function for origin-request
+    lambda_function_association {
+      event_type   = "origin-request"
+      lambda_arn   = "${aws_lambda_function.spa_router.arn}:${aws_lambda_function.spa_router.version}"
+      include_body = false
     }
   }
 
-  # Custom error responses for main app
+  # Custom error responses
   custom_error_response {
     error_code            = 403
     response_code         = 200
