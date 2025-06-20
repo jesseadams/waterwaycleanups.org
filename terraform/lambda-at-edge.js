@@ -6,11 +6,14 @@ exports.handler = (event, context, callback) => {
     const headers = request.headers;
     const uri = request.uri;
     
+    // Get the origin ID to use in logging
+    const originId = request.origin && request.origin.s3 ? request.origin.s3.domainName : 'unknown';
+    
     // Log the original request
     console.log('Lambda@Edge Processing Request:', {
         uri: uri,
         method: request.method,
-        originId: request.origin ? request.origin.s3.id : 'unknown',
+        originId: originId,
         clientIp: request.clientIp || 'unknown'
     });
     
@@ -70,7 +73,7 @@ exports.handler = (event, context, callback) => {
         // For main app requests
         if (!uri.startsWith('/sesv2-admin')) {
             // Check if this is a direct file request (has an extension)
-            const hasFileExtension = /\.[a-zA-Z0-9]+$/.test(uri);
+            const hasFileExtension = uri.includes('.');
             
             if (!hasFileExtension) {
                 const oldUri = request.uri;
@@ -81,7 +84,13 @@ exports.handler = (event, context, callback) => {
                     to: request.uri
                 });
             } else {
-                console.log('Main app file request, keeping URI unchanged:', uri);
+                // This is a static asset request for the main app.
+                // Ensure the path is correct (should already be correct since it's not transformed)
+                // But let's validate it just in case
+                if (!uri.startsWith('/')) {
+                    request.uri = '/' + uri;
+                }
+                console.log('Main app file request, URI:', request.uri);
             }
         }
         
@@ -92,7 +101,7 @@ exports.handler = (event, context, callback) => {
     }
     
     // Log the final request before returning
-    console.log('Final request URI:', request.uri);
+    console.log('Final request URI:', request.uri, 'Origin:', originId);
     
     callback(null, request);
 };
