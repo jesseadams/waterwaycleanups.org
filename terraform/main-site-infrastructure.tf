@@ -1,6 +1,19 @@
 # Main website infrastructure: CloudFront, S3, and Route 53 resources
 
 #
+# CLOUDFRONT FUNCTIONS
+#
+
+# CloudFront function for handling directory indexes in Hugo sites
+resource "aws_cloudfront_function" "directory_index" {
+  name    = "directory-index-handler"
+  runtime = "cloudfront-js-1.0"
+  comment = "Handles directory indexes for Hugo static site"
+  publish = true
+  code    = file("${path.module}/directory_index_function.js")
+}
+
+#
 # S3 BUCKET RESOURCES
 #
 
@@ -77,20 +90,20 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     
     # Using standard caching policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
+    
+    # CloudFront Function for directory index handling (Hugo-friendly)
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.directory_index.arn
+    }
   }
 
-  # Custom error response for SPA routing
-  custom_error_response {
-    error_code            = 403
-    response_code         = 200
-    response_page_path    = "/index.html"
-    error_caching_min_ttl = 10
-  }
   
+  # Custom error response for 404 errors only
   custom_error_response {
     error_code            = 404
-    response_code         = 200
-    response_page_path    = "/index.html"
+    response_code         = 404
+    response_page_path    = "/404/index.html"
     error_caching_min_ttl = 10
   }
 
