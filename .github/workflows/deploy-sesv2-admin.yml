@@ -90,20 +90,7 @@ jobs:
         env:
           CI: false # Prevents treating warnings as errors
           PUBLIC_URL: https://sesv2-admin.waterwaycleanups.org # Set the correct public URL
-      
-      # Deploy to S3 bucket (dynamically get the bucket name from Terraform outputs)
-      - name: Get S3 bucket name from Terraform outputs
-        id: tf-outputs
-        working-directory: ./sesv2-admin/terraform
-        run: |
-          # Parse bucket name, handling potential debug output format
-          BUCKET_NAME=$(terraform output -raw sesv2_admin_bucket_name | cut -d':' -f1)
-          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
-          
-          # Parse distribution ID, handling potential debug output format
-          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id | cut -d':' -f1)
-          echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
-      
+
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         working-directory: ./sesv2-admin

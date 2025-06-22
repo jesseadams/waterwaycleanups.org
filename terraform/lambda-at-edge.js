@@ -76,10 +76,20 @@ exports.handler = (event, context, callback) => {
             const hasFileExtension = uri.includes('.');
             
             if (!hasFileExtension) {
+                // This is a Hugo site, not a SPA
+                // Try to serve path/index.html for clean URLs
                 const oldUri = request.uri;
-                request.uri = '/index.html'; // Always serve index.html for SPA routes
                 
-                console.log('Main app SPA route detected, changing URI:', {
+                // Ensure we have a trailing slash, except for the root path
+                let newUri = uri;
+                if (uri !== '/' && !uri.endsWith('/')) {
+                    newUri = uri + '/';
+                }
+                
+                // Append index.html to the path
+                request.uri = newUri + 'index.html';
+                
+                console.log('Hugo route detected, changing URI:', {
                     from: oldUri,
                     to: request.uri
                 });
