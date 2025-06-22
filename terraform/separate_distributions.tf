@@ -151,6 +151,18 @@ resource "aws_cloudfront_distribution" "sesv2_admin_distribution" {
 # Route 53 Configuration
 # ----------------------
 
+# Route 53 zone for the domain
+resource "aws_route53_zone" "primary" {
+  name          = "waterwaycleanups.org"
+  comment       = "Managed by Terraform"
+  force_destroy = false
+  
+  # Prevent accidental deletion
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 # Main website records (unchanged)
 resource "aws_route53_record" "website_record" {
   zone_id = aws_route53_zone.primary.zone_id
@@ -204,4 +216,9 @@ output "main_cloudfront_distribution_id" {
 output "admin_cloudfront_distribution_id" {
   value       = aws_cloudfront_distribution.sesv2_admin_distribution.id
   description = "The ID of the SESv2 admin CloudFront distribution"
+}
+
+output "route53_zone_id" {
+  value = aws_route53_zone.primary.zone_id
+  description = "The ID of the Route 53 zone"
 }
