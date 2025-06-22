@@ -51,17 +51,8 @@ jobs:
         uses: hashicorp/setup-terraform@v1
         with:
           terraform_version: 1.5.7
-
-      # Step 2: Create Lambda deployment package with enhanced logging
-      - name: Create Lambda deployment package
-        if: github.ref == 'refs/heads/main'
-        working-directory: ./terraform
-        run: |
-          zip lambda-at-edge.zip lambda-at-edge.js
-          echo "Lambda package contents:"
-          unzip -l lambda-at-edge.zip
           
-      # Step 3: Apply Terraform changes including Lambda@Edge
+      # Step 2: Apply Terraform changes for separate CloudFront distributions
       - name: Terraform Init and Apply
         if: github.ref == 'refs/heads/main'
         working-directory: ./terraform
@@ -97,8 +88,9 @@ jobs:
           npm run build:ci
         env:
           CI: false # Prevents treating warnings as errors
+          PUBLIC_URL: https://sesv2-admin.waterwaycleanups.org # Set the correct public URL
       
-      # Deploy to S3 - important: files go at the root of the bucket
+      # Deploy to S3 and invalidate CloudFront
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         working-directory: ./sesv2-admin
@@ -109,29 +101,21 @@ jobs:
       
       - name: Invalidate CloudFront cache
         if: github.ref == 'refs/heads/main'
+        working-directory: ./terraform
         run: |
-          CLOUDFRONT_DISTRIBUTION_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?Aliases.Items[?contains(@, 'waterwaycleanups.org')]].Id" --output text)
-          aws cloudfront create-invalidation --distribution-id $CLOUDFRONT_DISTRIBUTION_ID --paths "/*" "/sesv2-admin/*" "/sesv2-admin"
+          ADMIN_DISTRIBUTION_ID=$(terraform output -raw admin_cloudfront_distribution_id)
+          aws cloudfront create-invalidation --distribution-id $ADMIN_DISTRIBUTION_ID --paths "/*"
       
-      # Step to help debug by making requests to trigger Lambda@Edge
-      - name: Trigger Lambda@Edge for testing
+      - name: Verify deployment
         if: github.ref == 'refs/heads/main'
         run: |
-          echo "Waiting 30 seconds for cache invalidation to propagate..."
+          echo "Waiting 30 seconds for invalidation to start propagating..."
           sleep 30
           
-          # Make requests to trigger the Lambda@Edge function
-          echo "Testing admin SPA route:"
-          curl -s -I https://waterwaycleanups.org/sesv2-admin/ | grep -E "HTTP|X-Cache|Content-Type"
+          # Test the deployed site
+          echo "Testing SESv2 admin site..."
+          curl -s -I https://sesv2-admin.waterwaycleanups.org/ | grep -E "HTTP|X-Cache|Content-Type"
           
-          # Get a list of JS files in the admin app's build folder
-          ASSET_FILE=$(find sesv2-admin/build -name "*.js" -type f | head -1 | sed 's|sesv2-admin/build/|sesv2-admin/|')
-          
-          if [ -n "$ASSET_FILE" ]; then
-            echo "Testing static asset route: $ASSET_FILE"
-            curl -s -I "https://waterwaycleanups.org/$ASSET_FILE" | grep -E "HTTP|X-Cache|Content-Type"
-          fi
-      
       - name: Slack Notification
         uses: slackapi/slack-github-action@v2.1.0
         with:
