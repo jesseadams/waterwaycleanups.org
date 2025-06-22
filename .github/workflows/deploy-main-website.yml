@@ -1,15 +1,15 @@
-name: Deploy SESv2 Admin App
+name: Deploy Main Website
 
 on:
   push:
     branches:
       - main
-    paths:
+    paths-ignore:
       - 'sesv2-admin/**'
   pull_request:
     branches:
       - main
-    paths:
+    paths-ignore:
       - 'sesv2-admin/**'
       
   # Allow manual triggering
@@ -31,13 +31,10 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          cache-dependency-path: sesv2-admin/package-lock.json
       
       - name: Install dependencies
-        working-directory: ./sesv2-admin
         run: |
           npm ci
-          sudo apt-get update && sudo apt-get install -y jq
       
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -52,69 +49,45 @@ jobs:
         with:
           terraform_version: 1.5.7
           
-      # Step 2: Apply SESv2 Admin App Terraform (from its own folder)
+      # Step 2: Apply Main Website Infrastructure
       - name: Terraform Init and Apply
         if: github.ref == 'refs/heads/main'
-        working-directory: ./sesv2-admin/terraform
+        working-directory: ./terraform
         run: |
           terraform init
           terraform validate
           terraform apply -auto-approve
       
-      # Continue with the SESv2 admin app deployment
-      - name: Retrieve parameters from SSM
-        working-directory: ./sesv2-admin
+      # Step 3: Build the site
+      - name: Build site
         run: |
-          ./get-params-from-ssm.sh prod
-          # Display parameter names (but not values for security)
-          grep -v "^#" .env | cut -d= -f1 || true
-
-      # Export environment variables for subsequent steps
-      - name: Export environment variables
-        working-directory: ./sesv2-admin
-        run: |
-          # Create a list of export commands for GitHub Actions to use in subsequent steps
-          grep -v '^#' .env | sed 's/^/echo "/' | sed 's/$/\" >> $GITHUB_ENV/' | sh
-          
-      - name: Verify environment variables
-        working-directory: ./sesv2-admin
-        run: |
-          # Run the verification script to ensure all required variables are available
-          node verify-build-env.js
-
-      - name: Build application
-        working-directory: ./sesv2-admin
-        run: |
-          # Use the custom CI build script which will automatically load .env variables
-          npm run build:ci
-        env:
-          CI: false # Prevents treating warnings as errors
-          PUBLIC_URL: https://sesv2-admin.waterwaycleanups.org # Set the correct public URL
+          npm run build
       
-      # Deploy to S3 bucket (dynamically get the bucket name from Terraform outputs)
+      # Step 4: Deploy to S3
       - name: Get S3 bucket name from Terraform outputs
         id: tf-outputs
-        working-directory: ./sesv2-admin/terraform
+        working-directory: ./terraform
         run: |
-          BUCKET_NAME=$(terraform output -raw sesv2_admin_bucket_name)
+          BUCKET_NAME=$(terraform output -raw website_bucket_name)
           echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           
-          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
+          DISTRIBUTION_ID=$(terraform output -raw main_cloudfront_distribution_id)
           echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
       
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
-        working-directory: ./sesv2-admin
         run: |
-          aws s3 sync build/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
+          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
           echo "Verifying deployment:"
           aws s3 ls s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --recursive | head -5
       
+      # Step 5: Invalidate CloudFront cache
       - name: Invalidate CloudFront cache
         if: github.ref == 'refs/heads/main'
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.distribution_id }} --paths "/*"
       
+      # Step 6: Verify deployment
       - name: Verify deployment
         if: github.ref == 'refs/heads/main'
         run: |
@@ -122,8 +95,8 @@ jobs:
           sleep 30
           
           # Test the deployed site
-          echo "Testing SESv2 admin site..."
-          curl -s -I https://sesv2-admin.waterwaycleanups.org/ | grep -E "HTTP|X-Cache|Content-Type"
+          echo "Testing main website..."
+          curl -s -I https://waterwaycleanups.org/ | grep -E "HTTP|X-Cache|Content-Type"
           
       - name: Slack Notification
         uses: slackapi/slack-github-action@v2.1.0
@@ -131,9 +104,9 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*SESv2 Admin deploy result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            text: "*Main Website deploy result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "SESv2 Admin deploy result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  text: "Main Website deploy result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
