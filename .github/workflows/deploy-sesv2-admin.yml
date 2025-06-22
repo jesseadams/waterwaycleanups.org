@@ -96,10 +96,12 @@ jobs:
         id: tf-outputs
         working-directory: ./sesv2-admin/terraform
         run: |
-          BUCKET_NAME=$(terraform output -raw sesv2_admin_bucket_name)
+          # Parse bucket name, handling potential debug output format
+          BUCKET_NAME=$(terraform output -raw sesv2_admin_bucket_name | cut -d':' -f1)
           echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           
-          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
+          # Parse distribution ID, handling potential debug output format
+          DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id | cut -d':' -f1)
           echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
       
       - name: Deploy to S3
