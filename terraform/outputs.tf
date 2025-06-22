@@ -12,3 +12,5 @@ output "contact_list_name" {
   description = "The name of the SES contact list"
   value       = var.ses_contact_list_name
 }
+
+# CloudFront distribution ID outputs have been moved to separate_distributions.tf

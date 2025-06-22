@@ -30,31 +30,8 @@ resource "aws_s3_bucket_versioning" "sesv2_admin_bucket_versioning" {
   }
 }
 
-# S3 bucket policy for sesv2-admin bucket to allow CloudFront access
-resource "aws_s3_bucket_policy" "sesv2_admin_bucket_policy" {
-  bucket = aws_s3_bucket.sesv2_admin_bucket.id
-
-  policy = jsonencode({
-    Id        = "PolicyForCloudFrontPrivateContent"
-    Statement = [
-      {
-        Action    = "s3:GetObject"
-        Condition = {
-          StringEquals = {
-            "AWS:SourceArn" = aws_cloudfront_distribution.website_distribution.arn
-          }
-        }
-        Effect    = "Allow"
-        Principal = {
-          Service = "cloudfront.amazonaws.com"
-        }
-        Resource  = "${aws_s3_bucket.sesv2_admin_bucket.arn}/*"
-        Sid       = "AllowCloudFrontServicePrincipal"
-      },
-    ]
-    Version   = "2012-10-17"
-  })
-}
+# S3 bucket policy has been moved to s3_bucket_policies.tf
+# This comment is kept to indicate where the resource was originally defined
 
 # Output the sesv2-admin bucket name
 output "sesv2_admin_bucket_name" {
