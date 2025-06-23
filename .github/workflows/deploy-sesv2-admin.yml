@@ -93,26 +93,18 @@ jobs:
           CI: false # Prevents treating warnings as errors
           PUBLIC_URL: https://sesv2-admin.waterwaycleanups.org # Set the correct public URL
       
-      # Deploy to S3 bucket (dynamically get the bucket name from Terraform outputs)
-      - name: Get S3 bucket name from Terraform outputs
-        id: tf-outputs
-        working-directory: ./sesv2-admin/terraform
-        run: |
-          echo "bucket_name=$(terraform output -raw sesv2_admin_bucket_name)" >> $GITHUB_OUTPUT         
-          echo "distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_OUTPUT
-      
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
         working-directory: ./sesv2-admin
         run: |
-          aws s3 sync build/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
+          aws s3 sync build/ s3://${{ secrets.S3_BUCKET_NAME_SESV2_ADMIN }}/ --delete
           echo "Verifying deployment:"
-          aws s3 ls s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --recursive | head -5
+          aws s3 ls s3://${{ secrets.S3_BUCKET_NAME_SESV2_ADMIN }}/ --recursive | head -5
       
       - name: Invalidate CloudFront cache
         if: github.ref == 'refs/heads/main'
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.distribution_id }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_SESV2_ADMIN }} --paths "/*"
       
       - name: Verify deployment
         if: github.ref == 'refs/heads/main'
