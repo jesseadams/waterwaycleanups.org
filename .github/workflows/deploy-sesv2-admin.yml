@@ -99,10 +99,10 @@ jobs:
         working-directory: ./sesv2-admin/terraform
         run: |
           BUCKET_NAME=$(terraform output -raw sesv2_admin_bucket_name)
-          echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+          echo "bucket_name=$BUCKET_NAME" >> "$GITHUB_OUTPUT"
           
           DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
-          echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
+          echo "distribution_id=$DISTRIBUTION_ID" >> "$GITHUB_OUTPUT"
       
       - name: Deploy to S3
         if: github.ref == 'refs/heads/main'
