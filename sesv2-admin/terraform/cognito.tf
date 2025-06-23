@@ -90,8 +90,8 @@ resource "aws_cognito_user_pool_client" "ses_admin_client" {
   allowed_oauth_scopes = ["email", "openid", "profile"]
   
   # Define callback URLs matching exactly what's in AWS
-  callback_urls = ["http://localhost:3000", "https://ses-admin.waterwaycleanups.org/"]
-  logout_urls   = ["http://localhost:3000", "https://ses-admin.waterwaycleanups.org/"]
+  callback_urls = ["http://localhost:3000", "https://sesv2-admin.waterwaycleanups.org/"]
+  logout_urls   = ["http://localhost:3000", "https://sesv2-admin.waterwaycleanups.org/"]
   
   supported_identity_providers = ["COGNITO", "Google"]
   
