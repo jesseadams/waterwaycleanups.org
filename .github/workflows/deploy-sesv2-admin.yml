@@ -98,11 +98,9 @@ jobs:
         id: tf-outputs
         working-directory: ./sesv2-admin/terraform
         run: |
-          # Parse bucket name, handling potential debug output format
           BUCKET_NAME=$(terraform output -raw sesv2_admin_bucket_name)
           echo "bucket_name=$BUCKET_NAME" >> $GITHUB_OUTPUT
           
-          # Parse distribution ID, handling potential debug output format
           DISTRIBUTION_ID=$(terraform output -raw cloudfront_distribution_id)
           echo "distribution_id=$DISTRIBUTION_ID" >> $GITHUB_OUTPUT
       
