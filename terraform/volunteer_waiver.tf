@@ -324,13 +324,6 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment" {
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
 }
 
-# API Gateway stage
-resource "aws_api_gateway_stage" "volunteer_waiver_stage" {
-  deployment_id = aws_api_gateway_deployment.volunteer_waiver_deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.volunteer_waiver_api.id
-  stage_name    = var.environment
-}
-
 # Output the API URLs
 output "check_waiver_url" {
   description = "URL for checking volunteer waivers"
