@@ -36,4 +36,4 @@ https://www.google.com/maps/place/38%C2%B021'21.0%22N+77%C2%B025'28.8%22W/@38.35
 Bring water, wear sturdy shoes, and dress for the weather. All ages welcome—kids under 18 must be accompanied by an adult.
 {{< /tabs >}}
 
-{{< button "Sign Up" "https://www.facebook.com/share/1YE6BrRBwj/" >}}
+{{< event_rsvp attendance_cap="20" >}}

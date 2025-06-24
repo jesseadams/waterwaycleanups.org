@@ -312,17 +312,8 @@ resource "aws_lambda_permission" "submit_waiver_lambda_permission" {
   source_arn    = "${aws_api_gateway_rest_api.volunteer_waiver_api.execution_arn}/*/${aws_api_gateway_method.submit_waiver_post.http_method}${aws_api_gateway_resource.submit_waiver.path}"
 }
 
-# API Gateway deployment
-resource "aws_api_gateway_deployment" "volunteer_waiver_deployment" {
-  depends_on = [
-    aws_api_gateway_integration.check_waiver_integration,
-    aws_api_gateway_integration.submit_waiver_integration,
-    aws_api_gateway_integration.check_waiver_options_integration,
-    aws_api_gateway_integration.submit_waiver_options_integration
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
-}
+# Note: Using updated_api_deployment from event_rsvp.tf
+# which includes all endpoints (waiver and rsvp)
 
 # API Gateway stage
 resource "aws_api_gateway_stage" "volunteer_waiver_stage" {
