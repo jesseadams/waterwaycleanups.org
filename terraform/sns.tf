@@ -21,3 +21,10 @@ resource "aws_sns_topic_subscription" "waiver_email_subscription" {
   protocol  = "email"
   endpoint  = "jesse@waterwaycleanups.org"
 }
+
+# Subscribe email to event RSVP SNS topic
+resource "aws_sns_topic_subscription" "event_rsvp_email_subscription" {
+  topic_arn = aws_sns_topic.event_rsvp_topic.arn
+  protocol  = "email"
+  endpoint  = "jesse@waterwaycleanups.org"
+}
