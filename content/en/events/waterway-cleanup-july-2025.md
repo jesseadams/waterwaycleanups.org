@@ -2,7 +2,7 @@
 title: Waterway Cleanup - July 2025
 image: /uploads/waterway-cleanups/waterways-2.png
 tags:
-  - tbd
+  - dixon park wetlands
 preheader_is_light: false
 start_time: "2025-07-12T09:00:00-04:00"
 end_time: "2025-07-12T12:00:00-04:00"
@@ -12,14 +12,16 @@ end_time: "2025-07-12T12:00:00-04:00"
 {{< tabs >}}
 ## Event Details
 
-Join us for our July waterway cleanup! Help us protect our local waterways and keep our community beautiful. Volunteers of all ages are welcome to participate in this important environmental stewardship event.
+Join us for our July waterway cleanup with the City of Fredericksburg! Help us protect our local waterways and keep our community beautiful. Volunteers of all ages are welcome to participate in this important environmental stewardship event.
 
 Please wear appropriate clothing and shoes you don't mind getting dirty. Don't forget to bring water and sun protection!
 
 ---
 ## Location
 
-To be determined, based on need.
+Dixon Park<br/>
+1300 Dixon St</br>
+Fredericksburg, VA 22401
 
 ---
 ## What We Provide
