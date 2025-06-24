@@ -5,9 +5,11 @@ import os
 from botocore.exceptions import ClientError
 import uuid
 
-# Initialize DynamoDB client
+# Initialize AWS clients
 dynamodb = boto3.resource('dynamodb')
+sns = boto3.client('sns')
 table_name = os.environ.get('WAIVER_TABLE_NAME', 'volunteer_waivers')
+sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
 table = dynamodb.Table(table_name)
 
 # Set up logging
@@ -149,6 +151,42 @@ def handler(event, context):
         logger.info(f"Saving waiver record to DynamoDB table: {table_name}")
         table.put_item(Item=item)
         logger.info("Waiver record saved successfully")
+        
+        # Send SNS notification
+        if sns_topic_arn:
+            try:
+                # Format message for email notification
+                message = json.dumps({
+                    "waiver_id": waiver_id,
+                    "submission_date": submission_date,
+                    "details": {
+                        "full_legal_name": body['full_legal_name'],
+                        "email": body['email'],
+                        "phone_number": body['phone_number'],
+                        "date_of_birth": body['date_of_birth'],
+                        "is_adult": is_adult,
+                        **({"adult_signature": body['adult_signature']} if is_adult else {
+                            "guardian_name": body['guardian_name'],
+                            "guardian_email": body['guardian_email'],
+                            "relationship_type": body['relationship_type']
+                        })
+                    }
+                }, indent=2)
+                
+                # Create a more readable subject line
+                subject = f"New Volunteer Waiver: {body['full_legal_name']}"
+                
+                # Publish to SNS topic
+                logger.info(f"Sending notification to SNS topic: {sns_topic_arn}")
+                sns.publish(
+                    TopicArn=sns_topic_arn,
+                    Subject=subject,
+                    Message=message
+                )
+                logger.info("SNS notification sent successfully")
+            except Exception as e:
+                # Log error but don't fail the submission
+                logger.error(f"Error sending SNS notification: {str(e)}")
         
         # Calculate expiration date
         try:

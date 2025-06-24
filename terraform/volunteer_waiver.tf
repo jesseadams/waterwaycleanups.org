@@ -80,6 +80,15 @@ resource "aws_iam_policy" "volunteer_waiver_lambda_policy" {
         ],
         Resource = "arn:aws:logs:*:*:*",
         Effect   = "Allow"
+      },
+      {
+        Action = [
+          "sns:Publish"
+        ],
+        Resource = [
+          aws_sns_topic.volunteer_waiver_topic.arn
+        ],
+        Effect = "Allow"
       }
     ]
   })
@@ -136,6 +145,7 @@ resource "aws_lambda_function" "volunteer_waiver_submit" {
   environment {
     variables = {
       WAIVER_TABLE_NAME = aws_dynamodb_table.volunteer_waivers.name
+      SNS_TOPIC_ARN = aws_sns_topic.volunteer_waiver_topic.arn
     }
   }
 }
@@ -314,7 +324,8 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment" {
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
 }
 
-resource "aws_api_gateway_stage" "example" {
+# API Gateway stage
+resource "aws_api_gateway_stage" "volunteer_waiver_stage" {
   deployment_id = aws_api_gateway_deployment.volunteer_waiver_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.volunteer_waiver_api.id
   stage_name    = var.environment
@@ -323,12 +334,12 @@ resource "aws_api_gateway_stage" "example" {
 # Output the API URLs
 output "check_waiver_url" {
   description = "URL for checking volunteer waivers"
-  value       = "${aws_api_gateway_deployment.volunteer_waiver_deployment.invoke_url}/${aws_api_gateway_resource.check_waiver.path_part}"
+  value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.check_waiver.path_part}"
 }
 
 output "submit_waiver_url" {
   description = "URL for submitting volunteer waivers"
-  value       = "${aws_api_gateway_deployment.volunteer_waiver_deployment.invoke_url}/${aws_api_gateway_resource.submit_waiver.path_part}"
+  value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.submit_waiver.path_part}"
 }
 
 # Create SSM Parameters for frontend to use
@@ -336,7 +347,7 @@ resource "aws_ssm_parameter" "check_waiver_url" {
   name        = "/waterwaycleanups/check_waiver_api_url"
   description = "URL for checking volunteer waivers"
   type        = "String"
-  value       = "${aws_api_gateway_deployment.volunteer_waiver_deployment.invoke_url}/${aws_api_gateway_resource.check_waiver.path_part}"
+  value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.check_waiver.path_part}"
   
   tags = {
     Environment = var.environment
@@ -348,7 +359,7 @@ resource "aws_ssm_parameter" "submit_waiver_url" {
   name        = "/waterwaycleanups/submit_waiver_api_url"
   description = "URL for submitting volunteer waivers"
   type        = "String"
-  value       = "${aws_api_gateway_deployment.volunteer_waiver_deployment.invoke_url}/${aws_api_gateway_resource.submit_waiver.path_part}"
+  value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.submit_waiver.path_part}"
   
   tags = {
     Environment = var.environment
