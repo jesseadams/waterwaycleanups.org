@@ -356,6 +356,20 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
   
+  triggers = {
+    redeployment = sha1(jsonencode([
+    aws_api_gateway_integration.check_waiver_integration,
+    aws_api_gateway_integration.submit_waiver_integration,
+    aws_api_gateway_integration.check_waiver_options_integration,
+    aws_api_gateway_integration.submit_waiver_options_integration,
+    # RSVP endpoints
+    aws_api_gateway_integration.check_rsvp_integration,
+    aws_api_gateway_integration.submit_rsvp_integration,
+    aws_api_gateway_integration.check_rsvp_options_integration,
+    aws_api_gateway_integration.submit_rsvp_options_integration
+    ]))
+  }
+
   lifecycle {
     create_before_destroy = true
   }
