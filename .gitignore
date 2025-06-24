@@ -48,3 +48,7 @@ static/css/tailwind-output.css
 static/js/tailwind-output-bundle.js
 
 terraform.tfstate*
+
+*.zip
+scripts/*
+docs/*

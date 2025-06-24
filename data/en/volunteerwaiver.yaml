@@ -1,0 +1,132 @@
+action: "#" # We'll handle the form submission with JavaScript
+form_id: volunteerwaiver
+placeholders: false
+fields:
+- name: title
+  input_type: html
+  label: <h3>Volunteer Waiver and Release Form</h3>
+- name: instructions
+  input_type: html
+  label: <div class="email-section"><p>Please enter your email address to begin. We'll check if you've already completed a waiver in the past year.</p>
+- name: email
+  input_type: email
+  label: Email address
+  required: true
+- name: check_email
+  input_type: submit
+  label: Check Email
+  required: true
+- name: email_section_end
+  input_type: html
+  label: </div>
+- name: waiver_form_fields
+  input_type: html
+  label: <div id="waiver-form-fields" style="display:none;">
+- name: full_legal_name
+  input_type: text
+  label: Full Legal Name
+  required: false
+- name: phone_number
+  input_type: tel
+  label: Phone Number
+  required: false
+- name: date_of_birth
+  input_type: date
+  label: Date of Birth
+  required: false
+- name: waiver_text
+  input_type: html
+  label: >
+    <div class="waiver-text">
+      <h4>Waiver Terms and Requirements</h4>
+      
+      <h5>Requirements and Potential Risks</h5>
+      <ul>
+        <li><strong>Minimum Age & Supervision:</strong> You must be 10 years of age or older to participate. Minors under 18 must be accompanied by a parent or legal guardian, who is expected to remain with the minor for the duration of the event, regardless of their participation level.</li>
+        <li><strong>Physical Readiness:</strong> Know your limitations, including your physical fitness. You must be in good health and capable of performing tasks that may include walking on uneven terrain, picking up trash, and carrying filled trash bags.</li>
+        <li><strong>Personal Responsibility:</strong> You are responsible for bringing appropriate clothing, sturdy closed-toe shoes, drinking water, and sun/weather protection. Volunteers should dress appropriately for outdoor conditions.</li>
+        <li><strong>No Unregistered Participants:</strong> You may not bring unregistered volunteers or guests to the event. All participants must be registered and have agreed to the waiver terms.</li>
+        <li><strong>Environmental Responsibility:</strong> Leave No Trace principles must be followed. This includes disposing of waste properly, leaving what you find, respecting wildlife, and being considerate of others.</li>
+        <li><strong>Respect Nature:</strong> You must handle natural areas responsibly and avoid disturbing plants, animals, or habitats.</li>
+        <li><strong>Substance Use:</strong> Use of alcohol, illegal drugs, or being under the influence of such substances is strictly prohibited during the event.</li>
+        <li><strong>Follow Instructions:</strong> You must follow all instructions given by Waterway Cleanups staff, organizers, or designated team leads at all times.</li>
+        <li><strong>Hazards:</strong> You understand there may be risks including, but not limited to: Slippery, wet, or uneven terrain; Sharp or dangerous debris; Contact with allergens, poison ivy, or insects; Exposure to weather conditions; Proximity to roads, vehicles, or water.</li>
+        <li><strong>Hazardous Materials:</strong> If you encounter potentially hazardous items, report them to a team lead and do not attempt to handle them yourself.</li>
+        <li><strong>Tools & Equipment:</strong> You may not use tools or equipment unless specifically authorized and instructed by a team lead.</li>
+        <li><strong>Emergencies:</strong> In the event of injury or emergency, you authorize basic first aid to be administered.</li>
+      </ul>
+      
+      <h5>Release of Liability and Assumption of Risk</h5>
+      <p>By signing this waiver, I release Waterway Cleanups, its staff, board members, volunteers, partners, sponsors, and any landowners or managing agencies from all liability relating to injuries or losses that may occur while participating in this volunteer activity.</p>
+      
+      <p>I understand that participating in outdoor cleanup activities involves certain inherent risks, including but not limited to:</p>
+      <ul>
+        <li>Personal injury (e.g., slips, falls, cuts, allergic reactions)</li>
+        <li>Exposure to hazardous materials or weather conditions</li>
+        <li>Damage to or loss of personal property</li>
+        <li>Encounters with wildlife, plants, or insects</li>
+      </ul>
+      
+      <p>I voluntarily assume all such risks and affirm that I am in good physical condition to participate safely. I agree to comply with all safety guidelines and instructions provided to me. I hereby waive my right to bring legal action against Waterway Cleanups, its partners, or affiliated property owners for any reason related to my participation in this activity.</p>
+    </div>
+- name: waiver_acknowledgement_html
+  input_type: html
+  label: <div class="waiver-note">Please check the box to agree to the waiver terms:</div>
+- name: waiver_acknowledgement
+  input_type: checkbox
+  label: I agree to the terms outlined in this Volunteer Waiver and Release Form.
+  required: true
+- name: adult_fields
+  input_type: html
+  label: <div id="adult-fields" style="display:none;">
+- name: adult_signature
+  input_type: text
+  label: Type your full legal name as your electronic signature
+  required: false
+- name: adult_todays_date
+  input_type: date
+  label: Today's Date
+  required: false
+- name: adult_fields_end
+  input_type: html
+  label: </div>
+- name: minor_fields
+  input_type: html
+  label: <div id="minor-fields" style="display:none;">
+- name: guardian_name
+  input_type: text
+  label: Parent/Guardian Full Legal Name
+  required: false
+- name: guardian_email
+  input_type: email
+  label: Parent/Guardian Email Address
+  required: false
+- name: relationship_type
+  input_type: select
+  label: Relationship to Minor
+  options:
+    - Parent
+    - Legal Guardian
+    - Other
+  required: false
+- name: guardian_consent_html
+  input_type: html
+  label: <div class="waiver-note">Parent/Guardian consent:</div>
+- name: guardian_consent
+  input_type: checkbox
+  label: I am the parent or legal guardian of the minor and give permission for their participation.
+  required: true
+- name: minor_todays_date
+  input_type: date
+  label: Today's Date
+  required: false
+- name: minor_fields_end
+  input_type: html
+  label: </div>
+- name: waiver_form_fields_end
+  input_type: html
+  label: </div>
+- name: submit
+  input_type: submit
+  label: Submit Waiver
+  required: true

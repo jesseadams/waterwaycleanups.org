@@ -32,6 +32,8 @@ Volunteering with Waterway Cleanups is a rewarding way to make a direct impact o
 
 Ready to get involved? Fill out our volunteer interest form and we'll be in touch soon!
 
+> **Important**: All volunteers must complete our [Waiver and Release Form](/volunteer-waiver/) before participating in cleanup events.
+
 ---
 
 {{< volunteerform >}}

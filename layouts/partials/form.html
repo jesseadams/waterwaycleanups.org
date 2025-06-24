@@ -10,8 +10,18 @@
                 <label><input type="radio" name="{{ .name }}" value="{{ .label }}" required>{{ .label }}</label>
             </div>
         {{- else if eq .input_type `checkbox` -}}
-            <div class="checkbox">
+            <div class="checkbox-container">
                 <label><input type="checkbox" name="{{ .name }}" value="{{ .label }}" required>{{ .label | safeHTML }}</label>
+            </div>
+        {{- else if eq .input_type `select` -}}
+            <div>
+                <label class="inborder{{ if eq $.placeholders true }} sr-only{{ end }}" for="{{ .name }}">{{ .label }}</label>
+                <select name="{{ .name }}" id="{{ .name }}" class="form-control" required>
+                    <option value="" disabled selected>Please select...</option>
+                    {{- range .options -}}
+                    <option value="{{ . }}">{{ . }}</option>
+                    {{- end -}}
+                </select>
             </div>
         {{- else if eq .input_type `html` -}}
             {{ .label | safeHTML }}

@@ -1,0 +1,197 @@
+/* Volunteer Waiver Form Styles */
+
+#waiver-form-message {
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+#waiver-form-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+#waiver-form-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+#waiver-form-message.info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* Form specific styles */
+#volunteerwaiver {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#volunteerwaiver div {
+  margin-bottom: 15px;
+}
+
+#volunteerwaiver label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+#volunteerwaiver input[type="text"],
+#volunteerwaiver input[type="email"],
+#volunteerwaiver input[type="tel"],
+#volunteerwaiver input[type="date"],
+#volunteerwaiver select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Remove custom checkbox styling to use the site's default styling */
+
+#volunteerwaiver .submit {
+  margin-top: 20px;
+}
+
+#volunteerwaiver .button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#volunteerwaiver .button:hover {
+  background-color: #45a049;
+}
+
+/* Waiver instructions styling */
+.waiver-instructions {
+  background-color: #f9f9f9;
+  padding: 15px;
+  margin-bottom: 20px;
+  border-left: 4px solid #4CAF50;
+  border-radius: 4px;
+}
+
+.waiver-instructions h4 {
+  margin-top: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.waiver-instructions p {
+  margin-bottom: 0;
+  color: #666;
+}
+
+/* Email display styling */
+.email-display {
+  margin-bottom: 20px;
+}
+
+.email-badge {
+  display: inline-block;
+  background-color: #f0f8ff; /* Light blue background */
+  border: 1px solid #b8d8ff;
+  padding: 8px 15px;
+  border-radius: 20px;
+  color: #0066cc;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+/* Waiver text styling */
+.waiver-text {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  border: 1px solid #e0e0e0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* Waiver confirm styling */
+.waiver-confirm {
+  margin: 15px 0;
+  padding-top: 5px;
+  border-top: 1px solid #eee;
+}
+
+.waiver-confirm p {
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 10px;
+}
+
+/* Clean checkbox styling */
+.checkbox-container {
+  margin: 15px 0 25px 0;
+}
+
+.checkbox-container label {
+  display: flex;
+  align-items: flex-start;
+  font-weight: normal;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 10px;
+  margin-top: 3px;
+}
+
+.waiver-note {
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+
+.waiver-text h4 {
+  color: #333;
+  margin-top: 0;
+  font-size: 18px;
+}
+
+.waiver-text h5 {
+  color: #444;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.waiver-text ul {
+  padding-left: 20px;
+}
+
+.waiver-text li {
+  margin-bottom: 8px;
+}
+
+.waiver-text p {
+  margin-bottom: 15px;
+  line-height: 1.5;
+}
+
+/* Success message styling */
+.success-message {
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 20px;
+  margin: 30px 0;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.success-message h3 {
+  color: #155724;
+  margin-bottom: 10px;
+}
