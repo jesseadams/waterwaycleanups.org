@@ -1,5 +1,5 @@
 ---
-title: Waterway Cleanup - July 2025
+title: Dixon Park Wetlands Cleanup
 image: /uploads/waterway-cleanups/waterways-2.png
 tags:
   - dixon park wetlands
