@@ -12,7 +12,7 @@ end_time: "2025-07-19T12:00:00-04:00"
 {{< tabs >}}
 ## Event Details
 
-We are joining Green Aquia in Aquia Harbor in their water cleanup. Participants will be using canoes, kayaks, etc. to remove trash from the water and shorelines. More details will be posted soon!
+We are joining Green Aquia in Aquia Harbor in their water cleanup. Participants will be using canoes, kayaks, etc. to remove trash from the water and shorelines. Bring your boat, kayak, canoe or catch a ride with someone. We will also have land groups. 
 
 ---
 ## Location
@@ -24,7 +24,7 @@ Stafford, VA 22554
 ---
 ## What We Provide
 
-More information soon!
+Grabbers, bags and vests for those on land will be supplied. Bring bug spray and please dress accordingly for HOT weather.
 
 {{< /tabs >}}
 
