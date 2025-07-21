@@ -2,7 +2,7 @@
 // This endpoint directly submits volunteer waiver form data to DynamoDB
 
 // For serverless/Netlify/Vercel environments:
-// Import AWS SDK for DynamoDB access
+// Import AWS SDK for DynamoDB and SES access
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
@@ -11,9 +11,64 @@ AWS.config.update({
   region: process.env.AWS_REGION || 'us-east-1'
 });
 
-// Initialize DynamoDB client
+// Initialize DynamoDB and SESv2 clients
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const sesv2 = new AWS.SESv2();
 const tableName = process.env.WAIVER_TABLE_NAME || 'volunteer_waivers';
+
+// SES configuration - these should be environment variables
+const CONTACT_LIST_NAME = process.env.SES_CONTACT_LIST_NAME || 'volunteers';
+const TOPIC_NAME = process.env.SES_TOPIC_NAME || 'general';
+
+// Helper function to check if contact exists in SES
+const checkContactExists = async (contactListName, emailAddress) => {
+  try {
+    const command = {
+      ContactListName: contactListName,
+      EmailAddress: emailAddress
+    };
+    
+    await sesv2.getContact(command).promise();
+    return true; // Contact exists
+  } catch (error) {
+    if (error.code === 'NotFoundException') {
+      return false; // Contact doesn't exist
+    }
+    throw error; // Other error
+  }
+};
+
+// Helper function to add contact to SES
+const addContactToSES = async (contactListName, emailAddress, fullName, attributes = {}, topicName = null) => {
+  try {
+    // Include name and other attributes
+    const contactAttributes = {
+      full_name: fullName,
+      ...attributes
+    };
+    
+    // Prepare topic preferences if topic name is provided
+    const topicPreferences = topicName ? [
+      {
+        TopicName: topicName,
+        SubscriptionStatus: 'OPT_IN'
+      }
+    ] : [];
+    
+    const command = {
+      ContactListName: contactListName,
+      EmailAddress: emailAddress,
+      AttributesData: JSON.stringify(contactAttributes),
+      TopicPreferences: topicPreferences
+    };
+    
+    await sesv2.createContact(command).promise();
+    return true;
+  } catch (error) {
+    console.error(`Error adding contact ${emailAddress} to SES:`, error);
+    throw error;
+  }
+};
 exports.handler = async (event) => {
   // Set up CORS headers
   const headers = {
@@ -167,6 +222,31 @@ exports.handler = async (event) => {
       console.log(`Saving waiver record to DynamoDB: ${waiverId}`);
       await dynamoDB.put(params).promise();
       console.log(`Waiver record saved successfully: ${waiverId}`);
+      
+      // Add contact to SES if they don't already exist
+      try {
+        const contactExists = await checkContactExists(CONTACT_LIST_NAME, requestBody.email);
+        
+        if (!contactExists) {
+          // Prepare additional attributes
+          const additionalAttributes = {
+            phone_number: requestBody.phone_number,
+            date_of_birth: requestBody.date_of_birth,
+            waiver_date: submissionDate.split('T')[0]
+          };
+          
+          await addContactToSES(
+            CONTACT_LIST_NAME, 
+            requestBody.email, 
+            requestBody.full_legal_name,
+            additionalAttributes,
+            TOPIC_NAME
+          );
+        }
+      } catch (sesError) {
+        // Don't fail the entire request if SES fails, but log it
+        console.error('SES contact addition failed (continuing with waiver submission):', sesError);
+      }
       
       // Calculate expiration date (1 year from submission)
       const submissionDateTime = new Date(submissionDate);
