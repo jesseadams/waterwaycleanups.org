@@ -1,0 +1,232 @@
+name: Multi-Environment Deployment
+
+# Temporarily disabled for testing - uncomment when ready to activate
+# on:
+#   push:
+#     branches:
+#       - main
+#       - develop
+#   pull_request:
+#     branches:
+#       - main
+#   workflow_dispatch:
+#     inputs:
+#       environment:
+#         description: 'Environment to deploy to'
+#         required: true
+#         default: 'staging'
+#         type: choice
+#         options:
+#           - staging
+#           - prod
+
+# Manual trigger only for testing
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to (TESTING ONLY)'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - prod
+
+jobs:
+  # Determine deployment environment
+  determine-environment:
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.set-env.outputs.environment }}
+      terraform-workspace: ${{ steps.set-env.outputs.terraform-workspace }}
+      hugo-base-url: ${{ steps.set-env.outputs.hugo-base-url }}
+      is-production: ${{ steps.set-env.outputs.is-production }}
+    steps:
+      - id: set-env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            ENV="${{ github.event.inputs.environment }}"
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            ENV="prod"
+          elif [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            ENV="staging"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            ENV="staging"
+          else
+            ENV="staging"
+          fi
+          
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          
+          # Set terraform workspace (prod uses 'default')
+          if [[ "$ENV" == "prod" ]]; then
+            echo "terraform-workspace=default" >> $GITHUB_OUTPUT
+            echo "hugo-base-url=https://waterwaycleanups.org/" >> $GITHUB_OUTPUT
+            echo "is-production=true" >> $GITHUB_OUTPUT
+          else
+            echo "terraform-workspace=$ENV" >> $GITHUB_OUTPUT
+            echo "hugo-base-url=https://$ENV.waterwaycleanups.org/" >> $GITHUB_OUTPUT
+            echo "is-production=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Build and deploy infrastructure and website
+  deploy:
+    needs: determine-environment
+    runs-on: ubuntu-latest
+    environment: ${{ needs.determine-environment.outputs.environment }}
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
+          aws-region: us-east-1
+          role-session-name: github-actions-${{ needs.determine-environment.outputs.environment }}
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: '0.147.1'
+          extended: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.7'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Update Hugo base URL
+        run: |
+          sed -i "s|baseURL:.*|baseURL: ${{ needs.determine-environment.outputs.hugo-base-url }}|" config.yaml
+
+      - name: Build assets and Hugo site
+        run: |
+          npm run build:css
+          npm run build:assets
+          hugo --minify
+
+      - name: Initialize Terraform
+        working-directory: terraform
+        run: terraform init
+
+      - name: Select Terraform workspace
+        working-directory: terraform
+        run: |
+          terraform workspace select ${{ needs.determine-environment.outputs.terraform-workspace }} || \
+          terraform workspace new ${{ needs.determine-environment.outputs.terraform-workspace }}
+
+      - name: Terraform plan
+        working-directory: terraform
+        run: |
+          terraform plan \
+            -var-file="environments/${{ needs.determine-environment.outputs.environment }}.tfvars" \
+            -out=tfplan
+
+      - name: Terraform apply
+        working-directory: terraform
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: terraform apply tfplan
+
+      - name: Get S3 bucket name
+        working-directory: terraform
+        id: bucket
+        run: |
+          BUCKET=$(terraform output -raw website_bucket_id 2>/dev/null || echo "")
+          if [[ -n "$BUCKET" ]]; then
+            echo "bucket_name=$BUCKET" >> $GITHUB_OUTPUT
+          else
+            # Fallback to environment-based naming
+            if [[ "${{ needs.determine-environment.outputs.environment }}" == "prod" ]]; then
+              echo "bucket_name=waterwaycleanups.org" >> $GITHUB_OUTPUT
+            else
+              echo "bucket_name=${{ needs.determine-environment.outputs.environment }}-waterwaycleanups-org" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Deploy to S3
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          aws s3 sync public/ s3://${{ steps.bucket.outputs.bucket_name }}/ \
+            --delete \
+            --cache-control "public, max-age=86400" \
+            --exclude "*.html" \
+            --exclude "*.xml"
+          
+          # Deploy HTML files with shorter cache
+          aws s3 sync public/ s3://${{ steps.bucket.outputs.bucket_name }}/ \
+            --cache-control "public, max-age=3600" \
+            --include "*.html" \
+            --include "*.xml"
+
+      - name: Get CloudFront distribution ID
+        working-directory: terraform
+        id: cloudfront
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        run: |
+          DIST_ID=$(terraform output -raw cloudfront_distribution_id 2>/dev/null || echo "")
+          echo "distribution_id=$DIST_ID" >> $GITHUB_OUTPUT
+
+      - name: Invalidate CloudFront
+        if: steps.cloudfront.outputs.distribution_id != '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ steps.cloudfront.outputs.distribution_id }} \
+            --paths "/*"
+
+      - name: Add PR comment with preview URL
+        if: github.event_name == 'pull_request' && needs.determine-environment.outputs.environment == 'staging'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## 🚀 Staging Preview Available
+            
+            Your changes have been deployed to the staging environment:
+            
+            **🌐 Preview URL:** https://staging.waterwaycleanups.org/
+            
+            This preview will be updated automatically with new commits to this PR.
+            
+            ### Environment Details
+            - **Environment:** staging
+            - **Hugo Base URL:** ${{ needs.determine-environment.outputs.hugo-base-url }}
+            - **Terraform Workspace:** ${{ needs.determine-environment.outputs.terraform-workspace }}
+            
+            ---
+            <sub>Deployed from commit ${context.sha.slice(0, 7)}</sub>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Slack notification
+        if: always() && needs.determine-environment.outputs.is-production == 'true'
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          channel: '#deployments'
+          text: |
+            Production deployment ${{ job.status }}!
+            Environment: ${{ needs.determine-environment.outputs.environment }}
+            Commit: ${{ github.sha }}
+            URL: ${{ needs.determine-environment.outputs.hugo-base-url }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

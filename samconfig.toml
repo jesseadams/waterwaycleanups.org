@@ -1,0 +1,60 @@
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "waterway-cleanups-local"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+disable_rollback = true
+image_repositories = []
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+parameter_overrides = [
+  "Environment=local",
+  "ContactListName=WaterwayCleanups-Local",
+  "TopicName=volunteer-local"
+]
+
+[default.local_start_api.parameters]
+warm_containers = "EAGER"
+debug_port = 5858
+debug_args = "-e debugpy --listen 0.0.0.0:5858 --wait-for-client"
+skip_pull_image = false
+parameter_overrides = [
+  "Environment=local",
+  "ContactListName=WaterwayCleanups-Local", 
+  "TopicName=volunteer-local"
+]
+
+[default.local_start_lambda.parameters]
+warm_containers = "EAGER"
+debug_port = 5858
+debug_args = "-e debugpy --listen 0.0.0.0:5858 --wait-for-client"
+parameter_overrides = [
+  "Environment=local",
+  "ContactListName=WaterwayCleanups-Local",
+  "TopicName=volunteer-local"
+]
+
+[staging]
+[staging.deploy.parameters]
+stack_name = "waterway-cleanups-staging"
+parameter_overrides = [
+  "Environment=staging",
+  "ContactListName=WaterwayCleanups-Staging",
+  "TopicName=volunteer-staging"
+]
+
+[prod]  
+[prod.deploy.parameters]
+stack_name = "waterway-cleanups-prod"
+parameter_overrides = [
+  "Environment=prod",
+  "ContactListName=WaterwayCleanups",
+  "TopicName=volunteer"
+]

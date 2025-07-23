@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Waterway Cleanups API - Local Development with SAM
+
+Parameters:
+  Environment:
+    Type: String
+    Default: local
+    AllowedValues: [local, dev, staging, prod]
+    Description: Environment name
+
+  ContactListName:
+    Type: String
+    Default: WaterwayCleanups-Local
+    Description: SES Contact List Name
+
+  TopicName:
+    Type: String
+    Default: volunteer-local
+    Description: SES Topic Name
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.9
+    Environment:
+      Variables:
+        ENVIRONMENT: !Ref Environment
+        SES_CONTACT_LIST_NAME: !Ref ContactListName
+        SES_TOPIC_NAME: !Ref TopicName
+        WAIVER_TABLE_NAME: !Sub "${Environment}_volunteer_waivers"
+        RSVP_TABLE_NAME: !Sub "${Environment}_event_rsvps"
+
+  Api:
+    Cors:
+      AllowMethods: "'OPTIONS,POST,GET'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
+
+Resources:
+  # DynamoDB Tables for local development
+  VolunteerWaiversTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${Environment}_volunteer_waivers"
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: waiver_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: waiver_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  EventRSVPTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "${Environment}_event_rsvps"
+      AttributeDefinitions:
+        - AttributeName: email
+          AttributeType: S
+        - AttributeName: event_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: email
+          KeyType: HASH
+        - AttributeName: event_id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  # Volunteer Waiver Submission API
+  VolunteerWaiverSubmitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: terraform/
+      Handler: lambda_volunteer_waiver_submit.handler
+      Environment:
+        Variables:
+          WAIVER_TABLE_NAME: !Ref VolunteerWaiversTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VolunteerWaiversTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sesv2:CreateContact
+                - sesv2:GetContact
+                - sesv2:GetContactList
+                - sesv2:ListContactLists
+              Resource: '*'
+      Events:
+        VolunteerWaiverAPI:
+          Type: Api
+          Properties:
+            Path: /api/submit-volunteer-waiver
+            Method: post
+            RestApiId: !Ref WaterwayCleanupAPI
+
+  # Volunteer Waiver Check API
+  VolunteerWaiverCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: terraform/
+      Handler: lambda_volunteer_waiver_check.handler
+      Environment:
+        Variables:
+          WAIVER_TABLE_NAME: !Ref VolunteerWaiversTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref VolunteerWaiversTable
+      Events:
+        VolunteerWaiverCheckAPI:
+          Type: Api
+          Properties:
+            Path: /api/check-volunteer-waiver
+            Method: post
+            RestApiId: !Ref WaterwayCleanupAPI
+
+  # Event RSVP Submission API
+  EventRSVPSubmitFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: terraform/
+      Handler: lambda_event_rsvp_submit.handler
+      Environment:
+        Variables:
+          RSVP_TABLE_NAME: !Ref EventRSVPTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref EventRSVPTable
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - sesv2:CreateContact
+                - sesv2:GetContact
+                - sesv2:GetContactList
+                - sesv2:ListContactLists
+              Resource: '*'
+      Events:
+        EventRSVPAPI:
+          Type: Api
+          Properties:
+            Path: /api/submit-event-rsvp
+            Method: post
+            RestApiId: !Ref WaterwayCleanupAPI
+
+  # Event RSVP Check API
+  EventRSVPCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: terraform/
+      Handler: lambda_event_rsvp_check.handler
+      Environment:
+        Variables:
+          RSVP_TABLE_NAME: !Ref EventRSVPTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref EventRSVPTable
+      Events:
+        EventRSVPCheckAPI:
+          Type: Api
+          Properties:
+            Path: /api/check-event-rsvp
+            Method: post
+            RestApiId: !Ref WaterwayCleanupAPI
+
+  # API Gateway
+  WaterwayCleanupAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      Cors:
+        AllowMethods: "'OPTIONS,POST,GET'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+
+Outputs:
+  WaterwayCleanupAPI:
+    Description: "API Gateway endpoint URL for Waterway Cleanup APIs"
+    Value: !Sub "https://${WaterwayCleanupAPI}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
+
+  VolunteerWaiverSubmitFunction:
+    Description: "Volunteer Waiver Submit Lambda Function ARN"
+    Value: !GetAtt VolunteerWaiverSubmitFunction.Arn
+
+  EventRSVPSubmitFunction:
+    Description: "Event RSVP Submit Lambda Function ARN"
+    Value: !GetAtt EventRSVPSubmitFunction.Arn

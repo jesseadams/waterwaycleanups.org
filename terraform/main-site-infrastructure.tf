@@ -19,11 +19,11 @@ resource "aws_cloudfront_function" "directory_index" {
 
 # S3 bucket for website hosting
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "waterwaycleanups.org"
+  bucket = var.environment == "prod" ? "waterwaycleanups.org" : "${var.environment}-waterwaycleanups-org"
 
   tags = {
-    Name        = "Waterway Cleanups Website"
-    Environment = "Production"
+    Name        = "Waterway Cleanups Website - ${title(var.environment)}"
+    Environment = title(var.environment)
     ManagedBy   = "Terraform"
   }
 }
@@ -55,8 +55,8 @@ resource "aws_s3_bucket_versioning" "website_bucket_versioning" {
 
 # Main website origin access control
 resource "aws_cloudfront_origin_access_control" "website_oac" {
-  name                              = "waterwaycleanups.org.s3.us-east-1.amazonaws.com"
-  description                       = "Origin Access Control for main website"
+  name                              = "${aws_s3_bucket.website_bucket.id}.s3.us-east-1.amazonaws.com"
+  description                       = "Origin Access Control for ${var.environment} website"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -66,13 +66,15 @@ resource "aws_cloudfront_origin_access_control" "website_oac" {
 resource "aws_cloudfront_distribution" "website_distribution" {
   # S3 origin for main website
   origin {
-    domain_name              = "waterwaycleanups.org.s3.us-east-1.amazonaws.com"
+    domain_name              = aws_s3_bucket.website_bucket.bucket_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
     origin_id                = "s3-main-website"
   }
 
-  # Aliases (CNAMEs)
-  aliases = ["waterwaycleanups.org", "www.waterwaycleanups.org", "mta-sts.waterwaycleanups.org"]
+  # Aliases (CNAMEs) - conditional based on environment
+  aliases = var.environment == "prod" ? 
+    ["waterwaycleanups.org", "www.waterwaycleanups.org", "mta-sts.waterwaycleanups.org"] :
+    [var.website_domain]
 
   enabled             = true
   is_ipv6_enabled     = true
