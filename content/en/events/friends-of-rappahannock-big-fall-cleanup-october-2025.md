@@ -1,6 +1,6 @@
 ---
 title: Friends of the Rappahannock Big Fall Cleanup
-image: /uploads/waterway-cleanups/waterways-5.png
+image: /uploads/waterway-cleanups/river_road.jpg
 tags:
   - rappahannock
 preheader_is_light: false
