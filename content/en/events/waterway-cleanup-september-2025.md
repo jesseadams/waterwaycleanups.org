@@ -1,8 +1,8 @@
 ---
-title: Waterway Cleanup - September 2025
-image: /uploads/waterway-cleanups/waterways-4.png
+title: Accokeek Creek Cleanup
+image: /uploads/waterway-cleanups/accokeek_creek.jpg
 tags:
-  - tbd
+  - accokeek creek
 preheader_is_light: false
 start_time: "2025-09-20T09:00:00-04:00"
 end_time: "2025-09-20T12:00:00-04:00"
@@ -19,7 +19,8 @@ Wear weather-appropriate clothing and sturdy shoes. The early fall weather can b
 ---
 ## Location
 
-To be determined, based on need.
+Accokeek Creek
+Launch location TBD
 
 ---
 ## What We Provide
