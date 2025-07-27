@@ -35,6 +35,11 @@
     {{ partial "volunteer-waiver-head.html" . }}
   </head>
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KDRJD92M"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <script>
       //* The mobile view width is set in the page as a data attribute
       document.body.setAttribute('data-mobile-width', '{{ (index .Site.Data .Language.Lang).header.mobile_view_width }}');
