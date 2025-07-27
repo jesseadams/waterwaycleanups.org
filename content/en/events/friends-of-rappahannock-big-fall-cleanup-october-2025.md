@@ -21,9 +21,8 @@ Dress warmly in layers and wear sturdy, waterproof footwear. Gloves and equipmen
 ---
 ## Location
 
-Friends of the Rappahannock Headquarters<br />
-3219 Fall Hill Avenue<br />
-Fredericksburg, VA 22401
+TBD - Stafford County / Fredericksburg area
+
 ---
 ## What We Provide
 
@@ -36,4 +35,4 @@ Fredericksburg, VA 22401
 All ages welcome—kids under 18 must be accompanied by an adult.
 {{< /tabs >}}
 
-{{< button "Sign Up" "https://riverfriends.org/events/" >}}
+{{< event_rsvp attendance_cap="20" >}}

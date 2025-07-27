@@ -34,4 +34,4 @@ Launch location TBD
 All ages welcome—kids under 18 must be accompanied by an adult.
 {{< /tabs >}}
 
-{{< button "Sign Up" "https://waterwaycleanups.org/contact" >}}
+{{< event_rsvp attendance_cap="8" >}}
