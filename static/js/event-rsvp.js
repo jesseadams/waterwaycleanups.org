@@ -91,6 +91,16 @@ function initializeRsvpWidget(widget) {
         );
         
         if (result.success) {
+          // Fire Google Analytics event for registration submission
+          if (typeof gtag === 'function') {
+            gtag('event', 'registration_submission', {
+              'cleanup_id': eventId
+            });
+            console.log(`Fired gtag event 'registration_submission' for cleanup_id: ${eventId}`);
+          } else {
+            console.warn('gtag function not found. Unable to fire registration_submission event.');
+          }
+          
           // Show success message
           if (rsvpSuccessMessage) {
             rsvpSuccessMessage.classList.remove('hidden');
