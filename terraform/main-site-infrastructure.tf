@@ -120,7 +120,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   }
   
   # Associate WAF Web ACL with CloudFront
-  web_acl_id = aws_wafv2_web_acl.china_block.arn
+  web_acl_id = aws_wafv2_web_acl.geo_block.arn
 
   # Prevent accidental deletion
   lifecycle {

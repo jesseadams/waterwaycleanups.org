@@ -1,19 +1,19 @@
-# WAF to block traffic from China
+# WAF to block traffic from specific countries
 # This WAF is associated with the main CloudFront distribution
 
 # Create a Web ACL for CloudFront
-resource "aws_wafv2_web_acl" "china_block" {
-  name        = "china-block-waf"
-  description = "WAF Web ACL to block traffic from China"
+resource "aws_wafv2_web_acl" "geo_block" {
+  name        = "country-block-waf"
+  description = "WAF Web ACL to block traffic from specific countries"
   scope       = "CLOUDFRONT" # Using CLOUDFRONT scope since we're associating it with CloudFront
 
   default_action {
     allow {}
   }
 
-  # Rule to block traffic from China
+  # Rule to block traffic from specified countries
   rule {
-    name     = "BlockChina"
+    name     = "BlockCountries"
     priority = 1
 
     action {
@@ -22,13 +22,18 @@ resource "aws_wafv2_web_acl" "china_block" {
 
     statement {
       geo_match_statement {
-        country_codes = ["CN"] # ISO 3166 country code for China
+        country_codes = [
+          "CN", # China
+          "RU", # Russia
+          "NL", # Netherlands
+          "KP"  # North Korea
+        ]
       }
     }
 
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                = "BlockChina"
+      metric_name                = "BlockCountries"
       sampled_requests_enabled   = true
     }
   }
@@ -36,7 +41,7 @@ resource "aws_wafv2_web_acl" "china_block" {
   # Required visibility configuration
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                = "ChinaBlockWAF"
+    metric_name                = "CountryBlockWAF"
     sampled_requests_enabled   = true
   }
 
@@ -51,12 +56,12 @@ resource "aws_wafv2_web_acl" "china_block" {
 
 # Output the WAF Web ACL ID
 output "waf_web_acl_id" {
-  value       = aws_wafv2_web_acl.china_block.id
+  value       = aws_wafv2_web_acl.geo_block.id
   description = "The ID of the WAF Web ACL"
 }
 
 # Output the WAF Web ACL ARN
 output "waf_web_acl_arn" {
-  value       = aws_wafv2_web_acl.china_block.arn
+  value       = aws_wafv2_web_acl.geo_block.arn
   description = "The ARN of the WAF Web ACL"
 }
