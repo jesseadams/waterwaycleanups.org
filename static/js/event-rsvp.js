@@ -42,6 +42,14 @@ function initializeRsvpWidget(widget) {
         // Focus the first input when form is shown
         const firstInput = rsvpForm.querySelector('input');
         if (firstInput) firstInput.focus();
+        
+        // Fire Google Analytics event for intent to register
+        if (typeof gtag === 'function') {
+          gtag('event', 'intent_to_register', {
+            'cleanup_id': eventId
+          });
+          console.log(`Fired gtag event 'intent_to_register' for cleanup_id: ${eventId}`);
+        }
       }
     });
   }
