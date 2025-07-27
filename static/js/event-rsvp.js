@@ -49,6 +49,8 @@ function initializeRsvpWidget(widget) {
             'cleanup_id': eventId
           });
           console.log(`Fired gtag event 'intent_to_register' for cleanup_id: ${eventId}`);
+        } else {
+          console.warn('gtag function not found. Unable to fire intent_to_register event.');
         }
       }
     });
