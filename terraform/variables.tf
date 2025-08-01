@@ -27,3 +27,9 @@ variable "environment" {
   type        = string
   default     = "prod"
 }
+
+variable "website_domain" {
+  description = "Primary domain name for the website"
+  type        = string
+  default     = "waterwaycleanups.org"
+}
