@@ -13,7 +13,7 @@ end_time: "2025-08-09T11:30:00-04:00"
 {{< tabs >}}
 ## Event Details
 
-We are excited to partner with Virginia State Parks to host a cleanup on at the beautiful Widewater State Park! Volunteers will work together to remove trash and debris from the water and shoreline. Bring your kayak or canoe and help us remove as much trash as we can from the shore and water that would normally not be otherwise accessible. 
+We are excited to partner with Virginia State Parks to host a cleanup at the beautiful Widewater State Park! Volunteers will work together to remove trash and debris from the water and shoreline. Bring your kayak or canoe and help us remove as much trash as we can from the shore and water that would normally not be otherwise accessible. 
 
 Please dress in cool, comfortable clothing and water-friendly shoes. Bring lots of water, sunscreen, and a hat for sun protection. If you have a kayak please bring it with you! PFDs are required. A limited number of kayaks are available to borrow (email info@waterwaycleanups.org to claim). A ranger will do a water safety briefing prior to our group launching.
 
