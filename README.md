@@ -117,10 +117,8 @@ npm --version
 
 - `npm run dev` - Start the Hugo development server with asset watching
 - `npm run build` - Build the Hugo site for production
-- `npm run build:assets` - Build frontend assets with Webpack
-- `npm run watch:assets` - Watch and rebuild frontend assets during development
-- `npm run build:css` - Build and minify Tailwind CSS
-- `npm run watch:css` - Watch and rebuild Tailwind CSS during development
+- `npm run build:assets` - Build all frontend assets (CSS + JavaScript) with Webpack
+- `npm run watch:assets` - Watch and rebuild all frontend assets during development
 - `npm run start` - Build assets and start Hugo server
 - `npm run clean` - Clean generated assets
 
@@ -722,7 +720,7 @@ This project uses [Tailwind CSS](https://tailwindcss.com/docs) for styling. You 
 
 1. Editing the `tailwind.config.js` file to modify colors, fonts, and other design tokens
 2. Adding custom CSS in the `static/css/src/` directory
-3. Rebuilding CSS with `npm run build:css`
+3. Rebuilding assets with `npm run build:assets`
 
 For more information on Tailwind CSS utility classes and configuration options, refer to the [official Tailwind CSS documentation](https://tailwindcss.com/docs).
 
