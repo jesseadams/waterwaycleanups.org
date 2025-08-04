@@ -8,14 +8,56 @@ import uuid
 # Initialize AWS clients
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
+sesv2 = boto3.client('sesv2')
 table_name = os.environ.get('WAIVER_TABLE_NAME', 'volunteer_waivers')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
+contact_list_name = os.environ.get('SES_CONTACT_LIST_NAME', 'volunteers')
+topic_name = os.environ.get('SES_TOPIC_NAME', 'general')
 table = dynamodb.Table(table_name)
 
 # Set up logging
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+def check_contact_exists(contact_list_name, email_address):
+    """Check if contact exists in SES contact list"""
+    try:
+        sesv2.get_contact(
+            ContactListName=contact_list_name,
+            EmailAddress=email_address
+        )
+        return True
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NotFoundException':
+            return False
+        raise e
+
+def add_contact_to_ses(contact_list_name, email_address, full_name, attributes=None, topic_name=None):
+    """Add contact to SES contact list"""
+    try:
+        contact_attributes = {
+            'full_name': full_name,
+            **(attributes or {})
+        }
+        
+        topic_preferences = []
+        if topic_name:
+            topic_preferences.append({
+                'TopicName': topic_name,
+                'SubscriptionStatus': 'OPT_IN'
+            })
+        
+        sesv2.create_contact(
+            ContactListName=contact_list_name,
+            EmailAddress=email_address,
+            AttributesData=json.dumps(contact_attributes),
+            TopicPreferences=topic_preferences
+        )
+        return True
+    except Exception as e:
+        logger.error(f'Error adding contact {email_address} to SES: {str(e)}')
+        raise e
 
 def handler(event, context):
     """
@@ -151,6 +193,31 @@ def handler(event, context):
         logger.info(f"Saving waiver record to DynamoDB table: {table_name}")
         table.put_item(Item=item)
         logger.info("Waiver record saved successfully")
+        
+        # Add contact to SES if they don't already exist
+        try:
+            contact_exists = check_contact_exists(contact_list_name, body['email'])
+            
+            if not contact_exists:
+                additional_attributes = {
+                    'phone_number': body['phone_number'],
+                    'date_of_birth': body['date_of_birth'],
+                    'waiver_date': submission_date.split('T')[0]
+                }
+                
+                add_contact_to_ses(
+                    contact_list_name,
+                    body['email'],
+                    body['full_legal_name'],
+                    additional_attributes,
+                    topic_name
+                )
+                logger.info(f"Contact added to SES contact list: {contact_list_name}")
+            else:
+                logger.info("Contact already exists in SES, skipping addition")
+        except Exception as ses_error:
+            # Don't fail the entire request if SES fails, but log it
+            logger.error(f"SES contact addition failed (continuing with waiver submission): {str(ses_error)}")
         
         # Send SNS notification
         if sns_topic_arn:
