@@ -431,6 +431,69 @@ Content for a large section with a wide container width.
 - `dir` (required) - Directory containing images
 - This automatically creates a gallery from all images in the specified directory
 
+#### Gallery with External Links
+The `brick_gallery_external_links` shortcode allows you to create galleries where images can link to external websites (perfect for sponsors, partners, etc.).
+
+```markdown
+{{< brick_gallery_external_links type="sponsors" >}}
+{{< brick_gallery_external_links type="partners" >}}
+```
+
+**Parameters:**
+- `type` (required) - The data file name to use (e.g., "sponsors", "partners")
+
+**Setup Instructions:**
+
+**1. Create Data Configuration File**
+
+Create a YAML file in `/data/` directory (e.g., `/data/sponsors.yaml`):
+
+```yaml
+# Sponsors with external links (clickable)
+- name: "Company Name"
+  image: "company-logo.png"  # filename in /uploads/sponsors/
+  dir: "/uploads/sponsors"
+  url: "https://company-website.com"
+
+- name: "Another Sponsor"
+  image: "sponsor2.jpg"
+  dir: "/uploads/sponsors"
+  url: "https://another-sponsor.org"
+
+# Sponsor without external link (display only)
+- name: "Local Business"
+  image: "local-business.png"
+  dir: "/uploads/sponsors"
+  # url: ""  # Omit or leave empty for no link
+```
+
+**2. Add Images to Directory**
+
+Place your logo/image files in the corresponding directory:
+- `/static/uploads/sponsors/company-logo.png`
+- `/static/uploads/sponsors/sponsor2.jpg`
+- `/static/uploads/sponsors/local-business.png`
+
+**3. Use the Shortcode**
+
+```markdown
+{{< brick_gallery_external_links type="sponsors" >}}
+```
+
+**Configuration Options:**
+
+- **With External Link:** Include `url` field - image becomes clickable and opens in new tab
+- **Without External Link:** Omit `url` field or leave empty - image displays but is not clickable
+- **Image Support:** PNG, JPG, JPEG, WebP formats supported
+- **Responsive:** Automatically adjusts to screen size with responsive grid layout
+
+**Features:**
+- Hover effects with subtle animations
+- Grayscale to color transition on hover
+- Accessible with proper alt text and titles
+- Opens external links in new tab with security attributes
+- Responsive grid layout that adapts to screen size
+
 #### Button
 ```markdown
 {{< button "Text" "/link" >}}

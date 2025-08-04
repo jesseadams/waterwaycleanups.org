@@ -1,0 +1,19 @@
+- name: "Crow's Nest Research Center"
+  image: "crowsnestlogo.png"
+  dir: "/uploads/partners"
+  url: "https://crowsnestresearch.org"
+
+- name: "Friends of Rappahannock"
+  image: "friends-of-rappahannock-logo.png"
+  dir: "/uploads/partners"
+  url: "https://riverfriends.org"
+
+- name: "Karen for Nature"
+  image: "karen-for-nature-logo.png"
+  dir: "/uploads/partners"
+  url: "https://www.karenfornature.com"
+
+- name: "Virginia State Parks"
+  image: "virginia-state-parks-logo.png"
+  dir: "/uploads/partners"
+  url: "https://www.dcr.virginia.gov/state-parks/"
