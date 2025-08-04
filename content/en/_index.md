@@ -28,10 +28,10 @@ Join us at an upcoming event and help protect the Rappahannock, Potomac, Aquia C
 
 {{< brick_two_columns text_align="center" >}}
 ## Sponsors
-{{< gallery dir="/uploads/sponsors/" >}} 
+{{< brick_gallery_external_links type="sponsors" >}}
 ---
 ## Partners
-{{< gallery dir="/uploads/partners/" >}} 
+{{< brick_gallery_external_links type="partners" >}} 
 {{< /brick_two_columns >}}
 
 

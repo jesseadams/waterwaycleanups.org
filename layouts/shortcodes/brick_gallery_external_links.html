@@ -1,0 +1,22 @@
+{{/* 
+  Brick Gallery with External Links Shortcode
+  Usage: {{< brick_gallery_external_links type="sponsors" >}}
+         {{< brick_gallery_external_links type="partners" >}}
+*/}}
+{{ $type := .Get "type" | default "sponsors" }}
+{{ $items := index .Site.Data $type }}
+
+<ul class="image-gallery gallery-external-links">
+{{ range $items }}
+  {{- $staticurl := printf "%s/%s" .dir .image -}}
+  <li class="gallery-item">
+    {{- if .url -}}
+    <a href="{{ .url }}" target="_blank" rel="noopener noreferrer" title="Visit {{ .name }}" class="gallery-link">
+      <img src="{{ $staticurl }}" alt="{{ .name }}" class="gallery-image" style="max-width: 300px; max-height: 300px; object-fit: contain;" />
+    </a>
+    {{- else -}}
+    <img src="{{ $staticurl }}" alt="{{ .name }}" class="gallery-image" style="max-width: 300px; max-height: 300px; object-fit: contain;" />
+    {{- end -}}
+  </li>
+{{ end }}
+</ul>
