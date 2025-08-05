@@ -1,20 +1,24 @@
 # Event RSVP System - Terraform Configuration
 
+# Load event RSVPs table schema from JSON
+locals {
+  event_rsvps_schema = jsondecode(file("${path.module}/../schemas/event-rsvps-table.json"))
+}
+
 # Create DynamoDB table for storing event RSVPs
 resource "aws_dynamodb_table" "event_rsvps" {
-  name         = "event_rsvps"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "event_id"
-  range_key    = "email"
+  name         = local.event_rsvps_schema.table_name
+  billing_mode = local.event_rsvps_schema.billing_mode
+  hash_key     = local.event_rsvps_schema.hash_key
+  range_key    = local.event_rsvps_schema.range_key
 
-  attribute {
-    name = "event_id"
-    type = "S"
-  }
-
-  attribute {
-    name = "email"
-    type = "S"
+  # Create attributes dynamically from schema
+  dynamic "attribute" {
+    for_each = local.event_rsvps_schema.attributes
+    content {
+      name = attribute.value.name
+      type = attribute.value.type
+    }
   }
 
   point_in_time_recovery {
@@ -25,6 +29,7 @@ resource "aws_dynamodb_table" "event_rsvps" {
     Name        = "event-rsvps"
     Environment = var.environment
     Project     = "waterwaycleanups"
+    Schema      = "event-rsvps-table.json"
   }
 }
 
