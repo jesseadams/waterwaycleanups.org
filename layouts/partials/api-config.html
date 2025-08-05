@@ -1,0 +1,13 @@
+{{/* API Configuration - injected by Hugo environment variables */}}
+{{- $baseUrl := (getenv "HUGO_API_BASE_URL" | default .Site.Params.api.base_url) -}}
+<script>
+  window.API_CONFIG = {
+    BASE_URL: '{{ $baseUrl }}',
+    VOLUNTEER_WAIVER_CHECK: '{{ $baseUrl }}/check-volunteer-waiver',
+    VOLUNTEER_WAIVER_SUBMIT: '{{ $baseUrl }}/submit-volunteer-waiver',
+    EVENT_RSVP_CHECK: '{{ $baseUrl }}/check-event-rsvp',
+    EVENT_RSVP_SUBMIT: '{{ $baseUrl }}/submit-event-rsvp',
+    VOLUNTEER_SUBMIT: '{{ $baseUrl }}/submit-volunteer'
+  };
+  console.log('API Configuration loaded with base URL:', window.API_CONFIG.BASE_URL);
+</script>

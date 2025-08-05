@@ -172,8 +172,7 @@ async function updateRsvpCount(eventId, countElement, statusElement, attendanceC
  */
 async function checkEventRsvp(eventId, email) {
   try {
-    // API endpoint URL from Terraform output
-    const url = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod/check-event-rsvp';
+    const url = window.API_CONFIG.EVENT_RSVP_CHECK;
     
     const requestOptions = {
       method: 'POST',
@@ -228,8 +227,7 @@ async function checkEventRsvp(eventId, email) {
  */
 async function submitEventRsvp(eventId, firstName, lastName, email, attendanceCap) {
   try {
-    // API endpoint URL from Terraform output
-    const url = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod/submit-event-rsvp';
+    const url = window.API_CONFIG.EVENT_RSVP_SUBMIT;
     
     const payload = {
       event_id: eventId,

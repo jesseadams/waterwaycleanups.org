@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
       formElement.classList.add('form-loading');
       
       // Submit to REST API
-      fetch("https://882dzmsoy5.execute-api.us-east-1.amazonaws.com/prod/submit-volunteer", {
+      fetch(window.API_CONFIG.VOLUNTEER_SUBMIT, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
