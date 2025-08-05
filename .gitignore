@@ -43,9 +43,15 @@ temp/
 .terraform*
 lambda.zip
 
-# tailwindcss
+# Built assets
 static/css/tailwind-output.css
+static/css/tailwind-output.css.map
+static/css/tailwind-output.min.css
 static/js/tailwind-output-bundle.js
+static/js/date-bundle.js
+static/js/parallax-bundle.js
+*.map
+*.LICENSE.txt
 
 terraform.tfstate*
 
