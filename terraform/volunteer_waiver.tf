@@ -1,20 +1,24 @@
 # Volunteer Waiver System - Terraform Configuration
 
+# Load volunteer waivers table schema from JSON
+locals {
+  volunteer_waivers_schema = jsondecode(file("${path.module}/../schemas/volunteer-waivers-table.json"))
+}
+
 # Create DynamoDB table for storing volunteer waivers
 resource "aws_dynamodb_table" "volunteer_waivers" {
-  name         = "volunteer_waivers"
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "email"
-  range_key    = "waiver_id"
+  name         = local.volunteer_waivers_schema.table_name
+  billing_mode = local.volunteer_waivers_schema.billing_mode
+  hash_key     = local.volunteer_waivers_schema.hash_key
+  range_key    = local.volunteer_waivers_schema.range_key
 
-  attribute {
-    name = "email"
-    type = "S"
-  }
-
-  attribute {
-    name = "waiver_id"
-    type = "S"
+  # Create attributes dynamically from schema
+  dynamic "attribute" {
+    for_each = local.volunteer_waivers_schema.attributes
+    content {
+      name = attribute.value.name
+      type = attribute.value.type
+    }
   }
 
   point_in_time_recovery {
@@ -25,6 +29,7 @@ resource "aws_dynamodb_table" "volunteer_waivers" {
     Name        = "volunteer-waivers"
     Environment = var.environment
     Project     = "waterwaycleanups"
+    Schema      = "volunteer-waivers-table.json"
   }
 }
 
