@@ -4,11 +4,18 @@
   "description": "Waterways Cleanup Project",
   "scripts": {
     "dev": "concurrently \"hugo server\" \"npm run watch:assets\"",
+    "dev:full": "concurrently \"npm run dev\" \"npm run api:local\"",
     "build": "npm run build:assets && hugo --minify",
     "build:assets": "webpack --mode production",
     "watch:assets": "webpack --watch --mode development",
     "clean": "rm -f static/css/tailwind-output.css static/js/main-bundle.js",
-    "start": "npm run build && hugo server"
+    "start": "npm run build && hugo server",
+    "api:build": "sam build",
+    "api:local": "./scripts/local-dev.sh",
+    "api:deploy:staging": "sam deploy --config-env staging",
+    "api:deploy:prod": "sam deploy --config-env prod",
+    "db:local": "docker-compose up -d dynamodb-local dynamodb-admin",
+    "db:stop": "docker-compose down"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",
