@@ -3,12 +3,10 @@
   "version": "1.0.0",
   "description": "Waterways Cleanup Project",
   "scripts": {
-    "dev": "concurrently \"hugo server\" \"npm run watch:assets\" \"npm run watch:css\"",
-    "build": "npm run build:css && npm run build:assets && hugo --minify",
+    "dev": "concurrently \"hugo server\" \"npm run watch:assets\"",
+    "build": "npm run build:assets && hugo --minify",
     "build:assets": "webpack --mode production",
-    "build:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.css --minify",
     "watch:assets": "webpack --watch --mode development",
-    "watch:css": "tailwindcss -i ./static/css/src/tailwind.css -o ./static/css/tailwind-output.css --watch",
     "clean": "rm -f static/css/tailwind-output.css static/js/main-bundle.js",
     "start": "npm run build && hugo server"
   },
