@@ -32,6 +32,7 @@
 
     <link rel="stylesheet" href="/css/tailwind-output.css" /> 
     
+    {{ partial "api-config.html" . }}
     {{ partial "volunteer-waiver-head.html" . }}
   </head>
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">

@@ -267,8 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function checkExistingWaiver(email) {
     console.log('Checking waiver for email:', email);
     try {
-      // Use the direct AWS API Gateway URL from Terraform output
-      const apiUrl = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod/check-volunteer-waiver';
+      const apiUrl = window.API_CONFIG.VOLUNTEER_WAIVER_CHECK;
       console.log(`Sending request to: ${apiUrl}`);
       
       const response = await fetch(apiUrl, {
@@ -295,8 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function submitWaiverData(data) {
     console.log('Submitting waiver data:', data);
     try {
-      // Use the direct AWS API Gateway URL from Terraform output
-      const apiUrl = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod/submit-volunteer-waiver';
+      const apiUrl = window.API_CONFIG.VOLUNTEER_WAIVER_SUBMIT;
       console.log(`Sending request to: ${apiUrl}`);
       
       const response = await fetch(apiUrl, {
