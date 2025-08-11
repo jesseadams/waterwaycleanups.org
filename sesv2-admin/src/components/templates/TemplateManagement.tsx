@@ -3,6 +3,7 @@ import { listEmailTemplates, deleteEmailTemplate, cloneEmailTemplate } from '../
 import TemplateForm from './TemplateForm';
 import TemplatePreview from './TemplatePreview';
 import TemplateEditForm from './TemplateEditForm';
+import NewsletterGenerator from '../emails/NewsletterGenerator';
 
 // Using 'any' here since the AWS SDK types are complex and this simplifies the component
 interface Template {
@@ -22,6 +23,7 @@ const TemplateManagement: React.FC = () => {
   const [cloneSourceTemplate, setCloneSourceTemplate] = useState<string | null>(null);
   const [newTemplateName, setNewTemplateName] = useState<string>("");
   const [isCloning, setIsCloning] = useState<boolean>(false);
+  const [showNewsletterGenerator, setShowNewsletterGenerator] = useState<boolean>(false);
 
   // Fetch templates on component mount
   useEffect(() => {
@@ -120,6 +122,18 @@ const TemplateManagement: React.FC = () => {
     setNewTemplateName('');
   };
 
+  const handleNewsletterTemplateCreated = async (templateName: string) => {
+    // Close the newsletter generator
+    setShowNewsletterGenerator(false);
+    
+    // Refresh templates list
+    fetchTemplates();
+    
+    // Show success message
+    setError(null);
+    alert(`Newsletter template "${templateName}" created successfully!`);
+  };
+
   if (isLoading && templates.length === 0) {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
@@ -128,17 +142,28 @@ const TemplateManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">Template Management</h1>
-        <button
-          onClick={() => {
-            setIsCreatingTemplate(true);
-            setIsPreviewMode(false);
-            setIsEditingTemplate(false);
-            setSelectedTemplate(null);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Create Template
-        </button>
+        <div className="flex space-x-3">
+          <button
+            onClick={() => setShowNewsletterGenerator(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            AI Newsletter Generator
+          </button>
+          <button
+            onClick={() => {
+              setIsCreatingTemplate(true);
+              setIsPreviewMode(false);
+              setIsEditingTemplate(false);
+              setSelectedTemplate(null);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Create Template
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -238,6 +263,20 @@ const TemplateManagement: React.FC = () => {
           </div>
           <div className="max-w-full overflow-hidden">
             <TemplatePreview templateName={selectedTemplate} />
+          </div>
+        </div>
+      )}
+
+      {/* Newsletter Generator Modal */}
+      {showNewsletterGenerator && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-6 overflow-y-auto" style={{ maxHeight: '90vh' }}>
+              <NewsletterGenerator
+                onTemplateCreated={handleNewsletterTemplateCreated}
+                onCancel={() => setShowNewsletterGenerator(false)}
+              />
+            </div>
           </div>
         </div>
       )}

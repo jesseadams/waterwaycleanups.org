@@ -5,6 +5,7 @@
   "homepage": "/sesv2-admin/",
   "dependencies": {
     "@aws-amplify/ui-react": "^6.11.2",
+    "@aws-sdk/client-bedrock-runtime": "^3.826.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.826.0",
     "@aws-sdk/client-s3": "^3.830.0",
     "@aws-sdk/client-sesv2": "^3.826.0",

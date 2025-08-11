@@ -86,6 +86,29 @@ resource "aws_iam_policy" "s3_access_policy" {
   })
 }
 
+# IAM Policy for Bedrock access
+resource "aws_iam_policy" "bedrock_access_policy" {
+  name        = "ses_admin_bedrock_access_policy"
+  description = "Policy for accessing AWS Bedrock for AI newsletter generation"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream"
+        ]
+        Resource = [
+          "arn:aws:bedrock:us-*::foundation-model/anthropic.claude-*",
+          "arn:aws:bedrock:us-*:767072126027:inference-profile/*"
+        ]
+      }
+    ]
+  })
+}
+
 # Attach the SES and S3 policies to the authenticated role
 resource "aws_iam_role_policy_attachment" "sesv2_policy_attachment" {
   role       = aws_iam_role.ses_admin_auth_role.name
@@ -95,6 +118,11 @@ resource "aws_iam_role_policy_attachment" "sesv2_policy_attachment" {
 resource "aws_iam_role_policy_attachment" "s3_policy_attachment" {
   role       = aws_iam_role.ses_admin_auth_role.name
   policy_arn = aws_iam_policy.s3_access_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "bedrock_policy_attachment" {
+  role       = aws_iam_role.ses_admin_auth_role.name
+  policy_arn = aws_iam_policy.bedrock_access_policy.arn
 }
 
 # Connect roles to the Identity Pool

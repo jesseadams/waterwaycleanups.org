@@ -38,6 +38,7 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
   const [availableTopics, setAvailableTopics] = useState<Array<{TopicName?: string, DisplayName?: string}>>([]);
   const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [recipientsFilteredByTopic, setRecipientsFilteredByTopic] = useState<string[]>([]);
+  const [showNewsletterGenerator, setShowNewsletterGenerator] = useState<boolean>(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -192,6 +193,26 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
     });
     
     return result;
+  };
+
+  const handleNewsletterTemplateCreated = async (templateName: string) => {
+    // Close the newsletter generator
+    setShowNewsletterGenerator(false);
+    
+    // Refresh templates list
+    try {
+      const templatesResponse = await listEmailTemplates();
+      setTemplates(templatesResponse.TemplatesMetadata || []);
+      
+      // Select the newly created template
+      setSelectedTemplate(templateName);
+      
+      // Show success message
+      setMessage(`Newsletter template "${templateName}" created successfully!`);
+    } catch (err) {
+      console.error('Error refreshing templates:', err);
+      setError('Template created but failed to refresh list. Please refresh the page.');
+    }
   };
 
   const handleTestRender = async () => {
