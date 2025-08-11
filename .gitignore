@@ -56,3 +56,7 @@ static/js/parallax-bundle.js
 terraform.tfstate*
 
 *.zip
+
+docs/**
+scripts/**
+static/admin/**
