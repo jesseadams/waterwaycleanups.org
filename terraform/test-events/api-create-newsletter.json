@@ -1,0 +1,9 @@
+{
+  "httpMethod": "POST",
+  "path": "/scheduled-newsletters",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"scheduledTime\":\"2025-08-14T14:00:00Z\",\"templateName\":\"monthly-newsletter\",\"subject\":\"Test Scheduled Newsletter\",\"toAddresses\":[\"test@example.com\"],\"useTopics\":false,\"templateData\":\"{\\\"month\\\":\\\"August\\\",\\\"year\\\":\\\"2025\\\"}\"}",
+  "isBase64Encoded": false
+}

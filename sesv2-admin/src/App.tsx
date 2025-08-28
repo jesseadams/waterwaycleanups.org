@@ -6,6 +6,7 @@ import Dashboard from './components/Dashboard';
 import ContactsManagement from './components/contacts/ContactsManagement';
 import TemplateManagement from './components/templates/TemplateManagement';
 import EmailSender from './components/emails/EmailSender';
+import ScheduledNewsletters from './components/emails/ScheduledNewsletters';
 import Layout from './components/Layout';
 import Login from './components/auth/Login';
 import './App.css';
@@ -26,6 +27,7 @@ function App() {
             <Route path="contacts" element={<ContactsManagement />} />
             <Route path="templates" element={<TemplateManagement />} />
             <Route path="send-emails" element={<EmailSender />} />
+            <Route path="scheduled-newsletters" element={<ScheduledNewsletters />} />
           </Route>
         </Routes>
       </div>

@@ -1,0 +1,13 @@
+{
+  "version": "0",
+  "id": "test-event-id",
+  "detail-type": "Scheduled Event",
+  "source": "aws.events",
+  "account": "767072126027",
+  "time": "2025-08-13T18:00:00Z",
+  "region": "us-east-1",
+  "resources": [
+    "arn:aws:events:us-east-1:767072126027:rule/waterway-cleanups-scheduled-newsletters-trigger"
+  ],
+  "detail": {}
+}

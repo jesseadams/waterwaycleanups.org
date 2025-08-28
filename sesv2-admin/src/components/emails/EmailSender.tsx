@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { listContactLists, listContacts, listEmailTemplates, sendEmail, getContact, getEmailTemplate, testRenderEmailTemplate, getContactList } from '../../utils/sesv2';
+import { createScheduledNewsletter, getNextAvailableSlot, getAvailableHours } from '../../utils/scheduledNewsletters';
 
 // Tab enum for cleaner state management
 enum TabType {
@@ -39,9 +40,17 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
   const [selectedTopic, setSelectedTopic] = useState<string>('');
   const [recipientsFilteredByTopic, setRecipientsFilteredByTopic] = useState<string[]>([]);
   const [showNewsletterGenerator, setShowNewsletterGenerator] = useState<boolean>(false);
+  const [isScheduled, setIsScheduled] = useState<boolean>(false);
+  const [scheduledDate, setScheduledDate] = useState<string>('');
+  const [scheduledHour, setScheduledHour] = useState<string>('');
+  const [availableScheduleHours, setAvailableScheduleHours] = useState<number[]>([]);
 
   useEffect(() => {
     fetchInitialData();
+    // Initialize with next available slot
+    const nextSlot = getNextAvailableSlot();
+    setScheduledDate(nextSlot.toISOString().split('T')[0]);
+    setScheduledHour(nextSlot.getHours().toString());
   }, []);
 
   useEffect(() => {
@@ -51,6 +60,20 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
     }
   }, [selectedContactList]);
   
+  // Update available hours when date changes
+  useEffect(() => {
+    if (scheduledDate) {
+      const date = new Date(scheduledDate + 'T00:00:00');
+      const hours = getAvailableHours(date);
+      setAvailableScheduleHours(hours);
+      
+      // If current hour is not available, set to first available
+      if (!hours.includes(parseInt(scheduledHour))) {
+        setScheduledHour(hours[0]?.toString() || '');
+      }
+    }
+  }, [scheduledDate]);
+
   // Filter visible contacts based on selected topic
   useEffect(() => {
     if (!selectedContactList || sendToSingleContact) return;
@@ -313,15 +336,50 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
     setError(null);
     setMessage(null);
 
-    // Track progress
-    const emailsToSend = sendToSingleContact ? [singleContactToSend] : selectedContacts;
-    setSendingProgress({
-      total: emailsToSend.length,
-      sent: 0, 
-      failed: 0
-    });
-
     try {
+      // If scheduled, create scheduled newsletter instead of sending immediately
+      if (isScheduled) {
+        if (!scheduledDate || !scheduledHour) {
+          setError('Please select a date and time for scheduling.');
+          setSending(false);
+          return;
+        }
+
+        // Construct the scheduled time in UTC
+        const scheduledDateTime = new Date(`${scheduledDate}T${scheduledHour.padStart(2, '0')}:00:00`);
+        // Convert from ET to UTC
+        const utcDateTime = new Date(scheduledDateTime.toLocaleString('en-US', { timeZone: 'UTC' }));
+
+        // Create scheduled newsletter
+        await createScheduledNewsletter({
+          templateName: selectedTemplate,
+          contactList: selectedContactList || '',
+          scheduledTime: utcDateTime.toISOString(),
+          fromEmail: sourceEmail,
+          templateData: isUsingTemplate ? JSON.parse(globalTemplateData || '{}') : {},
+          topic: selectedTopic || undefined
+        });
+
+        setMessage('Newsletter scheduled successfully!');
+        
+        // Reset form
+        setIsScheduled(false);
+        const nextSlot = getNextAvailableSlot();
+        setScheduledDate(nextSlot.toISOString().split('T')[0]);
+        setScheduledHour(nextSlot.getHours().toString());
+        
+        setSending(false);
+        return;
+      }
+
+      // Original immediate send logic
+      // Track progress
+      const emailsToSend = sendToSingleContact ? [singleContactToSend] : selectedContacts;
+      setSendingProgress({
+        total: emailsToSend.length,
+        sent: 0, 
+        failed: 0
+      });
       if (isUsingTemplate) {
         // Parse the global template data string to JSON object
         let parsedGlobalData = {};
@@ -601,6 +659,68 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
                   </div>
                 </div>
               )}
+
+              {/* Scheduling Section */}
+              {activeTab === TabType.Send && (
+                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center mb-4">
+                    <input
+                      type="checkbox"
+                      id="schedule"
+                      checked={isScheduled}
+                      onChange={(e) => setIsScheduled(e.target.checked)}
+                      className="mr-2"
+                    />
+                    <label htmlFor="schedule" className="text-sm font-medium text-gray-700">
+                      Schedule for later
+                    </label>
+                  </div>
+                  
+                  {isScheduled && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
+                          Date
+                        </label>
+                        <input
+                          type="date"
+                          id="scheduledDate"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="scheduledHour" className="block text-sm font-medium text-gray-700 mb-1">
+                          Time (ET)
+                        </label>
+                        <select
+                          id="scheduledHour"
+                          value={scheduledHour}
+                          onChange={(e) => setScheduledHour(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={availableScheduleHours.length === 0}
+                        >
+                          {availableScheduleHours.length === 0 ? (
+                            <option value="">No available times</option>
+                          ) : (
+                            availableScheduleHours.map(hour => (
+                              <option key={hour} value={hour}>
+                                {hour === 12 ? '12:00 PM' : hour > 12 ? `${hour - 12}:00 PM` : `${hour}:00 AM`}
+                              </option>
+                            ))
+                          )}
+                        </select>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Newsletters can be scheduled between 9 AM and 4 PM ET
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Send Tab */}
               {activeTab === TabType.Send && (
@@ -809,7 +929,7 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
                         disabled={sending || (!sendToSingleContact && selectedContacts.length === 0) || 
                                 (sendToSingleContact && !singleContactToSend) || !selectedTemplate}
                       >
-                        Send Email
+                        {isScheduled ? 'Schedule Email' : 'Send Email'}
                       </button>
                     </div>
                   </div>

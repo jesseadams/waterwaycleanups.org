@@ -204,10 +204,27 @@ resource "aws_lambda_permission" "api_gateway_permission" {
 resource "aws_api_gateway_deployment" "volunteer_api_deployment" {
   depends_on = [
     aws_api_gateway_integration.lambda_integration,
-    aws_api_gateway_integration.options_integration
+    aws_api_gateway_integration.options_integration,
+    aws_api_gateway_integration.scheduled_newsletters_lambda,
+    aws_api_gateway_integration.scheduled_newsletters_options_integration,
+    aws_api_gateway_integration_response.scheduled_newsletters_options_integration_response
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_api.id
+  
+  triggers = {
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_method.submit_volunteer_post,
+      aws_api_gateway_method.options_method,
+      aws_api_gateway_integration.lambda_integration,
+      aws_api_gateway_integration.options_integration,
+      aws_api_gateway_method.scheduled_newsletters_any,
+      aws_api_gateway_method.scheduled_newsletters_options,
+      aws_api_gateway_integration.scheduled_newsletters_lambda,
+      aws_api_gateway_integration.scheduled_newsletters_options_integration,
+      aws_api_gateway_integration_response.scheduled_newsletters_options_integration_response
+    ]))
+  }
   
   lifecycle {
     create_before_destroy = true

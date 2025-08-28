@@ -1,0 +1,9 @@
+{
+  "httpMethod": "GET",
+  "path": "/scheduled-newsletters",
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": null,
+  "isBase64Encoded": false
+}

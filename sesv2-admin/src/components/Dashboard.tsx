@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { listContactLists, listEmailTemplates } from '../utils/sesv2';
+import { listScheduledNewsletters } from '../utils/scheduledNewsletters';
 
 const Dashboard: React.FC = () => {
   const [contactLists, setContactLists] = useState<any[]>([]);
   const [emailTemplates, setEmailTemplates] = useState<any[]>([]);
+  const [scheduledNewsletters, setScheduledNewsletters] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [contactListsResponse, templatesResponse] = await Promise.all([
+        const [contactListsResponse, templatesResponse, scheduledResponse] = await Promise.all([
           listContactLists(),
-          listEmailTemplates()
+          listEmailTemplates(),
+          listScheduledNewsletters()
         ]);
         
         setContactLists(contactListsResponse.ContactLists || []);
         setEmailTemplates(templatesResponse.TemplatesMetadata || []);
+        setScheduledNewsletters(scheduledResponse.newsletters.filter(n => n.status === 'pending') || []);
         setLoading(false);
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -33,7 +37,7 @@ const Dashboard: React.FC = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <DashboardCard
           title="Contact Management"
           count={contactLists.length}
@@ -58,6 +62,15 @@ const Dashboard: React.FC = () => {
           description="Send emails to your contacts using templates"
           link="/send-emails"
           loading={false}
+        />
+
+        <DashboardCard
+          title="Scheduled Newsletters"
+          count={scheduledNewsletters.length}
+          description="View and manage scheduled newsletters"
+          link="/scheduled-newsletters"
+          loading={loading}
+          error={error}
         />
       </div>
 

@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM template for testing scheduled newsletters Lambda locally
+
+Resources:
+  ProcessScheduledNewsletters:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_scheduled_newsletters.zip
+      Handler: lambda_process_scheduled_newsletters.handler
+      Runtime: python3.9
+      Timeout: 300
+      MemorySize: 512
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: waterway-cleanups-scheduled-newsletters
+          SOURCE_EMAIL: "Waterway Cleanups <info@waterwaycleanups.org>"
+          REGION: us-east-1
+          # For local testing, we'll mock these services
+          AWS_SAM_LOCAL: true
+
+  ScheduledNewslettersApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./lambda_scheduled_newsletters_api.zip
+      Handler: lambda_scheduled_newsletters_api.handler
+      Runtime: python3.9
+      Timeout: 30
+      MemorySize: 128
+      Environment:
+        Variables:
+          DYNAMODB_TABLE_NAME: waterway-cleanups-scheduled-newsletters
+          REGION: us-east-1
+          AWS_SAM_LOCAL: true
+      Events:
+        ApiEvent:
+          Type: Api
+          Properties:
+            Path: /scheduled-newsletters/{proxy+}
+            Method: ANY
