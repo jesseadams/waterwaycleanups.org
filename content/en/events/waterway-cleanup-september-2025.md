@@ -19,8 +19,8 @@ Wear weather-appropriate clothing and sturdy shoes. The early fall weather can b
 ---
 ## Location
 
-Accokeek Creek
-Launch location TBD
+Crow's Nest Research Center
+400 Marlborough Point Road, Stafford, VA 22554
 
 ---
 ## What We Provide
