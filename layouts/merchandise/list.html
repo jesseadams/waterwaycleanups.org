@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Waterway Cleanups Merchandise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-blue': '#004a8f',
+              'brand-teal': '#00a99d',
+            },
+            fontFamily: {
+              sans: ['Lato', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <script>
+      // Stripe publishable key from Hugo configuration
+      window.STRIPE_PUBLISHABLE_KEY = '{{ site.Params.stripe_publishable_key | safeJS }}';
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+    <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "@stripe/stripe-js": "https://aistudiocdn.com/@stripe/stripe-js@^7.9.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+  </head>
+  <body class="bg-gray-50">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script>
+      console.log('Page loaded, Stripe key:', window.STRIPE_PUBLISHABLE_KEY);
+      console.log('Root element found:', document.getElementById('root'));
+    </script>
+    <script type="module" src="/merch-page/app.js"></script>
+  </body>
+</html>
