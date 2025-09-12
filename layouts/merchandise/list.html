@@ -1,33 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Waterway Cleanups Merchandise</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'brand-blue': '#004a8f',
-              'brand-teal': '#00a99d',
-            },
-            fontFamily: {
-              sans: ['Lato', 'sans-serif'],
-            }
-          }
+{{ define "content" }}
+<style>
+  /* Override the main site styles for the merchandise section */
+  #merch-root {
+    background: #f9fafb;
+  }
+  #merch-root .font-sans {
+    font-family: 'Lato', sans-serif;
+  }
+  
+  /* Fix positioning for sticky header */
+  .merchandise-page {
+    padding-top: 120px; /* Account for sticky header height */
+  }
+  
+  /* Ensure cart button appears correctly in header */
+  #header-cart-btn {
+    z-index: 30;
+    position: relative;
+  }
+</style>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          'brand-blue': '#004a8f',
+          'brand-teal': '#00a99d',
+        },
+        fontFamily: {
+          sans: ['Lato', 'sans-serif'],
         }
       }
-    </script>
-    <script>
-      // Stripe publishable key from Hugo configuration
-      window.STRIPE_PUBLISHABLE_KEY = '{{ site.Params.stripe_publishable_key | safeJS }}';
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
-    <script type="importmap">
+    }
+  }
+</script>
+<script>
+  // Stripe publishable key from Hugo configuration
+  window.STRIPE_PUBLISHABLE_KEY = '{{ site.Params.stripe_publishable_key | safeJS }}';
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<script type="importmap">
 {
   "imports": {
     "react/": "https://aistudiocdn.com/react@^19.1.1/",
@@ -37,15 +53,28 @@
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
-  </head>
-  <body class="bg-gray-50">
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <script>
-      console.log('Page loaded, Stripe key:', window.STRIPE_PUBLISHABLE_KEY);
-      console.log('Root element found:', document.getElementById('root'));
-    </script>
-    <script type="module" src="/merch-page/app.js"></script>
-  </body>
-</html>
+
+<noscript>You need to enable JavaScript to run this app.</noscript>
+
+<!-- Add cart button to page content area -->
+<div class="fixed top-4 right-4 z-50">
+  <button id="header-cart-btn" class="bg-white shadow-lg rounded-full p-3 text-gray-600 hover:text-brand-teal transition-colors duration-200 relative">
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17M17 17a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+    </svg>
+    <span id="cart-count" class="absolute -top-2 -right-2 bg-brand-teal text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+  </button>
+</div>
+
+<div class="merchandise-page">
+  <div class="container mx-auto px-4 py-8">
+    <div id="merch-root"></div>
+  </div>
+</div>
+
+<script>
+  console.log('Page loaded, Stripe key:', window.STRIPE_PUBLISHABLE_KEY);
+  console.log('Root element found:', document.getElementById('merch-root'));
+</script>
+<script type="module" src="/merch-page/app.js"></script>
+{{ end }}
