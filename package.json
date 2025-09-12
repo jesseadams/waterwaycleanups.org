@@ -10,9 +10,9 @@
     "clean": "rm -f static/css/tailwind-output.css static/js/main-bundle.js",
     "start": "npm run build && hugo server",
     "build-merch": "npx esbuild merch-page/index.tsx --bundle --outfile=static/merch-page/app.js --format=esm --platform=browser --target=es2020 --jsx=automatic --jsx-import-source=react --external:react --external:react-dom/client --external:react/jsx-runtime --external:@stripe/stripe-js --minify",
-    "sync-products": "node scripts/sync-products.js",
+    "sync-products": "node scripts/sync-products.js && npm run build-merch",
     "sync-products:dry-run": "node scripts/sync-products.js --dry-run",
-    "sync-products:verbose": "node scripts/sync-products.js --verbose"
+    "sync-products:verbose": "node scripts/sync-products.js --verbose && npm run build-merch"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",

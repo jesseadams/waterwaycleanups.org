@@ -128,6 +128,16 @@ Support Waterway Cleanups with our eco-friendly merchandise!
 3. **Test**: Visit the merchandise page on the Hugo site
 4. **Deploy**: Commit changes and deploy site
 
+### Product Sync Workflow
+
+When syncing products from Stripe:
+
+1. **Preview first**: `npm run sync-products:dry-run` (shows changes without applying them)
+2. **Sync and build**: `npm run sync-products` (automatically rebuilds the app after syncing)
+3. **Test**: Visit `/merchandise` to verify products display correctly
+
+**Note**: The `sync-products` command automatically runs `build-merch` after syncing to ensure the React app includes the latest product data.
+
 ## Key Components
 
 ### App.tsx

@@ -122,6 +122,13 @@ npm --version
 - `npm run start` - Build assets and start Hugo server
 - `npm run clean` - Clean generated assets
 
+#### Merchandise Page Scripts
+
+- `npm run build-merch` - Build the React merchandise storefront using esbuild
+- `npm run sync-products` - Sync products with Stripe and rebuild merchandise app
+- `npm run sync-products:dry-run` - Preview product sync without making changes (no build)
+- `npm run sync-products:verbose` - Sync products with detailed output and rebuild merchandise app
+
 ### Recommended Development Workflow
 
 For the most efficient development experience that watches all file changes (content, layouts, CSS, JavaScript, and React components):
@@ -152,6 +159,30 @@ This project includes React components for interactive elements like the paralla
    npm run watch:assets
    ```
    This will rebuild components whenever you save changes
+
+### Working with the Merchandise Page
+
+The merchandise page is a React-based storefront with Stripe integration. For detailed documentation, see [`docs/merch-page.md`](docs/merch-page.md).
+
+#### Quick Development Guide
+
+1. **Make changes** to React components in the `merch-page/` directory
+2. **Build the merchandise app**:
+   ```bash
+   npm run build-merch
+   ```
+3. **Test locally** by visiting `/merchandise` on your development server
+4. **Sync products with Stripe** (if needed):
+   ```bash
+   npm run sync-products:dry-run  # Preview changes first
+   npm run sync-products          # Apply changes and rebuild app
+   ```
+
+#### Key Files
+- `merch-page/App.tsx` - Main React application
+- `merch-page/data/products.ts` - Product catalog
+- `static/merch-page/app.js` - Compiled output (auto-generated)
+- `layouts/merchandise/list.html` - Hugo template integration
 
 ## 📄 Content Pages
 
