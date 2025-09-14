@@ -1,0 +1,5 @@
+{
+  "name": "Waterway Cleanups Merchandise Page",
+  "description": "A merchandise page for waterwaycleanups.org featuring products from Stripe, a shopping cart, and Stripe Checkout integration. This React app is designed to be embedded into a Hugo website.",
+  "requestFramePermissions": []
+}

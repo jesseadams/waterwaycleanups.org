@@ -12,26 +12,26 @@ const App: React.FC = () => {
   useEffect(() => {
     const headerCartBtn = document.getElementById('header-cart-btn');
     const cartCountElement = document.getElementById('cart-count');
-    
+
     if (headerCartBtn) {
       const handleCartClick = () => setIsCartOpen(true);
       headerCartBtn.addEventListener('click', handleCartClick);
-      
+
       // Update cart count in header
       if (cartCountElement) {
-        cartCountElement.textContent = cart.items.length.toString();
-        if (cart.items.length > 0) {
+        cartCountElement.textContent = cart.getTotalItems().toString();
+        if (cart.getTotalItems() > 0) {
           cartCountElement.classList.remove('hidden');
         } else {
           cartCountElement.classList.add('hidden');
         }
       }
-      
+
       return () => {
         headerCartBtn.removeEventListener('click', handleCartClick);
       };
     }
-  }, [cart.items.length]);
+  }, [cart.getTotalItems]);
 
   return (
     <div className="font-sans antialiased text-gray-800">
