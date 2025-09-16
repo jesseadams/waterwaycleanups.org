@@ -14,7 +14,7 @@ end_time: "2025-09-20T12:00:00-04:00"
 
 Join us for our September waterway cleanup as we transition into fall! This is a perfect opportunity to help prepare our waterways for the changing seasons. Together, we'll remove accumulated summer debris and trash to ensure our local waterways remain healthy.
 
-Wear weather-appropriate clothing and sturdy shoes. The early fall weather can be variable, so dress in layers.
+Please dress in cool, comfortable clothing and water-friendly shoes. Bring lots of water, sunscreen, and a hat for sun protection. If you have a kayak please bring it with you! PFDs are required. A limited number of kayaks are available to borrow (email info@waterwaycleanups.org to claim). A staff member will do a water safety briefing prior to our group launching.
 
 ---
 ## Location
