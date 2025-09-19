@@ -19,8 +19,13 @@ Please dress in cool, comfortable clothing and water-friendly shoes. Bring lots 
 ---
 ## Location
 
-Crow's Nest Research Center
-400 Marlborough Point Road, Stafford, VA 22554
+<b>LAUNCH CHANGE!</b><br/>
+Crow's Nest Natural Area Preserve - Canoe Launch<br/>
+2500 Brooke Rd<br/>
+Stafford, VA 22554<br/><br/>
+
+<s>Crow's Nest Research Center<br/>
+400 Marlborough Point Road, Stafford, VA 22554</s>
 
 ---
 ## What We Provide
