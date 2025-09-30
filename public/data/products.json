@@ -166,7 +166,7 @@
       "stripe_product_id": "prod_T3tEwmJSXQtjLJ",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:23.958Z"
+      "updated_at": "2025-09-30T02:04:42.908Z"
     },
     {
       "id": "shirt-001-limited-medium",
@@ -180,7 +180,7 @@
       "stripe_product_id": "prod_T3tEnwfATsLova",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:24.348Z"
+      "updated_at": "2025-09-30T02:04:43.316Z"
     },
     {
       "id": "shirt-001-limited-large",
@@ -194,7 +194,7 @@
       "stripe_product_id": "prod_T3tE23Zav0zwAB",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:24.740Z"
+      "updated_at": "2025-09-30T02:04:43.714Z"
     },
     {
       "id": "shirt-001-limited-xl",
@@ -202,13 +202,13 @@
       "sku": "SHIRT-LIMITED-XL",
       "price": 2500,
       "currency": "USD",
-      "inventory_quantity": 12,
+      "inventory_quantity": 2,
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRt3IH8C7AKmuM0b9G1jW",
       "stripe_product_id": "prod_T3tEd4Cz3GsnIS",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:25.154Z"
+      "updated_at": "2025-09-30T02:04:44.320Z"
     },
     {
       "id": "shirt-001-limited-xxl",
@@ -222,7 +222,7 @@
       "stripe_product_id": "prod_T3tE9tRkakZ3jt",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:25.545Z"
+      "updated_at": "2025-09-30T02:04:44.703Z"
     },
     {
       "id": "shirt-001-official-small",
@@ -236,7 +236,7 @@
       "stripe_product_id": "prod_T3tEXnhorifPAo",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:25.954Z"
+      "updated_at": "2025-09-30T02:04:45.104Z"
     },
     {
       "id": "shirt-001-official-medium",
@@ -250,7 +250,7 @@
       "stripe_product_id": "prod_T3tEbxR4Glpjxn",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:26.451Z"
+      "updated_at": "2025-09-30T02:04:45.489Z"
     },
     {
       "id": "shirt-001-official-large",
@@ -264,7 +264,7 @@
       "stripe_product_id": "prod_T3tEaGPmzvNXh2",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:26.888Z"
+      "updated_at": "2025-09-30T02:04:45.855Z"
     },
     {
       "id": "shirt-001-official-xl",
@@ -278,7 +278,7 @@
       "stripe_product_id": "prod_T3tEQbMvYjz2sL",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:27.275Z"
+      "updated_at": "2025-09-30T02:04:46.238Z"
     },
     {
       "id": "shirt-001-official-xxl",
@@ -292,7 +292,7 @@
       "stripe_product_id": "prod_T3tE2jSjmcAkV6",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:27.664Z"
+      "updated_at": "2025-09-30T02:04:46.632Z"
     },
     {
       "id": "shirt-001-special-small",
@@ -306,7 +306,7 @@
       "stripe_product_id": "prod_T3tEsL4qEXyJ7h",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:28.065Z"
+      "updated_at": "2025-09-30T02:04:47.003Z"
     },
     {
       "id": "shirt-001-special-medium",
@@ -320,7 +320,7 @@
       "stripe_product_id": "prod_T3tELvgehK8E7m",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:28.457Z"
+      "updated_at": "2025-09-30T02:04:47.387Z"
     },
     {
       "id": "shirt-001-special-large",
@@ -334,7 +334,7 @@
       "stripe_product_id": "prod_T3tEMkbBynaanq",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:28.857Z"
+      "updated_at": "2025-09-30T02:04:47.773Z"
     },
     {
       "id": "shirt-001-special-xl",
@@ -348,7 +348,7 @@
       "stripe_product_id": "prod_T3tE78BeP9IfAa",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:29.233Z"
+      "updated_at": "2025-09-30T02:04:48.132Z"
     },
     {
       "id": "shirt-001-special-xxl",
@@ -362,7 +362,7 @@
       "stripe_product_id": "prod_T3tE3Pmri0lRAb",
       "active": true,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:16:29.607Z"
+      "updated_at": "2025-09-30T02:04:48.502Z"
     },
     {
       "id": "var-1757977263051-f2ymin3mq",

@@ -7,6 +7,9 @@ public/
 resources/_gen/
 .hugo_build.lock
 
+# Include public products data
+!public/data/products.json
+
 # OS files
 .DS_Store
 Thumbs.db
