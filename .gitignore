@@ -57,6 +57,4 @@ terraform.tfstate*
 
 *.zip
 
-docs/**
-scripts/**
 static/admin/**
