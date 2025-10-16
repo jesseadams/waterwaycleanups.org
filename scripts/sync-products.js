@@ -312,9 +312,9 @@ const options = {
 
 if (args.includes('--help') || args.includes('-h')) {
   console.log(`
-Stripe Product Variants Sync Tool
+Stripe Products Sync Tool
 
-Usage: node scripts/sync-products-with-variants.js [options]
+Usage: node scripts/sync-products.js [options]
 
 Options:
   --dry-run, -d       Show what would be changed without making changes
@@ -325,12 +325,12 @@ Environment:
   STRIPE_SECRET_KEY   Your Stripe secret key (required)
 
 Examples:
-  node scripts/sync-products-with-variants.js --dry-run    # Preview changes
-  node scripts/sync-products-with-variants.js --verbose    # Sync with detailed output
-  npm run sync-variants                                    # Sync variants (if npm script exists)
+  node scripts/sync-products.js --dry-run    # Preview changes
+  node scripts/sync-products.js --verbose    # Sync with detailed output
+  npm run sync-products                      # Sync products
 
 This tool will:
-1. Create a separate Stripe Product for each variant
+1. Create a separate Stripe Product for each product variant
 2. Create/update Stripe Prices for each variant
 3. Deactivate unused Stripe products
 4. Update local data with Stripe IDs

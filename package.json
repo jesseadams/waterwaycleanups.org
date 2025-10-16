@@ -13,9 +13,6 @@
     "sync-products": "node scripts/sync-products.js && npm run build:merch",
     "sync-products:dry-run": "node scripts/sync-products.js --dry-run",
     "sync-products:verbose": "node scripts/sync-products.js --verbose && npm run build:merch",
-    "sync-variants": "node scripts/sync-products-with-variants.js && npm run build:merch",
-    "sync-variants:dry-run": "node scripts/sync-products-with-variants.js --dry-run",
-    "sync-variants:verbose": "node scripts/sync-products-with-variants.js --verbose && npm run build:merch",
     "products": "node scripts/product-manager.js"
   },
   "dependencies": {

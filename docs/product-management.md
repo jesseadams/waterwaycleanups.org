@@ -41,8 +41,7 @@ The system uses a relational data model stored in JSON format:
 │   └── components/               # React components for variant display
 ├── scripts/
 │   ├── product-manager.js        # CLI product management tool
-│   ├── sync-products.js          # Legacy product sync
-│   └── sync-products-with-variants.js # New variant sync
+│   └── sync-products.js          # Sync products to Stripe
 ```
 
 ## Usage
@@ -121,14 +120,14 @@ The system automatically creates individual Stripe products for each variant.
 You can run the Stripe sync directly from the CLI tool (option 7), or use these npm scripts:
 
 ```bash
-# Sync all variants to Stripe
-npm run sync-variants
+# Sync all products to Stripe
+npm run sync-products
 
 # Dry run to preview changes
-npm run sync-variants:dry-run
+npm run sync-products:dry-run
 
 # Verbose output
-npm run sync-variants:verbose
+npm run sync-products:verbose
 ```
 
 #### What Happens During Sync
@@ -296,7 +295,7 @@ The new system is backward compatible. The old `products.ts` file is still suppo
 1. **Backup existing data**: Copy current `merch-page/data/products.ts`
 2. **Install new system**: All new files are already in place
 3. **Create product data**: Use admin interface or APIs to recreate products
-4. **Sync to Stripe**: Run `npm run sync-variants`
+4. **Sync to Stripe**: Run `npm run sync-products`
 5. **Test frontend**: Verify merchandise page works with new system
 
 ## Future Enhancements

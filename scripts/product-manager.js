@@ -699,7 +699,7 @@ class ProductManager {
     const { spawn } = require('child_process');
 
     try {
-      const syncProcess = spawn('npm', ['run', 'sync-variants'], { stdio: 'inherit' });
+      const syncProcess = spawn('npm', ['run', 'sync-products'], { stdio: 'inherit' });
 
       syncProcess.on('close', (code) => {
         if (code === 0) {
@@ -715,7 +715,7 @@ class ProductManager {
 
     } catch (error) {
       console.log('❌ Failed to run sync script:', error.message);
-      console.log('Make sure you have the sync-variants npm script configured.');
+      console.log('Make sure you have the sync-products npm script configured.');
     }
 
     await this.question('\nPress Enter to continue...');

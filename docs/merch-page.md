@@ -7,7 +7,7 @@ This documentation covers the React-based merchandise storefront integrated into
 The merchandise system consists of:
 
 - **Source Code**: `merch-page/` directory containing React/TypeScript components
-- **Build System**: esbuild via `npm run build-merch` command
+- **Build System**: esbuild via `npm run build:merch` command
 - **Output**: `static/merch-page/app.js` - compiled React application
 - **Integration**: Hugo layout template that loads the compiled app
 
@@ -49,7 +49,7 @@ layouts/merchandise/            # Hugo templates
 
 ### Build Command
 ```bash
-npm run build-merch
+npm run build:merch
 ```
 
 This runs esbuild to compile `merch-page/index.tsx` into `static/merch-page/app.js` with:
@@ -124,19 +124,20 @@ Support Waterway Cleanups with our eco-friendly merchandise!
 ## Development Workflow
 
 1. **Make Changes**: Edit files in `merch-page/`
-2. **Build**: Run `npm run build-merch`
+2. **Build**: Run `npm run build:merch`
 3. **Test**: Visit the merchandise page on the Hugo site
 4. **Deploy**: Commit changes and deploy site
 
 ### Product Sync Workflow
 
-When syncing products from Stripe:
+When syncing products to Stripe:
 
-1. **Preview first**: `npm run sync-products:dry-run` (shows changes without applying them)
-2. **Sync and build**: `npm run sync-products` (automatically rebuilds the app after syncing)
-3. **Test**: Visit `/merchandise` to verify products display correctly
+1. **Manage products**: Use `npm run products` for interactive product management
+2. **Preview sync**: `npm run sync-products:dry-run` (shows what would be synced to Stripe)
+3. **Sync and build**: `npm run sync-products` (syncs products to Stripe and rebuilds the app)
+4. **Test**: Visit `/merchandise` to verify products display correctly
 
-**Note**: The `sync-products` command automatically runs `build-merch` after syncing to ensure the React app includes the latest product data.
+**Note**: The `sync-products` command automatically runs `build:merch` after syncing to ensure the React app includes the latest product data.
 
 ## Key Components
 
