@@ -14,7 +14,7 @@
       "name": "WWC Shirt",
       "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways.",
       "images": [
-        "/uploads/products/t-shirt/shirt-wwc.jpg"
+        "https://waterwaycleanups.org/uploads/products/t-shirt/shirt-wwc.jpg"
       ],
       "status": "inactive",
       "created_at": "2025-01-20T00:00:00Z",
@@ -25,7 +25,7 @@
       "name": "WWC Shirt",
       "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways.",
       "images": [
-        "/uploads/products/t-shirt/shirt-wwc.jpg"
+        "https://waterwaycleanups.org/uploads/products/t-shirt/shirt-wwc.jpg"
       ],
       "status": "active",
       "created_at": "2025-10-17T18:36:41.013Z",
@@ -36,7 +36,7 @@
       "name": "WWC Shirt - Limited Edition 1",
       "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways. This run was limited to only 6 shirts and this color will never be available again.",
       "images": [
-        "/uploads/products/t-shirt/shirt-1.jpg"
+        "https://waterwaycleanups.org/uploads/products/t-shirt/shirt-1.jpg"
       ],
       "status": "active",
       "created_at": "2025-10-17T18:46:08.525Z",
@@ -47,7 +47,7 @@
       "name": "WWC Shirt - Limited Edition 2",
       "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways. These were a limited edition run for Fall 2025.",
       "images": [
-        "/uploads/products/t-shirt/shirt-2.jpg"
+        "https://waterwaycleanups.org/uploads/products/t-shirt/shirt-2.jpg"
       ],
       "status": "active",
       "created_at": "2025-10-17T18:48:10.468Z",
@@ -634,11 +634,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ243IH8C7AKmur8KxUVHp",
+      "stripe_product_id": "prod_TFofmn21VCsP4y",
       "active": true,
       "created_at": "2025-10-17T18:39:55.160Z",
-      "updated_at": "2025-10-17T18:39:55.160Z"
+      "updated_at": "2025-10-17T19:09:44.731Z"
     },
     {
       "id": "var-1760726424344-y7r1vmdtu",
@@ -648,11 +648,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ243IH8C7AKmukmH69cdw",
+      "stripe_product_id": "prod_TFoftSOZQL5W3J",
       "active": true,
       "created_at": "2025-10-17T18:40:24.344Z",
-      "updated_at": "2025-10-17T18:40:24.344Z"
+      "updated_at": "2025-10-17T19:09:45.081Z"
     },
     {
       "id": "var-1760726440575-scskr2ymo",
@@ -662,11 +662,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ253IH8C7AKmu8YLRc17E",
+      "stripe_product_id": "prod_TFof2YPVoSjtEJ",
       "active": true,
       "created_at": "2025-10-17T18:40:40.575Z",
-      "updated_at": "2025-10-17T18:40:40.575Z"
+      "updated_at": "2025-10-17T19:09:45.454Z"
     },
     {
       "id": "var-1760726487595-wygcu4ti8",
@@ -676,11 +676,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ253IH8C7AKmuofSYjNJ3",
+      "stripe_product_id": "prod_TFof71VBVldTQ0",
       "active": true,
       "created_at": "2025-10-17T18:41:27.595Z",
-      "updated_at": "2025-10-17T18:41:27.595Z"
+      "updated_at": "2025-10-17T19:09:45.802Z"
     },
     {
       "id": "var-1760726503801-5f78qh189",
@@ -690,11 +690,11 @@
       "currency": "USD",
       "inventory_quantity": 1,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ263IH8C7AKmu6qIdOmPn",
+      "stripe_product_id": "prod_TFofJm28UDtFV3",
       "active": true,
       "created_at": "2025-10-17T18:41:43.801Z",
-      "updated_at": "2025-10-17T18:41:43.801Z"
+      "updated_at": "2025-10-17T19:09:46.163Z"
     },
     {
       "id": "var-1760726835948-5quicoj28",
@@ -704,11 +704,11 @@
       "currency": "USD",
       "inventory_quantity": 1,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ263IH8C7AKmuNPLbpqW9",
+      "stripe_product_id": "prod_TFof4uaO4DgVJj",
       "active": true,
       "created_at": "2025-10-17T18:47:15.948Z",
-      "updated_at": "2025-10-17T18:47:15.948Z"
+      "updated_at": "2025-10-17T19:09:46.549Z"
     },
     {
       "id": "var-1760726961514-88nk4uxf4",
@@ -718,11 +718,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ263IH8C7AKmu3KHbfmtf",
+      "stripe_product_id": "prod_TFofI5wHnKC3pc",
       "active": true,
       "created_at": "2025-10-17T18:49:21.515Z",
-      "updated_at": "2025-10-17T18:49:21.515Z"
+      "updated_at": "2025-10-17T19:09:46.906Z"
     },
     {
       "id": "var-1760726981630-431wxzo6j",
@@ -732,11 +732,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ273IH8C7AKmuWswiBjNn",
+      "stripe_product_id": "prod_TFofQCNLlfMXe9",
       "active": true,
       "created_at": "2025-10-17T18:49:41.630Z",
-      "updated_at": "2025-10-17T18:49:41.630Z"
+      "updated_at": "2025-10-17T19:09:47.271Z"
     },
     {
       "id": "var-1760726994956-3jyjw3fyw",
@@ -746,11 +746,11 @@
       "currency": "USD",
       "inventory_quantity": 1,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SJJ273IH8C7AKmuO11yU4IS",
+      "stripe_product_id": "prod_TFofxgkgZkrqKT",
       "active": true,
       "created_at": "2025-10-17T18:49:54.956Z",
-      "updated_at": "2025-10-17T18:49:54.956Z"
+      "updated_at": "2025-10-17T19:09:47.624Z"
     }
   ],
   "variant_attributes": [
