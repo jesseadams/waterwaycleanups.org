@@ -11,16 +11,47 @@
     },
     {
       "id": "shirt-001",
-      "name": "Waterway Cleanups Supporter T-Shirt",
-      "description": "Show your support with this 100% organic cotton t-shirt. Comfortable, durable, and eco-friendly. All proceeds go directly to our cleanup efforts.",
+      "name": "WWC Shirt",
+      "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways.",
       "images": [
-        "https://picsum.photos/seed/wcshirt1/600/600",
-        "https://picsum.photos/seed/wcshirt2/600/600",
-        "https://picsum.photos/seed/wcshirt3/600/600"
+        "/uploads/products/t-shirt/shirt-wwc.jpg"
+      ],
+      "status": "inactive",
+      "created_at": "2025-01-20T00:00:00Z",
+      "updated_at": "2025-10-17T18:35:24.105Z"
+    },
+    {
+      "id": "prod-1760726201013-qyl4p0g14",
+      "name": "WWC Shirt",
+      "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways.",
+      "images": [
+        "/uploads/products/t-shirt/shirt-wwc.jpg"
       ],
       "status": "active",
-      "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-15T23:03:13.183Z"
+      "created_at": "2025-10-17T18:36:41.013Z",
+      "updated_at": "2025-10-17T18:39:11.774Z"
+    },
+    {
+      "id": "prod-1760726768525-uxk8rcsx6",
+      "name": "WWC Shirt - Limited Edition 1",
+      "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways. This run was limited to only 6 shirts and this color will never be available again.",
+      "images": [
+        "/uploads/products/t-shirt/shirt-1.jpg"
+      ],
+      "status": "active",
+      "created_at": "2025-10-17T18:46:08.525Z",
+      "updated_at": "2025-10-17T18:46:08.526Z"
+    },
+    {
+      "id": "prod-1760726890468-bjm9txn5d",
+      "name": "WWC Shirt - Limited Edition 2",
+      "description": "These shirts are upcycled shirts and hand printed and dyed. Each one is unique and goes directly to supporting Virginia waterways. These were a limited edition run for Fall 2025.",
+      "images": [
+        "/uploads/products/t-shirt/shirt-2.jpg"
+      ],
+      "status": "active",
+      "created_at": "2025-10-17T18:48:10.468Z",
+      "updated_at": "2025-10-17T18:48:10.468Z"
     }
   ],
   "dimensions": [
@@ -50,6 +81,27 @@
       "product_id": "prod-1757977066695-o4o0773bv",
       "name": "Color",
       "display_order": 2,
+      "required": true
+    },
+    {
+      "id": "dim-1760726227491-3ib4285m7",
+      "product_id": "prod-1760726201013-qyl4p0g14",
+      "name": "Size",
+      "display_order": 1,
+      "required": true
+    },
+    {
+      "id": "dim-1760726796256-4sjmnhuh1",
+      "product_id": "prod-1760726768525-uxk8rcsx6",
+      "name": "Size",
+      "display_order": 1,
+      "required": true
+    },
+    {
+      "id": "dim-1760726928416-gne65s4a5",
+      "product_id": "prod-1760726890468-bjm9txn5d",
+      "name": "Size",
+      "display_order": 1,
       "required": true
     }
   ],
@@ -151,6 +203,76 @@
       "value": "Yellow",
       "display_order": 3,
       "active": true
+    },
+    {
+      "id": "val-1760726227491-rgb8q0hzj",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "value": "Small",
+      "display_order": 1,
+      "active": true
+    },
+    {
+      "id": "val-1760726227491-gtcfzhc0q",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "value": "Medium",
+      "display_order": 2,
+      "active": true
+    },
+    {
+      "id": "val-1760726227491-z6ilrjbld",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "value": "Large",
+      "display_order": 3,
+      "active": true
+    },
+    {
+      "id": "val-1760726227491-qxi46tsve",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "value": "XL",
+      "display_order": 4,
+      "active": true
+    },
+    {
+      "id": "val-1760726227491-qb900ri7o",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "value": "2X",
+      "display_order": 5,
+      "active": true
+    },
+    {
+      "id": "val-1760726227491-mbskg578a",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "value": "3X",
+      "display_order": 6,
+      "active": true
+    },
+    {
+      "id": "val-1760726796256-ync8a82mi",
+      "dimension_id": "dim-1760726796256-4sjmnhuh1",
+      "value": "XL",
+      "display_order": 1,
+      "active": true
+    },
+    {
+      "id": "val-1760726928416-qd2aeb224",
+      "dimension_id": "dim-1760726928416-gne65s4a5",
+      "value": "Large (looks Medium)",
+      "display_order": 1,
+      "active": true
+    },
+    {
+      "id": "val-1760726928416-e05o2smcn",
+      "dimension_id": "dim-1760726928416-gne65s4a5",
+      "value": "Medium",
+      "display_order": 2,
+      "active": true
+    },
+    {
+      "id": "val-1760726928416-th9mahzyt",
+      "dimension_id": "dim-1760726928416-gne65s4a5",
+      "value": "XL",
+      "display_order": 3,
+      "active": true
     }
   ],
   "variants": [
@@ -164,9 +286,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRr3IH8C7AKmui4wpnm3G",
       "stripe_product_id": "prod_T3tEwmJSXQtjLJ",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:42.908Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-limited-medium",
@@ -178,9 +300,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRs3IH8C7AKmudIbs6chC",
       "stripe_product_id": "prod_T3tEnwfATsLova",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:43.316Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-limited-large",
@@ -192,9 +314,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRs3IH8C7AKmuXdV6Jwxb",
       "stripe_product_id": "prod_T3tE23Zav0zwAB",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:43.714Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-limited-xl",
@@ -206,9 +328,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRt3IH8C7AKmuM0b9G1jW",
       "stripe_product_id": "prod_T3tEd4Cz3GsnIS",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:44.320Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-limited-xxl",
@@ -220,9 +342,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRt3IH8C7AKmuagYJ9hzp",
       "stripe_product_id": "prod_T3tE9tRkakZ3jt",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:44.703Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-official-small",
@@ -234,9 +356,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRt3IH8C7AKmunJkDEaHD",
       "stripe_product_id": "prod_T3tEXnhorifPAo",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:45.104Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-official-medium",
@@ -248,9 +370,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRu3IH8C7AKmumD4tg5dc",
       "stripe_product_id": "prod_T3tEbxR4Glpjxn",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:45.489Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-official-large",
@@ -262,9 +384,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRu3IH8C7AKmuKp3JV2wA",
       "stripe_product_id": "prod_T3tEaGPmzvNXh2",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:45.855Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-official-xl",
@@ -276,9 +398,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRu3IH8C7AKmuCJbyCBqA",
       "stripe_product_id": "prod_T3tEQbMvYjz2sL",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:46.238Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-official-xxl",
@@ -290,9 +412,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRv3IH8C7AKmuxOWuSoH6",
       "stripe_product_id": "prod_T3tE2jSjmcAkV6",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:46.632Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-special-small",
@@ -304,9 +426,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRv3IH8C7AKmu93DWJphz",
       "stripe_product_id": "prod_T3tEsL4qEXyJ7h",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:47.003Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-special-medium",
@@ -318,9 +440,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRv3IH8C7AKmuTzlHfjjq",
       "stripe_product_id": "prod_T3tELvgehK8E7m",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:47.387Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-special-large",
@@ -332,9 +454,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRw3IH8C7AKmu2iV9iZ2O",
       "stripe_product_id": "prod_T3tEMkbBynaanq",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:47.773Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-special-xl",
@@ -346,9 +468,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRw3IH8C7AKmuQsIkZeiy",
       "stripe_product_id": "prod_T3tE78BeP9IfAa",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:48.132Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "shirt-001-special-xxl",
@@ -360,9 +482,9 @@
       "inventory_tracking": true,
       "stripe_price_id": "price_1S7lRx3IH8C7AKmujYJOmDlE",
       "stripe_product_id": "prod_T3tE3Pmri0lRAb",
-      "active": true,
+      "active": false,
       "created_at": "2025-01-20T00:00:00Z",
-      "updated_at": "2025-09-30T02:04:48.502Z"
+      "updated_at": "2025-10-17T18:35:24.105Z"
     },
     {
       "id": "var-1757977263051-f2ymin3mq",
@@ -503,6 +625,132 @@
       "active": false,
       "created_at": "2025-09-15T23:04:20.262Z",
       "updated_at": "2025-09-29T23:19:27.889Z"
+    },
+    {
+      "id": "var-1760726395160-4gw9ap47c",
+      "product_id": "prod-1760726201013-qyl4p0g14",
+      "sku": "SHIRT-WWC-S",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 2,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:39:55.160Z",
+      "updated_at": "2025-10-17T18:39:55.160Z"
+    },
+    {
+      "id": "var-1760726424344-y7r1vmdtu",
+      "product_id": "prod-1760726201013-qyl4p0g14",
+      "sku": "SHIRT-WWC-M",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 2,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:40:24.344Z",
+      "updated_at": "2025-10-17T18:40:24.344Z"
+    },
+    {
+      "id": "var-1760726440575-scskr2ymo",
+      "product_id": "prod-1760726201013-qyl4p0g14",
+      "sku": "SHIRT-WWC-L",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 2,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:40:40.575Z",
+      "updated_at": "2025-10-17T18:40:40.575Z"
+    },
+    {
+      "id": "var-1760726487595-wygcu4ti8",
+      "product_id": "prod-1760726201013-qyl4p0g14",
+      "sku": "SHIRT-WWC-XL",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 2,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:41:27.595Z",
+      "updated_at": "2025-10-17T18:41:27.595Z"
+    },
+    {
+      "id": "var-1760726503801-5f78qh189",
+      "product_id": "prod-1760726201013-qyl4p0g14",
+      "sku": "SHIRT-WWC-2X",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 1,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:41:43.801Z",
+      "updated_at": "2025-10-17T18:41:43.801Z"
+    },
+    {
+      "id": "var-1760726835948-5quicoj28",
+      "product_id": "prod-1760726768525-uxk8rcsx6",
+      "sku": "SHIRT-LE-1",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 1,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:47:15.948Z",
+      "updated_at": "2025-10-17T18:47:15.948Z"
+    },
+    {
+      "id": "var-1760726961514-88nk4uxf4",
+      "product_id": "prod-1760726890468-bjm9txn5d",
+      "sku": "SHIRT-LE-2-LM",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 2,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:49:21.515Z",
+      "updated_at": "2025-10-17T18:49:21.515Z"
+    },
+    {
+      "id": "var-1760726981630-431wxzo6j",
+      "product_id": "prod-1760726890468-bjm9txn5d",
+      "sku": "SHIRT-LE-2-M",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 2,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:49:41.630Z",
+      "updated_at": "2025-10-17T18:49:41.630Z"
+    },
+    {
+      "id": "var-1760726994956-3jyjw3fyw",
+      "product_id": "prod-1760726890468-bjm9txn5d",
+      "sku": "SHIRT-LE-2-XL",
+      "price": 3000,
+      "currency": "USD",
+      "inventory_quantity": 1,
+      "inventory_tracking": true,
+      "stripe_price_id": "",
+      "stripe_product_id": "",
+      "active": true,
+      "created_at": "2025-10-17T18:49:54.956Z",
+      "updated_at": "2025-10-17T18:49:54.956Z"
     }
   ],
   "variant_attributes": [
@@ -755,6 +1003,51 @@
       "variant_id": "var-1757977460262-niv6q812x",
       "dimension_id": "dim-1757977107393-bin30jmpp",
       "dimension_value_id": "val-1757977107393-4ilsfydbx"
+    },
+    {
+      "variant_id": "var-1760726395160-4gw9ap47c",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "dimension_value_id": "val-1760726227491-rgb8q0hzj"
+    },
+    {
+      "variant_id": "var-1760726424344-y7r1vmdtu",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "dimension_value_id": "val-1760726227491-gtcfzhc0q"
+    },
+    {
+      "variant_id": "var-1760726440575-scskr2ymo",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "dimension_value_id": "val-1760726227491-z6ilrjbld"
+    },
+    {
+      "variant_id": "var-1760726487595-wygcu4ti8",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "dimension_value_id": "val-1760726227491-qxi46tsve"
+    },
+    {
+      "variant_id": "var-1760726503801-5f78qh189",
+      "dimension_id": "dim-1760726227491-3ib4285m7",
+      "dimension_value_id": "val-1760726227491-qb900ri7o"
+    },
+    {
+      "variant_id": "var-1760726835948-5quicoj28",
+      "dimension_id": "dim-1760726796256-4sjmnhuh1",
+      "dimension_value_id": "val-1760726796256-ync8a82mi"
+    },
+    {
+      "variant_id": "var-1760726961514-88nk4uxf4",
+      "dimension_id": "dim-1760726928416-gne65s4a5",
+      "dimension_value_id": "val-1760726928416-qd2aeb224"
+    },
+    {
+      "variant_id": "var-1760726981630-431wxzo6j",
+      "dimension_id": "dim-1760726928416-gne65s4a5",
+      "dimension_value_id": "val-1760726928416-e05o2smcn"
+    },
+    {
+      "variant_id": "var-1760726994956-3jyjw3fyw",
+      "dimension_id": "dim-1760726928416-gne65s4a5",
+      "dimension_value_id": "val-1760726928416-th9mahzyt"
     }
   ]
 }
