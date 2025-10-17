@@ -3,7 +3,9 @@ node_modules/
 jspm_packages/
 
 # Build directory
-public/
+public/*
+!public/data/
+public/data/*
 resources/_gen/
 .hugo_build.lock
 
