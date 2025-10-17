@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import type { ProductWithVariants, ProductVariant, SelectedVariant, CartItem } from '../types';
 import { productService } from '../services/productService';
 
@@ -126,6 +127,24 @@ const ProductCard: React.FC<ProductCardProps> = ({ productWithVariants, addToCar
     };
 
     addToCart(cartItem);
+
+    // Build the selection details string (e.g., "size small, color blue")
+    const selectionDetails = dimensions
+      .map(dimension => {
+        const selectedValueId = selections[dimension.id];
+        const selectedValue = availableOptions[dimension.id]?.find(
+          option => option.id === selectedValueId
+        );
+        return selectedValue ? `${dimension.name.toLowerCase()} ${selectedValue.value.toLowerCase()}` : null;
+      })
+      .filter(Boolean)
+      .join(', ');
+
+    const toastMessage = selectionDetails
+      ? `Added ${product.name} (${selectionDetails}) to cart!`
+      : `Added ${product.name} to cart!`;
+
+    toast.success(toastMessage);
   };
 
   return (

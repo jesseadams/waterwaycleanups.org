@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { Toaster } from 'sonner';
 import ProductList from './components/ProductList';
 import Cart from './components/Cart';
 import { useCart } from './hooks/useCart';
@@ -35,6 +36,21 @@ const App: React.FC = () => {
 
   return (
     <div className="font-sans antialiased text-gray-800">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#004a8f',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: '600',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0, 74, 143, 0.3)',
+          },
+        }}
+        duration={4000}
+      />
       <main>
         <ProductList addToCart={cart.addToCart} />
       </main>
