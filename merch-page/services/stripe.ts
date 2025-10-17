@@ -46,8 +46,8 @@ export const redirectToCheckout = async (lineItems: StripeLineItem[]) => {
   const { error } = await stripe.redirectToCheckout({
     lineItems,
     mode: 'payment',
-    successUrl: `${window.location.origin}?session_id={CHECKOUT_SESSION_ID}`,
-    cancelUrl: window.location.origin,
+    successUrl: `${window.location.origin}/merchandise/?session_id={CHECKOUT_SESSION_ID}`,
+    cancelUrl: `${window.location.origin}/merchandise/`,
   });
 
   if (error) {

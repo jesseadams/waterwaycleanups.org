@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import ProductList from './components/ProductList';
 import Cart from './components/Cart';
+import OrderSuccess from './components/OrderSuccess';
 import { useCart } from './hooks/useCart';
 
 const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [successSessionId, setSuccessSessionId] = useState<string | null>(null);
   const cart = useCart();
 
   // Connect the header cart button to the React app
@@ -34,6 +36,22 @@ const App: React.FC = () => {
     }
   }, [cart.getTotalItems]);
 
+  // Handle checkout success
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+      cart.clearCart();
+      setSuccessSessionId(sessionId);
+      toast.success('Payment successful! Thank you for your order.');
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete('session_id');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [cart]);
+
   return (
     <div className="font-sans antialiased text-gray-800">
       <Toaster
@@ -59,6 +77,12 @@ const App: React.FC = () => {
         onClose={() => setIsCartOpen(false)}
         {...cart}
       />
+      {successSessionId && (
+        <OrderSuccess
+          sessionId={successSessionId}
+          onClose={() => setSuccessSessionId(null)}
+        />
+      )}
     </div>
   );
 };
