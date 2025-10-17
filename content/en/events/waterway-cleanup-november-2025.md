@@ -1,5 +1,5 @@
 ---
-title: WScouting For Clean Waterways 2025
+title: Scouting For Clean Waterways 2025
 image: /uploads/waterway-cleanups/scouts.jpg
 tags:
   - scouting
