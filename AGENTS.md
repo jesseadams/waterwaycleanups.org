@@ -20,8 +20,8 @@ This is the waterwaycleanups.org website - a Hugo-based static site with integra
 - `npm run clean` - Clean generated assets
 
 ### Merchandise System
-- `npm run build-merch` - Build React merchandise storefront
-- `npm run sync-products` - Sync products from Stripe and rebuild merch app
+- `npm run build:merch` - Build React merchandise storefront
+- `npm run sync-products` - Sync products to Stripe and rebuild merch app
 - `npm run sync-products:dry-run` - Preview product sync without applying changes
 - `npm run sync-products:verbose` - Sync with detailed output
 
@@ -51,8 +51,8 @@ No specific test or lint commands are configured. The project relies on Hugo's b
 - **External Dependencies**: React, React-DOM, and Stripe loaded via importmap
 
 ### Stripe Integration
-- Products synced from Stripe via `scripts/sync-products.js`
-- Product data stored in `merch-page/data/products.ts`
+- Products synced to Stripe via `scripts/sync-products.js`
+- Product data stored in `public/data/products.json`
 - Publishable key configured in Hugo params, injected into frontend
 - Checkout handled by Stripe-hosted pages
 
@@ -76,6 +76,7 @@ No specific test or lint commands are configured. The project relies on Hugo's b
 
 ### Scripts & Tools
 - `scripts/sync-products.js` - Stripe product synchronization
+- `scripts/product-manager.js` - Interactive CLI for product management
 
 ## Development Workflow
 
@@ -91,14 +92,15 @@ No specific test or lint commands are configured. The project relies on Hugo's b
 
 ### Merchandise System Changes
 1. Edit files in `merch-page/`
-2. Run `npm run build-merch` to compile
+2. Run `npm run build:merch` to compile
 3. Test on `/merchandise` page
 
 ### Product Management
-1. Add products in Stripe Dashboard
-2. Run `npm run sync-products:dry-run` to preview changes
-3. Run `npm run sync-products` to sync and rebuild
-4. Products automatically appear on merchandise page
+1. Use `npm run products` to run the interactive CLI tool
+2. Create products with variants using the CLI
+3. Run `npm run sync-products:dry-run` to preview Stripe sync
+4. Run `npm run sync-products` to sync products to Stripe and rebuild
+5. Products with variants automatically appear on merchandise page
 
 ## Important Notes
 

@@ -7,16 +7,30 @@
   #merch-root .font-sans {
     font-family: 'Lato', sans-serif;
   }
-  
+
   /* Fix positioning for sticky header */
   .merchandise-page {
     padding-top: 120px; /* Account for sticky header height */
   }
-  
+
   /* Ensure cart button appears correctly in header */
   #header-cart-btn {
     z-index: 30;
     position: relative;
+  }
+
+  /* Fix Sonner toast positioning - ensure it appears in top-right */
+  [data-sonner-toaster] {
+    position: fixed !important;
+    top: 16px !important;
+    right: 16px !important;
+    left: auto !important;
+    transform: none !important;
+    z-index: 9999 !important;
+  }
+
+  [data-sonner-toast] {
+    position: relative !important;
   }
 </style>
 
@@ -49,7 +63,9 @@
     "react/": "https://aistudiocdn.com/react@^19.1.1/",
     "react": "https://aistudiocdn.com/react@^19.1.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
-    "@stripe/stripe-js": "https://aistudiocdn.com/@stripe/stripe-js@^7.9.0"
+    "react-dom": "https://aistudiocdn.com/react-dom@^19.1.1",
+    "@stripe/stripe-js": "https://aistudiocdn.com/@stripe/stripe-js@^7.9.0",
+    "sonner": "https://esm.sh/sonner@2.0.7?external=react,react-dom"
   }
 }
 </script>
