@@ -124,8 +124,9 @@ npm --version
 
 #### Merchandise Page Scripts
 
-- `npm run build-merch` - Build the React merchandise storefront using esbuild
-- `npm run sync-products` - Sync products with Stripe and rebuild merchandise app
+- `npm run build:merch` - Build the React merchandise storefront using esbuild
+- `npm run products` - Run interactive CLI for product management
+- `npm run sync-products` - Sync products to Stripe and rebuild merchandise app
 - `npm run sync-products:dry-run` - Preview product sync without making changes (no build)
 - `npm run sync-products:verbose` - Sync products with detailed output and rebuild merchandise app
 
@@ -166,13 +167,17 @@ The merchandise page is a React-based storefront with Stripe integration. For de
 
 #### Quick Development Guide
 
-1. **Make changes** to React components in the `merch-page/` directory
-2. **Build the merchandise app**:
+1. **Manage products** using the interactive CLI:
    ```bash
-   npm run build-merch
+   npm run products
    ```
-3. **Test locally** by visiting `/merchandise` on your development server
-4. **Sync products with Stripe** (if needed):
+2. **Make changes** to React components in the `merch-page/` directory
+3. **Build the merchandise app**:
+   ```bash
+   npm run build:merch
+   ```
+4. **Test locally** by visiting `/merchandise` on your development server
+5. **Sync products with Stripe** (if needed):
    ```bash
    npm run sync-products:dry-run  # Preview changes first
    npm run sync-products          # Apply changes and rebuild app
@@ -180,9 +185,19 @@ The merchandise page is a React-based storefront with Stripe integration. For de
 
 #### Key Files
 - `merch-page/App.tsx` - Main React application
-- `merch-page/data/products.ts` - Product catalog
+- `public/data/products.json` - Production product catalog with variants
+- `public/data/products.test.json` - Test product catalog (for development with test Stripe)
 - `static/merch-page/app.js` - Compiled output (auto-generated)
 - `layouts/merchandise/list.html` - Hugo template integration
+- `scripts/product-manager.js` - Interactive product management CLI
+
+#### Environment-Specific Product Data
+
+The system automatically uses the correct product file based on your Stripe environment:
+- **Test mode** (`sk_test_*`): Uses `products.test.json`
+- **Production mode** (`sk_live_*`): Uses `products.json`
+
+Simply set your `STRIPE_SECRET_KEY` in `.env` and the tools will automatically use the appropriate file. This prevents mixing test and production Stripe IDs.
 
 ## 📄 Content Pages
 

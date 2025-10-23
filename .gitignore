@@ -3,9 +3,15 @@ node_modules/
 jspm_packages/
 
 # Build directory
-public/
+public/*
+!public/data/
+public/data/*
 resources/_gen/
 .hugo_build.lock
+
+# Include public products data
+!public/data/products.json
+!public/data/products.test.json
 
 # OS files
 .DS_Store

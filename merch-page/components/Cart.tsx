@@ -9,11 +9,19 @@ interface CartProps {
   isOpen: boolean;
   onClose: () => void;
   items: CartItem[];
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, newQuantity: number) => void;
+  removeFromCart: (variantId: string) => void;
+  updateQuantity: (variantId: string, newQuantity: number) => void;
+  getTotalPrice: () => number;
 }
 
-const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, removeFromCart, updateQuantity }) => {
+const Cart: React.FC<CartProps> = ({
+  isOpen,
+  onClose,
+  items,
+  removeFromCart,
+  updateQuantity,
+  getTotalPrice
+}) => {
   const [isCheckingOut, setIsCheckingOut] = React.useState(false);
 
   useEffect(() => {
@@ -28,12 +36,19 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, removeFromCart, upd
   }, [isOpen]);
 
   const subtotal = useMemo(() => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
-  }, [items]);
+    return getTotalPrice() / 100; // Convert from cents to dollars
+  }, [getTotalPrice]);
 
   const handleCheckout = async () => {
     setIsCheckingOut(true);
-    await redirectToCheckout(items);
+
+    // Convert cart items to the format expected by Stripe
+    const stripeLineItems = items.map(item => ({
+      price: item.variant.stripe_price_id,
+      quantity: item.quantity,
+    }));
+
+    await redirectToCheckout(stripeLineItems);
     setIsCheckingOut(false); // This line might not be reached if redirect succeeds
   };
 
@@ -71,7 +86,7 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose, items, removeFromCart, upd
               <div className="flex-grow overflow-y-auto p-6 space-y-4">
                 {items.map(item => (
                   <CartItemComponent
-                    key={item.id}
+                    key={item.variant.id}
                     item={item}
                     onRemove={removeFromCart}
                     onUpdateQuantity={updateQuantity}

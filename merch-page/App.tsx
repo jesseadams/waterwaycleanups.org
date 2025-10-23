@@ -1,40 +1,74 @@
 
 import React, { useState, useEffect } from 'react';
+import { Toaster, toast } from 'sonner';
 import ProductList from './components/ProductList';
 import Cart from './components/Cart';
+import OrderSuccess from './components/OrderSuccess';
 import { useCart } from './hooks/useCart';
 
 const App: React.FC = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [successSessionId, setSuccessSessionId] = useState<string | null>(null);
   const cart = useCart();
 
   // Connect the header cart button to the React app
   useEffect(() => {
     const headerCartBtn = document.getElementById('header-cart-btn');
     const cartCountElement = document.getElementById('cart-count');
-    
+
     if (headerCartBtn) {
       const handleCartClick = () => setIsCartOpen(true);
       headerCartBtn.addEventListener('click', handleCartClick);
-      
+
       // Update cart count in header
       if (cartCountElement) {
-        cartCountElement.textContent = cart.items.length.toString();
-        if (cart.items.length > 0) {
+        cartCountElement.textContent = cart.getTotalItems().toString();
+        if (cart.getTotalItems() > 0) {
           cartCountElement.classList.remove('hidden');
         } else {
           cartCountElement.classList.add('hidden');
         }
       }
-      
+
       return () => {
         headerCartBtn.removeEventListener('click', handleCartClick);
       };
     }
-  }, [cart.items.length]);
+  }, [cart.getTotalItems]);
+
+  // Handle checkout success
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+
+    if (sessionId) {
+      cart.clearCart();
+      setSuccessSessionId(sessionId);
+      toast.success('Payment successful! Thank you for your order.');
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete('session_id');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [cart]);
 
   return (
     <div className="font-sans antialiased text-gray-800">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: '#004a8f',
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: '600',
+            padding: '16px 20px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 25px rgba(0, 74, 143, 0.3)',
+          },
+        }}
+        duration={4000}
+      />
       <main>
         <ProductList addToCart={cart.addToCart} />
       </main>
@@ -43,6 +77,12 @@ const App: React.FC = () => {
         onClose={() => setIsCartOpen(false)}
         {...cart}
       />
+      {successSessionId && (
+        <OrderSuccess
+          sessionId={successSessionId}
+          onClose={() => setSuccessSessionId(null)}
+        />
+      )}
     </div>
   );
 };

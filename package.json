@@ -4,15 +4,16 @@
   "description": "Waterways Cleanup Project",
   "scripts": {
     "dev": "concurrently \"hugo server\" \"npm run watch:assets\"",
-    "build": "npm run build:assets && hugo --minify",
+    "build": "npm run build:assets && hugo --minify && npm run build:merch",
     "build:assets": "webpack --mode production",
     "watch:assets": "webpack --watch --mode development",
     "clean": "rm -f static/css/tailwind-output.css static/js/main-bundle.js",
     "start": "npm run build && hugo server",
-    "build-merch": "npx esbuild merch-page/index.tsx --bundle --outfile=static/merch-page/app.js --format=esm --platform=browser --target=es2020 --jsx=automatic --jsx-import-source=react --external:react --external:react-dom/client --external:react/jsx-runtime --external:@stripe/stripe-js --minify",
-    "sync-products": "node scripts/sync-products.js && npm run build-merch",
+    "build:merch": "npx esbuild merch-page/index.tsx --bundle --outfile=static/merch-page/app.js --format=esm --platform=browser --target=es2020 --jsx=automatic --jsx-import-source=react --external:react --external:react-dom/client --external:react/jsx-runtime --external:@stripe/stripe-js --external:sonner --minify",
+    "sync-products": "node scripts/sync-products.js && npm run build:merch",
     "sync-products:dry-run": "node scripts/sync-products.js --dry-run",
-    "sync-products:verbose": "node scripts/sync-products.js --verbose && npm run build-merch"
+    "sync-products:verbose": "node scripts/sync-products.js --verbose && npm run build:merch",
+    "products": "node scripts/product-manager.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.826.0",
@@ -21,7 +22,8 @@
     "lineicons-react": "^2.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "simple-parallax-js": "^5.6.2"
+    "simple-parallax-js": "^5.6.2",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "@babel/core": "^7.26.10",
