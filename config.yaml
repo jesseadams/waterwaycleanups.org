@@ -22,7 +22,7 @@ markup:
         block: true
 
 params:
-  stripe_publishable_key: "pk_test_51S5BvI3IH8C7AKmuGN4I2docys7XnGTiVa8kZrWtXKlYjI3AIkUbKzZ4sUv2GEQoPo8ifGZhP59uSAXmmS980nl800921LLiBP"
+  stripe_publishable_key: "pk_live_51S5BvA3dx9K6lxUY472msOL3O84VqAq3Q2ZrYJ3Zy4GQaOpaxvZvHEjU1ImpzkktgwGf7z4Qcsy9jQ1dSBldHujH00vQMi7OOx"
 
 languages:
   en:
