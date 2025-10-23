@@ -185,10 +185,19 @@ The merchandise page is a React-based storefront with Stripe integration. For de
 
 #### Key Files
 - `merch-page/App.tsx` - Main React application
-- `public/data/products.json` - Product catalog with variants
+- `public/data/products.json` - Production product catalog with variants
+- `public/data/products.test.json` - Test product catalog (for development with test Stripe)
 - `static/merch-page/app.js` - Compiled output (auto-generated)
 - `layouts/merchandise/list.html` - Hugo template integration
 - `scripts/product-manager.js` - Interactive product management CLI
+
+#### Environment-Specific Product Data
+
+The system automatically uses the correct product file based on your Stripe environment:
+- **Test mode** (`sk_test_*`): Uses `products.test.json`
+- **Production mode** (`sk_live_*`): Uses `products.json`
+
+Simply set your `STRIPE_SECRET_KEY` in `.env` and the tools will automatically use the appropriate file. This prevents mixing test and production Stripe IDs.
 
 ## 📄 Content Pages
 

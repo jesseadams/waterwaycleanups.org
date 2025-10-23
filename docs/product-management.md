@@ -29,7 +29,8 @@ The system uses a relational data model stored in JSON format:
 
 ```
 ├── public/data/
-│   └── products.json              # Main product data file (accessible to frontend)
+│   ├── products.json              # Production product data file (accessible to frontend)
+│   └── products.test.json         # Test product data file (for development with test Stripe)
 ├── docs/
 │   ├── products-schema.md         # Data model documentation
 │   └── product-management.md      # This file
@@ -43,6 +44,48 @@ The system uses a relational data model stored in JSON format:
 │   ├── product-manager.js        # CLI product management tool
 │   └── sync-products.js          # Sync products to Stripe
 ```
+
+### Environment-Specific Product Files
+
+The system uses separate product files for test and production environments to prevent mixing test and production Stripe data:
+
+- **`products.json`**: Production product data with production Stripe IDs (used when `STRIPE_SECRET_KEY` starts with `sk_live_`)
+- **`products.test.json`**: Test product data with test Stripe IDs (used when `STRIPE_SECRET_KEY` starts with `sk_test_`)
+
+#### How It Works
+
+Both the product manager CLI (`product-manager.js`) and the sync script (`sync-products.js`) automatically detect which environment you're using based on your `STRIPE_SECRET_KEY` in `.env`:
+
+```bash
+# Test mode - uses products.test.json
+STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxx
+
+# Production mode - uses products.json
+STRIPE_SECRET_KEY=sk_live_xxxxxxxxxxxxx
+```
+
+When you run `npm run products` or `npm run sync-products`, the tool will display which environment and file it's using:
+
+```
+📁 Environment: TEST
+📄 Using file: products.test.json
+```
+
+#### Switching Between Environments
+
+To switch between test and production:
+
+1. **Update your `.env` file** with the appropriate Stripe key
+2. **Run your commands** - the tools will automatically use the correct file
+
+No other changes are needed! The client-side code always loads `/data/products.json`, which should contain your production data in production deployments.
+
+#### Benefits
+
+- **No data mixing**: Test Stripe IDs never pollute production data
+- **Safe testing**: Freely test product changes without affecting production
+- **Easy switching**: Just change your `.env` file
+- **Automatic detection**: No manual file path configuration needed
 
 ## Usage
 

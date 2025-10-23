@@ -5,7 +5,13 @@ const Stripe = require('stripe');
 const fs = require('fs');
 const path = require('path');
 
-const PRODUCTS_FILE_PATH = path.join(__dirname, '..', 'public', 'data', 'products.json');
+function getProductsFilePath() {
+  const isTestMode = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_test_');
+  const fileName = isTestMode ? 'products.test.json' : 'products.json';
+  return path.join(__dirname, '..', 'public', 'data', fileName);
+}
+
+const PRODUCTS_FILE_PATH = getProductsFilePath();
 
 class VariantProductSyncer {
   constructor(options = {}) {
@@ -261,6 +267,10 @@ class VariantProductSyncer {
       console.error('❌ Invalid Stripe secret key format');
       process.exit(1);
     }
+
+    const isTestMode = process.env.STRIPE_SECRET_KEY.startsWith('sk_test_');
+    console.log(`📁 Environment: ${isTestMode ? 'TEST' : 'PRODUCTION'}`);
+    console.log(`📄 Using file: ${path.basename(PRODUCTS_FILE_PATH)}\n`);
 
     try {
       const data = await this.loadProductsData();

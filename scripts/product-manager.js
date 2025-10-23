@@ -1,10 +1,17 @@
 #!/usr/bin/env node
 
+require('dotenv').config();
 const fs = require('fs').promises;
 const path = require('path');
 const readline = require('readline');
 
-const PRODUCTS_FILE = path.join(process.cwd(), 'public', 'data', 'products.json');
+function getProductsFilePath() {
+  const isTestMode = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_test_');
+  const fileName = isTestMode ? 'products.test.json' : 'products.json';
+  return path.join(process.cwd(), 'public', 'data', fileName);
+}
+
+const PRODUCTS_FILE = getProductsFilePath();
 
 class ProductManager {
   constructor() {
@@ -48,6 +55,10 @@ class ProductManager {
     console.clear();
     console.log('🛍️  Product Management System');
     console.log('================================');
+
+    const isTestMode = process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_test_');
+    console.log(`📁 Environment: ${isTestMode ? 'TEST' : 'PRODUCTION'}`);
+    console.log(`📄 Using file: ${path.basename(PRODUCTS_FILE)}`);
     console.log();
 
     try {
