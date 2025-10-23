@@ -101,94 +101,80 @@ interface ErrorResponse {
 }
 ```
 
-#### Python Lambda Implementation
+#### Python Lambda Implementation (with AWS Lambda Powertools)
 
 **File:** `terraform/lambda_create_checkout_session.py`
 
+This implementation uses [AWS Lambda Powertools for Python](https://docs.aws.amazon.com/powertools/python/latest/) for production-ready patterns including structured logging, API Gateway event handling, and secure secret management.
+
 ```python
-import json
 import os
+from aws_lambda_powertools import Logger, Tracer
+from aws_lambda_powertools.event_handler import APIGatewayRestResolver
+from aws_lambda_powertools.utilities.parameters import get_secret
+from aws_lambda_powertools.logging import correlation_paths
 import stripe
 
-# Initialize Stripe with secret key from environment
-stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
-stripe.api_version = '2024-11-20.acacia'  # Pin API version to prevent breaking changes
-site_url = os.environ.get('SITE_URL', 'https://waterwaycleanups.org')
-allowed_origin = os.environ.get('ALLOWED_ORIGIN', '*')
+# Initialize Powertools
+logger = Logger()
+tracer = Tracer()
+app = APIGatewayRestResolver(cors=True)  # Handles CORS automatically
 
-def handler(event, context):
-    """
-    Lambda function to create a Stripe Checkout Session
-    """
-    print(f"Received event: {json.dumps(event)}")
+# Stripe initialization state
+_stripe_initialized = False
 
-    # Set default response headers for CORS
-    headers = {
-        'Access-Control-Allow-Origin': allowed_origin,
-        'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
-        'Access-Control-Allow-Methods': 'OPTIONS,POST',
-        'Access-Control-Max-Age': '86400',
-        'Content-Type': 'application/json'
-    }
+def init_stripe():
+    """Initialize Stripe with secret from AWS Secrets Manager"""
+    global _stripe_initialized
+    if not _stripe_initialized:
+        # Retrieves and caches secret from Secrets Manager
+        stripe_secret = get_secret("stripe_secret_key")
+        stripe.api_key = stripe_secret
+        stripe.api_version = '2024-11-20.acacia'  # Pin API version
+        _stripe_initialized = True
+        logger.info("Stripe initialized successfully")
 
-    # Handle preflight OPTIONS request
-    if event.get('httpMethod') == 'OPTIONS':
+@app.post("/create-checkout-session")
+@tracer.capture_method
+def create_checkout_session():
+    """Create a Stripe Checkout Session"""
+    init_stripe()
+
+    # Access request data - Powertools handles parsing
+    body = app.current_event.json_body
+    line_items = body.get('lineItems', [])
+
+    # Validate input
+    if not line_items or not isinstance(line_items, list) or len(line_items) == 0:
+        logger.warning("Invalid line items received", extra={"line_items": line_items})
         return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({'message': 'CORS preflight successful'})
-        }
+            'error': 'Invalid line items',
+            'success': False
+        }, 400
 
-    # Only allow POST requests
-    if event.get('httpMethod') != 'POST':
-        return {
-            'statusCode': 405,
-            'headers': headers,
-            'body': json.dumps({'error': 'Method not allowed'})
-        }
+    # Validate each line item
+    for item in line_items:
+        price_id = item.get('price', '')
+        quantity = item.get('quantity', 0)
+
+        if not price_id or not price_id.startswith('price_'):
+            logger.error("Invalid price ID", extra={"price_id": price_id})
+            return {
+                'error': 'Invalid price ID',
+                'success': False
+            }, 400
+
+        if not isinstance(quantity, int) or quantity < 1 or quantity > 100:
+            logger.error("Invalid quantity", extra={"quantity": quantity})
+            return {
+                'error': 'Invalid quantity',
+                'success': False
+            }, 400
 
     try:
-        # Parse request body
-        body = json.loads(event.get('body', '{}'))
-        line_items = body.get('lineItems', [])
+        # Create Checkout Session with X-Ray tracing
+        site_url = os.environ.get('SITE_URL', 'https://waterwaycleanups.org')
 
-        # Validate input
-        if not line_items or not isinstance(line_items, list) or len(line_items) == 0:
-            return {
-                'statusCode': 400,
-                'headers': headers,
-                'body': json.dumps({
-                    'error': 'Invalid line items',
-                    'success': False
-                })
-            }
-
-        # Validate each line item
-        for item in line_items:
-            price_id = item.get('price', '')
-            quantity = item.get('quantity', 0)
-
-            if not price_id or not price_id.startswith('price_'):
-                return {
-                    'statusCode': 400,
-                    'headers': headers,
-                    'body': json.dumps({
-                        'error': 'Invalid price ID',
-                        'success': False
-                    })
-                }
-
-            if not isinstance(quantity, int) or quantity < 1 or quantity > 100:
-                return {
-                    'statusCode': 400,
-                    'headers': headers,
-                    'body': json.dumps({
-                        'error': 'Invalid quantity',
-                        'success': False
-                    })
-                }
-
-        # Create Checkout Session
         session = stripe.checkout.Session.create(
             mode='payment',
             line_items=line_items,
@@ -201,40 +187,51 @@ def handler(event, context):
             # automatic_tax={'enabled': True},
         )
 
-        # Return success response
+        logger.info(
+            "Checkout session created successfully",
+            extra={
+                "session_id": session.id,
+                "amount_total": session.amount_total,
+                "currency": session.currency,
+                "num_items": len(line_items)
+            }
+        )
+
         return {
-            'statusCode': 200,
-            'headers': headers,
-            'body': json.dumps({
-                'sessionId': session.id,
-                'url': session.url,
-                'success': True
-            })
+            'sessionId': session.id,
+            'url': session.url,
+            'success': True
         }
 
     except stripe.error.StripeError as e:
-        print(f"Stripe error: {str(e)}")
+        logger.exception("Stripe API error occurred", extra={"error_type": type(e).__name__})
         return {
-            'statusCode': 500,
-            'headers': headers,
-            'body': json.dumps({
-                'error': 'Failed to create checkout session',
-                'details': str(e),
-                'success': False
-            })
-        }
-
+            'error': 'Failed to create checkout session',
+            'success': False
+        }, 500
     except Exception as e:
-        print(f"Error: {str(e)}")
+        logger.exception("Unexpected error occurred")
         return {
-            'statusCode': 500,
-            'headers': headers,
-            'body': json.dumps({
-                'error': str(e),
-                'success': False
-            })
-        }
+            'error': 'Internal server error',
+            'success': False
+        }, 500
+
+@logger.inject_lambda_context(correlation_id_path=correlation_paths.API_GATEWAY_REST)
+@tracer.capture_lambda_handler
+def handler(event, context):
+    """
+    Lambda handler with Powertools decorators for logging and tracing
+    """
+    return app.resolve(event, context)
 ```
+
+**Benefits of AWS Lambda Powertools:**
+- ✅ **Automatic CORS handling** - No manual header management
+- ✅ **Structured logging** - JSON logs with context for CloudWatch
+- ✅ **AWS X-Ray tracing** - Track Stripe API calls end-to-end
+- ✅ **Secrets Manager integration** - More secure than environment variables
+- ✅ **Request parsing** - Cleaner code with `app.current_event.json_body`
+- ✅ **Production-ready patterns** - Battle-tested by AWS
 
 #### Terraform Configuration
 
@@ -272,7 +269,7 @@ resource "aws_iam_role" "stripe_checkout_lambda_role" {
 # Create IAM policy for Stripe Checkout Lambda
 resource "aws_iam_policy" "stripe_checkout_lambda_policy" {
   name        = "stripe_checkout_lambda_policy"
-  description = "IAM policy for Stripe Checkout Lambda function"
+  description = "IAM policy for Stripe Checkout Lambda with Secrets Manager and X-Ray"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -285,6 +282,21 @@ resource "aws_iam_policy" "stripe_checkout_lambda_policy" {
         ],
         Resource = "arn:aws:logs:*:*:*",
         Effect   = "Allow"
+      },
+      {
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = aws_secretsmanager_secret.stripe_secret_key.arn,
+        Effect   = "Allow"
+      },
+      {
+        Action = [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords"
+        ],
+        Resource = "*",
+        Effect   = "Allow"
       }
     ]
   })
@@ -296,15 +308,32 @@ resource "aws_iam_role_policy_attachment" "stripe_checkout_lambda_attachment" {
   policy_arn = aws_iam_policy.stripe_checkout_lambda_policy.arn
 }
 
-# Create Lambda layer for Stripe Python library
-resource "aws_lambda_layer_version" "stripe_python" {
-  filename            = "${path.module}/lambda_layers/stripe_layer.zip"
-  layer_name          = "stripe_python"
+# Store Stripe secret in AWS Secrets Manager (more secure than env vars)
+resource "aws_secretsmanager_secret" "stripe_secret_key" {
+  name        = "stripe_secret_key"
+  description = "Stripe API secret key for checkout sessions"
+
+  tags = {
+    Environment = var.environment
+    Project     = "waterwaycleanups"
+    Service     = "stripe-checkout"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "stripe_secret_key" {
+  secret_id     = aws_secretsmanager_secret.stripe_secret_key.id
+  secret_string = var.stripe_secret_key
+}
+
+# Create Lambda layer with Stripe and AWS Lambda Powertools
+resource "aws_lambda_layer_version" "stripe_and_powertools" {
+  filename            = "${path.module}/lambda_layers/stripe_powertools_layer.zip"
+  layer_name          = "stripe_and_powertools"
   compatible_runtimes = ["python3.9", "python3.10", "python3.11"]
 
-  source_code_hash = filebase64sha256("${path.module}/lambda_layers/stripe_layer.zip")
+  source_code_hash = filebase64sha256("${path.module}/lambda_layers/stripe_powertools_layer.zip")
 
-  description = "Stripe Python library for checkout session creation"
+  description = "Stripe and AWS Lambda Powertools for checkout"
 }
 
 # Package Lambda function
@@ -325,13 +354,21 @@ resource "aws_lambda_function" "stripe_checkout" {
   timeout          = 30
   memory_size      = 256
 
-  layers = [aws_lambda_layer_version.stripe_python.arn]
+  layers = [aws_lambda_layer_version.stripe_and_powertools.arn]
+
+  # Enable X-Ray tracing for observability
+  tracing_config {
+    mode = "Active"
+  }
 
   environment {
     variables = {
-      STRIPE_SECRET_KEY = var.stripe_secret_key
-      SITE_URL          = var.site_url
-      ALLOWED_ORIGIN    = "https://waterwaycleanups.org"
+      # Stripe secret is retrieved from Secrets Manager, not env var
+      SITE_URL                = var.site_url
+      # Powertools configuration
+      POWERTOOLS_SERVICE_NAME = "stripe-checkout"
+      POWERTOOLS_METRICS_NAMESPACE = "waterwaycleanups"
+      LOG_LEVEL               = "INFO"
     }
   }
 
@@ -477,8 +514,9 @@ site_url          = "https://waterwaycleanups.org"
 **Security Note:**
 - The `STRIPE_SECRET_KEY` must NEVER be committed to Git
 - Ensure `.gitignore` includes `*.tfvars` and `terraform.tfvars`
-- Use AWS Secrets Manager or environment variables for production
-- Consider using AWS Secrets Manager for production keys (see Security Considerations section)
+- ✅ **Implementation uses AWS Secrets Manager** (not environment variables)
+- Secret is retrieved securely at runtime by Powertools Parameters utility
+- Terraform stores the secret value in Secrets Manager during deployment
 
 ### 2. Frontend Changes
 
@@ -616,43 +654,48 @@ params:
 
 #### Prerequisites
 
-1. **Install Stripe Python Library for Lambda:**
+1. **Install Dependencies for Lambda Layer:**
 
-   The Lambda function requires the Stripe Python library. You'll need to create a Lambda layer or package it with your function:
+   The Lambda function requires Stripe and AWS Lambda Powertools. Create a Lambda layer with both:
 
-   **Option A: Create Lambda Layer (Recommended - Already included in terraform config above)**
+   **Create Lambda Layer (Recommended)**
    ```bash
    cd terraform
-   mkdir -p lambda_layers/stripe/python
-   pip install stripe -t lambda_layers/stripe/python
-   cd lambda_layers/stripe
-   zip -r ../stripe_layer.zip .
+   mkdir -p lambda_layers/stripe_powertools/python
+
+   # Install both Stripe and Powertools
+   pip install stripe aws-lambda-powertools -t lambda_layers/stripe_powertools/python
+
+   # Create the layer zip
+   cd lambda_layers/stripe_powertools
+   zip -r ../stripe_powertools_layer.zip .
    cd ../..
+
+   # Verify the layer was created
+   ls -lh lambda_layers/stripe_powertools_layer.zip
    ```
 
-   The terraform configuration above already includes the Lambda layer resource and attaches it to the function.
+   The terraform configuration includes the Lambda layer resource and attaches it to the function.
 
-   **Option B: Package with Function**
+   **Alternative: Package with Function (Not Recommended)**
    ```bash
    cd terraform
    mkdir -p stripe_checkout_package
-   pip install stripe -t stripe_checkout_package
+   pip install stripe aws-lambda-powertools -t stripe_checkout_package
    cp lambda_create_checkout_session.py stripe_checkout_package/
    cd stripe_checkout_package
    zip -r ../lambda_create_checkout_session.zip .
    ```
 
-   Update Terraform to use the packaged zip.
-
 #### Deployment Process
 
-1. **Create Lambda layer (MUST DO FIRST):**
+1. **Create Lambda layer with Stripe and Powertools (MUST DO FIRST):**
    ```bash
    cd terraform
-   mkdir -p lambda_layers/stripe/python
-   pip install stripe -t lambda_layers/stripe/python
-   cd lambda_layers/stripe && zip -r ../stripe_layer.zip . && cd ../..
-   ls -lh lambda_layers/stripe_layer.zip  # Verify it exists
+   mkdir -p lambda_layers/stripe_powertools/python
+   pip install stripe aws-lambda-powertools -t lambda_layers/stripe_powertools/python
+   cd lambda_layers/stripe_powertools && zip -r ../stripe_powertools_layer.zip . && cd ../..
+   ls -lh lambda_layers/stripe_powertools_layer.zip  # Verify it exists (~15-20 MB)
    ```
 
 2. **Create the Lambda function file:**
@@ -818,6 +861,78 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment" {
    - [ ] Firefox
    - [ ] Safari (desktop & mobile)
    - [ ] Edge
+
+8. **Observability Testing (with AWS Lambda Powertools & X-Ray)**
+   - [ ] Verify structured logs in CloudWatch Logs
+   - [ ] Check X-Ray traces for Stripe API calls
+   - [ ] Verify correlation IDs link requests to traces
+   - [ ] Test CloudWatch Insights queries for checkout metrics
+   - [ ] Verify errors are properly logged with stack traces
+
+## Observability & Monitoring
+
+With AWS Lambda Powertools and X-Ray integration, you get comprehensive observability:
+
+### CloudWatch Logs
+Structured JSON logs with automatic context:
+```json
+{
+  "level": "INFO",
+  "location": "create_checkout_session:190",
+  "message": "Checkout session created successfully",
+  "timestamp": "2025-10-23T12:00:00.000Z",
+  "service": "stripe-checkout",
+  "session_id": "cs_test_abc123",
+  "amount_total": 3000,
+  "currency": "usd",
+  "num_items": 2,
+  "cold_start": false,
+  "function_name": "stripe_create_checkout_session",
+  "function_memory_size": 256,
+  "function_arn": "arn:aws:lambda:...",
+  "function_request_id": "abc-123-def-456"
+}
+```
+
+### X-Ray Tracing
+- End-to-end request tracing from API Gateway → Lambda → Stripe API
+- Automatic service map visualization
+- Performance bottleneck identification
+- Error rate tracking per subsegment
+
+### CloudWatch Insights Queries
+
+**Find failed checkout attempts:**
+```
+fields @timestamp, @message, session_id, error_type
+| filter @message like /Stripe API error/
+| sort @timestamp desc
+| limit 20
+```
+
+**Checkout success rate:**
+```
+stats count(*) as total,
+      count(success = true) as successful,
+      avg(amount_total) as avg_amount
+by bin(5m)
+```
+
+**Monitor Lambda performance:**
+```
+filter @type = "REPORT"
+| stats avg(@duration), max(@duration), avg(@billedDuration)
+by bin(5m)
+```
+
+### Monitoring Dashboards
+
+Consider creating CloudWatch Dashboard with:
+- Checkout success/failure rate
+- Average checkout amount
+- Lambda duration and error rate
+- X-Ray service map
+- Stripe API latency
 
 ## Migration Checklist
 
