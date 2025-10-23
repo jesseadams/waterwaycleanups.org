@@ -634,11 +634,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdP3dx9K6lxUYCV4KEIDL",
+      "stripe_product_id": "prod_THnDOhAAVhjmsy",
       "active": true,
       "created_at": "2025-10-17T18:39:55.160Z",
-      "updated_at": "2025-10-17T19:09:44.731Z"
+      "updated_at": "2025-10-23T01:48:11.625Z"
     },
     {
       "id": "var-1760726424344-y7r1vmdtu",
@@ -648,11 +648,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdP3dx9K6lxUY6a9Ny8u7",
+      "stripe_product_id": "prod_THnDsdsEQc6Yca",
       "active": true,
       "created_at": "2025-10-17T18:40:24.344Z",
-      "updated_at": "2025-10-17T19:09:45.081Z"
+      "updated_at": "2025-10-23T01:48:12.005Z"
     },
     {
       "id": "var-1760726440575-scskr2ymo",
@@ -662,11 +662,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdQ3dx9K6lxUY4V4Ge75b",
+      "stripe_product_id": "prod_THnDBKIKmMe5ah",
       "active": true,
       "created_at": "2025-10-17T18:40:40.575Z",
-      "updated_at": "2025-10-17T19:09:45.454Z"
+      "updated_at": "2025-10-23T01:48:12.421Z"
     },
     {
       "id": "var-1760726487595-wygcu4ti8",
@@ -676,11 +676,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdQ3dx9K6lxUYDojYmtSa",
+      "stripe_product_id": "prod_THnDsKcA7UkvDu",
       "active": true,
       "created_at": "2025-10-17T18:41:27.595Z",
-      "updated_at": "2025-10-17T19:09:45.802Z"
+      "updated_at": "2025-10-23T01:48:12.809Z"
     },
     {
       "id": "var-1760726503801-5f78qh189",
@@ -690,11 +690,11 @@
       "currency": "USD",
       "inventory_quantity": 1,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdR3dx9K6lxUYg18Ci3FI",
+      "stripe_product_id": "prod_THnDZOE2rvPQTA",
       "active": true,
       "created_at": "2025-10-17T18:41:43.801Z",
-      "updated_at": "2025-10-17T19:09:46.163Z"
+      "updated_at": "2025-10-23T01:48:13.185Z"
     },
     {
       "id": "var-1760726835948-5quicoj28",
@@ -704,11 +704,11 @@
       "currency": "USD",
       "inventory_quantity": 1,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdR3dx9K6lxUYMxEEzQf7",
+      "stripe_product_id": "prod_THnDf6XmDqBOBo",
       "active": true,
       "created_at": "2025-10-17T18:47:15.948Z",
-      "updated_at": "2025-10-17T19:09:46.549Z"
+      "updated_at": "2025-10-23T01:48:13.564Z"
     },
     {
       "id": "var-1760726961514-88nk4uxf4",
@@ -718,11 +718,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdR3dx9K6lxUYVVl6CYAh",
+      "stripe_product_id": "prod_THnD4BkAM1U46l",
       "active": true,
       "created_at": "2025-10-17T18:49:21.515Z",
-      "updated_at": "2025-10-17T19:09:46.906Z"
+      "updated_at": "2025-10-23T01:48:13.924Z"
     },
     {
       "id": "var-1760726981630-431wxzo6j",
@@ -732,11 +732,11 @@
       "currency": "USD",
       "inventory_quantity": 2,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdS3dx9K6lxUYhUK22gol",
+      "stripe_product_id": "prod_THnDyc5XEE4C5h",
       "active": true,
       "created_at": "2025-10-17T18:49:41.630Z",
-      "updated_at": "2025-10-17T19:09:47.271Z"
+      "updated_at": "2025-10-23T01:48:14.315Z"
     },
     {
       "id": "var-1760726994956-3jyjw3fyw",
@@ -746,11 +746,11 @@
       "currency": "USD",
       "inventory_quantity": 1,
       "inventory_tracking": true,
-      "stripe_price_id": "",
-      "stripe_product_id": "",
+      "stripe_price_id": "price_1SLDdS3dx9K6lxUYpRYHv5z1",
+      "stripe_product_id": "prod_THnDNmKQ7xskA8",
       "active": true,
       "created_at": "2025-10-17T18:49:54.956Z",
-      "updated_at": "2025-10-17T19:09:47.624Z"
+      "updated_at": "2025-10-23T01:48:14.656Z"
     }
   ],
   "variant_attributes": [
