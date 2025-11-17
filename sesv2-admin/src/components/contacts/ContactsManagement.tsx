@@ -79,8 +79,15 @@ const ContactsManagement: React.FC = () => {
       const listsWithCounts = await Promise.all(
         lists.map(async (list) => {
           try {
-            const contactsResponse = await listContacts(list.ContactListName as string);
-            const contacts = contactsResponse.Contacts || [];
+            // Fetch all contacts with pagination
+            let allContacts: any[] = [];
+            let nextToken: string | undefined = undefined;
+            
+            do {
+              const contactsResponse = await listContacts(list.ContactListName as string, 100, nextToken);
+              allContacts = [...allContacts, ...(contactsResponse.Contacts || [])];
+              nextToken = contactsResponse.NextToken;
+            } while (nextToken);
             
             // Get the contact list details to get topics
             const contactListDetails = await getContactList(list.ContactListName as string);
@@ -95,7 +102,7 @@ const ContactsManagement: React.FC = () => {
             });
             
             // Count contacts per topic
-            for (const contact of contacts) {
+            for (const contact of allContacts) {
               if (contact.TopicPreferences && Array.isArray(contact.TopicPreferences)) {
                 contact.TopicPreferences.forEach((pref: any) => {
                   if (pref.TopicName && topicCounts[pref.TopicName]) {
@@ -111,7 +118,7 @@ const ContactsManagement: React.FC = () => {
             
             return {
               ...list,
-              ContactCount: contacts.length,
+              ContactCount: allContacts.length,
               TopicCounts: topicCounts
             };
           } catch (error) {
@@ -140,8 +147,18 @@ const ContactsManagement: React.FC = () => {
   const fetchContacts = async (contactListName: string) => {
     setIsLoading(true);
     try {
-      const response = await listContacts(contactListName);
-      setContacts(response.Contacts || []);
+      let allContacts: any[] = [];
+      let nextToken: string | undefined = undefined;
+      
+      // Loop through all pages of contacts
+      do {
+        const response = await listContacts(contactListName, 100, nextToken);
+        allContacts = [...allContacts, ...(response.Contacts || [])];
+        nextToken = response.NextToken;
+      } while (nextToken);
+      
+      setContacts(allContacts);
+      console.log(`Fetched ${allContacts.length} contacts from ${contactListName}`);
     } catch (error) {
       console.error(`Error fetching contacts for ${contactListName}:`, error);
     } finally {
