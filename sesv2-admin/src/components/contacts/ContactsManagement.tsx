@@ -152,7 +152,7 @@ const ContactsManagement: React.FC = () => {
       
       // Loop through all pages of contacts
       do {
-        const response = await listContacts(contactListName, 100, nextToken);
+        const response: any = await listContacts(contactListName, 100, nextToken);
         allContacts = [...allContacts, ...(response.Contacts || [])];
         nextToken = response.NextToken;
       } while (nextToken);
