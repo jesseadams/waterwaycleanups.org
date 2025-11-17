@@ -19,7 +19,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
 }) => {
   const [formData, setFormData] = useState<ContactFormData>({
     email: '',
-    attributes: [{ key: 'FirstName', value: '' }, { key: 'LastName', value: '' }],
+    attributes: [{ key: 'firstName', value: '' }, { key: 'lastName', value: '' }],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
