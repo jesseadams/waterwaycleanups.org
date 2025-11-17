@@ -19,7 +19,7 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [isUsingTemplate, setIsUsingTemplate] = useState<boolean>(true);
   const [globalTemplateData, setGlobalTemplateData] = useState<string>('{}');
-  const [sendingProgess, setSendingProgress] = useState<{total: number, sent: number, failed: number} | null>(null);
+  const [sendingProgress, setSendingProgress] = useState<{total: number, sent: number, failed: number} | null>(null);
   const [customEmail, setCustomEmail] = useState({
     subject: '',
     htmlBody: '<html><body><p>Your email content here.</p></body></html>',
@@ -140,9 +140,19 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
   const fetchContacts = async (contactListName: string) => {
     setLoading(true);
     try {
-      const response = await listContacts(contactListName);
-      setContacts(response.Contacts || []);
+      let allContacts: any[] = [];
+      let nextToken: string | undefined = undefined;
+      
+      // Loop through all pages of contacts
+      do {
+        const response: any = await listContacts(contactListName, 100, nextToken);
+        allContacts = [...allContacts, ...(response.Contacts || [])];
+        nextToken = response.NextToken;
+      } while (nextToken);
+      
+      setContacts(allContacts);
       setSelectedContacts([]);
+      console.log(`Fetched ${allContacts.length} contacts from ${contactListName} for email sending`);
     } catch (error) {
       console.error(`Error fetching contacts for ${contactListName}:`, error);
       setError(`Failed to load contacts from ${contactListName}. Please try again.`);
@@ -401,7 +411,34 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
         // Determine which contacts to send to based on selection mode
         const contactsToSend = sendToSingleContact ? [singleContactToSend] : selectedContacts;
         
-        // Send emails one by one to each contact
+        // Helper function for exponential backoff retry
+        const sendWithRetry = async (emailFn: () => Promise<any>, maxRetries = 3): Promise<boolean> => {
+          let lastError;
+          for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+              await emailFn();
+              return true;
+            } catch (err: any) {
+              lastError = err;
+              const isRateLimitError = err?.name === 'ThrottlingException' || 
+                                      err?.name === 'TooManyRequestsException' ||
+                                      err?.$metadata?.httpStatusCode === 429;
+              
+              if (isRateLimitError && attempt < maxRetries) {
+                // Exponential backoff: 1s, 2s, 4s
+                const delay = Math.pow(2, attempt) * 1000;
+                console.log(`Rate limit hit, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+              } else if (!isRateLimitError) {
+                // Non-rate-limit error, don't retry
+                throw err;
+              }
+            }
+          }
+          throw lastError;
+        };
+
+        // Send emails one by one to each contact with rate limiting
         for (let i = 0; i < contactsToSend.length; i++) {
           const emailAddress = contactsToSend[i];
           
@@ -419,23 +456,31 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
               ...contactAttributes
             };
             
-            console.log(`Sending to ${emailAddress} with data:`, mergedTemplateData);
+            console.log(`Sending to ${emailAddress} (${i + 1}/${contactsToSend.length})`);
             
-            // Send email with merged template data
-            await sendEmail(
-              sourceEmail,
-              [emailAddress], // Send to just this contact
-              '', // Subject will come from template
-              '', // HTML body will come from template
-              undefined,
-              selectedTemplate,
-              mergedTemplateData, // Merged template data with contact attributes
-              undefined, // configSet
-              selectedContactList || undefined, // contactListName
-              selectedTopic || undefined // Use selected topic
-            );
+            // Send email with retry logic
+            await sendWithRetry(async () => {
+              await sendEmail(
+                sourceEmail,
+                [emailAddress], // Send to just this contact
+                '', // Subject will come from template
+                '', // HTML body will come from template
+                undefined,
+                selectedTemplate,
+                mergedTemplateData, // Merged template data with contact attributes
+                undefined, // configSet
+                selectedContactList || undefined, // contactListName
+                selectedTopic || undefined // Use selected topic
+              );
+            });
             
             successCount++;
+            
+            // Rate limiting: Add delay between sends (10 emails per second = 100ms delay)
+            // AWS SES default limit is 14 emails/second, we use 10 to be safe
+            if (i < contactsToSend.length - 1) {
+              await new Promise(resolve => setTimeout(resolve, 100));
+            }
           } catch (err) {
             console.error(`Failed to send to ${emailAddress}:`, err);
             failureCount++;
@@ -507,6 +552,34 @@ const EmailSender: React.FC<EmailSenderProps> = () => {
       {message && (
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4">
           <p>{message}</p>
+        </div>
+      )}
+
+      {/* Progress Bar */}
+      {sendingProgress && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-4">Sending Progress</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>Sent: {sendingProgress.sent} / {sendingProgress.total}</span>
+              <span>Failed: {sendingProgress.failed}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+              <div 
+                className="bg-blue-600 h-full rounded-full transition-all duration-300 ease-out flex items-center justify-end pr-2"
+                style={{ 
+                  width: `${(sendingProgress.sent + sendingProgress.failed) / sendingProgress.total * 100}%` 
+                }}
+              >
+                <span className="text-xs font-medium text-white">
+                  {Math.round((sendingProgress.sent + sendingProgress.failed) / sendingProgress.total * 100)}%
+                </span>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Rate limiting: 10 emails/second with exponential backoff retry for rate limits
+            </p>
+          </div>
         </div>
       )}
 
