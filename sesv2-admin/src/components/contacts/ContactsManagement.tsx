@@ -84,7 +84,7 @@ const ContactsManagement: React.FC = () => {
             let nextToken: string | undefined = undefined;
             
             do {
-              const contactsResponse = await listContacts(list.ContactListName as string, 100, nextToken);
+              const contactsResponse: any = await listContacts(list.ContactListName as string, 100, nextToken);
               allContacts = [...allContacts, ...(contactsResponse.Contacts || [])];
               nextToken = contactsResponse.NextToken;
             } while (nextToken);
