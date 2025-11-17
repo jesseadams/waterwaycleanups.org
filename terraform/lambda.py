@@ -134,8 +134,8 @@ def handler(event, context):
                     }
                 ],
                 'AttributesData': json.dumps({
-                    'FirstName': first_name,
-                    'LastName': last_name
+                    'firstName': first_name,
+                    'lastName': last_name
                 })
             }
             
@@ -190,7 +190,6 @@ def handler(event, context):
         except Exception as e:
             error_trace = traceback.format_exc()
             error_message = f"Error adding contact to SES: {str(e)}"
-            print("FOOBAR")
             print(error_message)
             print(f"Error trace: {error_trace}")
             print(f"SES Region: {REGION_NAME}")
