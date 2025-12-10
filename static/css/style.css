@@ -62,3 +62,8 @@ img {filter: grayscale(0);}
 section.two-columns-section {
     padding-top: 5rem;
  }
+
+/* Team page - keep photos in color */
+.people .avatar {
+    filter: none !important;
+}

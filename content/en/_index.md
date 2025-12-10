@@ -28,7 +28,7 @@ Join us at an upcoming event and help protect the Rappahannock, Potomac, Aquia C
 
 {{< brick_two_columns text_align="center" >}}
 ## Sponsors
-{{< brick_gallery_external_links type="sponsors" >}}
+We are looking for sponsors to help fuel our mission. If you are interested in contributing to the critical restoration of our waterways, please email us at: info@waterwaycleanups.org
 ---
 ## Partners
 {{< brick_gallery_external_links type="partners" >}} 
