@@ -228,6 +228,7 @@
    @media only screen and (min-width: 768px) {
       section.two-columns-section .container.twocols .text:first-child {
          border-right: 1px solid var(--pearl-bush-white);
+         padding-right: 50px;
       }
    }
 
