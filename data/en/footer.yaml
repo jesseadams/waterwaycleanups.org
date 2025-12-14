@@ -5,9 +5,13 @@ menuitems:
   - title: Upcoming Cleanups
     link:  /#cleanups
   - title: Projects
-    link:  /#projects
-  - title: Sponsors
-    link:  /#sponsors
+    link:  /projects/
+  - title: Our Team
+    link:  /team/
+  - title: Impact
+    link:  /impact-report/
+  - title: Volunteer
+    link:  /volunteer/
   - title: Donate
     link:  https://collect.crowded.me/collection/3d678868-046a-4399-99e7-8f1b09b7485f
 socials:

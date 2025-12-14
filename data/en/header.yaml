@@ -11,8 +11,8 @@ menuitems:
     link: /projects/
   - title: Our Team
     link: /team/
-  - title: Sponsors
-    link: /#sponsors
+  - title: Impact
+    link: /impact-report/
   - title: Volunteer
     link: /volunteer/
 cta:

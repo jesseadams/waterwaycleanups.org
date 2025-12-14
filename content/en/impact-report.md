@@ -147,14 +147,32 @@ As we look toward 2026, we're inspired by what we've accomplished and energized 
 
 ## Recognition
 
-Our achievements this year wouldn't have been possible without the incredible dedication of our volunteers and the support of our community partners. Each cleanup event brought together people from all walks of life, united by a common goal of protecting our precious waterways.
+Our achievements this year wouldn't have been possible without the incredible dedication of our volunteers and the support of our community partners. Each cleanup event brought together people from all walks of life, united by a common goal of protecting our precious waterways. In addition to [our wonderful team](/team), I would like to personally recognize and thank the following individuals for their support.
+
+* Heather Adams for her unwavering patience and support
+* Lis Heras and Angela Nam from [Friends of the Rappahannock](https://riverfriends.org/)
+* Hope Mikelson from the [R-Board](https://r-board.org/)
+* Paul Anderson and Ellen Hillborn from DCR at [Widewater State Park](https://www.dcr.virginia.gov/state-parks/widewater)
+* Mike Lott from DCR at [Crow's Nest](https://www.dcr.virginia.gov/natural-heritage/natural-area-preserves/crowsnest)
+* Sophie Stern from [Alliance for the Chesapeake Bay](https://www.allianceforthebay.org/)
+* Sophie Lynn from [Crow's Nest Research Center](https://crowsnestresearch.org/)
+* Karen Tavakoli and the whole crew from [Karen for Nature](https://www.karenfornature.com/)
+* Em Ford from [Downtown Greens](https://www.downtowngreens.org/)
+* Hanna Taylor from [Fredericksburg Public Works](https://www.fredericksburgva.gov/459/Public-Works)
+* Vic Ellenfield from [Green Aquia](https://www.facebook.com/groups/GreenAquia/)
+* Erin Sanzero from [Protect Stafford](https://protectstafford.com/) along with the Environmental Impact Team.
+* Chad "Trey" Tracy for the website design
+* David and Teri Adams for their repeat donations
+* Tie Dye Jeff Eastland for his donations, volunteerism, and decades long career of environmental stewardship
+* Jerry Lawson for his donations, volunteerism, and decades long career of environmental stewardship
+* Mara and Gavin, my children, who are turning into quite the environmental stewards and make me a proud dad.
 
 {{< /brick_two_columns >}}
 
 {{< brick_two_columns text_align="center" >}}
 ## Looking Forward
 
-Our first year has laid a strong foundation for the future. With your continued support, we're planning to expand our reach, engage more volunteers, and make an even greater impact on Virginia's waterways in 2026.
+Our first year has laid a strong foundation for the future. With your continued support, we're planning to expand our reach, engage more volunteers, and make an even greater impact on Virginia's waterways in 2026. We have large goals to expand our mission space into growing native plants and using them to solve erosion, stormwater management, and pollution challenges in our community. We need volunteers now more than ever. Please join our mailing list today!
 
 {{< button "Join Our Mission" "/volunteer" >}}
 
@@ -162,7 +180,9 @@ Our first year has laid a strong foundation for the future. With your continued 
 
 ## Thank You
 
-To our incredible volunteers, generous sponsors, and community partners - this impact report represents the power of collective action. Together, we're not just cleaning waterways; we're building a movement for environmental stewardship that will benefit generations to come.
+To our incredible volunteers, generous sponsors, and community partners - this impact report represents the power of collective action. Together, we're not just cleaning waterways; we're building a movement for environmental stewardship that will benefit generations to come. We have our entire schedule for 2026 cleanup events on the calendar already. We will also be adding dates around the native plant nursery soon.
+
+
 
 {{< button "Get Involved" "/#cleanups" >}}
 
