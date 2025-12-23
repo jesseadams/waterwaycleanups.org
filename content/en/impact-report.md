@@ -150,6 +150,7 @@ As we look toward 2026, we're inspired by what we've accomplished and energized 
 Our achievements this year wouldn't have been possible without the incredible dedication of our volunteers and the support of our community partners. Each cleanup event brought together people from all walks of life, united by a common goal of protecting our precious waterways. In addition to [our wonderful team](/team), I would like to personally recognize and thank the following individuals for their support.
 
 * Heather Adams for her unwavering patience and support
+* Keep Virginia Beautiful and the [Green Grants Program](https://keepvirginiabeautiful.org/programs/30-in-30-green-grants/)
 * Lis Heras and Angela Nam from [Friends of the Rappahannock](https://riverfriends.org/)
 * Hope Mikelson from the [R-Board](https://r-board.org/)
 * Paul Anderson and Ellen Hillborn from DCR at [Widewater State Park](https://www.dcr.virginia.gov/state-parks/widewater)
