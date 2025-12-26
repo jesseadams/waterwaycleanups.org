@@ -110,6 +110,13 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   restrictions {
     geo_restriction {
       restriction_type = "none"
+      # restriction_type = "blacklist"
+      # locations = [
+      #  "CN", # China
+      #  "RU", # Russia
+      #  "NL", # Netherlands
+      #  "KP"  # North Korea
+      #]
     }
   }
 

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Environment Config Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .success { color: green; font-weight: bold; }
+    .error { color: red; font-weight: bold; }
+    pre { background: #f4f4f4; padding: 10px; overflow: auto; }
+    button { padding: 8px 16px; background: #4CAF50; color: white; border: none; cursor: pointer; margin: 10px 0; }
+    h3 { margin-top: 20px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Environment Configuration Test</h1>
+    <p>This page tests if the environment configuration is properly loaded.</p>
+
+    <h3>Step 1: Load Environment Configuration</h3>
+    <p>First, we'll set up the window.ENV_CONFIG object directly:</p>
+    <pre id="step1-output">Loading...</pre>
+    
+    <h3>Step 2: Verify Required Variables</h3>
+    <p>Checking if all required environment variables are available:</p>
+    <pre id="step2-output">Loading...</pre>
+    
+    <h3>Step 3: Test Amplify Configuration</h3>
+    <p>Creating a sample Amplify configuration with these values:</p>
+    <pre id="step3-output">Loading...</pre>
+    
+    <button id="reload-btn">Run Tests Again</button>
+  </div>
+
+  <script>
+    document.getElementById('reload-btn').addEventListener('click', runTests);
+
+    function runTests() {
+      // Step 1: Set up window.ENV_CONFIG
+      try {
+        window.ENV_CONFIG = {
+          REACT_APP_AWS_REGION: "us-east-1",
+          REACT_APP_COGNITO_USER_POOL_ID: "us-east-1_bI0nXjMKy",
+          REACT_APP_COGNITO_APP_CLIENT_ID: "6jta1gje9aigo1v4svcd6f9ft7",
+          REACT_APP_COGNITO_DOMAIN: "ses-admin-portal.auth.us-east-1.amazoncognito.com",
+          REACT_APP_COGNITO_IDENTITY_POOL_ID: "us-east-1:f8113d78-70a0-4c8c-87c5-5e11295ef73e",
+          REACT_APP_REDIRECT_URL: "http://localhost:3000",
+          REACT_APP_S3_BUCKET: "waterway-cleanups-newsletter-photos",
+          REACT_APP_S3_REGION: "us-east-1",
+          REACT_APP_S3_PREFIX: "/"
+        };
+        
+        document.getElementById('step1-output').innerHTML = 
+          `<div class="success">✅ Successfully created window.ENV_CONFIG</div>` +
+          `<div>Available keys: ${Object.keys(window.ENV_CONFIG).join(', ')}</div>`;
+      } catch(err) {
+        document.getElementById('step1-output').innerHTML = 
+          `<div class="error">❌ Error creating window.ENV_CONFIG: ${err.message}</div>`;
+      }
+
+      // Step 2: Check required variables
+      const requiredVars = [
+        'REACT_APP_AWS_REGION',
+        'REACT_APP_COGNITO_USER_POOL_ID',
+        'REACT_APP_COGNITO_APP_CLIENT_ID',
+        'REACT_APP_COGNITO_DOMAIN',
+        'REACT_APP_COGNITO_IDENTITY_POOL_ID'
+      ];
+      
+      let step2Output = '';
+      let allPresent = true;
+      
+      requiredVars.forEach(varName => {
+        if (window.ENV_CONFIG && window.ENV_CONFIG[varName]) {
+          step2Output += `<div>✅ ${varName}: [Value Available]</div>`;
+        } else {
+          step2Output += `<div class="error">❌ ${varName}: MISSING</div>`;
+          allPresent = false;
+        }
+      });
+      
+      if (allPresent) {
+        step2Output = `<div class="success">✅ All required variables are present!</div>` + step2Output;
+      } else {
+        step2Output = `<div class="error">❌ Some required variables are missing!</div>` + step2Output;
+      }
+      
+      document.getElementById('step2-output').innerHTML = step2Output;
+
+      // Step 3: Create sample Amplify config
+      try {
+        const region = window.ENV_CONFIG?.REACT_APP_AWS_REGION || '';
+        const userPoolId = window.ENV_CONFIG?.REACT_APP_COGNITO_USER_POOL_ID || '';
+        const userPoolClientId = window.ENV_CONFIG?.REACT_APP_COGNITO_APP_CLIENT_ID || '';
+        const domain = window.ENV_CONFIG?.REACT_APP_COGNITO_DOMAIN || '';
+        const identityPoolId = window.ENV_CONFIG?.REACT_APP_COGNITO_IDENTITY_POOL_ID || '';
+        const redirectUrl = window.ENV_CONFIG?.REACT_APP_REDIRECT_URL || 'http://localhost:3000';
+        
+        const amplifyConfig = {
+          aws_project_region: region,
+          aws_cognito_region: region,
+          aws_user_pools_id: userPoolId,
+          aws_user_pools_web_client_id: userPoolClientId,
+          aws_cognito_identity_pool_id: identityPoolId,
+          oauth: {
+            domain: domain,
+            scope: ['email', 'profile', 'openid'],
+            redirectSignIn: redirectUrl,
+            redirectSignOut: redirectUrl,
+            responseType: 'code',
+            redirectUri: redirectUrl
+          },
+          federationTarget: 'COGNITO_USER_POOLS',
+          Auth: {
+            Cognito: {
+              region: region,
+              userPoolId: userPoolId,
+              userPoolClientId: userPoolClientId
+            }
+          }
+        };
+        
+        document.getElementById('step3-output').innerHTML = 
+          `<div class="success">✅ Successfully created Amplify config object</div>` +
+          `<div>region: ${amplifyConfig.aws_project_region}</div>` +
+          `<div>userPoolId: ${amplifyConfig.aws_user_pools_id ? '✅ Set' : '❌ Missing'}</div>` +
+          `<div>userPoolClientId: ${amplifyConfig.aws_user_pools_web_client_id ? '✅ Set' : '❌ Missing'}</div>` +
+          `<div>identityPoolId: ${amplifyConfig.aws_cognito_identity_pool_id ? '✅ Set' : '❌ Missing'}</div>` +
+          `<div>domain: ${amplifyConfig.oauth.domain ? '✅ Set' : '❌ Missing'}</div>` +
+          `<div>redirectUrl: ${amplifyConfig.oauth.redirectSignIn}</div>`;
+      } catch(err) {
+        document.getElementById('step3-output').innerHTML = 
+          `<div class="error">❌ Error creating Amplify config: ${err.message}</div>`;
+      }
+    }
+    
+    // Run tests on page load
+    runTests();
+  </script>
+</body>
+</html>
