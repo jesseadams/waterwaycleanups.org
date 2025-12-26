@@ -117,6 +117,7 @@ jobs:
           curl -s -I https://sesv2-admin.waterwaycleanups.org/ | grep -E "HTTP|X-Cache|Content-Type"
           
       - name: Slack Notification
+        if: always()
         uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
