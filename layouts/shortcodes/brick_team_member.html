@@ -1,0 +1,23 @@
+{{- $name := .Get "name" | default "" -}}
+{{- $function := .Get "function" | default "" -}}
+{{- $description := .Get "description" | default "" -}}
+{{- $image := .Get "image" | default "" -}}
+{{- $linkedin := .Get "linkedin" | default "" -}}
+
+<div class="team-member">
+  <div class="member-image">
+    {{- if $image -}}
+      <img src="{{ $image }}" alt="{{ $name }}" />
+    {{- end -}}
+  </div>
+  <div class="member-info">
+    <h3 class="member-name">{{ $name }}</h3>
+    <p class="member-function">{{ $function }}</p>
+    <div class="member-bio">
+      {{ $description | markdownify }}
+    </div>
+    {{- if $linkedin -}}
+      <a href="{{ $linkedin }}" target="_blank" rel="noopener noreferrer" class="linkedin-link">LinkedIn Profile</a>
+    {{- end -}}
+  </div>
+</div>

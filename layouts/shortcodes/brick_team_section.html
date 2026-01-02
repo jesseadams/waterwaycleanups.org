@@ -1,0 +1,12 @@
+{{- $functions := split (.Get "functions") "," -}}
+{{- $title := .Get "title" -}}
+{{- $inner := .Inner -}}
+
+<section class="features">
+    <div class="container small">
+        {{- markdownify $inner -}}
+    </div>
+    <div class="container">
+        {{ partial "people_filtered.html" (dict "functions" $functions) }}
+    </div>
+</section>
