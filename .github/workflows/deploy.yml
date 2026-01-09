@@ -1,4 +1,5 @@
-name: Deploy Hugo Website
+name: Deploy Website
+run-name: Deploy to ${{ inputs.environment || 'staging' }}
 
 on:
   push:
@@ -9,6 +10,16 @@ on:
       - main
   schedule:
     - cron: "15 6 * * *"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
   workflow_call:
     inputs:
       environment:
@@ -16,8 +27,8 @@ on:
         type: string
 
 env:
-  # Determine environment: workflow_call input, or main branch = staging
-  DEPLOY_ENV: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'staging') || '' }}
+  # Priority: inputs > default to staging for main branch
+  DEPLOY_ENV: ${{ inputs.environment || 'staging' }}
 
 jobs:
   build-and-deploy:
