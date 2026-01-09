@@ -9,6 +9,16 @@ resource "aws_s3_bucket" "newsletter_photos_bucket" {
   }
 }
 
+# Allow public access for newsletter photos (needed for public read policy)
+resource "aws_s3_bucket_public_access_block" "newsletter_photos_public_access" {
+  bucket = aws_s3_bucket.newsletter_photos_bucket.id
+
+  block_public_acls       = true
+  ignore_public_acls      = true
+  block_public_policy     = false  # Allow public bucket policies
+  restrict_public_buckets = false  # Allow public access
+}
+
 # Enable server-side encryption for the newsletter photos bucket
 resource "aws_s3_bucket_server_side_encryption_configuration" "newsletter_photos_bucket_encryption" {
   bucket = aws_s3_bucket.newsletter_photos_bucket.id
@@ -46,6 +56,9 @@ resource "aws_s3_bucket_cors_configuration" "newsletter_photos_cors" {
 # Public read access policy for the newsletter photos bucket
 resource "aws_s3_bucket_policy" "newsletter_photos_bucket_policy" {
   bucket = aws_s3_bucket.newsletter_photos_bucket.id
+
+  # Ensure public access block is configured first
+  depends_on = [aws_s3_bucket_public_access_block.newsletter_photos_public_access]
 
   policy = jsonencode({
     Version = "2012-10-17",
