@@ -108,7 +108,7 @@ resource "aws_iam_role_policy_attachment" "event_rsvp_lambda_attachment" {
 # Create SNS topic for event RSVP notifications
 resource "aws_sns_topic" "event_rsvp_topic" {
   name = "event-rsvp-notifications"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"
@@ -166,7 +166,7 @@ resource "aws_lambda_function" "event_rsvp_submit" {
   environment {
     variables = {
       RSVP_TABLE_NAME = aws_dynamodb_table.event_rsvps.name
-      SNS_TOPIC_ARN = aws_sns_topic.event_rsvp_topic.arn
+      SNS_TOPIC_ARN   = aws_sns_topic.event_rsvp_topic.arn
     }
   }
 }
@@ -463,20 +463,20 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
-  
+
   triggers = {
     redeployment = sha1(jsonencode([
-    aws_api_gateway_integration.check_waiver_integration,
-    aws_api_gateway_integration.submit_waiver_integration,
-    aws_api_gateway_integration.check_waiver_options_integration,
-    aws_api_gateway_integration.submit_waiver_options_integration,
-    # RSVP endpoints
-    aws_api_gateway_integration.check_rsvp_integration,
-    aws_api_gateway_integration.submit_rsvp_integration,
-    aws_api_gateway_integration.check_rsvp_options_integration,
-    aws_api_gateway_integration.submit_rsvp_options_integration,
-    aws_api_gateway_integration.list_rsvps_integration,
-    aws_api_gateway_integration.list_rsvps_options_integration
+      aws_api_gateway_integration.check_waiver_integration,
+      aws_api_gateway_integration.submit_waiver_integration,
+      aws_api_gateway_integration.check_waiver_options_integration,
+      aws_api_gateway_integration.submit_waiver_options_integration,
+      # RSVP endpoints
+      aws_api_gateway_integration.check_rsvp_integration,
+      aws_api_gateway_integration.submit_rsvp_integration,
+      aws_api_gateway_integration.check_rsvp_options_integration,
+      aws_api_gateway_integration.submit_rsvp_options_integration,
+      aws_api_gateway_integration.list_rsvps_integration,
+      aws_api_gateway_integration.list_rsvps_options_integration
     ]))
   }
 
@@ -502,7 +502,7 @@ resource "aws_ssm_parameter" "check_rsvp_url" {
   description = "URL for checking event RSVPs"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.check_rsvp.path_part}"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"
@@ -514,7 +514,7 @@ resource "aws_ssm_parameter" "submit_rsvp_url" {
   description = "URL for submitting event RSVPs"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.submit_rsvp.path_part}"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"
@@ -531,7 +531,7 @@ resource "aws_ssm_parameter" "list_rsvps_url" {
   description = "URL for listing event RSVPs"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.list_rsvps.path_part}"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"

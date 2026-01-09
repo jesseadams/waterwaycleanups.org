@@ -57,13 +57,13 @@ resource "aws_iam_role_policy_attachment" "lambda_ses_attachment" {
 
 # Create Lambda function for handling volunteer form submissions
 resource "aws_lambda_function" "volunteer_lambda" {
-  filename      = data.archive_file.lambda_zip.output_path
+  filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = filebase64sha256(data.archive_file.lambda_zip.output_path)
-  function_name = "volunteer_form_handler"
-  role          = aws_iam_role.lambda_role.arn
-  handler       = "lambda.handler"
-  runtime       = "python3.9"
-  timeout       = 30
+  function_name    = "volunteer_form_handler"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "lambda.handler"
+  runtime          = "python3.9"
+  timeout          = 30
 
   environment {
     variables = {
@@ -79,7 +79,7 @@ resource "aws_lambda_function" "volunteer_lambda" {
 resource "aws_api_gateway_rest_api" "volunteer_api" {
   name        = "volunteer-api"
   description = "API for volunteer form submissions"
-  
+
   endpoint_configuration {
     types = ["REGIONAL"]
   }
@@ -123,7 +123,7 @@ resource "aws_api_gateway_method_response" "post_200" {
     "method.response.header.Access-Control-Allow-Methods" = true
     "method.response.header.Access-Control-Allow-Headers" = true
   }
-  
+
   response_models = {
     "application/json" = "Empty"
   }
@@ -154,9 +154,9 @@ resource "aws_api_gateway_integration" "options_integration" {
   rest_api_id = aws_api_gateway_rest_api.volunteer_api.id
   resource_id = aws_api_gateway_resource.submit_volunteer.id
   http_method = aws_api_gateway_method.options_method.http_method
-  
+
   type = "MOCK"
-  
+
   request_templates = {
     "application/json" = "{\"statusCode\": 200}"
   }
@@ -168,7 +168,7 @@ resource "aws_api_gateway_method_response" "options_response" {
   resource_id = aws_api_gateway_resource.submit_volunteer.id
   http_method = aws_api_gateway_method.options_method.http_method
   status_code = "200"
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Methods" = true
@@ -182,7 +182,7 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
   resource_id = aws_api_gateway_resource.submit_volunteer.id
   http_method = aws_api_gateway_method.options_method.http_method
   status_code = aws_api_gateway_method_response.options_response.status_code
-  
+
   response_parameters = {
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
@@ -211,7 +211,7 @@ resource "aws_api_gateway_deployment" "volunteer_api_deployment" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_api.id
-  
+
   triggers = {
     redeployment = sha1(jsonencode([
       aws_api_gateway_method.submit_volunteer_post,
@@ -225,7 +225,7 @@ resource "aws_api_gateway_deployment" "volunteer_api_deployment" {
       aws_api_gateway_integration_response.scheduled_newsletters_options_integration_response
     ]))
   }
-  
+
   lifecycle {
     create_before_destroy = true
   }

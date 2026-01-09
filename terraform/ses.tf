@@ -1,8 +1,8 @@
 # Reference existing SES configuration set
 resource "aws_ses_configuration_set" "main" {
-  name = "my-first-configuration-set"
+  name                       = "my-first-configuration-set"
   reputation_metrics_enabled = true
-  
+
   # Preserve existing configuration
   sending_enabled = true
 }
@@ -24,7 +24,7 @@ resource "aws_ses_event_destination" "sns_destination" {
   name                   = "email-issues-destination"
   configuration_set_name = aws_ses_configuration_set.main.name
   enabled                = true
-  
+
   matching_types = [
     "bounce",
     "complaint",

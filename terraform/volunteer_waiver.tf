@@ -150,7 +150,7 @@ resource "aws_lambda_function" "volunteer_waiver_submit" {
   environment {
     variables = {
       WAIVER_TABLE_NAME = aws_dynamodb_table.volunteer_waivers.name
-      SNS_TOPIC_ARN = aws_sns_topic.volunteer_waiver_topic.arn
+      SNS_TOPIC_ARN     = aws_sns_topic.volunteer_waiver_topic.arn
     }
   }
 }
@@ -344,7 +344,7 @@ resource "aws_ssm_parameter" "check_waiver_url" {
   description = "URL for checking volunteer waivers"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.check_waiver.path_part}"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"
@@ -356,7 +356,7 @@ resource "aws_ssm_parameter" "submit_waiver_url" {
   description = "URL for submitting volunteer waivers"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.submit_waiver.path_part}"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"

@@ -5,9 +5,9 @@ resource "aws_api_gateway_method_settings" "cors_settings" {
   method_path = "*/*"
 
   settings {
-    metrics_enabled    = false
-    logging_level      = "OFF"
-    caching_enabled    = false
+    metrics_enabled        = false
+    logging_level          = "OFF"
+    caching_enabled        = false
     throttling_burst_limit = 5000
     throttling_rate_limit  = 10000
   }

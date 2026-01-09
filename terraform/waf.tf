@@ -5,7 +5,7 @@
 resource "aws_cloudwatch_log_group" "waf_log_group" {
   name              = "aws-waf-logs-country-block-waf"
   retention_in_days = 90
-  
+
   tags = {
     Name        = "WAF Country Block Logs"
     Environment = "production"
@@ -98,7 +98,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "waf_logging" {
   log_destination_configs = [aws_cloudwatch_log_group.waf_log_group.arn]
 
   # No logging_filter means all requests (allowed and blocked) will be logged
-  
+
   depends_on = [
     aws_cloudwatch_log_group.waf_log_group,
     aws_cloudwatch_log_resource_policy.waf_log_policy

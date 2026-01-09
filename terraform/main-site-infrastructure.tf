@@ -1,12 +1,14 @@
 # Main website infrastructure: CloudFront, S3, and Route 53 resources
+# Parameterized by Terraform workspace (staging vs production)
 
 #
 # CLOUDFRONT FUNCTIONS
 #
 
 # CloudFront function for handling directory indexes in Hugo sites
+# Note: This is a global resource, shared across workspaces
 resource "aws_cloudfront_function" "directory_index" {
-  name    = "directory-index-handler"
+  name    = local.cloudfront_function_name
   runtime = "cloudfront-js-1.0"
   comment = "Handles directory indexes for Hugo static site"
   publish = true
@@ -19,12 +21,13 @@ resource "aws_cloudfront_function" "directory_index" {
 
 # S3 bucket for website hosting
 resource "aws_s3_bucket" "website_bucket" {
-  bucket = "waterwaycleanups.org"
+  bucket = local.bucket_name
 
   tags = {
     Name        = "Waterway Cleanups Website"
-    Environment = "Production"
+    Environment = local.environment_name
     ManagedBy   = "Terraform"
+    Workspace   = local.workspace
   }
 }
 
@@ -43,7 +46,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "website_bucket_en
 # S3 bucket versioning for the main website
 resource "aws_s3_bucket_versioning" "website_bucket_versioning" {
   bucket = aws_s3_bucket.website_bucket.id
-  
+
   versioning_configuration {
     status = "Disabled"
   }
@@ -55,8 +58,8 @@ resource "aws_s3_bucket_versioning" "website_bucket_versioning" {
 
 # Main website origin access control
 resource "aws_cloudfront_origin_access_control" "website_oac" {
-  name                              = "waterwaycleanups.org.s3.us-east-1.amazonaws.com"
-  description                       = "Origin Access Control for main website"
+  name                              = local.oac_name
+  description                       = "Origin Access Control for ${local.environment_name} website"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
@@ -66,13 +69,13 @@ resource "aws_cloudfront_origin_access_control" "website_oac" {
 resource "aws_cloudfront_distribution" "website_distribution" {
   # S3 origin for main website
   origin {
-    domain_name              = "waterwaycleanups.org.s3.us-east-1.amazonaws.com"
+    domain_name              = aws_s3_bucket.website_bucket.bucket_regional_domain_name
     origin_access_control_id = aws_cloudfront_origin_access_control.website_oac.id
-    origin_id                = "s3-main-website"
+    origin_id                = "s3-${local.workspace}-website"
   }
 
-  # Aliases (CNAMEs)
-  aliases = ["waterwaycleanups.org", "www.waterwaycleanups.org", "mta-sts.waterwaycleanups.org"]
+  # Aliases (CNAMEs) - varies by workspace
+  aliases = local.use_custom_certificate ? local.cloudfront_aliases : []
 
   enabled             = true
   is_ipv6_enabled     = true
@@ -84,13 +87,13 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   default_cache_behavior {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
-    target_origin_id       = "s3-main-website"
+    target_origin_id       = "s3-${local.workspace}-website"
     compress               = true
     viewer_protocol_policy = "redirect-to-https"
-    
+
     # Using standard caching policy
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6" # Managed-CachingOptimized policy
-    
+
     # CloudFront Function for directory index handling (Hugo-friendly)
     function_association {
       event_type   = "viewer-request"
@@ -98,7 +101,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
     }
   }
 
-  
+
   # Custom error response for 404 errors only
   custom_error_response {
     error_code            = 404
@@ -110,42 +113,53 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   restrictions {
     geo_restriction {
       restriction_type = "none"
-      # restriction_type = "blacklist"
-      # locations = [
-      #  "CN", # China
-      #  "RU", # Russia
-      #  "NL", # Netherlands
-      #  "KP"  # North Korea
-      #]
     }
   }
 
-  viewer_certificate {
-    acm_certificate_arn      = "arn:aws:acm:us-east-1:767072126027:certificate/98ff48eb-0a07-45a8-8cf3-c6b782f409d9"
-    ssl_support_method       = "sni-only"
-    minimum_protocol_version = "TLSv1.2_2021"
+  # Use ACM certificate if available, otherwise CloudFront default
+  dynamic "viewer_certificate" {
+    for_each = local.use_custom_certificate ? [1] : []
+    content {
+      acm_certificate_arn      = local.acm_certificate_arn
+      ssl_support_method       = "sni-only"
+      minimum_protocol_version = "TLSv1.2_2021"
+    }
   }
-  
-  # Associate WAF Web ACL with CloudFront
-  web_acl_id = aws_wafv2_web_acl.geo_block.arn
 
-  # Prevent accidental deletion
+  dynamic "viewer_certificate" {
+    for_each = local.use_custom_certificate ? [] : [1]
+    content {
+      cloudfront_default_certificate = true
+    }
+  }
+
+  # Associate WAF Web ACL with CloudFront (production only)
+  web_acl_id = local.apply_waf ? aws_wafv2_web_acl.geo_block.arn : null
+
+  tags = {
+    Name        = "${local.environment_name} Website Distribution"
+    Environment = local.environment_name
+    ManagedBy   = "Terraform"
+    Workspace   = local.workspace
+  }
+
+  # Prevent accidental deletion (production only)
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false # Note: Set to true manually for production after initial deploy
   }
 }
 
 # S3 bucket policy for main website
 resource "aws_s3_bucket_policy" "website_bucket_policy" {
   bucket = aws_s3_bucket.website_bucket.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action    = "s3:GetObject",
-        Effect    = "Allow",
-        Resource  = "${aws_s3_bucket.website_bucket.arn}/*",
+        Action   = "s3:GetObject",
+        Effect   = "Allow",
+        Resource = "${aws_s3_bucket.website_bucket.arn}/*",
         Principal = {
           Service = "cloudfront.amazonaws.com"
         },
@@ -164,21 +178,34 @@ resource "aws_s3_bucket_policy" "website_bucket_policy" {
 # ROUTE 53 RESOURCES
 #
 
-# Route 53 zone for the domain
+# Route 53 zone for the domain (shared across workspaces, only create in production)
 resource "aws_route53_zone" "primary" {
+  count         = local.is_production ? 1 : 0
   name          = "waterwaycleanups.org"
   comment       = "Managed by Terraform"
   force_destroy = false
-  
+
   # Prevent accidental deletion
   lifecycle {
     prevent_destroy = true
   }
 }
 
-# Main website records
+# Data source to reference the zone in staging workspace
+data "aws_route53_zone" "primary" {
+  count = local.is_staging ? 1 : 0
+  name  = "waterwaycleanups.org"
+}
+
+locals {
+  # Use the zone from resource in production, data source in staging
+  route53_zone_id = local.is_production ? aws_route53_zone.primary[0].zone_id : data.aws_route53_zone.primary[0].zone_id
+}
+
+# Main website A record (production only - apex domain)
 resource "aws_route53_record" "website_record" {
-  zone_id = aws_route53_zone.primary.zone_id
+  count   = local.is_production ? 1 : 0
+  zone_id = local.route53_zone_id
   name    = "waterwaycleanups.org"
   type    = "A"
 
@@ -189,36 +216,77 @@ resource "aws_route53_record" "website_record" {
   }
 }
 
-# www CNAME record
+# www CNAME record (production only)
 resource "aws_route53_record" "www_record" {
-  zone_id = aws_route53_zone.primary.zone_id
+  count   = local.is_production ? 1 : 0
+  zone_id = local.route53_zone_id
   name    = "www.waterwaycleanups.org"
   type    = "CNAME"
   ttl     = 300
   records = ["waterwaycleanups.org"]
 }
 
-# MTA-STS CNAME record
+# MTA-STS CNAME record (production only)
 resource "aws_route53_record" "mta_sts_record" {
-  zone_id = aws_route53_zone.primary.zone_id
+  count   = local.is_production ? 1 : 0
+  zone_id = local.route53_zone_id
   name    = "mta-sts.waterwaycleanups.org"
   type    = "CNAME"
   ttl     = 60
   records = ["waterwaycleanups.org"]
 }
 
+# Staging subdomain A record
+resource "aws_route53_record" "staging_record" {
+  count   = local.is_staging && local.use_custom_certificate ? 1 : 0
+  zone_id = local.route53_zone_id
+  name    = "staging.waterwaycleanups.org"
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.website_distribution.domain_name
+    zone_id                = aws_cloudfront_distribution.website_distribution.hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+
 #
 # OUTPUTS
 #
 
+output "workspace" {
+  value       = local.workspace
+  description = "Current Terraform workspace"
+}
+
+output "environment" {
+  value       = local.environment_name
+  description = "Environment name (Production or Staging)"
+}
+
+output "website_bucket_name" {
+  value       = aws_s3_bucket.website_bucket.id
+  description = "The name of the website S3 bucket"
+}
+
 # Output the main website CloudFront distribution ID
 output "main_cloudfront_distribution_id" {
   value       = aws_cloudfront_distribution.website_distribution.id
-  description = "The ID of the main website CloudFront distribution"
+  description = "The ID of the website CloudFront distribution"
+}
+
+output "cloudfront_domain_name" {
+  value       = aws_cloudfront_distribution.website_distribution.domain_name
+  description = "The CloudFront distribution domain name"
+}
+
+output "website_url" {
+  value       = local.use_custom_certificate ? "https://${local.domain_name}" : "https://${aws_cloudfront_distribution.website_distribution.domain_name}"
+  description = "The URL for the website"
 }
 
 # Output the Route 53 zone ID
 output "route53_zone_id" {
-  value = aws_route53_zone.primary.zone_id
+  value       = local.route53_zone_id
   description = "The ID of the Route 53 zone"
 }

@@ -1,8 +1,8 @@
 # DynamoDB table for scheduled newsletters
 resource "aws_dynamodb_table" "scheduled_newsletters" {
-  name           = "waterway-cleanups-scheduled-newsletters"
-  billing_mode   = "PAY_PER_REQUEST"
-  hash_key       = "id"
+  name         = "waterway-cleanups-scheduled-newsletters"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "id"
 
   attribute {
     name = "id"
@@ -63,30 +63,30 @@ EOF
 data "archive_file" "process_scheduled_newsletters" {
   type        = "zip"
   output_path = "${path.module}/lambda_scheduled_newsletters_dummy.zip"
-  
+
   source {
     content  = "dummy"
     filename = "dummy.txt"
   }
-  
+
   depends_on = [null_resource.process_scheduled_newsletters_package]
 }
 
 # Lambda function for processing scheduled newsletters
 resource "aws_lambda_function" "process_scheduled_newsletters" {
-  filename         = "${path.module}/lambda_scheduled_newsletters.zip"
-  function_name    = "waterway-cleanups-process-scheduled-newsletters"
-  role             = aws_iam_role.scheduled_newsletters_lambda.arn
-  handler          = "lambda_process_scheduled_newsletters.handler"
-  runtime          = "python3.9"
-  timeout          = 300 # 5 minutes
-  memory_size      = 512
+  filename      = "${path.module}/lambda_scheduled_newsletters.zip"
+  function_name = "waterway-cleanups-process-scheduled-newsletters"
+  role          = aws_iam_role.scheduled_newsletters_lambda.arn
+  handler       = "lambda_process_scheduled_newsletters.handler"
+  runtime       = "python3.9"
+  timeout       = 300 # 5 minutes
+  memory_size   = 512
 
   environment {
     variables = {
-      DYNAMODB_TABLE_NAME     = aws_dynamodb_table.scheduled_newsletters.name
-      SOURCE_EMAIL            = "Waterway Cleanups <info@waterwaycleanups.org>"
-      REGION                  = var.aws_region
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.scheduled_newsletters.name
+      SOURCE_EMAIL        = "Waterway Cleanups <info@waterwaycleanups.org>"
+      REGION              = var.aws_region
     }
   }
 
@@ -225,23 +225,23 @@ EOF
 data "archive_file" "scheduled_newsletters_api" {
   type        = "zip"
   output_path = "${path.module}/lambda_scheduled_newsletters_api_dummy.zip"
-  
+
   source {
     content  = "dummy"
     filename = "dummy.txt"
   }
-  
+
   depends_on = [null_resource.scheduled_newsletters_api_package]
 }
 
 # Lambda for API endpoints
 resource "aws_lambda_function" "scheduled_newsletters_api" {
-  filename         = "${path.module}/lambda_scheduled_newsletters_api.zip"
-  function_name    = "waterway-cleanups-scheduled-newsletters-api"
-  role             = aws_iam_role.scheduled_newsletters_api.arn
-  handler          = "lambda_scheduled_newsletters_api.handler"
-  runtime          = "python3.9"
-  timeout          = 30
+  filename      = "${path.module}/lambda_scheduled_newsletters_api.zip"
+  function_name = "waterway-cleanups-scheduled-newsletters-api"
+  role          = aws_iam_role.scheduled_newsletters_api.arn
+  handler       = "lambda_scheduled_newsletters_api.handler"
+  runtime       = "python3.9"
+  timeout       = 30
 
   environment {
     variables = {
@@ -391,7 +391,7 @@ resource "aws_api_gateway_integration_response" "scheduled_newsletters_options_i
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,GET,POST,PUT,DELETE'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
-  
+
   depends_on = [
     aws_api_gateway_integration.scheduled_newsletters_options_integration
   ]
@@ -438,7 +438,7 @@ resource "aws_ssm_parameter" "scheduled_newsletters_api_url" {
   description = "URL for scheduled newsletters API"
   type        = "String"
   value       = "${aws_api_gateway_stage.prod.invoke_url}/scheduled-newsletters"
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"
@@ -457,7 +457,7 @@ resource "aws_ssm_parameter" "api_gateway_base_url" {
   description = "Base URL for API Gateway"
   type        = "String"
   value       = aws_api_gateway_stage.prod.invoke_url
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"
@@ -470,7 +470,7 @@ resource "aws_ssm_parameter" "sesv2_admin_api_gateway_url" {
   description = "API Gateway URL for SESv2 Admin app"
   type        = "String"
   value       = aws_api_gateway_stage.prod.invoke_url
-  
+
   tags = {
     Environment = var.environment
     Project     = "waterwaycleanups"

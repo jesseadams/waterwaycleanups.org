@@ -27,3 +27,15 @@ variable "environment" {
   type        = string
   default     = "prod"
 }
+
+variable "staging_certificate_arn" {
+  description = "ACM certificate ARN for staging domain (leave empty to use CloudFront default certificate)"
+  type        = string
+  default     = ""
+}
+
+variable "deploy_staging" {
+  description = "Whether to deploy staging infrastructure (used when not using workspaces)"
+  type        = bool
+  default     = false
+}

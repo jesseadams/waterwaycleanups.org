@@ -4,22 +4,37 @@ on:
   push:
     branches:
       - main
+    tags:
+      - prod
   pull_request:
     branches:
       - main
   schedule:
-    - cron: "15 6 * * *" 
+    - cron: "15 6 * * *"
+  workflow_dispatch:
+    inputs:
+      promote_to_prod:
+        description: 'Promote current main to production'
+        required: false
+        type: boolean
+        default: false
+
+env:
+  # Determine environment: prod tag = production, main branch = staging
+  DEPLOY_ENV: ${{ github.ref == 'refs/tags/prod' && 'production' || github.ref == 'refs/heads/main' && 'staging' || '' }}
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write  # Need write for tag operations
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full history for tag operations
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -31,37 +46,49 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: "1.5.7"
+          terraform_version: "1.14.3"
+          terraform_wrapper: false
 
       - name: Create Terraform state resources
-        if: github.ref == 'refs/heads/main'
+        if: env.DEPLOY_ENV != ''
         run: |
           cd terraform
-          # Temporarily move backend.tf to disable it
           if [ -f "backend.tf" ]; then
             mv backend.tf backend.tf.bak
           fi
-          
-          # Initialize without backend and create state resources
           terraform init
           terraform apply -auto-approve -target=aws_s3_bucket.terraform_state -target=aws_s3_bucket_versioning.terraform_state_versioning -target=aws_s3_bucket_server_side_encryption_configuration.terraform_state_encryption -target=aws_s3_bucket_public_access_block.terraform_state_public_access_block -target=aws_dynamodb_table.terraform_locks
-          
-          # Restore backend.tf
           if [ -f "backend.tf.bak" ]; then
             mv backend.tf.bak backend.tf
           fi
       
       - name: Terraform Init with S3 Backend
-        if: github.ref == 'refs/heads/main'
+        if: env.DEPLOY_ENV != ''
         run: |
           cd terraform
           terraform init -force-copy
         
+      - name: Select Terraform Workspace
+        if: env.DEPLOY_ENV != ''
+        run: |
+          cd terraform
+          terraform workspace select -or-create ${{ env.DEPLOY_ENV }}
+          echo "Using workspace: $(terraform workspace show)"
+
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
+        if: env.DEPLOY_ENV != ''
         run: |
           cd terraform
           terraform apply -auto-approve
+
+      - name: Get Terraform Outputs
+        if: env.DEPLOY_ENV != ''
+        id: tf-outputs
+        run: |
+          cd terraform
+          echo "bucket_name=$(terraform output -raw website_bucket_name)" >> $GITHUB_OUTPUT
+          echo "distribution_id=$(terraform output -raw main_cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "website_url=$(terraform output -raw website_url)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -85,25 +112,72 @@ jobs:
         run: hugo --minify
 
       - name: Deploy to S3
-        if: github.ref == 'refs/heads/main'
+        if: env.DEPLOY_ENV != ''
         run: |
-          aws s3 sync public/ s3://${{ secrets.S3_BUCKET_NAME }}/
+          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/
 
       - name: Invalidate CloudFront Cache
-        if: github.ref == 'refs/heads/main'
+        if: env.DEPLOY_ENV != ''
         run: |
-          aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
+          aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.distribution_id }} --paths "/*"
       
       - name: Slack Notification
-        if: always()
+        if: always() && env.DEPLOY_ENV != ''
         uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*GitHub Action build result*: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+            text: "*Deploy to ${{ env.DEPLOY_ENV }}*: ${{ job.status }}\n${{ steps.tf-outputs.outputs.website_url }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "GitHub Action build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+                  text: "Deploy to *${{ env.DEPLOY_ENV }}*: ${{ job.status }}\nURL: ${{ steps.tf-outputs.outputs.website_url }}\nCommit: ${{ github.event.head_commit.url || github.sha }}"
+
+    outputs:
+      deploy_env: ${{ env.DEPLOY_ENV }}
+      website_url: ${{ steps.tf-outputs.outputs.website_url }}
+
+  # Manual promotion to production - only shows after successful staging deploy
+  promote-to-production:
+    needs: build-and-deploy
+    if: needs.build-and-deploy.outputs.deploy_env == 'staging'
+    runs-on: ubuntu-latest
+    environment: production  # Requires manual approval in GitHub
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Update prod tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Delete existing prod tag if it exists
+          git tag -d prod 2>/dev/null || true
+          git push origin :refs/tags/prod 2>/dev/null || true
+          
+          # Create new prod tag at current commit
+          git tag -a prod -m "Production release from main @ $(git rev-parse --short HEAD)"
+          git push origin prod
+          
+          echo "✅ Updated prod tag to $(git rev-parse --short HEAD)"
+
+      - name: Slack Notification - Promotion Started
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "🚀 Production promotion initiated for commit ${{ github.sha }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "🚀 *Production promotion initiated*\nCommit: `${{ github.sha }}`\nTriggered by: ${{ github.actor }}"
