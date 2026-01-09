@@ -4,17 +4,20 @@ on:
   push:
     branches:
       - main
-    tags:
-      - prod
   pull_request:
     branches:
       - main
   schedule:
     - cron: "15 6 * * *"
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
 
 env:
-  # Determine environment: prod tag = production, main branch = staging
-  DEPLOY_ENV: ${{ github.ref == 'refs/tags/prod' && 'production' || github.ref == 'refs/heads/main' && 'staging' || '' }}
+  # Determine environment: workflow_call input, or main branch = staging
+  DEPLOY_ENV: ${{ inputs.environment || (github.ref == 'refs/heads/main' && 'staging') || '' }}
 
 jobs:
   build-and-deploy:

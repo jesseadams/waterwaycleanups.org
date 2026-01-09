@@ -48,7 +48,7 @@ jobs:
           
           echo "✅ Updated prod tag to $(git rev-parse --short $COMMIT_SHA)"
 
-      - name: Slack Notification
+      - name: Slack Notification - Promotion Started
         uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -59,4 +59,11 @@ jobs:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "🚀 *Production promotion initiated*\nCommit: `${{ inputs.commit_sha || github.sha }}`\nTriggered by: ${{ github.actor }}\n\nProduction deploy will start automatically."
+                  text: "🚀 *Production promotion initiated*\nCommit: `${{ inputs.commit_sha || github.sha }}`\nTriggered by: ${{ github.actor }}"
+
+  deploy-production:
+    needs: promote
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+    secrets: inherit
