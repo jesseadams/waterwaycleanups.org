@@ -49,6 +49,33 @@ jobs:
           terraform_version: "1.14.3"
           terraform_wrapper: false
 
+      - name: Setup Python for Lambda packages
+        if: env.DEPLOY_ENV != ''
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Build Lambda packages
+        if: env.DEPLOY_ENV != ''
+        run: |
+          cd terraform
+          
+          # Build process scheduled newsletters Lambda package
+          rm -rf lambda_process_package
+          mkdir -p lambda_process_package
+          cp lambda_process_scheduled_newsletters.py lambda_process_package/
+          pip install pytz -t lambda_process_package/ --quiet
+          cd lambda_process_package && zip -r ../lambda_scheduled_newsletters.zip . && cd ..
+          rm -rf lambda_process_package
+          
+          # Build scheduled newsletters API Lambda package
+          rm -rf lambda_api_package
+          mkdir -p lambda_api_package
+          cp lambda_scheduled_newsletters_api.py lambda_api_package/
+          pip install pytz -t lambda_api_package/ --quiet
+          cd lambda_api_package && zip -r ../lambda_scheduled_newsletters_api.zip . && cd ..
+          rm -rf lambda_api_package
+
       - name: Create Terraform state resources
         if: env.DEPLOY_ENV != ''
         run: |

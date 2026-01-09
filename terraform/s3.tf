@@ -1,10 +1,10 @@
 # S3 bucket for newsletter image uploads
 resource "aws_s3_bucket" "newsletter_photos_bucket" {
-  bucket = "waterway-cleanups-newsletter-photos"
+  bucket = "waterway-cleanups-newsletter-photos${local.resource_suffix}"
 
   tags = {
     Name        = "Waterway Cleanups Newsletter Photos"
-    Environment = "Production"
+    Environment = local.environment_name
     ManagedBy   = "Terraform"
   }
 }
