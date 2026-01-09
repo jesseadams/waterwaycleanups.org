@@ -137,6 +137,8 @@ jobs:
 
       - name: Build Hugo site
         run: hugo --minify
+        env:
+          HUGO_ENV: ${{ env.DEPLOY_ENV }}
 
       - name: Deploy to S3
         if: env.DEPLOY_ENV != ''

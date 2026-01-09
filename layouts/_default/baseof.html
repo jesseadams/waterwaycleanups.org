@@ -36,6 +36,7 @@
     {{ partial "volunteer-waiver-head.html" . }}
   </head>
   <body id="top" class="{{ if in (substr .Content  0 100) `transparent_header` }}transparent_header{{ end }} view_{{ with .File }}{{ .BaseFileName }}{{ end }}">
+    {{ partial "staging-banner.html" . }}
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KDRJD92M"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
