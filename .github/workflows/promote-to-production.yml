@@ -1,0 +1,62 @@
+name: Promote to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: 'Commit SHA to promote (leave empty for latest main)'
+        required: false
+        type: string
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    environment: production  # Requires manual approval in GitHub
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.commit_sha || 'main' }}
+
+      - name: Verify commit exists on main
+        run: |
+          COMMIT_SHA="${{ inputs.commit_sha || github.sha }}"
+          if ! git merge-base --is-ancestor $COMMIT_SHA origin/main; then
+            echo "❌ Error: Commit $COMMIT_SHA is not on the main branch"
+            exit 1
+          fi
+          echo "✅ Commit $COMMIT_SHA is on main branch"
+
+      - name: Update prod tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          COMMIT_SHA="${{ inputs.commit_sha || github.sha }}"
+          
+          # Delete existing prod tag if it exists
+          git tag -d prod 2>/dev/null || true
+          git push origin :refs/tags/prod 2>/dev/null || true
+          
+          # Create new prod tag at specified commit
+          git tag -a prod -m "Production release @ $(git rev-parse --short $COMMIT_SHA)" $COMMIT_SHA
+          git push origin prod
+          
+          echo "✅ Updated prod tag to $(git rev-parse --short $COMMIT_SHA)"
+
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "🚀 Production promotion initiated"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "🚀 *Production promotion initiated*\nCommit: `${{ inputs.commit_sha || github.sha }}`\nTriggered by: ${{ github.actor }}\n\nProduction deploy will start automatically."

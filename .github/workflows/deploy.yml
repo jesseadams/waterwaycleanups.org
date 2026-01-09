@@ -11,13 +11,6 @@ on:
       - main
   schedule:
     - cron: "15 6 * * *"
-  workflow_dispatch:
-    inputs:
-      promote_to_prod:
-        description: 'Promote current main to production'
-        required: false
-        type: boolean
-        default: false
 
 env:
   # Determine environment: prod tag = production, main branch = staging
@@ -28,13 +21,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: write  # Need write for tag operations
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Full history for tag operations
+          fetch-depth: 0
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -46,7 +39,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: "1.14.3"
+          terraform_version: "1.10.0"
           terraform_wrapper: false
 
       - name: Setup Python for Lambda packages
@@ -163,50 +156,3 @@ jobs:
                 text:
                   type: "mrkdwn"
                   text: "${{ job.status == 'success' && '✅' || '❌' }} Deploy to *${{ env.DEPLOY_ENV }}*: ${{ job.status }}${{ steps.tf-outputs.outputs.website_url && format('\nURL: {0}', steps.tf-outputs.outputs.website_url) || '' }}\nCommit: <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>\nRun: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>"
-
-    outputs:
-      deploy_env: ${{ env.DEPLOY_ENV }}
-      website_url: ${{ steps.tf-outputs.outputs.website_url }}
-
-  # Manual promotion to production - only shows after successful staging deploy
-  promote-to-production:
-    needs: build-and-deploy
-    if: needs.build-and-deploy.outputs.deploy_env == 'staging'
-    runs-on: ubuntu-latest
-    environment: production  # Requires manual approval in GitHub
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Update prod tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Delete existing prod tag if it exists
-          git tag -d prod 2>/dev/null || true
-          git push origin :refs/tags/prod 2>/dev/null || true
-          
-          # Create new prod tag at current commit
-          git tag -a prod -m "Production release from main @ $(git rev-parse --short HEAD)"
-          git push origin prod
-          
-          echo "✅ Updated prod tag to $(git rev-parse --short HEAD)"
-
-      - name: Slack Notification - Promotion Started
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
-          payload: |
-            text: "🚀 Production promotion initiated for commit ${{ github.sha }}"
-            blocks:
-              - type: "section"
-                text:
-                  type: "mrkdwn"
-                  text: "🚀 *Production promotion initiated*\nCommit: `${{ github.sha }}`\nTriggered by: ${{ github.actor }}"
