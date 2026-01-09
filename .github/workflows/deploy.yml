@@ -1,5 +1,5 @@
 name: Deploy Website
-run-name: Deploy to ${{ inputs.environment || 'staging' }}
+run-name: Deploy Website to ${{ inputs.environment || 'staging' }}
 
 on:
   push:

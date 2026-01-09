@@ -8,6 +8,11 @@ on:
         required: false
         type: string
 
+# Permissions needed for the called workflow
+permissions:
+  id-token: write
+  contents: write
+
 jobs:
   promote:
     runs-on: ubuntu-latest
