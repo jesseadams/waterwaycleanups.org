@@ -1,5 +1,5 @@
 name: Deploy Website
-run-name: Deploy Website to ${{ inputs.environment || 'staging' }}
+run-name: ${{ github.event_name == 'pull_request' && 'PR Build & Plan' || format('Deploy to {0}', inputs.environment || 'staging') }}
 
 on:
   push:
@@ -27,8 +27,8 @@ on:
         type: string
 
 env:
-  # Priority: inputs > default to staging for main branch
   DEPLOY_ENV: ${{ inputs.environment || 'staging' }}
+  IS_PR: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build-and-deploy:
@@ -36,15 +36,16 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      pull-requests: write  # For PR comments
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
           aws-region: us-east-1
@@ -57,13 +58,11 @@ jobs:
           terraform_wrapper: false
 
       - name: Setup Python for Lambda packages
-        if: env.DEPLOY_ENV != ''
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
       - name: Build Lambda packages
-        if: env.DEPLOY_ENV != ''
         run: |
           cd terraform
           
@@ -84,7 +83,7 @@ jobs:
           rm -rf lambda_api_package
 
       - name: Create Terraform state resources
-        if: env.DEPLOY_ENV != ''
+        if: env.IS_PR != 'true'
         run: |
           cd terraform
           if [ -f "backend.tf" ]; then
@@ -97,26 +96,58 @@ jobs:
           fi
       
       - name: Terraform Init with S3 Backend
-        if: env.DEPLOY_ENV != ''
         run: |
           cd terraform
           terraform init -force-copy
         
       - name: Select Terraform Workspace
-        if: env.DEPLOY_ENV != ''
         run: |
           cd terraform
           terraform workspace select -or-create ${{ env.DEPLOY_ENV }}
           echo "Using workspace: $(terraform workspace show)"
 
+      - name: Terraform Plan (PR only)
+        if: env.IS_PR == 'true'
+        id: plan
+        run: |
+          cd terraform
+          terraform plan -no-color -out=tfplan 2>&1 | tee plan_output.txt
+          echo "plan_output<<EOF" >> $GITHUB_OUTPUT
+          cat plan_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Comment PR with Terraform Plan
+        if: env.IS_PR == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `#### Terraform Plan 📖
+            
+            <details><summary>Show Plan</summary>
+            
+            \`\`\`
+            ${{ steps.plan.outputs.plan_output }}
+            \`\`\`
+            
+            </details>
+            
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
       - name: Terraform Apply
-        if: env.DEPLOY_ENV != ''
+        if: env.IS_PR != 'true'
         run: |
           cd terraform
           terraform apply -auto-approve
 
       - name: Get Terraform Outputs
-        if: env.DEPLOY_ENV != ''
+        if: env.IS_PR != 'true'
         id: tf-outputs
         run: |
           cd terraform
@@ -127,7 +158,7 @@ jobs:
           echo "api_base_url_volunteer=$(terraform output -raw api_base_url_volunteer)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
@@ -152,18 +183,18 @@ jobs:
           HUGO_API_BASE_URL_VOLUNTEER: ${{ steps.tf-outputs.outputs.api_base_url_volunteer }}
 
       - name: Deploy to S3
-        if: env.DEPLOY_ENV != ''
+        if: env.IS_PR != 'true'
         run: |
           aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/
 
       - name: Invalidate CloudFront Cache
-        if: env.DEPLOY_ENV != ''
+        if: env.IS_PR != 'true'
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.distribution_id }} --paths "/*"
       
       - name: Slack Notification
-        if: always() && env.DEPLOY_ENV != ''
-        uses: slackapi/slack-github-action@v2
+        if: always() && env.IS_PR != 'true'
+        uses: slackapi/slack-github-action@v2.1.0
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
