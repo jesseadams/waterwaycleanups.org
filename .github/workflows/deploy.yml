@@ -128,12 +128,12 @@ jobs:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text: "*Deploy to ${{ env.DEPLOY_ENV }}*: ${{ job.status }}\n${{ steps.tf-outputs.outputs.website_url }}"
+            text: "*Deploy to ${{ env.DEPLOY_ENV }}*: ${{ job.status }}"
             blocks:
               - type: "section"
                 text:
                   type: "mrkdwn"
-                  text: "Deploy to *${{ env.DEPLOY_ENV }}*: ${{ job.status }}\nURL: ${{ steps.tf-outputs.outputs.website_url }}\nCommit: ${{ github.event.head_commit.url || github.sha }}"
+                  text: "${{ job.status == 'success' && '✅' || '❌' }} Deploy to *${{ env.DEPLOY_ENV }}*: ${{ job.status }}${{ steps.tf-outputs.outputs.website_url && format('\nURL: {0}', steps.tf-outputs.outputs.website_url) || '' }}\nCommit: <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>\nRun: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>"
 
     outputs:
       deploy_env: ${{ env.DEPLOY_ENV }}

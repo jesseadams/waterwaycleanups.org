@@ -7,7 +7,7 @@ locals {
 
 # Create DynamoDB table for storing volunteer waivers
 resource "aws_dynamodb_table" "volunteer_waivers" {
-  name         = local.volunteer_waivers_schema.table_name
+  name         = "${local.volunteer_waivers_schema.table_name}${local.resource_suffix}"
   billing_mode = local.volunteer_waivers_schema.billing_mode
   hash_key     = local.volunteer_waivers_schema.hash_key
   range_key    = local.volunteer_waivers_schema.range_key
@@ -26,7 +26,7 @@ resource "aws_dynamodb_table" "volunteer_waivers" {
   }
 
   tags = {
-    Name        = "volunteer-waivers"
+    Name        = "volunteer-waivers${local.resource_suffix}"
     Environment = var.environment
     Project     = "waterwaycleanups"
     Schema      = "volunteer-waivers-table.json"
@@ -35,7 +35,7 @@ resource "aws_dynamodb_table" "volunteer_waivers" {
 
 # IAM Role for Lambda functions to access DynamoDB
 resource "aws_iam_role" "volunteer_waiver_lambda_role" {
-  name = "volunteer_waiver_lambda_role"
+  name = "volunteer_waiver_lambda_role${local.resource_suffix}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -54,7 +54,7 @@ resource "aws_iam_role" "volunteer_waiver_lambda_role" {
 
 # IAM Policy for Lambda to access DynamoDB and CloudWatch Logs
 resource "aws_iam_policy" "volunteer_waiver_lambda_policy" {
-  name        = "volunteer_waiver_lambda_policy"
+  name        = "volunteer_waiver_lambda_policy${local.resource_suffix}"
   description = "IAM policy for volunteer waiver lambda functions"
 
   policy = jsonencode({
@@ -120,7 +120,7 @@ data "archive_file" "volunteer_waiver_submit_zip" {
 
 # Create Lambda function for checking volunteer waivers
 resource "aws_lambda_function" "volunteer_waiver_check" {
-  function_name    = "volunteer_waiver_check"
+  function_name    = "volunteer_waiver_check${local.resource_suffix}"
   filename         = data.archive_file.volunteer_waiver_check_zip.output_path
   source_code_hash = data.archive_file.volunteer_waiver_check_zip.output_base64sha256
   handler          = "lambda_volunteer_waiver_check.handler"
@@ -138,7 +138,7 @@ resource "aws_lambda_function" "volunteer_waiver_check" {
 
 # Create Lambda function for submitting volunteer waivers
 resource "aws_lambda_function" "volunteer_waiver_submit" {
-  function_name    = "volunteer_waiver_submit"
+  function_name    = "volunteer_waiver_submit${local.resource_suffix}"
   filename         = data.archive_file.volunteer_waiver_submit_zip.output_path
   source_code_hash = data.archive_file.volunteer_waiver_submit_zip.output_base64sha256
   handler          = "lambda_volunteer_waiver_submit.handler"
@@ -157,7 +157,7 @@ resource "aws_lambda_function" "volunteer_waiver_submit" {
 
 # Create API Gateway REST API
 resource "aws_api_gateway_rest_api" "volunteer_waiver_api" {
-  name        = "volunteer-waiver-api"
+  name        = "volunteer-waiver-api${local.resource_suffix}"
   description = "API for volunteer waiver system"
 }
 
@@ -340,7 +340,7 @@ output "submit_waiver_url" {
 
 # Create SSM Parameters for frontend to use
 resource "aws_ssm_parameter" "check_waiver_url" {
-  name        = "/waterwaycleanups/check_waiver_api_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/check_waiver_api_url"
   description = "URL for checking volunteer waivers"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.check_waiver.path_part}"
@@ -352,7 +352,7 @@ resource "aws_ssm_parameter" "check_waiver_url" {
 }
 
 resource "aws_ssm_parameter" "submit_waiver_url" {
-  name        = "/waterwaycleanups/submit_waiver_api_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/submit_waiver_api_url"
   description = "URL for submitting volunteer waivers"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.submit_waiver.path_part}"

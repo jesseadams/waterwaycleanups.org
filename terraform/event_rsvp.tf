@@ -7,7 +7,7 @@ locals {
 
 # Create DynamoDB table for storing event RSVPs
 resource "aws_dynamodb_table" "event_rsvps" {
-  name         = local.event_rsvps_schema.table_name
+  name         = "${local.event_rsvps_schema.table_name}${local.resource_suffix}"
   billing_mode = local.event_rsvps_schema.billing_mode
   hash_key     = local.event_rsvps_schema.hash_key
   range_key    = local.event_rsvps_schema.range_key
@@ -26,7 +26,7 @@ resource "aws_dynamodb_table" "event_rsvps" {
   }
 
   tags = {
-    Name        = "event-rsvps"
+    Name        = "event-rsvps${local.resource_suffix}"
     Environment = var.environment
     Project     = "waterwaycleanups"
     Schema      = "event-rsvps-table.json"
@@ -35,7 +35,7 @@ resource "aws_dynamodb_table" "event_rsvps" {
 
 # IAM Role for Lambda functions to access DynamoDB
 resource "aws_iam_role" "event_rsvp_lambda_role" {
-  name = "event_rsvp_lambda_role"
+  name = "event_rsvp_lambda_role${local.resource_suffix}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -54,7 +54,7 @@ resource "aws_iam_role" "event_rsvp_lambda_role" {
 
 # IAM Policy for Lambda to access DynamoDB and CloudWatch Logs
 resource "aws_iam_policy" "event_rsvp_lambda_policy" {
-  name        = "event_rsvp_lambda_policy"
+  name        = "event_rsvp_lambda_policy${local.resource_suffix}"
   description = "IAM policy for event RSVP lambda functions"
 
   policy = jsonencode({
@@ -107,7 +107,7 @@ resource "aws_iam_role_policy_attachment" "event_rsvp_lambda_attachment" {
 
 # Create SNS topic for event RSVP notifications
 resource "aws_sns_topic" "event_rsvp_topic" {
-  name = "event-rsvp-notifications"
+  name = "event-rsvp-notifications${local.resource_suffix}"
 
   tags = {
     Environment = var.environment
@@ -136,7 +136,7 @@ data "archive_file" "event_rsvp_list_zip" {
 
 # Create Lambda function for checking event RSVPs
 resource "aws_lambda_function" "event_rsvp_check" {
-  function_name    = "event_rsvp_check"
+  function_name    = "event_rsvp_check${local.resource_suffix}"
   filename         = data.archive_file.event_rsvp_check_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_check_zip.output_base64sha256
   handler          = "lambda_event_rsvp_check.handler"
@@ -154,7 +154,7 @@ resource "aws_lambda_function" "event_rsvp_check" {
 
 # Create Lambda function for submitting event RSVPs
 resource "aws_lambda_function" "event_rsvp_submit" {
-  function_name    = "event_rsvp_submit"
+  function_name    = "event_rsvp_submit${local.resource_suffix}"
   filename         = data.archive_file.event_rsvp_submit_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_submit_zip.output_base64sha256
   handler          = "lambda_event_rsvp_submit.handler"
@@ -173,7 +173,7 @@ resource "aws_lambda_function" "event_rsvp_submit" {
 
 # Create Lambda function for listing event RSVPs
 resource "aws_lambda_function" "event_rsvp_list" {
-  function_name    = "event_rsvp_list"
+  function_name    = "event_rsvp_list${local.resource_suffix}"
   filename         = data.archive_file.event_rsvp_list_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_list_zip.output_base64sha256
   handler          = "lambda_event_rsvp_list.handler"
@@ -498,7 +498,7 @@ output "submit_rsvp_url" {
 
 # Create SSM Parameters for frontend to use
 resource "aws_ssm_parameter" "check_rsvp_url" {
-  name        = "/waterwaycleanups/check_rsvp_api_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/check_rsvp_api_url"
   description = "URL for checking event RSVPs"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.check_rsvp.path_part}"
@@ -510,7 +510,7 @@ resource "aws_ssm_parameter" "check_rsvp_url" {
 }
 
 resource "aws_ssm_parameter" "submit_rsvp_url" {
-  name        = "/waterwaycleanups/submit_rsvp_api_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/submit_rsvp_api_url"
   description = "URL for submitting event RSVPs"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.submit_rsvp.path_part}"
@@ -527,7 +527,7 @@ output "list_rsvps_url" {
 }
 
 resource "aws_ssm_parameter" "list_rsvps_url" {
-  name        = "/waterwaycleanups/list_rsvps_api_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/list_rsvps_api_url"
   description = "URL for listing event RSVPs"
   type        = "String"
   value       = "${aws_api_gateway_stage.volunteer_waiver_stage.invoke_url}/${aws_api_gateway_resource.list_rsvps.path_part}"

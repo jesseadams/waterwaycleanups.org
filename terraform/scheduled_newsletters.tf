@@ -1,6 +1,6 @@
 # DynamoDB table for scheduled newsletters
 resource "aws_dynamodb_table" "scheduled_newsletters" {
-  name         = "waterway-cleanups-scheduled-newsletters"
+  name         = "waterway-cleanups-scheduled-newsletters${local.resource_suffix}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "id"
 
@@ -36,8 +36,8 @@ resource "aws_dynamodb_table" "scheduled_newsletters" {
   }
 
   tags = {
-    Name        = "waterway-cleanups-scheduled-newsletters"
-    Environment = "production"
+    Name        = "waterway-cleanups-scheduled-newsletters${local.resource_suffix}"
+    Environment = local.environment_name
   }
 }
 
@@ -75,7 +75,7 @@ data "archive_file" "process_scheduled_newsletters" {
 # Lambda function for processing scheduled newsletters
 resource "aws_lambda_function" "process_scheduled_newsletters" {
   filename      = "${path.module}/lambda_scheduled_newsletters.zip"
-  function_name = "waterway-cleanups-process-scheduled-newsletters"
+  function_name = "waterway-cleanups-process-scheduled-newsletters${local.resource_suffix}"
   role          = aws_iam_role.scheduled_newsletters_lambda.arn
   handler       = "lambda_process_scheduled_newsletters.handler"
   runtime       = "python3.9"
@@ -99,13 +99,13 @@ resource "aws_lambda_function" "process_scheduled_newsletters" {
 
 # CloudWatch Log Group for Lambda
 resource "aws_cloudwatch_log_group" "scheduled_newsletters_lambda" {
-  name              = "/aws/lambda/waterway-cleanups-process-scheduled-newsletters"
+  name              = "/aws/lambda/waterway-cleanups-process-scheduled-newsletters${local.resource_suffix}"
   retention_in_days = 30
 }
 
 # IAM role for Lambda
 resource "aws_iam_role" "scheduled_newsletters_lambda" {
-  name = "waterway-cleanups-scheduled-newsletters-lambda-role"
+  name = "waterway-cleanups-scheduled-newsletters-lambda-role${local.resource_suffix}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -123,7 +123,7 @@ resource "aws_iam_role" "scheduled_newsletters_lambda" {
 
 # IAM policy for Lambda
 resource "aws_iam_policy" "scheduled_newsletters_lambda" {
-  name        = "waterway-cleanups-scheduled-newsletters-lambda-policy"
+  name        = "waterway-cleanups-scheduled-newsletters-lambda-policy${local.resource_suffix}"
   description = "Policy for scheduled newsletters Lambda function"
 
   policy = jsonencode({
@@ -177,7 +177,7 @@ resource "aws_iam_role_policy_attachment" "scheduled_newsletters_lambda_policy" 
 
 # EventBridge rule to trigger Lambda hourly from 9 AM to 4 PM ET
 resource "aws_cloudwatch_event_rule" "scheduled_newsletters_trigger" {
-  name                = "waterway-cleanups-scheduled-newsletters-trigger"
+  name                = "waterway-cleanups-scheduled-newsletters-trigger${local.resource_suffix}"
   description         = "Trigger scheduled newsletter processing hourly between 9 AM and 4 PM ET"
   schedule_expression = "cron(0 13-20 * * ? *)" # 13-20 UTC = 9 AM - 4 PM ET (accounting for EST/EDT)
 }
@@ -237,7 +237,7 @@ data "archive_file" "scheduled_newsletters_api" {
 # Lambda for API endpoints
 resource "aws_lambda_function" "scheduled_newsletters_api" {
   filename      = "${path.module}/lambda_scheduled_newsletters_api.zip"
-  function_name = "waterway-cleanups-scheduled-newsletters-api"
+  function_name = "waterway-cleanups-scheduled-newsletters-api${local.resource_suffix}"
   role          = aws_iam_role.scheduled_newsletters_api.arn
   handler       = "lambda_scheduled_newsletters_api.handler"
   runtime       = "python3.9"
@@ -259,13 +259,13 @@ resource "aws_lambda_function" "scheduled_newsletters_api" {
 
 # CloudWatch Log Group for API Lambda
 resource "aws_cloudwatch_log_group" "scheduled_newsletters_api" {
-  name              = "/aws/lambda/waterway-cleanups-scheduled-newsletters-api"
+  name              = "/aws/lambda/waterway-cleanups-scheduled-newsletters-api${local.resource_suffix}"
   retention_in_days = 30
 }
 
 # IAM role for API Lambda
 resource "aws_iam_role" "scheduled_newsletters_api" {
-  name = "waterway-cleanups-scheduled-newsletters-api-role"
+  name = "waterway-cleanups-scheduled-newsletters-api-role${local.resource_suffix}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -283,7 +283,7 @@ resource "aws_iam_role" "scheduled_newsletters_api" {
 
 # IAM policy for API Lambda
 resource "aws_iam_policy" "scheduled_newsletters_api" {
-  name        = "waterway-cleanups-scheduled-newsletters-api-policy"
+  name        = "waterway-cleanups-scheduled-newsletters-api-policy${local.resource_suffix}"
   description = "Policy for scheduled newsletters API Lambda function"
 
   policy = jsonencode({
@@ -408,7 +408,7 @@ resource "aws_lambda_permission" "api_gateway_scheduled_newsletters" {
 
 # CloudWatch Alarms for monitoring
 resource "aws_cloudwatch_metric_alarm" "scheduled_newsletters_errors" {
-  alarm_name          = "waterway-cleanups-scheduled-newsletters-errors"
+  alarm_name          = "waterway-cleanups-scheduled-newsletters-errors${local.resource_suffix}"
   comparison_operator = "GreaterThanThreshold"
   evaluation_periods  = "1"
   metric_name         = "Errors"
@@ -434,7 +434,7 @@ output "scheduled_newsletters_api_url" {
 
 # Create SSM Parameter for frontend to use
 resource "aws_ssm_parameter" "scheduled_newsletters_api_url" {
-  name        = "/waterwaycleanups/scheduled_newsletters_api_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/scheduled_newsletters_api_url"
   description = "URL for scheduled newsletters API"
   type        = "String"
   value       = "${aws_api_gateway_stage.prod.invoke_url}/scheduled-newsletters"
@@ -453,7 +453,7 @@ output "api_gateway_base_url" {
 
 # Create SSM Parameter for the base API Gateway URL
 resource "aws_ssm_parameter" "api_gateway_base_url" {
-  name        = "/waterwaycleanups/api_gateway_base_url"
+  name        = "/waterwaycleanups${local.resource_suffix}/api_gateway_base_url"
   description = "Base URL for API Gateway"
   type        = "String"
   value       = aws_api_gateway_stage.prod.invoke_url
@@ -466,7 +466,7 @@ resource "aws_ssm_parameter" "api_gateway_base_url" {
 
 # Create SSM Parameter specifically for the SESv2 Admin app
 resource "aws_ssm_parameter" "sesv2_admin_api_gateway_url" {
-  name        = "/waterwaycleanups/sesv2-admin/${var.environment}/REACT_APP_API_GATEWAY_URL"
+  name        = "/waterwaycleanups${local.resource_suffix}/sesv2-admin/${var.environment}/REACT_APP_API_GATEWAY_URL"
   description = "API Gateway URL for SESv2 Admin app"
   type        = "String"
   value       = aws_api_gateway_stage.prod.invoke_url

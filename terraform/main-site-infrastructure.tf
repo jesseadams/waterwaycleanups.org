@@ -134,7 +134,7 @@ resource "aws_cloudfront_distribution" "website_distribution" {
   }
 
   # Associate WAF Web ACL with CloudFront (production only)
-  web_acl_id = local.apply_waf ? aws_wafv2_web_acl.geo_block.arn : null
+  web_acl_id = local.apply_waf ? aws_wafv2_web_acl.geo_block[0].arn : null
 
   tags = {
     Name        = "${local.environment_name} Website Distribution"

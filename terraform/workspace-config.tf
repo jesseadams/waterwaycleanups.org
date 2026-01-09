@@ -10,6 +10,9 @@ locals {
   is_production = local.workspace == "production"
   is_staging    = local.workspace == "staging" || local.workspace == "default"
 
+  # Resource name suffix - append to AWS resource names to avoid conflicts
+  resource_suffix = local.is_production ? "" : "-staging"
+
   # Bucket names
   bucket_name = local.is_production ? "waterwaycleanups.org" : "staging.waterwaycleanups.org"
 
@@ -36,8 +39,8 @@ locals {
   # OAC naming
   oac_name = "${local.bucket_name}.s3.${var.aws_region}.amazonaws.com"
 
-  # CloudFront function name - shared across workspaces (created once)
-  cloudfront_function_name = "directory-index-handler"
+  # CloudFront function name - needs suffix to avoid conflicts
+  cloudfront_function_name = "directory-index-handler${local.resource_suffix}"
 
   # WAF - only apply to production
   apply_waf = local.is_production

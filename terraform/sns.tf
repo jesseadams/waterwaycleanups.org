@@ -1,6 +1,6 @@
 # Create SNS Topic for form submissions
 resource "aws_sns_topic" "volunteer_form_topic" {
-  name = "volunteer-form-submissions"
+  name = "volunteer-form-submissions${local.resource_suffix}"
 }
 
 # Subscribe email to SNS topic
@@ -12,7 +12,7 @@ resource "aws_sns_topic_subscription" "email_subscription" {
 
 # Create SNS Topic for volunteer waiver submissions
 resource "aws_sns_topic" "volunteer_waiver_topic" {
-  name = "volunteer-waiver-submissions"
+  name = "volunteer-waiver-submissions${local.resource_suffix}"
 }
 
 # Subscribe email to volunteer waiver SNS topic

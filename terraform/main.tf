@@ -4,7 +4,7 @@ provider "aws" {
 
 # Create IAM role for Lambda
 resource "aws_iam_role" "lambda_role" {
-  name = "volunteer_lambda_role"
+  name = "volunteer_lambda_role${local.resource_suffix}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -22,7 +22,7 @@ resource "aws_iam_role" "lambda_role" {
 
 # Create policy for Lambda to interact with SESv2 and SNS
 resource "aws_iam_policy" "lambda_ses_policy" {
-  name        = "lambda_sesv2_policy"
+  name        = "lambda_sesv2_policy${local.resource_suffix}"
   description = "IAM policy for Lambda to interact with SESv2 and SNS"
 
   policy = jsonencode({
@@ -59,7 +59,7 @@ resource "aws_iam_role_policy_attachment" "lambda_ses_attachment" {
 resource "aws_lambda_function" "volunteer_lambda" {
   filename         = data.archive_file.lambda_zip.output_path
   source_code_hash = filebase64sha256(data.archive_file.lambda_zip.output_path)
-  function_name    = "volunteer_form_handler"
+  function_name    = "volunteer_form_handler${local.resource_suffix}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda.handler"
   runtime          = "python3.9"
@@ -77,7 +77,7 @@ resource "aws_lambda_function" "volunteer_lambda" {
 
 # Create API Gateway REST API
 resource "aws_api_gateway_rest_api" "volunteer_api" {
-  name        = "volunteer-api"
+  name        = "volunteer-api${local.resource_suffix}"
   description = "API for volunteer form submissions"
 
   endpoint_configuration {
