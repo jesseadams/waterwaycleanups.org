@@ -39,26 +39,26 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
           aws-region: us-east-1
           role-session-name: github-actions
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.10.0"
           terraform_wrapper: false
 
       - name: Setup Python for Lambda packages
         if: env.DEPLOY_ENV != ''
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.9'
 
@@ -127,7 +127,7 @@ jobs:
           echo "api_base_url_volunteer=$(terraform output -raw api_base_url_volunteer)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
           node-version: '20'
           cache: 'npm'
@@ -139,7 +139,7 @@ jobs:
         run: npm run build:assets
 
       - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v2
+        uses: peaceiris/actions-hugo@v3
         with:
           hugo-version: "0.147.1"
           extended: true
@@ -163,7 +163,7 @@ jobs:
       
       - name: Slack Notification
         if: always() && env.DEPLOY_ENV != ''
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v2
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
