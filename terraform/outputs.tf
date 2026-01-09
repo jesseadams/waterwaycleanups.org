@@ -3,6 +3,16 @@ output "api_endpoint_url" {
   value       = "${aws_api_gateway_stage.prod.invoke_url}submit-volunteer"
 }
 
+output "api_base_url" {
+  description = "The base URL for the volunteer waiver API Gateway"
+  value       = aws_api_gateway_stage.volunteer_waiver_stage.invoke_url
+}
+
+output "api_base_url_volunteer" {
+  description = "The base URL for the volunteer form API Gateway"
+  value       = aws_api_gateway_stage.prod.invoke_url
+}
+
 output "aws_region" {
   description = "The AWS region where resources were deployed"
   value       = var.aws_region

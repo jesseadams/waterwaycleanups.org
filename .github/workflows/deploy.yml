@@ -123,6 +123,8 @@ jobs:
           echo "bucket_name=$(terraform output -raw website_bucket_name)" >> $GITHUB_OUTPUT
           echo "distribution_id=$(terraform output -raw main_cloudfront_distribution_id)" >> $GITHUB_OUTPUT
           echo "website_url=$(terraform output -raw website_url)" >> $GITHUB_OUTPUT
+          echo "api_base_url=$(terraform output -raw api_base_url)" >> $GITHUB_OUTPUT
+          echo "api_base_url_volunteer=$(terraform output -raw api_base_url_volunteer)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
@@ -146,6 +148,8 @@ jobs:
         run: hugo --minify
         env:
           HUGO_ENV: ${{ env.DEPLOY_ENV }}
+          HUGO_API_BASE_URL: ${{ steps.tf-outputs.outputs.api_base_url }}
+          HUGO_API_BASE_URL_VOLUNTEER: ${{ steps.tf-outputs.outputs.api_base_url_volunteer }}
 
       - name: Deploy to S3
         if: env.DEPLOY_ENV != ''
