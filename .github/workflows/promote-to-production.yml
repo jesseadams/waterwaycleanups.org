@@ -66,6 +66,7 @@ jobs:
 
   create-date-release:
     runs-on: ubuntu-latest
+    needs: deploy-production
 
     steps:
       - name: Checkout repository
