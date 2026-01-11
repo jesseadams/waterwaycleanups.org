@@ -5,11 +5,14 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'prod'
   pull_request:
     branches:
       - main
   schedule:
-    - cron: "15 6 * * *"
+    - cron: "30 5 * * *"  # Daily at 12:30 AM Eastern (5:30 AM UTC) for staging
+    - cron: "0 6 * * *"   # Daily at 1:00 AM Eastern (6:00 AM UTC) for prod tag deployment
   workflow_dispatch:
     inputs:
       environment:
@@ -27,8 +30,9 @@ on:
         type: string
 
 env:
-  DEPLOY_ENV: ${{ inputs.environment || 'staging' }}
+  DEPLOY_ENV: ${{ github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' && 'production' || inputs.environment || 'staging' }}
   IS_PR: ${{ github.event_name == 'pull_request' }}
+  IS_PROD_SCHEDULE: ${{ github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' }}
 
 jobs:
   build-and-deploy:
@@ -43,6 +47,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ env.IS_PROD_SCHEDULE == 'true' && 'prod' || github.ref }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
