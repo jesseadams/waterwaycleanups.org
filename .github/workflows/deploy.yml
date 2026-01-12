@@ -1,5 +1,4 @@
 name: Deploy Website
-run-name: ${{ github.event_name == 'pull_request' && 'PR Build & Plan' || format('Deploy to {0}', inputs.environment || 'staging') }}
 
 on:
   push:
