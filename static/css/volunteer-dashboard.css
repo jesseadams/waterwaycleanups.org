@@ -1,0 +1,332 @@
+/* Volunteer Dashboard CSS - Ensures Tailwind classes work properly */
+
+/* Override theme styles for volunteer dashboard */
+.innerbody #volunteer-dashboard-root {
+  /* Reset any theme overrides */
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+}
+
+.innerbody #volunteer-dashboard-root * {
+  /* Ensure box-sizing is correct */
+  box-sizing: border-box !important;
+}
+
+/* Ensure background colors work */
+.innerbody #volunteer-dashboard-root .bg-white {
+  background-color: #ffffff !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-gray-100 {
+  background-color: #f3f4f6 !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-gray-50 {
+  background-color: #f9fafb !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-blue-600 {
+  background-color: #2563eb !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-red-600 {
+  background-color: #dc2626 !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-green-100 {
+  background-color: #dcfce7 !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-red-100 {
+  background-color: #fee2e2 !important;
+}
+
+/* Ensure padding and margins work */
+.innerbody #volunteer-dashboard-root .p-6 {
+  padding: 1.5rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .p-4 {
+  padding: 1rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .p-3 {
+  padding: 0.75rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .py-8 {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .py-2 {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .px-4 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .px-3 {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .mb-4 {
+  margin-bottom: 1rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .mb-6 {
+  margin-bottom: 1.5rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .mb-3 {
+  margin-bottom: 0.75rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .mt-2 {
+  margin-top: 0.5rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .mt-6 {
+  margin-top: 1.5rem !important;
+}
+
+/* Ensure layout classes work */
+.innerbody #volunteer-dashboard-root .max-w-md {
+  max-width: 28rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .max-w-4xl {
+  max-width: 56rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .mx-auto {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.innerbody #volunteer-dashboard-root .w-full {
+  width: 100% !important;
+}
+
+.innerbody #volunteer-dashboard-root .min-h-screen {
+  min-height: 100vh !important;
+}
+
+/* Ensure flexbox and grid work */
+.innerbody #volunteer-dashboard-root .flex {
+  display: flex !important;
+}
+
+.innerbody #volunteer-dashboard-root .grid {
+  display: grid !important;
+}
+
+.innerbody #volunteer-dashboard-root .justify-between {
+  justify-content: space-between !important;
+}
+
+.innerbody #volunteer-dashboard-root .items-center {
+  align-items: center !important;
+}
+
+.innerbody #volunteer-dashboard-root .gap-6 {
+  gap: 1.5rem !important;
+}
+
+/* Ensure border radius works */
+.innerbody #volunteer-dashboard-root .rounded-lg {
+  border-radius: 0.5rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .rounded-md {
+  border-radius: 0.375rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .rounded {
+  border-radius: 0.25rem !important;
+}
+
+/* Ensure shadows work */
+.innerbody #volunteer-dashboard-root .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Ensure text colors work */
+.innerbody #volunteer-dashboard-root .text-white {
+  color: #ffffff !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-gray-700 {
+  color: #374151 !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-blue-600 {
+  color: #2563eb !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-blue-800 {
+  color: #1e40af !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-green-600 {
+  color: #059669 !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-red-700 {
+  color: #b91c1c !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-orange-600 {
+  color: #ea580c !important;
+}
+
+/* Ensure text sizes work */
+.innerbody #volunteer-dashboard-root .text-2xl {
+  font-size: 1.5rem !important;
+  line-height: 2rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-lg {
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+/* Ensure font weights work */
+.innerbody #volunteer-dashboard-root .font-bold {
+  font-weight: 700 !important;
+}
+
+.innerbody #volunteer-dashboard-root .font-semibold {
+  font-weight: 600 !important;
+}
+
+.innerbody #volunteer-dashboard-root .font-medium {
+  font-weight: 500 !important;
+}
+
+/* Ensure text alignment works */
+.innerbody #volunteer-dashboard-root .text-center {
+  text-align: center !important;
+}
+
+/* Ensure form styles work */
+.innerbody #volunteer-dashboard-root input,
+.innerbody #volunteer-dashboard-root button {
+  font-family: inherit !important;
+  font-size: inherit !important;
+}
+
+.innerbody #volunteer-dashboard-root input {
+  border: 1px solid #d1d5db !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.innerbody #volunteer-dashboard-root input:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  border-color: #3b82f6 !important;
+}
+
+.innerbody #volunteer-dashboard-root button {
+  border: none !important;
+  border-radius: 0.375rem !important;
+  padding: 0.5rem 1rem !important;
+  cursor: pointer !important;
+  font-weight: 500 !important;
+  transition: background-color 0.15s ease-in-out !important;
+}
+
+.innerbody #volunteer-dashboard-root button:hover:not(:disabled) {
+  opacity: 0.9 !important;
+}
+
+.innerbody #volunteer-dashboard-root button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Ensure container works */
+.innerbody #volunteer-dashboard-root .container {
+  width: 100% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+/* Responsive grid */
+@media (min-width: 768px) {
+  .innerbody #volunteer-dashboard-root .md\\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* Ensure borders work */
+.innerbody #volunteer-dashboard-root .border {
+  border-width: 1px !important;
+}
+
+.innerbody #volunteer-dashboard-root .border-gray-300 {
+  border-color: #d1d5db !important;
+}
+
+.innerbody #volunteer-dashboard-root .border-gray-200 {
+  border-color: #e5e7eb !important;
+}
+
+.innerbody #volunteer-dashboard-root .border-green-400 {
+  border-color: #4ade80 !important;
+}
+
+.innerbody #volunteer-dashboard-root .border-red-400 {
+  border-color: #f87171 !important;
+}
+
+/* Ensure space utilities work */
+.innerbody #volunteer-dashboard-root .space-y-2 > * + * {
+  margin-top: 0.5rem !important;
+}
+
+/* Ensure links work properly */
+.innerbody #volunteer-dashboard-root a {
+  text-decoration: none !important;
+  transition: color 0.15s ease-in-out !important;
+}
+
+.innerbody #volunteer-dashboard-root a:hover {
+  text-decoration: underline !important;
+}
+
+.innerbody #volunteer-dashboard-root .hover\\:text-blue-800:hover {
+  color: #1e40af !important;
+}
+
+.innerbody #volunteer-dashboard-root .hover\\:underline:hover {
+  text-decoration: underline !important;
+}
+
+/* Ensure display utilities work */
+.innerbody #volunteer-dashboard-root .block {
+  display: block !important;
+}
+
+.innerbody #volunteer-dashboard-root .inline-block {
+  display: inline-block !important;
+}
+
+.innerbody #volunteer-dashboard-root .hidden {
+  display: none !important;
+}

@@ -150,6 +150,31 @@ jobs:
           cd terraform
           terraform apply -auto-approve
 
+      - name: Verify database tables exist
+        if: env.IS_PR != 'true'
+        run: |
+          echo "Verifying database tables are created..."
+          cd terraform
+          
+          # Get table names from terraform outputs
+          EVENTS_TABLE=$(terraform output -raw events_table_name 2>/dev/null || echo "")
+          VOLUNTEERS_TABLE=$(terraform output -raw volunteers_table_name 2>/dev/null || echo "")
+          RSVPS_TABLE=$(terraform output -raw rsvps_table_name 2>/dev/null || echo "")
+          
+          if [ -n "$EVENTS_TABLE" ] && [ -n "$VOLUNTEERS_TABLE" ] && [ -n "$RSVPS_TABLE" ]; then
+            echo "✅ Database tables verified:"
+            echo "  Events: $EVENTS_TABLE"
+            echo "  Volunteers: $VOLUNTEERS_TABLE" 
+            echo "  RSVPs: $RSVPS_TABLE"
+          else
+            echo "❌ Database tables not found in terraform outputs"
+            echo "Available outputs:"
+            terraform output
+            exit 1
+          fi
+        env:
+          AWS_REGION: us-east-1
+
       - name: Get Terraform Outputs
         if: env.IS_PR != 'true'
         id: tf-outputs
@@ -173,6 +198,37 @@ jobs:
       - name: Build assets (Webpack)
         run: npm run build:assets
 
+      - name: Check database migration status
+        if: env.IS_PR != 'true'
+        id: migration-status
+        run: |
+          echo "Checking if database migration is needed..."
+          if npm run migrate:check${{ env.DEPLOY_ENV == 'production' && ':prod' || '' }} -- --verbose; then
+            echo "migration_needed=false" >> $GITHUB_OUTPUT
+            echo "✅ Migration not needed"
+          else
+            echo "migration_needed=true" >> $GITHUB_OUTPUT
+            echo "🔄 Migration needed"
+          fi
+        env:
+          AWS_REGION: us-east-1
+
+      - name: Run database-aware deployment
+        if: env.IS_PR != 'true'
+        run: |
+          echo "Running database-aware deployment process..."
+          npm run deploy:database${{ env.DEPLOY_ENV == 'production' && ':prod' || '' }} -- --verbose
+        env:
+          AWS_REGION: us-east-1
+
+      - name: Generate Hugo files from database
+        if: env.IS_PR != 'true'
+        run: |
+          echo "Generating Hugo files from database events..."
+          npm run generate-hugo${{ env.DEPLOY_ENV == 'production' && ':prod' || '' }} -- --environment=${{ env.DEPLOY_ENV }}
+        env:
+          AWS_REGION: us-east-1
+
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
@@ -195,6 +251,14 @@ jobs:
         if: env.IS_PR != 'true'
         run: |
           aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.distribution_id }} --paths "/*"
+
+      - name: Validate deployment
+        if: env.IS_PR != 'true'
+        run: |
+          echo "Validating deployment was successful..."
+          npm run validate:deployment${{ env.DEPLOY_ENV == 'production' && ':prod' || '' }} -- --verbose
+        env:
+          AWS_REGION: us-east-1
       
       - name: Slack Notification
         if: always() && env.IS_PR != 'true'

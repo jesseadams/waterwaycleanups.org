@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real Analytics API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; max-height: 400px; }
+    </style>
+</head>
+<body>
+    <h1>Real Analytics API Test</h1>
+    <p>Testing the actual deployed analytics endpoints with real data.</p>
+    
+    <div id="results"></div>
+    
+    <button onclick="testAnalyticsAPI()">Test Analytics API</button>
+    <button onclick="testExportAPIs()">Test Export APIs</button>
+    <button onclick="testAllAPIs()">Test All APIs</button>
+    
+    <script src="/static/js/events-api-client.js"></script>
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = message;
+            resultsDiv.appendChild(div);
+        }
+        
+        // Initialize the Events API client
+        const eventsAPI = new EventsAPIClient();
+        
+        async function testAnalyticsAPI() {
+            addResult('🔍 Testing Analytics API...', 'info');
+            
+            try {
+                const data = await eventsAPI.getAnalytics();
+                addResult('✅ Analytics API working!', 'success');
+                addResult(`<pre>${JSON.stringify(data, null, 2)}</pre>`, 'info');
+            } catch (error) {
+                addResult(`❌ Analytics API failed: ${error.message}`, 'error');
+                console.error('Analytics API error:', error);
+            }
+        }
+        
+        async function testExportAPIs() {
+            addResult('📊 Testing Export APIs...', 'info');
+            
+            // Test Events Export
+            try {
+                const eventsData = await eventsAPI.exportEvents('json', { include_rsvp_stats: true });
+                addResult('✅ Events Export API working!', 'success');
+                addResult(`Events exported: ${eventsData.events ? eventsData.events.length : 'N/A'} events`, 'info');
+            } catch (error) {
+                addResult(`❌ Events Export API failed: ${error.message}`, 'error');
+                console.error('Events Export API error:', error);
+            }
+            
+            // Test Volunteers Export
+            try {
+                const volunteersData = await eventsAPI.exportVolunteers('json', { include_metrics: true });
+                addResult('✅ Volunteers Export API working!', 'success');
+                addResult(`Volunteers exported: ${volunteersData.volunteers ? volunteersData.volunteers.length : 'N/A'} volunteers`, 'info');
+            } catch (error) {
+                addResult(`❌ Volunteers Export API failed: ${error.message}`, 'error');
+                console.error('Volunteers Export API error:', error);
+            }
+            
+            // Test Volunteer Metrics
+            try {
+                const metricsData = await eventsAPI.getVolunteerMetrics();
+                addResult('✅ Volunteer Metrics API working!', 'success');
+                addResult(`Metrics loaded: ${metricsData.success ? 'Success' : 'Failed'}`, 'info');
+            } catch (error) {
+                addResult(`❌ Volunteer Metrics API failed: ${error.message}`, 'error');
+                console.error('Volunteer Metrics API error:', error);
+            }
+        }
+        
+        async function testAllAPIs() {
+            resultsDiv.innerHTML = '';
+            addResult('🚀 Starting comprehensive API tests...', 'info');
+            
+            await testAnalyticsAPI();
+            await testExportAPIs();
+            
+            addResult('✅ All tests completed!', 'success');
+        }
+        
+        // Auto-run basic test on page load
+        window.addEventListener('load', () => {
+            addResult('🔧 Real Analytics API Test Tool Ready', 'info');
+            addResult('Click buttons above to test the real analytics endpoints.', 'info');
+            
+            // Show current environment
+            const hostname = window.location.hostname;
+            const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+            addResult(`Environment: ${isLocalhost ? 'Localhost (using staging API)' : 'Production'}`, 'info');
+        });
+    </script>
+</body>
+</html>

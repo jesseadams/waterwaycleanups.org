@@ -1,0 +1,876 @@
+{{ define "content" }}
+<!-- Load volunteer dashboard CSS -->
+<link rel="stylesheet" href="{{ "css/volunteer-dashboard.css" | relURL }}" />
+
+<div id="volunteer-dashboard-root">
+  <!-- Fallback content while React loads -->
+  <div class="min-h-screen bg-gray-100 py-8">
+    <div class="container mx-auto px-4">
+      <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Loading Volunteer Dashboard...</h2>
+        <p class="text-gray-600 text-center">Please wait while we load your dashboard.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load React and dependencies -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- Load Babel for JSX transformation -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- Load authentication client -->
+<script src="{{ "js/auth-client.js" | relURL }}"></script>
+
+<!-- Initialize auth client -->
+<script>
+  // Initialize the auth client
+  window.authClient = new AuthClient();
+</script>
+
+<!-- Load and render the volunteer dashboard component -->
+<script type="text/babel">
+  // Add error handling for React loading
+  if (typeof React === 'undefined') {
+    console.error('React is not loaded');
+    document.getElementById('volunteer-dashboard-root').innerHTML = 
+      '<div class="min-h-screen bg-gray-100 py-8"><div class="container mx-auto px-4"><div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-center text-red-600">Error Loading Dashboard</h2><p class="text-gray-600 text-center">React library failed to load. Please refresh the page.</p></div></div></div>';
+  } else if (typeof ReactDOM === 'undefined') {
+    console.error('ReactDOM is not loaded');
+    document.getElementById('volunteer-dashboard-root').innerHTML = 
+      '<div class="min-h-screen bg-gray-100 py-8"><div class="container mx-auto px-4"><div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-center text-red-600">Error Loading Dashboard</h2><p class="text-gray-600 text-center">ReactDOM library failed to load. Please refresh the page.</p></div></div></div>';
+  } else if (!window.authClient) {
+    console.error('AuthClient is not loaded');
+    document.getElementById('volunteer-dashboard-root').innerHTML = 
+      '<div class="min-h-screen bg-gray-100 py-8"><div class="container mx-auto px-4"><div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-center text-red-600">Error Loading Dashboard</h2><p class="text-gray-600 text-center">Authentication client failed to load. Please refresh the page.</p></div></div></div>';
+  } else {
+    // All dependencies loaded successfully, render the component
+    const { useState, useEffect } = React;
+
+  // MinorsManagement Component
+  const MinorsManagement = ({ sessionToken, onUpdate }) => {
+    const [minors, setMinors] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
+    const [formData, setFormData] = useState({
+      first_name: '',
+      last_name: '',
+      date_of_birth: '',
+      email: ''
+    });
+
+    const API_BASE = window.authClient.getBaseApiUrl();
+
+    useEffect(() => {
+      if (sessionToken) {
+        loadMinors();
+      }
+    }, [sessionToken]);
+
+    const loadMinors = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`${API_BASE}/minors-list`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_token: sessionToken })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setMinors(result.minors);
+        } else {
+          setError(result.message);
+        }
+      } catch (err) {
+        setError('Failed to load minors: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      try {
+        const response = await fetch(`${API_BASE}/minors-add`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_token: sessionToken,
+            ...formData
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setSuccess('Minor added successfully!');
+          setFormData({ first_name: '', last_name: '', date_of_birth: '', email: '' });
+          setShowAddForm(false);
+          loadMinors();
+          if (onUpdate) onUpdate();
+        } else {
+          setError(result.message);
+        }
+      } catch (err) {
+        setError('Failed to add minor: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const handleDelete = async (minorId) => {
+      if (!confirm('Are you sure you want to remove this minor from your account?')) {
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(`${API_BASE}/minors-delete`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_token: sessionToken,
+            minor_id: minorId
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setSuccess('Minor removed successfully');
+          loadMinors();
+          if (onUpdate) onUpdate();
+        } else {
+          setError(result.message);
+        }
+      } catch (err) {
+        setError('Failed to delete minor: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    return React.createElement('div', {
+      className: "mt-6 bg-white p-6 rounded-lg shadow-md"
+    }, [
+      React.createElement('div', {
+        key: 'header',
+        className: "mb-4"
+      }, [
+        React.createElement('h3', {
+          key: 'title',
+          className: "text-xl font-semibold"
+        }, 'Minors on Your Account'),
+        React.createElement('p', {
+          key: 'description',
+          className: "text-sm text-gray-600 mt-1"
+        }, 'Your waiver covers all minors attached to your account.')
+      ]),
+
+      error ? React.createElement('div', {
+        key: 'error',
+        className: "alert alert-error mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+      }, error) : null,
+
+      success ? React.createElement('div', {
+        key: 'success',
+        className: "alert alert-success mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+      }, success) : null,
+
+      !showAddForm ? React.createElement('button', {
+        key: 'add-button',
+        onClick: () => setShowAddForm(true),
+        className: "bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 mb-4",
+        disabled: loading
+      }, 'Add Minor') : null,
+
+      showAddForm ? React.createElement('div', {
+        key: 'add-form',
+        className: "bg-gray-50 p-4 rounded-lg mb-6"
+      }, [
+        React.createElement('h4', {
+          key: 'form-title',
+          className: "font-semibold mb-3"
+        }, 'Add Minor'),
+        React.createElement('form', {
+          key: 'form',
+          onSubmit: handleSubmit,
+          className: "space-y-3"
+        }, [
+          React.createElement('div', {
+            key: 'first-name'
+          }, [
+            React.createElement('label', {
+              key: 'label',
+              className: "block text-sm font-medium text-gray-700 mb-1"
+            }, 'First Name *'),
+            React.createElement('input', {
+              key: 'input',
+              type: 'text',
+              value: formData.first_name,
+              onChange: (e) => setFormData({...formData, first_name: e.target.value}),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+              required: true
+            })
+          ]),
+          React.createElement('div', {
+            key: 'last-name'
+          }, [
+            React.createElement('label', {
+              key: 'label',
+              className: "block text-sm font-medium text-gray-700 mb-1"
+            }, 'Last Name *'),
+            React.createElement('input', {
+              key: 'input',
+              type: 'text',
+              value: formData.last_name,
+              onChange: (e) => setFormData({...formData, last_name: e.target.value}),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+              required: true
+            })
+          ]),
+          React.createElement('div', {
+            key: 'dob'
+          }, [
+            React.createElement('label', {
+              key: 'label',
+              className: "block text-sm font-medium text-gray-700 mb-1"
+            }, 'Date of Birth *'),
+            React.createElement('input', {
+              key: 'input',
+              type: 'date',
+              value: formData.date_of_birth,
+              onChange: (e) => setFormData({...formData, date_of_birth: e.target.value}),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+              required: true
+            })
+          ]),
+          React.createElement('div', {
+            key: 'email'
+          }, [
+            React.createElement('label', {
+              key: 'label',
+              className: "block text-sm font-medium text-gray-700 mb-1"
+            }, 'Email (Optional)'),
+            React.createElement('input', {
+              key: 'input',
+              type: 'email',
+              value: formData.email,
+              onChange: (e) => setFormData({...formData, email: e.target.value}),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md"
+            })
+          ]),
+          React.createElement('div', {
+            key: 'buttons',
+            className: "flex space-x-2"
+          }, [
+            React.createElement('button', {
+              key: 'cancel',
+              type: 'button',
+              onClick: () => setShowAddForm(false),
+              className: "bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400",
+              disabled: loading
+            }, 'Cancel'),
+            React.createElement('button', {
+              key: 'submit',
+              type: 'submit',
+              className: "bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700",
+              disabled: loading
+            }, loading ? 'Saving...' : 'Add Minor')
+          ])
+        ])
+      ]) : null,
+
+      loading && minors.length === 0 ? React.createElement('div', {
+        key: 'loading',
+        className: "text-center py-4"
+      }, 'Loading...') : minors.length === 0 ? React.createElement('div', {
+        key: 'empty',
+        className: "text-gray-600 text-sm"
+      }, 'No minors on your account yet. Add one above!') : React.createElement('div', {
+        key: 'list',
+        className: "space-y-3"
+      }, minors.map(minor => 
+        React.createElement('div', {
+          key: minor.minor_id,
+          className: "bg-gray-50 p-4 rounded-lg"
+        }, [
+          React.createElement('div', {
+            key: 'content',
+            className: "flex justify-between items-start"
+          }, [
+            React.createElement('div', {
+              key: 'info'
+            }, [
+              React.createElement('h4', {
+                key: 'name',
+                className: "font-semibold"
+              }, `${minor.first_name} ${minor.last_name}`),
+              React.createElement('p', {
+                key: 'age',
+                className: "text-sm text-gray-600"
+              }, `Age: ${minor.age} years old`),
+              React.createElement('p', {
+                key: 'dob',
+                className: "text-sm text-gray-600"
+              }, `Date of Birth: ${minor.date_of_birth}`),
+              minor.email ? React.createElement('p', {
+                key: 'email',
+                className: "text-sm text-gray-600"
+              }, `Email: ${minor.email}`) : null
+            ]),
+            React.createElement('button', {
+              key: 'delete',
+              onClick: () => handleDelete(minor.minor_id),
+              className: "bg-red-600 text-white py-1 px-3 rounded-md hover:bg-red-700 text-sm",
+              disabled: loading
+            }, 'Remove')
+          ])
+        ])
+      ))
+    ]);
+  };
+
+  const VolunteerDashboard = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [email, setEmail] = useState('');
+    const [validationCode, setValidationCode] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+    const [step, setStep] = useState('loading'); // 'loading', 'email', 'code', 'dashboard'
+    const [dashboardData, setDashboardData] = useState(null);
+
+    // Parse URL parameters for return URL and action
+    const urlParams = new URLSearchParams(window.location.search);
+    const returnUrl = urlParams.get('return');
+    const action = urlParams.get('action');
+
+    useEffect(() => {
+      // Check if user is already authenticated
+      if (window.authClient && window.authClient.isAuthenticated()) {
+        setIsAuthenticated(true);
+        setEmail(window.authClient.getUserEmail());
+        setStep('dashboard');
+        loadDashboard();
+        
+        // Handle post-login actions
+        handlePostLoginAction();
+      } else {
+        // Not authenticated, show login form
+        setStep('email');
+      }
+    }, []);
+
+    const handlePostLoginAction = async () => {
+      if (!action) return;
+      
+      try {
+        if (action.startsWith('rsvp:')) {
+          const eventId = action.substring(5); // Remove 'rsvp:' prefix
+          console.log('Auto-RSVPing for event:', eventId);
+          
+          // Perform the RSVP
+          await performAutoRsvp(eventId);
+          
+          // Redirect back to the event page after a short delay
+          setTimeout(() => {
+            if (returnUrl) {
+              window.location.href = decodeURIComponent(returnUrl);
+            }
+          }, 2000);
+        }
+      } catch (error) {
+        console.error('Error handling post-login action:', error);
+        setError(`Failed to complete action: ${error.message}`);
+      }
+    };
+
+    const performAutoRsvp = async (eventId) => {
+      try {
+        const userEmail = window.authClient.getUserEmail();
+        const firstName = 'Volunteer'; // Default name - user can update later
+        const lastName = 'User';
+        
+        // Submit RSVP using auth client
+        const result = await window.authClient.submitEventRsvp(eventId, firstName, lastName);
+        
+        if (result.success) {
+          setSuccess(`✅ Successfully registered for the event! Redirecting you back...`);
+        }
+      } catch (error) {
+        console.error('Auto-RSVP failed:', error);
+        throw error;
+      }
+    };
+
+    const loadDashboard = async () => {
+      try {
+        setIsLoading(true);
+        const data = await window.authClient.getDashboard();
+        setDashboardData(data);
+      } catch (error) {
+        setError(error.message);
+        if (error.message.includes('authenticated') || error.message.includes('expired')) {
+          setIsAuthenticated(false);
+          setStep('email');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleSendCode = async (e) => {
+      e.preventDefault();
+      if (!email.trim()) {
+        setError('Please enter your email address');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError('');
+        await window.authClient.sendValidationCode(email);
+        setSuccess('Validation code sent to your email!');
+        setStep('code');
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleVerifyCode = async (e) => {
+      e.preventDefault();
+      if (!validationCode.trim()) {
+        setError('Please enter the validation code');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError('');
+        await window.authClient.verifyCode(email, validationCode);
+        setSuccess('Successfully authenticated!');
+        setIsAuthenticated(true);
+        setStep('dashboard');
+        loadDashboard();
+        
+        // Handle post-login actions (like auto-RSVP)
+        handlePostLoginAction();
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleLogout = () => {
+      window.authClient.logout();
+      setIsAuthenticated(false);
+      setStep('email');
+      setDashboardData(null);
+      setEmail('');
+      setValidationCode('');
+      setError('');
+      setSuccess('');
+    };
+
+    const formatDate = (dateString) => {
+      if (!dateString) return 'Unknown date';
+      
+      try {
+        // Handle different date formats
+        let date;
+        
+        if (typeof dateString === 'string') {
+          // Handle ISO format with Z suffix
+          if (dateString.includes('Z')) {
+            date = new Date(dateString);
+          } else if (dateString.includes('T')) {
+            // Handle ISO format without Z
+            date = new Date(dateString);
+          } else {
+            // Handle simple date format
+            date = new Date(dateString);
+          }
+        } else {
+          // Handle timestamp or other formats
+          date = new Date(dateString);
+        }
+        
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          console.warn('Invalid date:', dateString);
+          return 'Invalid date';
+        }
+        
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        });
+      } catch (error) {
+        console.error('Error formatting date:', dateString, error);
+        return 'Invalid date';
+      }
+    };
+
+    const getEventUrl = (eventId) => {
+      // Try to construct the correct event URL
+      // The event_id might not exactly match the Hugo page slug
+      return `/events/${eventId}/`;
+    };
+
+    const renderLoadingState = () => React.createElement('div', {
+      className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+    }, [
+      React.createElement('div', {
+        key: 'spinner-container',
+        className: "text-center"
+      }, [
+        React.createElement('div', {
+          key: 'spinner',
+          className: "inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"
+        }),
+        React.createElement('h2', {
+          key: 'title',
+          className: "text-2xl font-bold mb-2"
+        }, 'Loading...'),
+        React.createElement('p', {
+          key: 'subtitle',
+          className: "text-gray-600"
+        }, 'Checking your authentication status')
+      ])
+    ]);
+
+    const renderEmailStep = () => React.createElement('div', {
+      className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+    }, [
+      React.createElement('h2', {
+        key: 'title',
+        className: "text-2xl font-bold mb-4 text-center"
+      }, 'Volunteer Login'),
+      React.createElement('p', {
+        key: 'subtitle',
+        className: "text-gray-600 mb-6 text-center"
+      }, 'Enter your email to receive a validation code'),
+      React.createElement('form', {
+        key: 'form',
+        onSubmit: handleSendCode
+      }, [
+        React.createElement('div', {
+          key: 'email-group',
+          className: "mb-4"
+        }, [
+          React.createElement('label', {
+            key: 'label',
+            htmlFor: "email",
+            className: "block text-sm font-medium text-gray-700 mb-2"
+          }, 'Email Address'),
+          React.createElement('input', {
+            key: 'input',
+            type: "email",
+            id: "email",
+            value: email,
+            onChange: (e) => setEmail(e.target.value),
+            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+            placeholder: "your.email@example.com",
+            required: true
+          })
+        ]),
+        React.createElement('button', {
+          key: 'submit',
+          type: "submit",
+          disabled: isLoading,
+          className: "w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        }, isLoading ? 'Sending...' : 'Send Validation Code')
+      ])
+    ]);
+
+    const renderCodeStep = () => React.createElement('div', {
+      className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+    }, [
+      React.createElement('h2', {
+        key: 'title',
+        className: "text-2xl font-bold mb-4 text-center"
+      }, 'Enter Validation Code'),
+      React.createElement('p', {
+        key: 'subtitle',
+        className: "text-gray-600 mb-6 text-center"
+      }, [
+        'We sent a 6-digit code to ',
+        React.createElement('strong', { key: 'email' }, email)
+      ]),
+      React.createElement('form', {
+        key: 'form',
+        onSubmit: handleVerifyCode
+      }, [
+        React.createElement('div', {
+          key: 'code-group',
+          className: "mb-4"
+        }, [
+          React.createElement('label', {
+            key: 'label',
+            htmlFor: "code",
+            className: "block text-sm font-medium text-gray-700 mb-2"
+          }, 'Validation Code'),
+          React.createElement('input', {
+            key: 'input',
+            type: "text",
+            id: "code",
+            value: validationCode,
+            onChange: (e) => setValidationCode(e.target.value.replace(/\D/g, '').slice(0, 6)),
+            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg tracking-widest",
+            placeholder: "123456",
+            maxLength: "6",
+            required: true
+          })
+        ]),
+        React.createElement('button', {
+          key: 'submit',
+          type: "submit",
+          disabled: isLoading || validationCode.length !== 6,
+          className: "w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+        }, isLoading ? 'Verifying...' : 'Verify Code'),
+        React.createElement('button', {
+          key: 'back',
+          type: "button",
+          onClick: () => setStep('email'),
+          className: "w-full bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+        }, 'Back to Email')
+      ])
+    ]);
+
+    const renderDashboard = () => React.createElement('div', {
+      className: "max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md"
+    }, [
+      React.createElement('div', {
+        key: 'header',
+        className: "flex justify-between items-center mb-6"
+      }, [
+        React.createElement('div', { key: 'title-section' }, [
+          React.createElement('h2', {
+            key: 'title',
+            className: "text-2xl font-bold"
+          }, 'Volunteer Dashboard'),
+          React.createElement('p', {
+            key: 'welcome',
+            className: "text-gray-600"
+          }, `Welcome, ${email}`)
+        ]),
+        React.createElement('div', {
+          key: 'header-actions',
+          className: "flex space-x-3"
+        }, [
+          // Check if user has admin access (you can customize this logic)
+          email && (email.includes('admin') || email.includes('manager')) ? 
+            React.createElement('a', {
+              key: 'admin-link',
+              href: '/admin',
+              className: "bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700"
+            }, 'Admin Panel') : null,
+          React.createElement('button', {
+            key: 'logout',
+            onClick: handleLogout,
+            className: "bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+          }, 'Logout')
+        ])
+      ]),
+      isLoading ? React.createElement('div', {
+        key: 'loading',
+        className: "text-center py-8"
+      }, [
+        React.createElement('div', {
+          key: 'spinner',
+          className: "inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+        }),
+        React.createElement('p', {
+          key: 'text',
+          className: "mt-2 text-gray-600"
+        }, 'Loading your information...')
+      ]) : dashboardData ? React.createElement('div', {
+        key: 'content',
+        className: "grid md:grid-cols-2 gap-6"
+      }, [
+        // Waiver Status
+        React.createElement('div', {
+          key: 'waiver',
+          className: "bg-gray-50 p-4 rounded-lg"
+        }, [
+          React.createElement('h3', {
+            key: 'title',
+            className: "text-lg font-semibold mb-3"
+          }, 'Waiver Status'),
+          dashboardData.waiver.hasWaiver ? React.createElement('div', {
+            key: 'valid',
+            className: "text-green-600"
+          }, [
+            React.createElement('p', {
+              key: 'status',
+              className: "font-medium"
+            }, '✓ Valid waiver on file'),
+            React.createElement('p', {
+              key: 'expires',
+              className: "text-sm text-gray-600"
+            }, `Expires: ${formatDate(dashboardData.waiver.expirationDate)}`),
+            React.createElement('p', {
+              key: 'submitted',
+              className: "text-sm text-gray-600"
+            }, `Submitted: ${formatDate(dashboardData.waiver.submissionDate)}`)
+          ]) : React.createElement('div', {
+            key: 'invalid',
+            className: "text-orange-600"
+          }, [
+            React.createElement('p', {
+              key: 'status',
+              className: "font-medium"
+            }, '⚠ No valid waiver on file'),
+            React.createElement('p', {
+              key: 'message',
+              className: "text-sm text-gray-600 mb-3"
+            }, 'You need to complete a waiver to volunteer at events'),
+            React.createElement('a', {
+              key: 'link',
+              href: '/volunteer-waiver',
+              className: "bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 inline-block"
+            }, 'Complete Waiver')
+          ])
+        ]),
+        // RSVP History
+        React.createElement('div', {
+          key: 'rsvps',
+          className: "bg-gray-50 p-4 rounded-lg"
+        }, [
+          React.createElement('h3', {
+            key: 'title',
+            className: "text-lg font-semibold mb-3"
+          }, 'Event RSVPs'),
+          dashboardData.rsvps && dashboardData.rsvps.length > 0 ? React.createElement('div', {
+            key: 'list',
+            className: "space-y-2"
+          }, [
+            ...dashboardData.rsvps.slice(0, 5).map((rsvp, index) => 
+              React.createElement('div', {
+                key: index,
+                className: "bg-white p-3 rounded border"
+              }, [
+                React.createElement('div', {
+                  key: 'event-header',
+                  className: "flex justify-between items-start mb-2"
+                }, [
+                  React.createElement('a', {
+                    key: 'event-link',
+                    href: getEventUrl(rsvp.event_id),
+                    className: "font-medium text-blue-600 hover:text-blue-800 hover:underline flex-1"
+                  }, rsvp.event_id),
+                  React.createElement('div', {
+                    key: 'event-date',
+                    className: "text-sm font-medium text-gray-700 ml-2 text-right"
+                  }, rsvp.event_display_date || 'Date TBD')
+                ]),
+                React.createElement('div', {
+                  key: 'details',
+                  className: "text-sm text-gray-600"
+                }, [
+                  React.createElement('div', {
+                    key: 'rsvp-date',
+                    className: "mb-1"
+                  }, `RSVP'ed on ${formatDate(rsvp.created_at)}`),
+                  // Show attendees list if available
+                  rsvp.attendees && rsvp.attendees.length > 0 ? React.createElement('div', {
+                    key: 'attendees',
+                    className: "mt-2 pt-2 border-t border-gray-200"
+                  }, [
+                    React.createElement('div', {
+                      key: 'attendees-label',
+                      className: "text-xs font-semibold text-gray-500 uppercase mb-1"
+                    }, `Registered (${rsvp.attendees.length})`),
+                    React.createElement('div', {
+                      key: 'attendees-list',
+                      className: "space-y-1"
+                    }, rsvp.attendees.map((attendee, aIndex) => 
+                      React.createElement('div', {
+                        key: aIndex,
+                        className: "flex items-center text-xs"
+                      }, [
+                        React.createElement('span', {
+                          key: 'icon',
+                          className: "mr-1"
+                        }, attendee.attendee_type === 'minor' ? '👶' : '👤'),
+                        React.createElement('span', {
+                          key: 'name',
+                          className: "font-medium"
+                        }, attendee.attendee_type === 'volunteer' ? 'You' : `${attendee.first_name} ${attendee.last_name}`),
+                        attendee.age ? React.createElement('span', {
+                          key: 'age',
+                          className: "ml-1 text-gray-500"
+                        }, `(${attendee.age})`) : null
+                      ])
+                    ))
+                  ]) : null,
+                  rsvp.status && rsvp.status !== 'active' ? React.createElement('span', {
+                    key: 'status',
+                    className: `inline-block px-2 py-1 rounded text-xs mt-2 ${rsvp.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700'}`
+                  }, rsvp.status.toUpperCase()) : null
+                ])
+              ])
+            ),
+            dashboardData.rsvps.length > 5 ? React.createElement('p', {
+              key: 'more',
+              className: "text-sm text-gray-600"
+            }, `...and ${dashboardData.rsvps.length - 5} more`) : null
+          ]) : React.createElement('p', {
+            key: 'empty',
+            className: "text-gray-600"
+          }, 'No event RSVPs yet')
+        ])
+      ]) : null,
+      // Minors Management Section
+      dashboardData ? React.createElement(MinorsManagement, {
+        key: 'minors-management',
+        sessionToken: window.authClient.getSessionToken(),
+        apiBase: window.authClient.getBaseApiUrl(),
+        onUpdate: loadDashboard
+      }) : null
+    ]);
+
+    return React.createElement('div', {
+      className: "min-h-screen bg-gray-100 py-8"
+    }, React.createElement('div', {
+      className: "container mx-auto px-4"
+    }, [
+      error ? React.createElement('div', {
+        key: 'error',
+        className: "max-w-md mx-auto mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+      }, error) : null,
+      success ? React.createElement('div', {
+        key: 'success',
+        className: "max-w-md mx-auto mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+      }, success) : null,
+      step === 'loading' ? renderLoadingState() : null,
+      step === 'email' ? renderEmailStep() : null,
+      step === 'code' ? renderCodeStep() : null,
+      step === 'dashboard' ? renderDashboard() : null
+    ]));
+  };
+
+  // Render the component
+  ReactDOM.render(React.createElement(VolunteerDashboard), document.getElementById('volunteer-dashboard-root'));
+  }
+</script>
+{{ end }}

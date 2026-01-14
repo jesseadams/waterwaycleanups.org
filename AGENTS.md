@@ -116,3 +116,7 @@ No specific test or lint commands are configured. The project relies on Hugo's b
 
 ## Deployment
 The site builds to `public/` directory via `npm run build` and can be deployed to any static hosting service.
+
+## Guidelines
+
+- Please don't create unnecessary documentation for every single thing you do.

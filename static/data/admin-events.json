@@ -1,0 +1,607 @@
+{
+  "success": true,
+  "events": [
+    {
+      "updated_at": "2026-01-12T18:50:59.090Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.090Z",
+        "original_filename": "aquia-harbor-neighborhood-cleanup-with-friends-of-the-rappahannock"
+      },
+      "location": {
+        "name": "Briar Patch Park",
+        "address": "21B 1269, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.090Z",
+      "status": "completed",
+      "event_id": "aquia-harbor-neighborhood-cleanup-with-friends-of-the-rappahannock",
+      "start_time": "2025-04-26T09:00:00-04:00",
+      "end_time": "2025-04-26T12:00:00-04:00",
+      "description": "Join FOR, Stafford County and the Green Aquia Initiative in helping cleanup the Aquia Harbor on April 26th! ",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/waterways-3.png",
+        "preheader_is_light": false,
+        "tags": [
+          "aquia-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Aquia Harbor Neighborhood Cleanup (with Friends of the Rappahannock)"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.090Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.090Z",
+        "original_filename": "brooke-road-neighborhood-cleanup-with-brooke-ridge-hoa"
+      },
+      "location": {
+        "name": "1 Brooke Crest Lane",
+        "address": "Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.090Z",
+      "status": "completed",
+      "event_id": "brooke-road-neighborhood-cleanup-with-brooke-ridge-hoa",
+      "start_time": "2025-05-03T09:00:00-04:00",
+      "end_time": "2025-05-03T12:00:00-04:00",
+      "description": "Join us for a community cleanup day along Brooke Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/waterways-7.png",
+        "preheader_is_light": false,
+        "tags": [
+          "aquia-creek",
+          "accokeek-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Brooke Road Neighborhood Cleanup (with Brooke Ridge HOA)"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.094Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.094Z",
+        "original_filename": "river-road-cleanup-with-friends-of-the-rappahannock"
+      },
+      "location": {
+        "name": "Chatham Manor",
+        "address": "120 Chatham Ln, Fredericksburg, VA 22405"
+      },
+      "created_at": "2026-01-12T18:50:59.094Z",
+      "status": "completed",
+      "event_id": "river-road-cleanup-with-friends-of-the-rappahannock",
+      "start_time": "2025-05-17T09:00:00-04:00",
+      "end_time": "2025-05-17T12:00:00-04:00",
+      "description": "Join FOR and Stafford County in cleaning up along River Road on May 17th! Volunteers can park and meet at Chatham Manor (120 Chatham Ln, Fredericksburg, VA 22405).",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/waterways-5.png",
+        "preheader_is_light": false,
+        "tags": [
+          "rappahannock"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "River Road Cleanup (with Friends of the Rappahannock)"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.089Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.089Z",
+        "original_filename": "aquia-creek-road-cleanup-june-2025"
+      },
+      "location": {
+        "name": "60 Potomac Run Rd",
+        "address": "Fredericksburg, VA 22405-5914, United States, Exact coordinates for parking:, https://www.google.com/maps/place/38%C2%B021'21.0%22N+77%C2%B025'28.8%22W/@38.3558343,-77.4253104,19z/data=!3m1!4b1!4m4!3m3!8m2!3d38.3558333!4d-77.4246667?entry=ttu&g_ep=EgoyMDI1MDYwNC4wIKXMDSoASAFQAw%3D%3D"
+      },
+      "created_at": "2026-01-12T18:50:59.088Z",
+      "status": "completed",
+      "event_id": "potomac-run-road-cleanup-june-2025",
+      "start_time": "2025-06-07T09:00:00-04:00",
+      "end_time": "2025-06-07T12:00:00-04:00",
+      "description": "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/waterways-1.png",
+        "preheader_is_light": false,
+        "tags": [
+          "potomac-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Potomac Run Road Cleanup - June 2025"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.095Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.095Z",
+        "original_filename": "waterway-cleanup-july-2025"
+      },
+      "location": {
+        "name": "Dixon Park",
+        "address": "1300 Dixon St</br>, Fredericksburg, VA 22401"
+      },
+      "created_at": "2026-01-12T18:50:59.095Z",
+      "status": "completed",
+      "event_id": "dixon-park-wetlands-cleanup",
+      "start_time": "2025-07-12T09:00:00-04:00",
+      "end_time": "2025-07-12T12:00:00-04:00",
+      "description": "Join us for Dixon Park Wetlands Cleanup!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/waterways-2.png",
+        "preheader_is_light": false,
+        "tags": [
+          "dixon park wetlands"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Dixon Park Wetlands Cleanup"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.092Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.092Z",
+        "original_filename": "green-aquia-water-cleanup-july-2025"
+      },
+      "location": {
+        "name": "Briarpatch Park",
+        "address": "21B 1269</br>, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.092Z",
+      "status": "completed",
+      "event_id": "green-aquia-water-cleanup",
+      "start_time": "2025-07-19T09:00:00-04:00",
+      "end_time": "2025-07-19T12:00:00-04:00",
+      "description": "Join us for Green Aquia Water Cleanup!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/waterways-4.png",
+        "preheader_is_light": false,
+        "tags": [
+          "aquia creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Green Aquia Water Cleanup"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.094Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.094Z",
+        "original_filename": "waterway-cleanup-august-2025"
+      },
+      "location": {
+        "name": "Widewater State Park",
+        "address": "101 Widewater State Pk Rd, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.094Z",
+      "status": "completed",
+      "event_id": "widewater-state-park-water-cleanup",
+      "start_time": "2025-08-09T08:30:00-04:00",
+      "end_time": "2025-08-09T11:30:00-04:00",
+      "description": "Join us for Widewater State Park Water Cleanup!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/widewater_state_park.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "aquia creek",
+          "virginia state parks"
+        ]
+      },
+      "attendance_cap": 8,
+      "title": "Widewater State Park Water Cleanup"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.095Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.095Z",
+        "original_filename": "waterway-cleanup-september-2025"
+      },
+      "location": {
+        "name": "<b>LAUNCH CHANGE!</b>",
+        "address": "Crow's Nest Natural Area Preserve - Canoe Launch, 2500 Brooke Rd, Stafford, VA 22554, <s>Crow's Nest Research Center, 400 Marlborough Point Road, Stafford, VA 22554</s>"
+      },
+      "created_at": "2026-01-12T18:50:59.095Z",
+      "status": "completed",
+      "event_id": "accokeek-creek-cleanup",
+      "start_time": "2025-09-20T09:00:00-04:00",
+      "end_time": "2025-09-20T12:00:00-04:00",
+      "description": "Join us for Accokeek Creek Cleanup!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/accokeek_creek.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "accokeek creek"
+        ]
+      },
+      "attendance_cap": 8,
+      "title": "Accokeek Creek Cleanup"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.092Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.092Z",
+        "original_filename": "friends-of-rappahannock-big-fall-cleanup-october-2025"
+      },
+      "location": {
+        "name": "Old Mill Park",
+        "address": "2201 Caroline St Frederiscksburg, VA 22401"
+      },
+      "created_at": "2026-01-12T18:50:59.092Z",
+      "status": "completed",
+      "event_id": "friends-of-the-rappahannock-big-fall-cleanup",
+      "start_time": "2025-10-18T08:30:00-04:00",
+      "end_time": "2025-10-18T11:30:00-04:00",
+      "description": "Join us for Friends of the Rappahannock Big Fall Cleanup!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/river_road.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "rappahannock"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Friends of the Rappahannock Big Fall Cleanup"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.095Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.095Z",
+        "original_filename": "waterway-cleanup-november-2025"
+      },
+      "location": {
+        "name": "To be determined, based on need.",
+        "address": ""
+      },
+      "created_at": "2026-01-12T18:50:59.095Z",
+      "status": "completed",
+      "event_id": "scouting-for-clean-waterways-2025",
+      "start_time": "2025-11-15T09:00:00-05:00",
+      "end_time": "2025-11-15T12:00:00-05:00",
+      "description": "Join us for Scouting For Clean Waterways 2025!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/scouts.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "scouting"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Scouting For Clean Waterways 2025"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.094Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.094Z",
+        "original_filename": "waterway-cleanup-december-2025"
+      },
+      "location": {
+        "name": "Location TBD",
+        "address": ""
+      },
+      "created_at": "2026-01-12T18:50:59.094Z",
+      "status": "completed",
+      "event_id": "potomac-run-road-december-2025",
+      "start_time": "2025-12-13T09:00:00-05:00",
+      "end_time": "2025-12-13T12:00:00-05:00",
+      "description": "Join us for Potomac Run Road - December 2025!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/potomac_run_action.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "potomac creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Potomac Run Road - December 2025"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.094Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.094Z",
+        "original_filename": "river-road-cleanup-january-2026"
+      },
+      "location": {
+        "name": "Historic Port of Falmouth Park",
+        "address": "401 River Rd, Fredericksburg, VA 22405"
+      },
+      "created_at": "2026-01-12T18:50:59.094Z",
+      "status": "completed",
+      "event_id": "river-road-cleanup-january-2026",
+      "start_time": "2026-01-10T09:00:00-05:00",
+      "end_time": "2026-01-10T12:00:00-05:00",
+      "description": "Join us for a community cleanup day along River Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/river_road_2.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "rappahannock"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "River Road Cleanup - January 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.091Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.091Z",
+        "original_filename": "brooke-road-thorny-point-cleanup-february-2026"
+      },
+      "location": {
+        "name": "Patawomeck Band Memorial Park",
+        "address": "2803-2801, Co Rd 608, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.091Z",
+      "status": "active",
+      "event_id": "brooke-road-and-thorny-point-road-cleanup-february-2026",
+      "start_time": "2026-02-22T09:00:00-05:00",
+      "end_time": "2026-02-22T12:00:00-05:00",
+      "description": "Join us for a community cleanup day along Brooke Road and Thorny Point Road, including Aquia Landing and Patawomeck Memorial Park!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/thorny_point.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "accokeek-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Brooke Road and Thorny Point Road Cleanup - February 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.095Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.095Z",
+        "original_filename": "widewater-state-park-aquia-creek-cleanup-april-2026"
+      },
+      "location": {
+        "name": "Widewater State Park",
+        "address": "1571 Widewater Beach Rd, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.095Z",
+      "status": "active",
+      "event_id": "widewater-state-park-aquia-creek-cleanup-april-2026",
+      "start_time": "2026-04-25T09:00:00-04:00",
+      "end_time": "2026-04-25T12:00:00-04:00",
+      "description": "Join us for a community cleanup day at Widewater State Park along Aquia Creek! Let's work together to protect our waterways and keep our parks clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/widewater_state_park.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "aquia-creek",
+          "state-park"
+        ]
+      },
+      "attendance_cap": 10,
+      "title": "Widewater State Park (Aquia Creek) Cleanup - April 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.091Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.091Z",
+        "original_filename": "crows-nest-wetlands-cleanup-may-2026"
+      },
+      "location": {
+        "name": "Crow's Nest Canoe Launch",
+        "address": "2500 Brooke Rd, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.091Z",
+      "status": "active",
+      "event_id": "crows-nest-wetlands-accokeek-creek-cleanup-may-2026",
+      "start_time": "2026-05-23T09:00:00-04:00",
+      "end_time": "2026-05-23T12:00:00-04:00",
+      "description": "Join us for a community cleanup day at Crow's Nest Wetlands along Accokeek Creek! Help protect this important wetland ecosystem.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/accokeek_creek_2.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "accokeek-creek"
+        ]
+      },
+      "attendance_cap": 15,
+      "title": "Crow's Nest Wetlands (Accokeek Creek) Cleanup - May 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.093Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.093Z",
+        "original_filename": "potomac-run-road-cleanup-june-2026"
+      },
+      "location": {
+        "name": "Address:",
+        "address": "60 Potomac Run Rd, Fredericksburg, VA 22405-5914, United States, Parking Coordinates: <a href=\"https://www.google.com/maps/place/38%C2%B021'21.0%22N+77%C2%B025'28.8%22W/@38.3558343,-77.4253104,19z/data=!3m1!4b1!4m4!3m3!8m2!3d38.3558333!4d-77.4246667?entry=ttu&g_ep=EgoyMDI1MDYwNC4wIKXMDSoASAFQAw%3D%3D\">Click Here.</a>"
+      },
+      "created_at": "2026-01-12T18:50:59.093Z",
+      "status": "active",
+      "event_id": "potomac-run-road-cleanup-june-2026",
+      "start_time": "2026-06-20T09:00:00-04:00",
+      "end_time": "2026-06-20T12:00:00-04:00",
+      "description": "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/potomac_run_action.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "potomac-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Potomac Run Road Cleanup - June 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.095Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.095Z",
+        "original_filename": "widewater-state-park-potomac-river-cleanup-july-2026"
+      },
+      "location": {
+        "name": "Widewater State Park",
+        "address": "1571 Widewater Beach Rd, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.095Z",
+      "status": "active",
+      "event_id": "widewater-state-park-potomac-river-cleanup-july-2026",
+      "start_time": "2026-07-25T09:00:00-04:00",
+      "end_time": "2026-07-25T12:00:00-04:00",
+      "description": "Join us for a community cleanup day at Widewater State Park along the Potomac River! Help protect our main waterway and state park.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/widewater_state_park.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "potomac-river",
+          "state-park"
+        ]
+      },
+      "attendance_cap": 10,
+      "title": "Widewater State Park (Potomac River) Cleanup - July 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.093Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.093Z",
+        "original_filename": "potomac-run-road-cleanup-august-2026"
+      },
+      "location": {
+        "name": "Address:",
+        "address": "60 Potomac Run Rd, Fredericksburg, VA 22405-5914, United States, Parking Coordinates: <a href=\"https://www.google.com/maps/place/38%C2%B021'21.0%22N+77%C2%B025'28.8%22W/@38.3558343,-77.4253104,19z/data=!3m1!4b1!4m4!3m3!8m2!3d38.3558333!4d-77.4246667?entry=ttu&g_ep=EgoyMDI1MDYwNC4wIKXMDSoASAFQAw%3D%3D\">Click Here.</a>"
+      },
+      "created_at": "2026-01-12T18:50:59.093Z",
+      "status": "active",
+      "event_id": "potomac-run-road-cleanup-august-2026",
+      "start_time": "2026-08-15T09:00:00-04:00",
+      "end_time": "2026-08-15T12:00:00-04:00",
+      "description": "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/potomac_run_action.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "potomac-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Potomac Run Road Cleanup - August 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.095Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.095Z",
+        "original_filename": "widewater-state-park-aquia-creek-cleanup-september-2026"
+      },
+      "location": {
+        "name": "Widewater State Park",
+        "address": "1571 Widewater Beach Rd, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.095Z",
+      "status": "active",
+      "event_id": "widewater-state-park-aquia-creek-cleanup-september-2026",
+      "start_time": "2026-09-19T09:00:00-04:00",
+      "end_time": "2026-09-19T12:00:00-04:00",
+      "description": "Join us for a community cleanup day at Widewater State Park along Aquia Creek! Let's work together to protect our waterways and keep our parks clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/widewater_state_park.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "aquia-creek",
+          "state-park"
+        ]
+      },
+      "attendance_cap": 10,
+      "title": "Widewater State Park (Aquia Creek) Cleanup - September 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.094Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.094Z",
+        "original_filename": "river-road-cleanup-october-2026"
+      },
+      "location": {
+        "name": "Historic Port of Falmouth Park",
+        "address": "401 River Rd, Fredericksburg, VA 22405"
+      },
+      "created_at": "2026-01-12T18:50:59.094Z",
+      "status": "active",
+      "event_id": "river-road-cleanup-october-2026",
+      "start_time": "2026-10-17T09:00:00-04:00",
+      "end_time": "2026-10-17T12:00:00-04:00",
+      "description": "Join us for a community cleanup day along River Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/river_road_2.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "rappahannock"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "River Road Cleanup - October 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.091Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.091Z",
+        "original_filename": "brooke-road-thorny-point-cleanup-november-2026"
+      },
+      "location": {
+        "name": "Patawomeck Band Memorial Park",
+        "address": "2803-2801, Co Rd 608, Stafford, VA 22554"
+      },
+      "created_at": "2026-01-12T18:50:59.091Z",
+      "status": "active",
+      "event_id": "brooke-road-and-thorny-point-road-cleanup-november-2026",
+      "start_time": "2026-11-21T09:00:00-05:00",
+      "end_time": "2026-11-21T12:00:00-05:00",
+      "description": "Join us for a community cleanup day along Brooke Road and Thorny Point Road, including Aquia Landing and Patawomeck Memorial Park!",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/thorny_point.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "accokeek-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Brooke Road and Thorny Point Road Cleanup - November 2026"
+    },
+    {
+      "updated_at": "2026-01-12T18:50:59.093Z",
+      "metadata": {
+        "migrated_from": "markdown",
+        "migration_date": "2026-01-12T18:50:59.093Z",
+        "original_filename": "potomac-run-road-cleanup-december-2026"
+      },
+      "location": {
+        "name": "Address:",
+        "address": "60 Potomac Run Rd, Fredericksburg, VA 22405-5914, United States, Parking Coordinates: <a href=\"https://www.google.com/maps/place/38%C2%B021'21.0%22N+77%C2%B025'28.8%22W/@38.3558343,-77.4253104,19z/data=!3m1!4b1!4m4!3m3!8m2!3d38.3558333!4d-77.4246667?entry=ttu&g_ep=EgoyMDI1MDYwNC4wIKXMDSoASAFQAw%3D%3D\">Click Here.</a>"
+      },
+      "created_at": "2026-01-12T18:50:59.093Z",
+      "status": "active",
+      "event_id": "potomac-run-road-cleanup-december-2026",
+      "start_time": "2026-12-12T09:00:00-05:00",
+      "end_time": "2026-12-12T12:00:00-05:00",
+      "description": "Join us for a community cleanup day along Potomac Run Road! Let's work together to protect our waterways and keep our community clean.",
+      "hugo_config": {
+        "image": "/uploads/waterway-cleanups/potomac_run_action.jpg",
+        "preheader_is_light": false,
+        "tags": [
+          "potomac-creek"
+        ]
+      },
+      "attendance_cap": 20,
+      "title": "Potomac Run Road Cleanup - December 2026"
+    }
+  ],
+  "count": 22,
+  "generated_at": "2026-01-12T21:05:56.449Z",
+  "source": "static-generation"
+}

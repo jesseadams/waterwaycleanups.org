@@ -1,0 +1,13 @@
+{
+  "event_id": "test-event-123",
+  "title": "Test Event",
+  "description": "Test event description",
+  "start_time": "2026-01-20T10:00:00Z",
+  "end_time": "2026-01-20T13:00:00Z",
+  "location": {
+    "name": "Test Location",
+    "address": "123 Test Street"
+  },
+  "attendance_cap": 25,
+  "status": "active"
+}

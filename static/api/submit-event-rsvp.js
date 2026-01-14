@@ -5,6 +5,31 @@
  */
 
 /**
+ * Get API URL based on environment
+ * @param {string} endpoint - The endpoint name
+ * @returns {string} Full API URL
+ */
+function getApiUrl(endpoint) {
+  // First, try to use Hugo-injected API configuration
+  if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
+    return `${window.API_CONFIG.BASE_URL}/${endpoint}`;
+  }
+  
+  // Fallback to environment detection for localhost development
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  
+  if (isLocalhost) {
+    // Use staging APIs for localhost development
+    const stagingBase = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/staging';
+    return `${stagingBase}/${endpoint}`;
+  } else {
+    // Use production APIs as final fallback
+    const prodBase = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod';
+    return `${prodBase}/${endpoint}`;
+  }
+}
+
+/**
  * Submit an RSVP for an event
  * @param {string} eventId - The unique identifier for the event
  * @param {string} firstName - First name of the person registering
@@ -15,9 +40,7 @@
  */
 export async function submitEventRsvp(eventId, firstName, lastName, email, attendanceCap) {
   try {
-    const url = document.currentScript 
-      ? new URL(document.currentScript.src).origin + '/submit-event-rsvp'
-      : '/submit-event-rsvp';
+    const url = getApiUrl('submit-event-rsvp');
     
     const payload = {
       event_id: eventId,

@@ -1,3 +1,3 @@
 api:
-  base_url: "https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod"
-  base_url_volunteer: "https://882dzmsoy5.execute-api.us-east-1.amazonaws.com/prod"
+  base_url: "https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging"
+  base_url_volunteer: "https://882dzmsoy5.execute-api.us-east-1.amazonaws.com/staging"

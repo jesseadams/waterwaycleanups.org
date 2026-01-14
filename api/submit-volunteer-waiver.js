@@ -1,8 +1,6 @@
 // API Endpoint: /api/submit-volunteer-waiver
-// This endpoint directly submits volunteer waiver form data to DynamoDB
+// Submits volunteer waiver form data to DynamoDB (requires authentication)
 
-// For serverless/Netlify/Vercel environments:
-// Import AWS SDK for DynamoDB access
 const AWS = require('aws-sdk');
 const { v4: uuidv4 } = require('uuid');
 
@@ -11,11 +9,39 @@ AWS.config.update({
   region: process.env.AWS_REGION || 'us-east-1'
 });
 
-// Initialize DynamoDB client
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const tableName = process.env.WAIVER_TABLE_NAME || 'volunteer_waivers';
+const sessionTableName = process.env.SESSION_TABLE_NAME || 'user_sessions';
+const waiverTableName = process.env.WAIVER_TABLE_NAME || 'volunteer_waivers';
+
+// Helper function to validate session
+async function validateSession(sessionToken) {
+  const queryParams = {
+    TableName: sessionTableName,
+    IndexName: 'session-token-index',
+    KeyConditionExpression: 'session_token = :token',
+    ExpressionAttributeValues: {
+      ':token': sessionToken
+    }
+  };
+
+  const queryResult = await dynamoDB.query(queryParams).promise();
+  const sessions = queryResult.Items || [];
+
+  if (sessions.length === 0) {
+    return null;
+  }
+
+  const session = sessions[0];
+
+  // Check if session has expired
+  if (new Date(session.expires_at) <= new Date()) {
+    return null;
+  }
+
+  return session;
+}
+
 exports.handler = async (event) => {
-  // Set up CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
@@ -23,33 +49,50 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json'
   };
 
-  // Handle preflight OPTIONS request
   if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: 'CORS preflight successful' })
-    };
+    return { statusCode: 200, headers, body: JSON.stringify({ message: 'CORS preflight successful' }) };
   }
 
-  // Check if the request method is POST
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({
-        success: false,
-        message: 'Method Not Allowed'
-      })
+      body: JSON.stringify({ success: false, message: 'Method Not Allowed' })
     };
   }
 
   try {
-    // Parse request body
     const requestBody = JSON.parse(event.body);
 
+    // Validate session token
+    if (!requestBody.session_token) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ 
+          success: false, 
+          message: 'Session token is required' 
+        })
+      };
+    }
+
+    // Validate session
+    const session = await validateSession(requestBody.session_token);
+    if (!session) {
+      return {
+        statusCode: 401,
+        headers,
+        body: JSON.stringify({ 
+          success: false, 
+          message: 'Invalid or expired session' 
+        })
+      };
+    }
+
+    const email = session.email;
+
     // Validate required fields
-    const requiredFields = ['email', 'full_legal_name', 'phone_number', 'date_of_birth', 'waiver_acknowledgement'];
+    const requiredFields = ['full_legal_name', 'phone_number', 'date_of_birth', 'waiver_acknowledgement'];
     const missingFields = requiredFields.filter(field => !requestBody[field]);
 
     if (missingFields.length > 0) {
@@ -63,10 +106,7 @@ exports.handler = async (event) => {
       };
     }
 
-    // Normalize email to lowercase
-    requestBody.email = requestBody.email.toLowerCase();
-    
-    console.log(`Processing waiver submission for email: ${requestBody.email}`);
+    console.log(`Processing waiver submission for email: ${email}`);
     
     // Determine if adult or minor based on date of birth
     let isAdult = false;
@@ -132,7 +172,7 @@ exports.handler = async (event) => {
       
       // Create item with all form fields
       const item = {
-        email: requestBody.email,
+        email: email, // Use email from authenticated session
         waiver_id: waiverId,
         submission_date: submissionDate,
         full_legal_name: requestBody.full_legal_name,
@@ -160,13 +200,25 @@ exports.handler = async (event) => {
       
       // Save to DynamoDB
       const params = {
-        TableName: tableName,
+        TableName: waiverTableName,
         Item: item
       };
       
       console.log(`Saving waiver record to DynamoDB: ${waiverId}`);
       await dynamoDB.put(params).promise();
       console.log(`Waiver record saved successfully: ${waiverId}`);
+
+      // Update session last accessed time
+      const updateSessionParams = {
+        TableName: sessionTableName,
+        Key: { session_id: session.session_id },
+        UpdateExpression: 'SET last_accessed = :last_accessed',
+        ExpressionAttributeValues: {
+          ':last_accessed': new Date().toISOString()
+        }
+      };
+
+      await dynamoDB.update(updateSessionParams).promise();
       
       // Calculate expiration date (1 year from submission)
       const submissionDateTime = new Date(submissionDate);

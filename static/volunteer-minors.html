@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Minors - Waterway Cleanups</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <div class="mb-6">
+            <h1 class="text-3xl font-bold text-gray-900">Manage Minors on Your Account</h1>
+            <p class="text-gray-600 mt-2">Your waiver covers all minors attached to your account.</p>
+        </div>
+
+        <div id="auth-check" class="alert alert-info mb-6">
+            <span>Checking authentication...</span>
+        </div>
+
+        <div id="minors-app" style="display: none;">
+            <!-- Add Minor Form -->
+            <div class="card bg-base-100 shadow-xl mb-6">
+                <div class="card-body">
+                    <h2 class="card-title">Add a Minor</h2>
+                    <form id="add-minor-form" class="space-y-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">First Name *</span>
+                            </label>
+                            <input type="text" name="first_name" class="input input-bordered" required />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Last Name *</span>
+                            </label>
+                            <input type="text" name="last_name" class="input input-bordered" required />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Date of Birth *</span>
+                            </label>
+                            <input type="date" name="date_of_birth" class="input input-bordered" required />
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text">Email (Optional)</span>
+                            </label>
+                            <input type="email" name="email" class="input input-bordered" />
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">Add Minor</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Minors List -->
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title">Your Minors</h2>
+                    <div id="minors-list" class="space-y-4">
+                        <p class="text-gray-500">Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6">
+            <a href="/volunteer" class="btn btn-ghost">← Back to Dashboard</a>
+        </div>
+    </div>
+
+    <script src="/js/auth-client.js"></script>
+    <script>
+        const authClient = new AuthClient();
+        const API_BASE = window.location.origin + '/api';
+
+        // Check authentication
+        if (!authClient.isAuthenticated()) {
+            document.getElementById('auth-check').innerHTML = `
+                <div class="alert alert-warning">
+                    <span>You need to be logged in to manage minors.</span>
+                    <a href="/volunteer" class="btn btn-sm btn-primary">Login</a>
+                </div>
+            `;
+        } else {
+            document.getElementById('auth-check').style.display = 'none';
+            document.getElementById('minors-app').style.display = 'block';
+            loadMinors();
+        }
+
+        // Add minor form handler
+        document.getElementById('add-minor-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const sessionToken = authClient.getSessionToken();
+            
+            try {
+                const response = await fetch(`${API_BASE}/minors-add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_token: sessionToken,
+                        first_name: formData.get('first_name'),
+                        last_name: formData.get('last_name'),
+                        date_of_birth: formData.get('date_of_birth'),
+                        email: formData.get('email') || undefined
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('success', 'Minor added successfully!');
+                    e.target.reset();
+                    loadMinors();
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (error) {
+                showAlert('error', 'Failed to add minor: ' + error.message);
+            }
+        });
+
+        // Load minors
+        async function loadMinors() {
+            const sessionToken = authClient.getSessionToken();
+            const listDiv = document.getElementById('minors-list');
+            
+            try {
+                const response = await fetch(`${API_BASE}/minors-list`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_token: sessionToken })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    if (result.minors.length === 0) {
+                        listDiv.innerHTML = '<p class="text-gray-500">No minors on your account yet. Add one above!</p>';
+                    } else {
+                        listDiv.innerHTML = result.minors.map(minor => `
+                            <div class="card bg-base-200">
+                                <div class="card-body">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <h3 class="card-title">${minor.first_name} ${minor.last_name}</h3>
+                                            <p class="text-sm text-gray-600">Age: ${minor.age} years old</p>
+                                            <p class="text-sm text-gray-600">Date of Birth: ${minor.date_of_birth}</p>
+                                            ${minor.email ? `<p class="text-sm text-gray-600">Email: ${minor.email}</p>` : ''}
+                                        </div>
+                                        <button onclick="deleteMinor('${minor.minor_id}')" class="btn btn-sm btn-error">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    listDiv.innerHTML = `<p class="text-error">${result.message}</p>`;
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<p class="text-error">Failed to load minors: ${error.message}</p>`;
+            }
+        }
+
+        // Delete minor
+        async function deleteMinor(minorId) {
+            if (!confirm('Are you sure you want to remove this minor from your account?')) {
+                return;
+            }
+
+            const sessionToken = authClient.getSessionToken();
+            
+            try {
+                const response = await fetch(`${API_BASE}/minors-delete`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_token: sessionToken,
+                        minor_id: minorId
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showAlert('success', 'Minor removed successfully');
+                    loadMinors();
+                } else {
+                    showAlert('error', result.message);
+                }
+            } catch (error) {
+                showAlert('error', 'Failed to delete minor: ' + error.message);
+            }
+        }
+
+        // Show alert
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} mb-4`;
+            alertDiv.innerHTML = `<span>${message}</span>`;
+            
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+            
+            setTimeout(() => alertDiv.remove(), 5000);
+        }
+    </script>
+</body>
+</html>

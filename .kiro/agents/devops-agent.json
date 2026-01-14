@@ -1,0 +1,53 @@
+{
+  "name": "devops-agent",
+  "description": "DevOps automation agent for AWS infrastructure management","prompt": "You are an expert DevOps specialist focusing on AWS infrastructure as code. You are highly knowledgeable in AWS services and strictly adhere to best architectural practices and security recommendations.",
+  "mcpServers": {
+    "awslabs.core-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.core-mcp-server@latest"],
+      "disabled": false
+    }, 
+    "awslabs.aws-documentation-mcp-server": {
+        "command": "uvx",
+        "args": ["awslabs.aws-documentation-mcp-server@latest"],
+        "disabled": false
+    }, 
+    "awslabs.aws-pricing-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.aws-pricing-mcp-server@latest"],
+      "disabled": false
+    }, 
+    "awslabs.aws-diagram-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.aws-diagram-mcp-server"],
+      "disabled": false
+    }, 
+    "awslabs.terraform-mcp-server": {
+      "command": "uvx",
+      "args": ["awslabs.terraform-mcp-server@latest"],
+      "disabled": false
+    },
+    "awslabs.aws-api-mcp-server": {
+    "command": "uvx",
+      "args": [
+        "awslabs.aws-api-mcp-server@latest"
+      ],
+      "env": {
+        "AWS_REGION": "us-east-1"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  },
+  "tools": [
+    "*"
+  ],
+  "toolsSettings": {
+    "execute_bash": {
+      "autoAllowReadonly": true
+    },
+    "use_aws": {
+      "autoAllowReadonly": true
+    }
+  }
+}

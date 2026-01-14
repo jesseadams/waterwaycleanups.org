@@ -1,0 +1,1059 @@
+{{ define "content" }}
+<!-- Load admin dashboard CSS -->
+<link rel="stylesheet" href="{{ "css/volunteer-dashboard.css" | relURL }}" />
+<link rel="stylesheet" href="{{ "css/admin-dashboard.css" | relURL }}" />
+
+<div id="admin-dashboard-root">
+  <!-- Fallback content while React loads -->
+  <div class="min-h-screen bg-gray-100 py-8">
+    <div class="container mx-auto px-4">
+      <div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">Loading Admin Dashboard...</h2>
+        <p class="text-gray-600 text-center">Please wait while we load the admin interface.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Load React and dependencies -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- Load Babel for JSX transformation -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<!-- Load authentication client -->
+<script src="{{ "js/auth-client.js" | relURL }}"></script>
+
+<!-- Load events API client -->
+<script src="{{ "js/events-api-client.js" | relURL }}"></script>
+
+<!-- Initialize Events API with AWS API Gateway endpoints -->
+<script>
+  // Use the same API configuration as the auth client
+  // This will automatically detect localhost vs production and use appropriate endpoints
+  window.API_CONFIG = null; // Let the clients use their own endpoint resolution
+  
+  console.log('Admin API Config: Using automatic endpoint resolution');
+  
+  // Initialize Events API client immediately
+  if (typeof window.initializeEventsAPI === 'function') {
+    window.eventsAPI = window.initializeEventsAPI(null, null); // Let it auto-detect
+    console.log('Events API initialized with automatic endpoint resolution');
+  }
+</script>
+
+<!-- Load events API configuration (with fallback) -->
+<script src="{{ "js/events-api-init.js" | relURL }}"></script>
+
+<!-- Load admin integration test (development only) -->
+<script src="{{ "js/admin-integration-test.js" | relURL }}"></script>
+
+<!-- Load admin demo mode (development only) -->
+<script src="{{ "js/admin-demo-mode.js" | relURL }}"></script>
+
+<!-- Load admin API test functions (development only) -->
+<script src="{{ "js/admin-api-test.js" | relURL }}"></script>
+
+<!-- Load admin test script (development only) -->
+<script src="{{ "js/admin-test.js" | relURL }}"></script>
+
+<!-- Load final integration test (development only) -->
+<script src="{{ "js/admin-integration-final-test.js" | relURL }}"></script>
+
+<!-- Initialize auth client -->
+<script>
+  // Initialize the auth client
+  window.authClient = new AuthClient();
+</script>
+
+<!-- Load and render the admin dashboard component -->
+<script type="text/babel">
+  // Add error handling for React loading
+  if (typeof React === 'undefined') {
+    console.error('React is not loaded');
+    document.getElementById('admin-dashboard-root').innerHTML = 
+      '<div class="min-h-screen bg-gray-100 py-8"><div class="container mx-auto px-4"><div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-center text-red-600">Error Loading Dashboard</h2><p class="text-gray-600 text-center">React library failed to load. Please refresh the page.</p></div></div></div>';
+  } else if (typeof ReactDOM === 'undefined') {
+    console.error('ReactDOM is not loaded');
+    document.getElementById('admin-dashboard-root').innerHTML = 
+      '<div class="min-h-screen bg-gray-100 py-8"><div class="container mx-auto px-4"><div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-center text-red-600">Error Loading Dashboard</h2><p class="text-gray-600 text-center">ReactDOM library failed to load. Please refresh the page.</p></div></div></div>';
+  } else if (!window.authClient) {
+    console.error('AuthClient is not loaded');
+    document.getElementById('admin-dashboard-root').innerHTML = 
+      '<div class="min-h-screen bg-gray-100 py-8"><div class="container mx-auto px-4"><div class="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"><h2 class="text-2xl font-bold mb-4 text-center text-red-600">Error Loading Dashboard</h2><p class="text-gray-600 text-center">Authentication client failed to load. Please refresh the page.</p></div></div></div>';
+  } else {
+    // All dependencies loaded successfully, render the component
+    const { useState, useEffect } = React;
+
+    // Analytics Component
+    const AnalyticsComponent = () => {
+      const [analyticsData, setAnalyticsData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState('');
+      const [dateRange, setDateRange] = useState({
+        start_date: '',
+        end_date: ''
+      });
+      const [exportFormat, setExportFormat] = useState('json');
+
+      useEffect(() => {
+        loadAnalyticsData();
+      }, [dateRange]);
+
+      const loadAnalyticsData = async () => {
+        try {
+          setLoading(true);
+          setError('');
+          
+          if (!window.eventsAPI) {
+            throw new Error('Events API not initialized');
+          }
+
+          const filters = {};
+          if (dateRange.start_date) filters.start_date = dateRange.start_date;
+          if (dateRange.end_date) filters.end_date = dateRange.end_date;
+
+          const data = await window.eventsAPI.getAnalytics(filters);
+          setAnalyticsData(data);
+        } catch (err) {
+          console.error('Error loading analytics:', err);
+          setError(err.message || 'Failed to load analytics data');
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleExportEvents = async () => {
+        try {
+          const filters = {
+            include_rsvp_stats: true,
+            ...dateRange
+          };
+          
+          const data = await window.eventsAPI.exportEvents(exportFormat, filters);
+          
+          if (exportFormat === 'csv') {
+            // Create and download CSV file
+            const blob = new Blob([data.body || data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `events_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          } else {
+            // Download JSON file
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `events_export_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        } catch (err) {
+          console.error('Error exporting events:', err);
+          setError(err.message || 'Failed to export events');
+        }
+      };
+
+      const handleExportVolunteers = async () => {
+        try {
+          const filters = {
+            include_metrics: true
+          };
+          
+          const data = await window.eventsAPI.exportVolunteers(exportFormat, filters);
+          
+          if (exportFormat === 'csv') {
+            // Create and download CSV file
+            const blob = new Blob([data.body || data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `volunteers_export_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          } else {
+            // Download JSON file
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            a.href = url;
+            a.download = `volunteers_export_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        } catch (err) {
+          console.error('Error exporting volunteers:', err);
+          setError(err.message || 'Failed to export volunteers');
+        }
+      };
+
+      if (loading) {
+        return React.createElement('div', {
+          className: "text-center py-8"
+        }, [
+          React.createElement('div', {
+            key: 'spinner',
+            className: "inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+          }),
+          React.createElement('p', {
+            key: 'text',
+            className: "mt-2 text-gray-600"
+          }, 'Loading analytics...')
+        ]);
+      }
+
+      if (error) {
+        return React.createElement('div', {
+          className: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+        }, [
+          React.createElement('p', { key: 'error' }, error),
+          React.createElement('button', {
+            key: 'retry',
+            onClick: loadAnalyticsData,
+            className: "mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+          }, 'Retry')
+        ]);
+      }
+
+      return React.createElement('div', { className: "space-y-6" }, [
+        // Date Range Filter
+        React.createElement('div', {
+          key: 'filters',
+          className: "bg-gray-50 p-4 rounded-lg"
+        }, [
+          React.createElement('h4', {
+            key: 'title',
+            className: "text-lg font-semibold mb-4"
+          }, 'Filters & Export'),
+          React.createElement('div', {
+            key: 'controls',
+            className: "grid grid-cols-1 md:grid-cols-4 gap-4"
+          }, [
+            React.createElement('div', { key: 'start-date' }, [
+              React.createElement('label', {
+                key: 'label',
+                className: "block text-sm font-medium text-gray-700 mb-1"
+              }, 'Start Date'),
+              React.createElement('input', {
+                key: 'input',
+                type: 'date',
+                value: dateRange.start_date,
+                onChange: (e) => setDateRange(prev => ({ ...prev, start_date: e.target.value })),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              })
+            ]),
+            React.createElement('div', { key: 'end-date' }, [
+              React.createElement('label', {
+                key: 'label',
+                className: "block text-sm font-medium text-gray-700 mb-1"
+              }, 'End Date'),
+              React.createElement('input', {
+                key: 'input',
+                type: 'date',
+                value: dateRange.end_date,
+                onChange: (e) => setDateRange(prev => ({ ...prev, end_date: e.target.value })),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              })
+            ]),
+            React.createElement('div', { key: 'format' }, [
+              React.createElement('label', {
+                key: 'label',
+                className: "block text-sm font-medium text-gray-700 mb-1"
+              }, 'Export Format'),
+              React.createElement('select', {
+                key: 'select',
+                value: exportFormat,
+                onChange: (e) => setExportFormat(e.target.value),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              }, [
+                React.createElement('option', { key: 'json', value: 'json' }, 'JSON'),
+                React.createElement('option', { key: 'csv', value: 'csv' }, 'CSV')
+              ])
+            ]),
+            React.createElement('div', {
+              key: 'export-buttons',
+              className: "flex space-x-2"
+            }, [
+              React.createElement('button', {
+                key: 'export-events',
+                onClick: handleExportEvents,
+                className: "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
+              }, 'Export Events'),
+              React.createElement('button', {
+                key: 'export-volunteers',
+                onClick: handleExportVolunteers,
+                className: "bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
+              }, 'Export Volunteers')
+            ])
+          ])
+        ]),
+
+        // Analytics Cards
+        analyticsData ? React.createElement('div', {
+          key: 'analytics-cards',
+          className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        }, [
+          // Attendance Analytics
+          analyticsData.attendance_analytics ? React.createElement('div', {
+            key: 'attendance',
+            className: "bg-blue-50 p-6 rounded-lg border border-blue-200"
+          }, [
+            React.createElement('h4', {
+              key: 'title',
+              className: "text-lg font-semibold text-blue-800 mb-2"
+            }, 'Attendance Rate'),
+            React.createElement('p', {
+              key: 'rate',
+              className: "text-3xl font-bold text-blue-600"
+            }, `${analyticsData.attendance_analytics.overall_stats.overall_attendance_rate}%`),
+            React.createElement('p', {
+              key: 'details',
+              className: "text-sm text-blue-600 mt-2"
+            }, `${analyticsData.attendance_analytics.overall_stats.total_attended} attended / ${analyticsData.attendance_analytics.overall_stats.total_attended + analyticsData.attendance_analytics.overall_stats.total_no_shows} total`)
+          ]) : null,
+
+          // Cancellation Analytics
+          analyticsData.cancellation_analytics ? React.createElement('div', {
+            key: 'cancellation',
+            className: "bg-red-50 p-6 rounded-lg border border-red-200"
+          }, [
+            React.createElement('h4', {
+              key: 'title',
+              className: "text-lg font-semibold text-red-800 mb-2"
+            }, 'Cancellation Rate'),
+            React.createElement('p', {
+              key: 'rate',
+              className: "text-3xl font-bold text-red-600"
+            }, `${analyticsData.cancellation_analytics.overall_stats.cancellation_rate}%`),
+            React.createElement('p', {
+              key: 'details',
+              className: "text-sm text-red-600 mt-2"
+            }, `${analyticsData.cancellation_analytics.overall_stats.total_cancelled} cancelled / ${analyticsData.cancellation_analytics.overall_stats.total_rsvps} total`)
+          ]) : null,
+
+          // Volunteer Analytics
+          analyticsData.volunteer_analytics ? React.createElement('div', {
+            key: 'volunteers',
+            className: "bg-green-50 p-6 rounded-lg border border-green-200"
+          }, [
+            React.createElement('h4', {
+              key: 'title',
+              className: "text-lg font-semibold text-green-800 mb-2"
+            }, 'Total Volunteers'),
+            React.createElement('p', {
+              key: 'count',
+              className: "text-3xl font-bold text-green-600"
+            }, analyticsData.volunteer_analytics.total_volunteers),
+            React.createElement('p', {
+              key: 'details',
+              className: "text-sm text-green-600 mt-2"
+            }, `${analyticsData.volunteer_analytics.active_volunteers} active`)
+          ]) : null,
+
+          // Retention Rate
+          analyticsData.volunteer_analytics ? React.createElement('div', {
+            key: 'retention',
+            className: "bg-purple-50 p-6 rounded-lg border border-purple-200"
+          }, [
+            React.createElement('h4', {
+              key: 'title',
+              className: "text-lg font-semibold text-purple-800 mb-2"
+            }, 'Retention Rate'),
+            React.createElement('p', {
+              key: 'rate',
+              className: "text-3xl font-bold text-purple-600"
+            }, `${analyticsData.volunteer_analytics.retention_rate}%`),
+            React.createElement('p', {
+              key: 'details',
+              className: "text-sm text-purple-600 mt-2"
+            }, `${analyticsData.volunteer_analytics.repeat_volunteers} repeat volunteers`)
+          ]) : null
+        ]) : null,
+
+        // Detailed Analytics Tables
+        analyticsData ? React.createElement('div', {
+          key: 'detailed-analytics',
+          className: "grid grid-cols-1 lg:grid-cols-2 gap-6"
+        }, [
+          // Cancellation Timing Patterns
+          analyticsData.cancellation_analytics && analyticsData.cancellation_analytics.timing_patterns ? React.createElement('div', {
+            key: 'timing-patterns',
+            className: "bg-white p-6 rounded-lg border"
+          }, [
+            React.createElement('h4', {
+              key: 'title',
+              className: "text-lg font-semibold mb-4"
+            }, 'Cancellation Timing Patterns'),
+            React.createElement('div', {
+              key: 'patterns',
+              className: "space-y-2"
+            }, Object.entries(analyticsData.cancellation_analytics.timing_patterns).map(([key, value]) =>
+              React.createElement('div', {
+                key: key,
+                className: "flex justify-between items-center py-2 border-b"
+              }, [
+                React.createElement('span', {
+                  key: 'label',
+                  className: "text-gray-700 capitalize"
+                }, key.replace('_', ' ')),
+                React.createElement('span', {
+                  key: 'value',
+                  className: "font-semibold text-gray-900"
+                }, value)
+              ])
+            ))
+          ]) : null,
+
+          // Volunteer Engagement Distribution
+          analyticsData.volunteer_analytics && analyticsData.volunteer_analytics.engagement_distribution ? React.createElement('div', {
+            key: 'engagement',
+            className: "bg-white p-6 rounded-lg border"
+          }, [
+            React.createElement('h4', {
+              key: 'title',
+              className: "text-lg font-semibold mb-4"
+            }, 'Volunteer Engagement Distribution'),
+            React.createElement('div', {
+              key: 'distribution',
+              className: "space-y-2"
+            }, Object.entries(analyticsData.volunteer_analytics.engagement_distribution).map(([key, value]) =>
+              React.createElement('div', {
+                key: key,
+                className: "flex justify-between items-center py-2 border-b"
+              }, [
+                React.createElement('span', {
+                  key: 'label',
+                  className: "text-gray-700 capitalize"
+                }, key.replace('_', ' ')),
+                React.createElement('span', {
+                  key: 'value',
+                  className: "font-semibold text-gray-900"
+                }, value)
+              ])
+            ))
+          ]) : null
+        ]) : null
+      ]);
+    };
+
+    const AdminDashboard = () => {
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [email, setEmail] = useState('');
+      const [validationCode, setValidationCode] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState('');
+      const [success, setSuccess] = useState('');
+      const [step, setStep] = useState('loading'); // 'loading', 'email', 'code', 'dashboard'
+      const [activeTab, setActiveTab] = useState('events'); // 'events', 'volunteers', 'analytics'
+      
+      // Events state
+      const [events, setEvents] = useState([]);
+      const [eventFilters, setEventFilters] = useState({
+        status: '',
+        start_date: '',
+        end_date: '',
+        location: ''
+      });
+      const [showEventForm, setShowEventForm] = useState(false);
+      const [editingEvent, setEditingEvent] = useState(null);
+      const [eventFormData, setEventFormData] = useState({
+        title: '',
+        description: '',
+        start_time: '',
+        end_time: '',
+        location: { name: '', address: '' },
+        attendance_cap: 50,
+        status: 'active',
+        hugo_config: { tags: [], preheader_is_light: false }
+      });
+
+      // Volunteers state
+      const [volunteers, setVolunteers] = useState([]);
+      const [volunteerFilters, setVolunteerFilters] = useState({
+        search: '',
+        has_waiver: '',
+        experience: ''
+      });
+      const [selectedVolunteer, setSelectedVolunteer] = useState(null);
+      const [volunteerRSVPs, setVolunteerRSVPs] = useState([]);
+
+      // Analytics state
+      const [analytics, setAnalytics] = useState({
+        totalEvents: 0,
+        totalVolunteers: 0,
+        totalRSVPs: 0,
+        attendanceRate: 0,
+        cancellationRate: 0
+      });
+
+      useEffect(() => {
+        // Check if user is already authenticated
+        if (window.authClient && window.authClient.isAuthenticated()) {
+          setIsAuthenticated(true);
+          setEmail(window.authClient.getUserEmail());
+          setStep('dashboard');
+          loadDashboardData();
+        } else {
+          setStep('email');
+        }
+      }, []);
+
+      const loadDashboardData = async () => {
+        try {
+          setIsLoading(true);
+          await Promise.all([
+            loadEvents(),
+            loadVolunteers(),
+            loadAnalytics()
+          ]);
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const loadEvents = async () => {
+        try {
+          // Wait for Events API to be ready
+          if (!window.eventsAPI) {
+            if (window.waitForEventsAPI) {
+              await window.waitForEventsAPI();
+            } else {
+              throw new Error('Events API not available');
+            }
+          }
+          
+          const response = await window.eventsAPI.getEvents(eventFilters);
+          setEvents(response.events || []);
+        } catch (error) {
+          console.error('Error loading events:', error);
+          // Set empty array to prevent infinite loading
+          setEvents([]);
+          throw error;
+        }
+      };
+
+      const loadVolunteers = async () => {
+        try {
+          // Wait for Events API to be ready
+          if (!window.eventsAPI) {
+            if (window.waitForEventsAPI) {
+              await window.waitForEventsAPI();
+            } else {
+              throw new Error('Events API not available');
+            }
+          }
+          
+          const response = await window.eventsAPI.getVolunteers();
+          setVolunteers(response.volunteers || []);
+        } catch (error) {
+          console.error('Error loading volunteers:', error);
+          // Set empty array to prevent infinite loading
+          setVolunteers([]);
+          throw error;
+        }
+      };
+
+      const loadAnalytics = async () => {
+        try {
+          // Calculate analytics from loaded data
+          const totalEvents = events.length;
+          const totalVolunteers = volunteers.length;
+          
+          // This would be replaced with actual API calls for analytics
+          setAnalytics({
+            totalEvents,
+            totalVolunteers,
+            totalRSVPs: 0, // Would be calculated from API
+            attendanceRate: 0,
+            cancellationRate: 0
+          });
+        } catch (error) {
+          console.error('Error loading analytics:', error);
+        }
+      };
+
+      const handleSendCode = async (e) => {
+        e.preventDefault();
+        if (!email.trim()) {
+          setError('Please enter your email address');
+          return;
+        }
+
+        try {
+          setIsLoading(true);
+          setError('');
+          await window.authClient.sendValidationCode(email);
+          setSuccess('Validation code sent to your email!');
+          setStep('code');
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleVerifyCode = async (e) => {
+        e.preventDefault();
+        if (!validationCode.trim()) {
+          setError('Please enter the validation code');
+          return;
+        }
+
+        try {
+          setIsLoading(true);
+          setError('');
+          await window.authClient.verifyCode(email, validationCode);
+          setSuccess('Successfully authenticated!');
+          setIsAuthenticated(true);
+          setStep('dashboard');
+          loadDashboardData();
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleLogout = () => {
+        window.authClient.logout();
+        setIsAuthenticated(false);
+        setStep('email');
+        setEmail('');
+        setValidationCode('');
+        setError('');
+        setSuccess('');
+      };
+
+      const handleEventSubmit = async (e) => {
+        e.preventDefault();
+        try {
+          setIsLoading(true);
+          setError('');
+
+          if (editingEvent) {
+            await window.eventsAPI.updateEvent(editingEvent.event_id, eventFormData);
+            setSuccess('Event updated successfully!');
+          } else {
+            await window.eventsAPI.createEvent(eventFormData);
+            setSuccess('Event created successfully!');
+          }
+
+          setShowEventForm(false);
+          setEditingEvent(null);
+          resetEventForm();
+          await loadEvents();
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleEventDelete = async (eventId) => {
+        if (!confirm('Are you sure you want to delete this event? This will also delete all associated RSVPs.')) {
+          return;
+        }
+
+        try {
+          setIsLoading(true);
+          await window.eventsAPI.deleteEvent(eventId);
+          setSuccess('Event deleted successfully!');
+          await loadEvents();
+        } catch (error) {
+          setError(error.message);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleEventEdit = (event) => {
+        setEditingEvent(event);
+        setEventFormData({
+          title: event.title,
+          description: event.description,
+          start_time: event.start_time,
+          end_time: event.end_time,
+          location: event.location,
+          attendance_cap: event.attendance_cap,
+          status: event.status,
+          hugo_config: event.hugo_config || { tags: [], preheader_is_light: false }
+        });
+        setShowEventForm(true);
+      };
+
+      const resetEventForm = () => {
+        setEventFormData({
+          title: '',
+          description: '',
+          start_time: '',
+          end_time: '',
+          location: { name: '', address: '' },
+          attendance_cap: 50,
+          status: 'active',
+          hugo_config: { tags: [], preheader_is_light: false }
+        });
+      };
+
+      const handleVolunteerSelect = async (volunteer) => {
+        try {
+          setSelectedVolunteer(volunteer);
+          const response = await window.eventsAPI.getVolunteerRSVPs(volunteer.email);
+          setVolunteerRSVPs(response.rsvps || []);
+        } catch (error) {
+          setError(error.message);
+        }
+      };
+
+      const formatDate = (dateString) => {
+        if (!dateString) return 'Unknown date';
+        try {
+          return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit'
+          });
+        } catch (error) {
+          return 'Invalid date';
+        }
+      };
+
+      const formatDateForInput = (dateString) => {
+        if (!dateString) return '';
+        try {
+          return new Date(dateString).toISOString().slice(0, 16);
+        } catch (error) {
+          return '';
+        }
+      };
+
+      const filteredEvents = events.filter(event => {
+        if (eventFilters.status && event.status !== eventFilters.status) return false;
+        if (eventFilters.location && !event.location.name.toLowerCase().includes(eventFilters.location.toLowerCase())) return false;
+        return true;
+      });
+
+      const filteredVolunteers = volunteers.filter(volunteer => {
+        if (volunteerFilters.search) {
+          const search = volunteerFilters.search.toLowerCase();
+          if (!volunteer.full_name.toLowerCase().includes(search) && 
+              !volunteer.email.toLowerCase().includes(search)) return false;
+        }
+        return true;
+      });
+
+      // Render methods
+      const renderLoadingState = () => React.createElement('div', {
+        className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+      }, [
+        React.createElement('div', {
+          key: 'spinner-container',
+          className: "text-center"
+        }, [
+          React.createElement('div', {
+            key: 'spinner',
+            className: "inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"
+          }),
+          React.createElement('h2', {
+            key: 'title',
+            className: "text-2xl font-bold mb-2"
+          }, 'Loading...'),
+          React.createElement('p', {
+            key: 'subtitle',
+            className: "text-gray-600"
+          }, 'Checking your authentication status')
+        ])
+      ]);
+
+      const renderEmailStep = () => React.createElement('div', {
+        className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+      }, [
+        React.createElement('h2', {
+          key: 'title',
+          className: "text-2xl font-bold mb-4 text-center"
+        }, 'Admin Login'),
+        React.createElement('p', {
+          key: 'subtitle',
+          className: "text-gray-600 mb-6 text-center"
+        }, 'Enter your admin email to receive a validation code'),
+        React.createElement('form', {
+          key: 'form',
+          onSubmit: handleSendCode
+        }, [
+          React.createElement('div', {
+            key: 'email-group',
+            className: "mb-4"
+          }, [
+            React.createElement('label', {
+              key: 'label',
+              htmlFor: "email",
+              className: "block text-sm font-medium text-gray-700 mb-2"
+            }, 'Email Address'),
+            React.createElement('input', {
+              key: 'input',
+              type: "email",
+              id: "email",
+              value: email,
+              onChange: (e) => setEmail(e.target.value),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+              placeholder: "admin@example.com",
+              required: true
+            })
+          ]),
+          React.createElement('button', {
+            key: 'submit',
+            type: "submit",
+            disabled: isLoading,
+            className: "w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          }, isLoading ? 'Sending...' : 'Send Validation Code')
+        ])
+      ]);
+
+      const renderCodeStep = () => React.createElement('div', {
+        className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+      }, [
+        React.createElement('h2', {
+          key: 'title',
+          className: "text-2xl font-bold mb-4 text-center"
+        }, 'Enter Validation Code'),
+        React.createElement('p', {
+          key: 'subtitle',
+          className: "text-gray-600 mb-6 text-center"
+        }, [
+          'We sent a 6-digit code to ',
+          React.createElement('strong', { key: 'email' }, email)
+        ]),
+        React.createElement('form', {
+          key: 'form',
+          onSubmit: handleVerifyCode
+        }, [
+          React.createElement('div', {
+            key: 'code-group',
+            className: "mb-4"
+          }, [
+            React.createElement('label', {
+              key: 'label',
+              htmlFor: "code",
+              className: "block text-sm font-medium text-gray-700 mb-2"
+            }, 'Validation Code'),
+            React.createElement('input', {
+              key: 'input',
+              type: "text",
+              id: "code",
+              value: validationCode,
+              onChange: (e) => setValidationCode(e.target.value.replace(/\D/g, '').slice(0, 6)),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-lg tracking-widest",
+              placeholder: "123456",
+              maxLength: "6",
+              required: true
+            })
+          ]),
+          React.createElement('button', {
+            key: 'submit',
+            type: "submit",
+            disabled: isLoading || validationCode.length !== 6,
+            className: "w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed mb-3"
+          }, isLoading ? 'Verifying...' : 'Verify Code'),
+          React.createElement('button', {
+            key: 'back',
+            type: "button",
+            onClick: () => setStep('email'),
+            className: "w-full bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
+          }, 'Back to Email')
+        ])
+      ]);
+
+      const renderDashboard = () => React.createElement('div', {
+        className: "max-w-7xl mx-auto bg-white rounded-lg shadow-md"
+      }, [
+        React.createElement('div', {
+          key: 'header',
+          className: "flex justify-between items-center p-6 border-b"
+        }, [
+          React.createElement('div', { key: 'title-section' }, [
+            React.createElement('h2', {
+              key: 'title',
+              className: "text-2xl font-bold"
+            }, 'Admin Dashboard'),
+            React.createElement('p', {
+              key: 'welcome',
+              className: "text-gray-600"
+            }, `Welcome, ${email}`)
+          ]),
+          React.createElement('button', {
+            key: 'logout',
+            onClick: handleLogout,
+            className: "bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700"
+          }, 'Logout')
+        ]),
+        React.createElement('div', {
+          key: 'tabs',
+          className: "border-b"
+        }, React.createElement('nav', {
+          className: "flex space-x-8 px-6"
+        }, [
+          { id: 'events', label: 'Events', icon: '📅' },
+          { id: 'volunteers', label: 'Volunteers', icon: '👥' },
+          { id: 'analytics', label: 'Analytics', icon: '📊' }
+        ].map(tab => React.createElement('button', {
+          key: tab.id,
+          onClick: () => setActiveTab(tab.id),
+          className: `py-4 px-2 border-b-2 font-medium text-sm ${
+            activeTab === tab.id
+              ? 'border-blue-500 text-blue-600'
+              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+          }`
+        }, `${tab.icon} ${tab.label}`)))),
+        React.createElement('div', {
+          key: 'content',
+          className: "p-6"
+        }, isLoading ? React.createElement('div', {
+          className: "text-center py-8"
+        }, [
+          React.createElement('div', {
+            key: 'spinner',
+            className: "inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"
+          }),
+          React.createElement('p', {
+            key: 'text',
+            className: "mt-2 text-gray-600"
+          }, 'Loading...')
+        ]) : React.createElement('div', {}, [
+          activeTab === 'events' ? React.createElement('div', { key: 'events-tab' }, [
+            React.createElement('div', {
+              key: 'header',
+              className: "flex justify-between items-center mb-6"
+            }, [
+              React.createElement('h3', {
+                key: 'title',
+                className: "text-xl font-semibold"
+              }, 'Event Management'),
+              React.createElement('button', {
+                key: 'create-btn',
+                onClick: () => setShowEventForm(true),
+                className: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+              }, 'Create New Event')
+            ]),
+            React.createElement('div', {
+              key: 'events-list',
+              className: "space-y-4"
+            }, filteredEvents.length > 0 ? filteredEvents.map(event => React.createElement('div', {
+              key: event.event_id,
+              className: "bg-white border border-gray-200 rounded-lg p-4"
+            }, [
+              React.createElement('div', {
+                key: 'event-content',
+                className: "flex justify-between items-start"
+              }, [
+                React.createElement('div', {
+                  key: 'event-info',
+                  className: "flex-1"
+                }, [
+                  React.createElement('h4', {
+                    key: 'title',
+                    className: "text-lg font-semibold"
+                  }, event.title),
+                  React.createElement('p', {
+                    key: 'description',
+                    className: "text-gray-600 text-sm mb-2"
+                  }, event.description),
+                  React.createElement('div', {
+                    key: 'details',
+                    className: "grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600"
+                  }, [
+                    React.createElement('div', { key: 'date' }, `📅 ${formatDate(event.start_time)}`),
+                    React.createElement('div', { key: 'location' }, `📍 ${event.location.name}`),
+                    React.createElement('div', { key: 'cap' }, `👥 Cap: ${event.attendance_cap}`)
+                  ]),
+                  React.createElement('div', {
+                    key: 'status',
+                    className: "mt-2"
+                  }, React.createElement('span', {
+                    className: `inline-block px-2 py-1 text-xs rounded ${
+                      event.status === 'active' ? 'bg-green-100 text-green-800' :
+                      event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      event.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`
+                  }, event.status.toUpperCase()))
+                ]),
+                React.createElement('div', {
+                  key: 'actions',
+                  className: "flex space-x-2 ml-4"
+                }, [
+                  React.createElement('button', {
+                    key: 'edit',
+                    onClick: () => handleEventEdit(event),
+                    className: "bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
+                  }, 'Edit'),
+                  React.createElement('button', {
+                    key: 'delete',
+                    onClick: () => handleEventDelete(event.event_id),
+                    className: "bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                  }, 'Delete')
+                ])
+              ])
+            ])) : React.createElement('div', {
+              key: 'no-events',
+              className: "text-center py-8 text-gray-500"
+            }, 'No events found.'))
+          ]) : null,
+          activeTab === 'volunteers' ? React.createElement('div', { key: 'volunteers-tab' }, [
+            React.createElement('h3', {
+              key: 'title',
+              className: "text-xl font-semibold mb-6"
+            }, 'Volunteer Management'),
+            React.createElement('div', {
+              key: 'content',
+              className: "text-center py-8 text-gray-500"
+            }, 'Volunteer management features coming soon...')
+          ]) : null,
+          activeTab === 'analytics' ? React.createElement('div', { key: 'analytics-tab' }, [
+            React.createElement('h3', {
+              key: 'title',
+              className: "text-xl font-semibold mb-6"
+            }, 'Analytics & Reports'),
+            React.createElement(AnalyticsComponent, { key: 'analytics-content' })
+          ]) : null
+        ]))
+      ]);
+
+      return React.createElement('div', {
+        className: "min-h-screen bg-gray-100 py-8"
+      }, React.createElement('div', {
+        className: "container mx-auto px-4"
+      }, [
+        error ? React.createElement('div', {
+          key: 'error',
+          className: "max-w-4xl mx-auto mb-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+        }, error) : null,
+        success ? React.createElement('div', {
+          key: 'success',
+          className: "max-w-4xl mx-auto mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+        }, success) : null,
+        step === 'loading' ? renderLoadingState() : null,
+        step === 'email' ? renderEmailStep() : null,
+        step === 'code' ? renderCodeStep() : null,
+        step === 'dashboard' ? renderDashboard() : null
+      ]));
+    };
+
+    // Render the component
+    ReactDOM.render(React.createElement(AdminDashboard), document.getElementById('admin-dashboard-root'));
+  }
+</script>
+{{ end }}

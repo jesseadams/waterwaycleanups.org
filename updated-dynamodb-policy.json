@@ -1,0 +1,37 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:Scan",
+        "dynamodb:Query",
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:us-east-1:767072126027:table/events-staging",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/events-staging/index/*",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/volunteers-staging",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/volunteers-staging/index/*",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/rsvps-staging",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/rsvps-staging/index/*",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/auth_sessions-staging",
+        "arn:aws:dynamodb:us-east-1:767072126027:table/auth_sessions-staging/index/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:*:*:*"
+    }
+  ]
+}

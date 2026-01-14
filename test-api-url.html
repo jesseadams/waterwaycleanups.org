@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API URL Test</title>
+</head>
+<body>
+    <h1>API URL Test</h1>
+    <div id="results"></div>
+
+    <script src="static/js/events-api-client.js"></script>
+    <script>
+        // Simulate Hugo API config (like what would be injected in production)
+        window.API_CONFIG = {
+            BASE_URL: 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/staging'
+        };
+        
+        // Test the API URL generation
+        const client = new EventsAPIClient();
+        
+        const results = document.getElementById('results');
+        
+        // Test different endpoints
+        const endpoints = ['analytics', 'events/export', 'volunteers/metrics', 'events', 'user-dashboard', 'some-other-endpoint'];
+        
+        results.innerHTML = '<h2>API URL Generation Test</h2>';
+        results.innerHTML += `<p><strong>Hostname:</strong> ${window.location.hostname}</p>`;
+        results.innerHTML += `<p><strong>Is Localhost:</strong> ${window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'}</p>`;
+        results.innerHTML += `<p><strong>Hugo API Config:</strong> ${JSON.stringify(window.API_CONFIG)}</p>`;
+        results.innerHTML += '<h3>Endpoint URL Mapping:</h3>';
+        
+        endpoints.forEach(endpoint => {
+            const url = client.getApiUrl(endpoint);
+            const isEventsAPI = url.includes('o2pkfnwqq4');
+            const isMainAPI = url.includes('hq5bwnnj8h');
+            const apiType = isEventsAPI ? '(Events API)' : isMainAPI ? '(Main API)' : '(Other)';
+            results.innerHTML += `<p><strong>${endpoint}:</strong> ${url} ${apiType}</p>`;
+        });
+    </script>
+</body>
+</html>

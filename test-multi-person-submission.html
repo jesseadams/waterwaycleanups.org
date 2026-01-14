@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Person RSVP Submission Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .log-output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+    .log-entry {
+      margin-bottom: 5px;
+      padding: 2px 0;
+    }
+    .log-entry.success {
+      color: #4ade80;
+    }
+    .log-entry.error {
+      color: #f87171;
+    }
+    .log-entry.info {
+      color: #60a5fa;
+    }
+    .log-entry.warning {
+      color: #fbbf24;
+    }
+    .bg-eden-green {
+      background-color: #10b981;
+    }
+    .hover\:bg-green-700:hover {
+      background-color: #047857;
+    }
+  </style>
+</head>
+<body>
+  <h1 class="text-3xl font-bold mb-6">Multi-Person RSVP Submission Test</h1>
+
+  <div class="test-section">
+    <h2 class="text-xl font-semibold mb-4">Test Controls</h2>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button onclick="testBuildAttendeesArray()" class="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded">
+        Test Build Attendees Array
+      </button>
+      <button onclick="testSuccessfulSubmission()" class="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded">
+        Test Successful Submission
+      </button>
+      <button onclick="testDuplicateError()" class="bg-yellow-500 hover:bg-yellow-700 text-white py-2 px-4 rounded">
+        Test Duplicate Error
+      </button>
+      <button onclick="testCapacityError()" class="bg-orange-500 hover:bg-orange-700 text-white py-2 px-4 rounded">
+        Test Capacity Error
+      </button>
+      <button onclick="testFullFlow()" class="bg-purple-500 hover:bg-purple-700 text-white py-2 px-4 rounded">
+        Test Full Flow
+      </button>
+      <button onclick="clearLogs()" class="bg-gray-500 hover:bg-gray-700 text-white py-2 px-4 rounded">
+        Clear Logs
+      </button>
+    </div>
+    <div class="log-output" id="logOutput"></div>
+  </div>
+
+  <div class="test-section">
+    <h2 class="text-xl font-semibold mb-4">RSVP Widget</h2>
+    <div class="event-rsvp-widget" data-event-id="test-event-123" data-attendance-cap="15">
+      <div class="mb-4">
+        <h3 class="text-xl font-bold text-eden-green mb-1">Event Registration</h3>
+        <p class="text-gray-600">
+          <span class="rsvp-count">5</span>/<span class="rsvp-capacity">15</span> registered
+          &bull; <span class="rsvp-status">10 spots left</span>
+        </p>
+      </div>
+      
+      <button type="button" class="rsvp-toggle-button bg-eden-green hover:bg-green-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
+        Sign Up
+      </button>
+
+      <div class="rsvp-success hidden mt-4 p-3 bg-green-100 text-green-700 border border-green-200 rounded">
+        Thank you for registering!
+      </div>
+
+      <div class="rsvp-error hidden mt-4 p-3 bg-red-100 text-red-700 border border-red-200 rounded">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Mock API configuration
+    window.API_CONFIG = {
+      BASE_URL: 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging',
+      EVENT_RSVP_CHECK: 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging/check-event-rsvp',
+      EVENT_RSVP_SUBMIT: 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging/submit-event-rsvp'
+    };
+
+    // Mock auth client
+    window.authClient = {
+      isAuthenticated: () => true,
+      getUserEmail: () => 'test@example.com'
+    };
+
+    // Mock localStorage
+    localStorage.setItem('auth_user_email', 'test@example.com');
+    localStorage.setItem('auth_session_token', 'mock-token-123');
+
+    // Logging utility
+    function log(message, type = 'info') {
+      const logOutput = document.getElementById('logOutput');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logOutput.appendChild(entry);
+      logOutput.scrollTop = logOutput.scrollHeight;
+      console.log(message);
+    }
+
+    function clearLogs() {
+      document.getElementById('logOutput').innerHTML = '';
+      log('Logs cleared', 'info');
+    }
+
+    // Mock checkEventRsvp function
+    async function checkEventRsvp(eventId, email) {
+      log(`Mock: Checking RSVP for event: ${eventId}`, 'info');
+      return {
+        success: true,
+        rsvp_count: 5,
+        user_registered: false,
+        user_rsvps: []
+      };
+    }
+
+    // Mock updateRsvpCount function
+    async function updateRsvpCount(eventId, countElement, statusElement, attendanceCap) {
+      log(`Mock: Updating RSVP count for event: ${eventId}`, 'info');
+      if (countElement) countElement.textContent = '7';
+      if (statusElement) statusElement.textContent = '8 spots left';
+    }
+
+    // Mock checkUserRsvpStatus function
+    async function checkUserRsvpStatus(widget, eventId) {
+      log(`Mock: Checking user RSVP status for event: ${eventId}`, 'info');
+    }
+
+    // Test 1: Build attendees array
+    function testBuildAttendeesArray() {
+      log('=== Test 1: Build Attendees Array ===', 'info');
+      
+      const selectedAttendees = [
+        {
+          type: 'volunteer',
+          id: 'test@example.com',
+          email: 'test@example.com',
+          first_name: 'John',
+          last_name: 'Doe'
+        },
+        {
+          type: 'minor',
+          id: 'minor-1',
+          minor_id: 'minor-1',
+          first_name: 'Alice',
+          last_name: 'Smith',
+          age: 10
+        },
+        {
+          type: 'minor',
+          id: 'minor-2',
+          minor_id: 'minor-2',
+          first_name: 'Bob',
+          last_name: 'Smith',
+          age: 14
+        }
+      ];
+      
+      try {
+        const result = buildAttendeesArray(selectedAttendees);
+        log(`✓ Built attendees array with ${result.length} attendees`, 'success');
+        log(`  Volunteer: ${result[0].first_name} ${result[0].last_name} (${result[0].email})`, 'info');
+        log(`  Minor 1: ${result[1].first_name} ${result[1].last_name}, age ${result[1].age}`, 'info');
+        log(`  Minor 2: ${result[2].first_name} ${result[2].last_name}, age ${result[2].age}`, 'info');
+        log(JSON.stringify(result, null, 2), 'info');
+      } catch (error) {
+        log(`✗ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Test 2: Successful submission
+    async function testSuccessfulSubmission() {
+      log('=== Test 2: Successful Submission ===', 'info');
+      
+      // Mock successful API response
+      window.fetch = async (url, options) => {
+        log(`Mock API call to: ${url}`, 'info');
+        const body = JSON.parse(options.body);
+        log(`Request payload: ${JSON.stringify(body, null, 2)}`, 'info');
+        
+        return {
+          ok: true,
+          json: async () => ({
+            success: true,
+            message: 'RSVP submitted successfully',
+            results: [
+              { attendee_id: 'test@example.com', status: 'registered', attendee_type: 'volunteer', name: 'John Doe' },
+              { attendee_id: 'minor-1', status: 'registered', attendee_type: 'minor', name: 'Alice Smith' }
+            ],
+            current_attendance: 7,
+            attendance_cap: 15
+          })
+        };
+      };
+      
+      const widget = document.querySelector('.event-rsvp-widget');
+      const selectedAttendees = [
+        { type: 'volunteer', id: 'test@example.com', email: 'test@example.com', first_name: 'John', last_name: 'Doe' },
+        { type: 'minor', id: 'minor-1', minor_id: 'minor-1', first_name: 'Alice', last_name: 'Smith', age: 10 }
+      ];
+      
+      try {
+        await handleMultiPersonRsvpSubmission(widget, 'test-event-123', selectedAttendees, 15);
+        log('✓ Submission completed successfully', 'success');
+        log('✓ Check the widget above for success message', 'success');
+      } catch (error) {
+        log(`✗ Error: ${error.message}`, 'error');
+      }
+    }
+
+    // Test 3: Duplicate error
+    async function testDuplicateError() {
+      log('=== Test 3: Duplicate Attendees Error ===', 'info');
+      
+      // Mock error response for duplicates
+      window.fetch = async (url, options) => {
+        log(`Mock API call to: ${url}`, 'info');
+        
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: 'Some attendees are already registered',
+            duplicate_attendees: [
+              { attendee_id: 'test@example.com', name: 'John Doe', attendee_type: 'volunteer' }
+            ]
+          })
+        };
+      };
+      
+      const widget = document.querySelector('.event-rsvp-widget');
+      const selectedAttendees = [
+        { type: 'volunteer', id: 'test@example.com', email: 'test@example.com', first_name: 'John', last_name: 'Doe' }
+      ];
+      
+      try {
+        await handleMultiPersonRsvpSubmission(widget, 'test-event-123', selectedAttendees, 15);
+        log('✗ Should have thrown an error', 'error');
+      } catch (error) {
+        log(`✓ Caught expected error: ${error.message}`, 'success');
+        log('✓ Check the widget above for error message', 'success');
+      }
+    }
+
+    // Test 4: Capacity error
+    async function testCapacityError() {
+      log('=== Test 4: Capacity Exceeded Error ===', 'info');
+      
+      // Mock error response for capacity
+      window.fetch = async (url, options) => {
+        log(`Mock API call to: ${url}`, 'info');
+        
+        return {
+          ok: false,
+          status: 400,
+          json: async () => ({
+            success: false,
+            error: 'Event capacity exceeded',
+            remaining_capacity: 1
+          })
+        };
+      };
+      
+      const widget = document.querySelector('.event-rsvp-widget');
+      const selectedAttendees = [
+        { type: 'volunteer', id: 'test@example.com', email: 'test@example.com', first_name: 'John', last_name: 'Doe' },
+        { type: 'minor', id: 'minor-1', minor_id: 'minor-1', first_name: 'Alice', last_name: 'Smith', age: 10 }
+      ];
+      
+      try {
+        await handleMultiPersonRsvpSubmission(widget, 'test-event-123', selectedAttendees, 15);
+        log('✗ Should have thrown an error', 'error');
+      } catch (error) {
+        log(`✓ Caught expected error: ${error.message}`, 'success');
+        log('✓ Check the widget above for error message', 'success');
+      }
+    }
+
+    // Test 5: Full flow with selector
+    async function testFullFlow() {
+      log('=== Test 5: Full Flow with Selector ===', 'info');
+      
+      // Reset widget
+      const widget = document.querySelector('.event-rsvp-widget');
+      const container = widget.querySelector('.multi-person-selector-container');
+      if (container) container.remove();
+      
+      // Mock successful API response
+      window.fetch = async (url, options) => {
+        log(`Mock API call to: ${url}`, 'info');
+        
+        return {
+          ok: true,
+          json: async () => ({
+            success: true,
+            message: 'RSVP submitted successfully',
+            results: [
+              { attendee_id: 'test@example.com', status: 'registered', attendee_type: 'volunteer', name: 'Test User' },
+              { attendee_id: 'minor-2', status: 'registered', attendee_type: 'minor', name: 'Bob Smith' }
+            ],
+            current_attendance: 7,
+            attendance_cap: 15
+          })
+        };
+      };
+      
+      // Render selector
+      const minorsList = [
+        { minor_id: 'minor-1', first_name: 'Alice', last_name: 'Smith', age: 10 },
+        { minor_id: 'minor-2', first_name: 'Bob', last_name: 'Smith', age: 14 }
+      ];
+      
+      try {
+        await renderMultiPersonSelector(widget, 'test-event-123', minorsList, 15);
+        log('✓ Selector rendered', 'success');
+        log('→ Now select attendees and click "Register Selected"', 'warning');
+      } catch (error) {
+        log(`✗ Error: ${error.message}`, 'error');
+      }
+    }
+
+    log('Test page loaded. Click buttons to run tests.', 'info');
+  </script>
+
+  <!-- Load the actual event-rsvp.js file -->
+  <script src="/static/js/event-rsvp.js"></script>
+</body>
+</html>

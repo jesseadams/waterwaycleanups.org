@@ -322,9 +322,9 @@ resource "aws_lambda_permission" "submit_waiver_lambda_permission" {
 
 # API Gateway stage
 resource "aws_api_gateway_stage" "volunteer_waiver_stage" {
-  deployment_id = aws_api_gateway_deployment.volunteer_waiver_deployment.id
+  deployment_id = aws_api_gateway_deployment.volunteer_waiver_deployment_v2.id
   rest_api_id   = aws_api_gateway_rest_api.volunteer_waiver_api.id
-  stage_name    = var.environment
+  stage_name    = local.workspace
 }
 
 # Output the API URLs
