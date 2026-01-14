@@ -275,7 +275,7 @@ output "events_sns_topic_arn" {
 
 output "events_api_url" {
   description = "URL of the Events API Gateway"
-  value       = "https://${aws_api_gateway_rest_api.events_api.id}.execute-api.${data.aws_region.current.name}.amazonaws.com/${local.is_production ? "prod" : "staging"}"
+  value       = aws_api_gateway_stage.events_api_stage.invoke_url
 }
 
 output "events_api_id" {
@@ -1224,7 +1224,6 @@ resource "aws_api_gateway_deployment" "events_api" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.events_api.id
-  stage_name  = local.is_production ? "prod" : "staging"
 
   triggers = {
     redeployment = sha1(jsonencode([
@@ -1245,6 +1244,13 @@ resource "aws_api_gateway_deployment" "events_api" {
   }
 }
 
+# API Gateway stage
+resource "aws_api_gateway_stage" "events_api_stage" {
+  deployment_id = aws_api_gateway_deployment.events_api.id
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  stage_name    = local.is_production ? "prod" : "staging"
+}
+
 # ===== API THROTTLING AND RATE LIMITING =====
 
 # Usage plan for API throttling
@@ -1254,7 +1260,7 @@ resource "aws_api_gateway_usage_plan" "events_api_usage_plan" {
 
   api_stages {
     api_id = aws_api_gateway_rest_api.events_api.id
-    stage  = aws_api_gateway_deployment.events_api.stage_name
+    stage  = aws_api_gateway_stage.events_api_stage.stage_name
   }
 
   quota_settings {
