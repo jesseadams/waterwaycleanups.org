@@ -1249,6 +1249,8 @@ resource "aws_api_gateway_stage" "events_api_stage" {
   deployment_id = aws_api_gateway_deployment.events_api.id
   rest_api_id   = aws_api_gateway_rest_api.events_api.id
   stage_name    = local.is_production ? "prod" : "staging"
+  
+  depends_on = [aws_api_gateway_deployment.events_api]
 }
 
 # ===== API THROTTLING AND RATE LIMITING =====
