@@ -4,6 +4,25 @@
 .innerbody #volunteer-dashboard-root {
   /* Reset any theme overrides */
   font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji" !important;
+  position: relative !important;
+  z-index: 1 !important;
+  /* Add top margin to push entire dashboard below header */
+  margin-top: 140px !important;
+}
+
+/* Ensure the dashboard content doesn't get hidden behind fixed headers */
+.innerbody #volunteer-dashboard-root > div {
+  padding-top: 2rem !important;
+}
+
+/* Override the py-8 class to add more top padding */
+.innerbody #volunteer-dashboard-root .min-h-screen {
+  padding-top: 2rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .py-8 {
+  padding-top: 2rem !important;
+  padding-bottom: 2rem !important;
 }
 
 .innerbody #volunteer-dashboard-root * {
@@ -30,6 +49,10 @@
 
 .innerbody #volunteer-dashboard-root .bg-red-600 {
   background-color: #dc2626 !important;
+}
+
+.innerbody #volunteer-dashboard-root .bg-green-600 {
+  background-color: #16a34a !important;
 }
 
 .innerbody #volunteer-dashboard-root .bg-green-100 {
@@ -118,6 +141,14 @@
 /* Ensure flexbox and grid work */
 .innerbody #volunteer-dashboard-root .flex {
   display: flex !important;
+}
+
+.innerbody #volunteer-dashboard-root .flex-wrap {
+  flex-wrap: wrap !important;
+}
+
+.innerbody #volunteer-dashboard-root .items-start {
+  align-items: flex-start !important;
 }
 
 .innerbody #volunteer-dashboard-root .grid {
@@ -253,6 +284,18 @@
   opacity: 0.9 !important;
 }
 
+.innerbody #volunteer-dashboard-root .hover\\:bg-blue-700:hover {
+  background-color: #1d4ed8 !important;
+}
+
+.innerbody #volunteer-dashboard-root .hover\\:bg-red-700:hover {
+  background-color: #b91c1c !important;
+}
+
+.innerbody #volunteer-dashboard-root .hover\\:bg-green-700:hover {
+  background-color: #15803d !important;
+}
+
 .innerbody #volunteer-dashboard-root button:disabled {
   opacity: 0.5 !important;
   cursor: not-allowed !important;
@@ -298,6 +341,10 @@
 /* Ensure space utilities work */
 .innerbody #volunteer-dashboard-root .space-y-2 > * + * {
   margin-top: 0.5rem !important;
+}
+
+.innerbody #volunteer-dashboard-root .space-x-3 > * + * {
+  margin-left: 0.75rem !important;
 }
 
 /* Ensure links work properly */
