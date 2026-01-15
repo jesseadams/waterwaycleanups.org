@@ -28,18 +28,17 @@
 <!-- Load events API client -->
 <script src="{{ "js/events-api-client.js" | relURL }}"></script>
 
-<!-- Initialize Events API with AWS API Gateway endpoints -->
+<!-- Include API configuration from Hugo -->
+{{ partial "api-config.html" . }}
+
+<!-- Initialize Events API with injected configuration -->
 <script>
-  // Use the same API configuration as the auth client
-  // This will automatically detect localhost vs production and use appropriate endpoints
-  window.API_CONFIG = null; // Let the clients use their own endpoint resolution
+  console.log('Admin API Config loaded:', window.API_CONFIG);
   
-  console.log('Admin API Config: Using automatic endpoint resolution');
-  
-  // Initialize Events API client immediately
+  // Initialize Events API client with the injected config
   if (typeof window.initializeEventsAPI === 'function') {
-    window.eventsAPI = window.initializeEventsAPI(null, null); // Let it auto-detect
-    console.log('Events API initialized with automatic endpoint resolution');
+    window.eventsAPI = window.initializeEventsAPI(window.API_CONFIG.EVENTS_API_URL, null);
+    console.log('Events API initialized with URL:', window.API_CONFIG.EVENTS_API_URL);
   }
 </script>
 
