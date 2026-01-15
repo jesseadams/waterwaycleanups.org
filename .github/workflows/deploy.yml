@@ -188,7 +188,16 @@ jobs:
           echo "events_api_url=$(terraform output -raw events_api_url)" >> $GITHUB_OUTPUT
 
       - name: Display Terraform Outputs
-        run: echo toJSON(steps.tf-outputs.outputs)
+        if: env.IS_PR != 'true'
+        run: |
+          echo "Terraform Outputs:"
+          echo "bucket_name: ${{ steps.tf-outputs.outputs.bucket_name }}"
+          echo "distribution_id: ${{ steps.tf-outputs.outputs.distribution_id }}"
+          echo "website_url: ${{ steps.tf-outputs.outputs.website_url }}"
+          echo "api_base_url: ${{ steps.tf-outputs.outputs.api_base_url }}"
+          echo "api_base_url_volunteer: ${{ steps.tf-outputs.outputs.api_base_url_volunteer }}"
+          echo "events_api_url: ${{ steps.tf-outputs.outputs.events_api_url }}"
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
