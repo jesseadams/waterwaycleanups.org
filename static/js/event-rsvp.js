@@ -693,17 +693,11 @@ async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap) {
   }
 
   // Determine API URL
-  let apiUrl;
-  if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
-    apiUrl = `${window.API_CONFIG.BASE_URL}/submit-event-rsvp`;
-  } else {
-    // Fallback URL construction
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const baseUrl = isLocalhost 
-      ? 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging'
-      : 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod';
-    apiUrl = `${baseUrl}/submit-event-rsvp`;
+  if (!window.API_CONFIG || !window.API_CONFIG.BASE_URL) {
+    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
   }
+  
+  const apiUrl = `${window.API_CONFIG.BASE_URL}/submit-event-rsvp`;
 
   // Get user email from localStorage
   const userEmail = localStorage.getItem('auth_user_email');
@@ -971,17 +965,11 @@ async function cancelIndividualRsvp(eventId, attendeeId, attendeeType) {
   }
 
   // Determine API URL
-  let apiUrl;
-  if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
-    apiUrl = `${window.API_CONFIG.BASE_URL}/cancel-event-rsvp`;
-  } else {
-    // Fallback URL construction
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const baseUrl = isLocalhost 
-      ? 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging'
-      : 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod';
-    apiUrl = `${baseUrl}/cancel-event-rsvp`;
+  if (!window.API_CONFIG || !window.API_CONFIG.BASE_URL) {
+    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
   }
+  
+  const apiUrl = `${window.API_CONFIG.BASE_URL}/cancel-event-rsvp`;
 
   // Build the request payload
   const payload = {
@@ -1131,12 +1119,7 @@ async function submitEventRsvpDirect(eventId, firstName, lastName, email, attend
   if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
     apiUrl = `${window.API_CONFIG.BASE_URL}/submit-event-rsvp`;
   } else {
-    // Fallback URL construction
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const baseUrl = isLocalhost 
-      ? 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging'
-      : 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod';
-    apiUrl = `${baseUrl}/submit-event-rsvp`;
+    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
   }
 
   const payload = {
@@ -1830,12 +1813,7 @@ async function cancelRsvpDirectly(eventId, eventStartTime) {
   if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
     apiUrl = `${window.API_CONFIG.BASE_URL}/cancel-event-rsvp`;
   } else {
-    // Fallback URL construction
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const baseUrl = isLocalhost 
-      ? 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging'
-      : 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod';
-    apiUrl = `${baseUrl}/cancel-event-rsvp`;
+    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
   }
 
   const payload = {

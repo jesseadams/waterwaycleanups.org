@@ -44,65 +44,25 @@ class EventsAPIClient {
      * Get API URL based on environment (same logic as AuthClient)
      */
     getApiUrl(endpoint) {
-        // For admin-events, use a different approach during development
-        if (endpoint === 'admin-events') {
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            
-            if (isLocalhost) {
-                // During development, use the user-dashboard API as a workaround
-                // since Hugo doesn't serve the /api/admin-events endpoint
-                return this.getApiUrl('user-dashboard');
-            } else {
-                // In production, use the deployed admin-events endpoint
-                return `${this.baseUrl}/admin-events`;
-            }
-        }
-        
-        // For events-specific endpoints, always use the events API Gateway
-        // Don't use Hugo-injected API_CONFIG as it points to a different API Gateway
+        // For events-specific endpoints, use the Events API Gateway
         const eventsEndpoints = ['events', 'analytics', 'volunteers/metrics', 'volunteers/export'];
         const isEventsEndpoint = eventsEndpoints.some(ep => endpoint.startsWith(ep));
         
         if (isEventsEndpoint) {
-            // Determine environment based on hostname
-            const hostname = window.location.hostname;
-            const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-            const isStaging = hostname.includes('staging');
-            
-            // Determine the appropriate stage name
-            let stageName = 'prod'; // default
-            if (isLocalhost) {
-                // For localhost development, try staging first, fallback to prod
-                stageName = 'staging';
-            } else if (isStaging) {
-                stageName = 'staging';
+            // Use Hugo-injected Events API URL
+            if (window.API_CONFIG && window.API_CONFIG.EVENTS_API_URL) {
+                return `${window.API_CONFIG.EVENTS_API_URL}/${endpoint}`;
             }
             
-            // Use the Events API Gateway specifically
-            const eventsApiBase = 'https://o2pkfnwqq4.execute-api.us-east-1.amazonaws.com';
-            const fullUrl = `${eventsApiBase}/${stageName}/${endpoint}`;
-            
-            console.log(`Events API URL for ${endpoint}: ${fullUrl} (detected environment: ${stageName})`);
-            return fullUrl;
+            throw new Error('EVENTS_API_URL not found. Build with HUGO_EVENTS_API_URL environment variable.');
         }
         
-        // For non-events endpoints, use Hugo-injected API configuration if available
+        // For non-events endpoints, use standard API configuration
         if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
             return `${window.API_CONFIG.BASE_URL}/${endpoint}`;
         }
         
-        // Fallback for other endpoints
-        const hostname = window.location.hostname;
-        const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
-        const isStaging = hostname.includes('staging');
-        
-        if (isLocalhost || isStaging) {
-            const fallbackBase = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/staging';
-            return `${fallbackBase}/${endpoint}`;
-        } else {
-            const fallbackBase = 'https://hq5bwnnj8h.execute-api.us-east-1.amazonaws.com/prod';
-            return `${fallbackBase}/${endpoint}`;
-        }
+        throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
     }
 
     /**
@@ -113,22 +73,12 @@ class EventsAPIClient {
             'Content-Type': 'application/json'
         };
 
-        // Only add API key for authenticated endpoints
-        if (includeAuth) {
-            // Use staging API key for localhost development, production key for production
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            
-            if (isLocalhost) {
-                // Use staging API key for localhost development
-                headers['X-Api-Key'] = 'DLzv1VYEHralCbMz6C7nC8PmqEe3lTvE1yI8KG0e';
-            } else if (this.apiKey) {
-                headers['X-Api-Key'] = this.apiKey;
-            } else {
-                // Use default API key for production
-                headers['X-Api-Key'] = 'waterway-cleanups-api-key';
-            }
+        // Add API key if provided
+        if (includeAuth && this.apiKey) {
+            headers['X-Api-Key'] = this.apiKey;
         }
 
+        // Add session token if available
         if (includeAuth && this.sessionToken) {
             headers['Authorization'] = `Bearer ${this.sessionToken}`;
         }
@@ -156,30 +106,6 @@ class EventsAPIClient {
 
             return data;
         } catch (error) {
-            // If we're trying staging and it fails, try production as fallback
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const currentUrl = this.getApiUrl(endpoint);
-            
-            if (isLocalhost && currentUrl.includes('/staging/') && error.name !== 'APIError') {
-                console.warn(`Staging endpoint failed for ${endpoint}, trying production fallback...`);
-                
-                try {
-                    const prodUrl = `https://o2pkfnwqq4.execute-api.us-east-1.amazonaws.com/prod/${endpoint}`;
-                    const prodResponse = await fetch(prodUrl, config);
-                    const prodData = await prodResponse.json();
-
-                    if (!prodResponse.ok) {
-                        throw new APIError(prodData.error || 'Request failed', prodResponse.status, prodData.error_code);
-                    }
-
-                    console.log(`Successfully used production fallback for ${endpoint}`);
-                    return prodData;
-                } catch (prodError) {
-                    console.error(`Both staging and production failed for ${endpoint}:`, prodError);
-                    // Fall through to original error handling
-                }
-            }
-            
             if (error instanceof APIError) {
                 throw error;
             }
@@ -194,45 +120,6 @@ class EventsAPIClient {
      */
     async getEvents(filters = {}) {
         try {
-            // For localhost development, try to load from static JSON file first
-            const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            
-            if (isLocalhost) {
-                try {
-                    console.log('Loading events from static data file...');
-                    const response = await fetch('/data/admin-events.json');
-                    
-                    if (response.ok) {
-                        const data = await response.json();
-                        let events = data.events || [];
-                        
-                        // Apply filters
-                        if (filters.status) {
-                            events = events.filter(event => event.status === filters.status);
-                        }
-                        
-                        if (filters.location) {
-                            events = events.filter(event => 
-                                event.location && event.location.name && 
-                                event.location.name.toLowerCase().includes(filters.location.toLowerCase())
-                            );
-                        }
-                        
-                        console.log(`✅ Loaded ${events.length} events from static data`);
-                        
-                        return {
-                            success: true,
-                            events: events,
-                            count: events.length,
-                            source: 'static-file'
-                        };
-                    }
-                } catch (staticError) {
-                    console.warn('Static events file not available, trying API...');
-                }
-            }
-            
-            // Fallback to API
             const params = new URLSearchParams();
             
             if (filters.status) params.append('status', filters.status);

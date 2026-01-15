@@ -23,6 +23,11 @@ markup:
 
 params:
   stripe_publishable_key: "pk_live_51S5BvA3dx9K6lxUY472msOL3O84VqAq3Q2ZrYJ3Zy4GQaOpaxvZvHEjU1ImpzkktgwGf7z4Qcsy9jQ1dSBldHujH00vQMi7OOx"
+  api:
+    # API Gateway base URLs - override with HUGO_API_BASE_URL environment variable
+    base_url: "https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod"
+    base_url_volunteer: "https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod"
+    events_api_url: "https://o2pkfnwqq4.execute-api.us-east-1.amazonaws.com/prod"
 
 languages:
   en:

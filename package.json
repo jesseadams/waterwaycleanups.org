@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "concurrently \"hugo server\" \"npm run watch:assets\"",
     "build": "npm run build:assets && hugo --minify && npm run build:merch",
+    "build:staging": "./scripts/build-staging.sh",
+    "build:prod": "./scripts/build-prod.sh",
     "build:assets": "webpack --mode production",
     "watch:assets": "webpack --watch --mode development",
     "clean": "rm -f static/css/tailwind-output.css static/js/main-bundle.js",

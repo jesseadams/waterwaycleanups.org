@@ -9,7 +9,7 @@ class AuthClient {
     this.userEmail = localStorage.getItem('auth_user_email');
     this.sessionExpiry = localStorage.getItem('auth_session_expiry');
     
-    // API endpoints - use Hugo-injected config when available, fallback to environment detection
+    // API endpoints - use Hugo-injected config
     this.apiEndpoints = {
       sendCode: this.getApiUrl('auth-send-code'),
       verifyCode: this.getApiUrl('auth-verify-code'),
@@ -33,13 +33,7 @@ class AuthClient {
       return window.API_CONFIG.BASE_URL;
     }
     
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (isLocalhost) {
-      return 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging';
-    } else {
-      return 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod';
-    }
+    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
   }
 
   /**
@@ -48,23 +42,13 @@ class AuthClient {
    * @returns {string} Full API URL
    */
   getApiUrl(endpoint) {
-    // First, try to use Hugo-injected API configuration
+    // ALWAYS use Hugo-injected API configuration
+    // This is set at build time based on environment variables
     if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
       return `${window.API_CONFIG.BASE_URL}/${endpoint}`;
     }
     
-    // Fallback to environment detection for localhost development
-    const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    
-    if (isLocalhost) {
-      // Use staging APIs for localhost development
-      const stagingBase = 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging';
-      return `${stagingBase}/${endpoint}`;
-    } else {
-      // Use production APIs as final fallback
-      const prodBase = 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod';
-      return `${prodBase}/${endpoint}`;
-    }
+    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
   }
 
   /**

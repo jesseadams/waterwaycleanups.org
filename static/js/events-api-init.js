@@ -29,12 +29,16 @@
                     throw new Error(`Failed to load API config: ${response.status}`);
                 }
             } catch (fetchError) {
-                console.warn('Failed to fetch API config, using fallback:', fetchError.message);
+                console.error('Failed to fetch API config:', fetchError.message);
                 
-                // Use fallback configuration
+                // Use Hugo-injected configuration
+                if (!window.API_CONFIG?.BASE_URL) {
+                    throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
+                }
+                
                 config = {
-                    apiUrl: window.API_CONFIG?.BASE_URL || 'https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/prod',
-                    apiKey: window.API_CONFIG?.API_KEY || 'waterway-cleanups-api-key'
+                    apiUrl: window.API_CONFIG.BASE_URL,
+                    apiKey: window.API_CONFIG.API_KEY
                 };
             }
             
