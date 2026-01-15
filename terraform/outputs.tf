@@ -13,6 +13,11 @@ output "api_base_url_volunteer" {
   value       = aws_api_gateway_stage.prod.invoke_url
 }
 
+output "events_api_url" {
+  description = "The base URL for the Events API Gateway"
+  value       = aws_api_gateway_stage.events_api_stage.invoke_url
+}
+
 output "aws_region" {
   description = "The AWS region where resources were deployed"
   value       = var.aws_region
