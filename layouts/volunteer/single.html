@@ -382,35 +382,43 @@
       try {
         if (action.startsWith('rsvp:')) {
           const eventId = action.substring(5); // Remove 'rsvp:' prefix
-          console.log('Auto-RSVPing for event:', eventId);
           
-          // Perform the RSVP
-          await performAutoRsvp(eventId);
-          
-          // Redirect back to the event page after a short delay
-          setTimeout(() => {
-            if (returnUrl) {
-              window.location.href = decodeURIComponent(returnUrl);
-            }
-          }, 2000);
+          // Redirect back to the event page with a flag to auto-click
+          if (returnUrl) {
+            const url = new URL(decodeURIComponent(returnUrl), window.location.origin);
+            url.searchParams.set('auto_rsvp', 'true');
+            window.location.href = url.toString();
+          }
         }
       } catch (error) {
         console.error('Error handling post-login action:', error);
-        // Only show error if it's a meaningful error message
-        if (error.message && error.message !== 'Not authenticated') {
-          setError(`Failed to complete action: ${error.message}`);
-        }
       }
     };
 
     const performAutoRsvp = async (eventId) => {
       try {
-        const userEmail = window.authClient.getUserEmail();
+        // Use the email from state which is guaranteed to be set after successful login
+        // rather than getUserEmail() which might not be ready yet
+        const userEmail = email || window.authClient.getUserEmail();
+        
+        console.log('performAutoRsvp called with eventId:', eventId);
+        console.log('Email:', userEmail);
+        console.log('Session token:', window.authClient.getSessionToken());
+        console.log('Is authenticated:', window.authClient.isAuthenticated());
+        
+        if (!userEmail) {
+          throw new Error('Email not available. Please try signing up for the event again.');
+        }
+        
         const firstName = 'Volunteer'; // Default name - user can update later
         const lastName = 'User';
         
+        console.log('Calling submitEventRsvp with:', { eventId, firstName, lastName });
+        
         // Submit RSVP using auth client
         const result = await window.authClient.submitEventRsvp(eventId, firstName, lastName);
+        
+        console.log('RSVP result:', result);
         
         if (result.success) {
           setSuccess(`✅ Successfully registered for the event! Redirecting you back...`);
@@ -471,10 +479,10 @@
         setSuccess('Successfully authenticated!');
         setIsAuthenticated(true);
         setStep('dashboard');
-        loadDashboard();
+        await loadDashboard();
         
-        // Handle post-login actions (like auto-RSVP)
-        handlePostLoginAction();
+        // Handle post-login actions (like auto-RSVP) - await this to ensure it completes
+        await handlePostLoginAction();
       } catch (error) {
         setError(error.message);
       } finally {

@@ -216,6 +216,7 @@ resource "aws_lambda_function" "event_rsvp_submit" {
       RSVPS_TABLE_NAME        = aws_dynamodb_table.rsvps.name
       EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
       MINORS_TABLE_NAME       = aws_dynamodb_table.minors.name
+      SESSIONS_TABLE_NAME     = aws_dynamodb_table.auth_sessions.name
       SNS_TOPIC_ARN           = aws_sns_topic.event_rsvp_topic.arn
     }
   }

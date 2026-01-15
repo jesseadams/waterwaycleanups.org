@@ -5,6 +5,41 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Check if we should auto-click the RSVP button after login
+  const urlParams = new URLSearchParams(window.location.search);
+  const autoRsvp = urlParams.get('auto_rsvp');
+  
+  console.log('DOMContentLoaded - auto_rsvp:', autoRsvp);
+  
+  if (autoRsvp === 'true') {
+    console.log('Auto-RSVP triggered');
+    
+    // Remove the parameter from URL
+    urlParams.delete('auto_rsvp');
+    const newUrl = window.location.pathname + (urlParams.toString() ? '?' + urlParams.toString() : '');
+    window.history.replaceState({}, '', newUrl);
+    
+    // Wait a moment for the page to fully load, then scroll and click
+    setTimeout(() => {
+      const rsvpButton = document.querySelector('.rsvp-toggle-button');
+      console.log('Looking for RSVP button:', rsvpButton);
+      
+      if (rsvpButton) {
+        console.log('Found RSVP button, scrolling...');
+        // Scroll to the button
+        rsvpButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Wait for scroll to complete, then click
+        setTimeout(() => {
+          console.log('Clicking RSVP button...');
+          rsvpButton.click();
+        }, 1000);
+      } else {
+        console.error('RSVP button not found');
+      }
+    }, 1000);
+  }
+  
   // Initialize all RSVP widgets on the page
   const rsvpWidgets = document.querySelectorAll('.event-rsvp-widget');
   rsvpWidgets.forEach(widget => {
@@ -496,10 +531,14 @@ function initializeMultiPersonSelector(widget, eventId, userEmail, minorsList, a
       }
       
       // Validate: at least one adult (volunteer) must be selected if any minors are selected
+      // Check both selected attendees AND already-registered volunteers (disabled checkboxes)
       const hasMinors = selectedAttendees.some(att => att.type === 'minor');
       const hasVolunteer = selectedAttendees.some(att => att.type === 'volunteer');
       
-      if (hasMinors && !hasVolunteer) {
+      // Also check if volunteer is already registered (disabled checkbox)
+      const volunteerAlreadyRegistered = selectorContainer.querySelector('.attendee-checkbox[data-attendee-type="volunteer"][disabled]');
+      
+      if (hasMinors && !hasVolunteer && !volunteerAlreadyRegistered) {
         if (validationError) {
           validationError.textContent = 'Minors cannot attend without an adult. Please select yourself as an attendee.';
           validationError.classList.remove('hidden');

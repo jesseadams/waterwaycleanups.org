@@ -96,10 +96,15 @@ def query_guardian_rsvps(event_id, email):
     
     # Query 2: Get minor RSVPs where this volunteer is the guardian
     # Use the guardian-email-index GSI
+    # Filter to exclude volunteer RSVPs (only return minors)
     try:
         minor_response = event_rsvps_table.query(
             IndexName='guardian-email-index',
-            KeyConditionExpression=Key('guardian_email').eq(email) & Key('event_id').eq(event_id)
+            KeyConditionExpression=Key('guardian_email').eq(email) & Key('event_id').eq(event_id),
+            FilterExpression='attendee_type = :minor_type',
+            ExpressionAttributeValues={
+                ':minor_type': 'minor'
+            }
         )
         
         minor_rsvps = minor_response.get('Items', [])

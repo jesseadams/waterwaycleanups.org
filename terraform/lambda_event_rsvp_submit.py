@@ -4,7 +4,7 @@ import sys
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
 # Add the current directory to Python path for imports
@@ -32,6 +32,7 @@ volunteers_table = dynamodb.Table(volunteers_table_name)
 rsvps_table = dynamodb.Table(rsvps_table_name)
 event_rsvps_table = dynamodb.Table(event_rsvps_table_name)
 minors_table = dynamodb.Table(minors_table_name)
+sessions_table = dynamodb.Table(os.environ.get('SESSIONS_TABLE_NAME', 'auth_sessions'))
 
 # Initialize SNS client with region
 sns = boto3.client('sns', region_name=aws_region)
@@ -64,10 +65,69 @@ def convert_decimals(obj):
         return obj
 
 
-def parse_request_format(body):
+def validate_session(session_token):
+    """
+    Validate session token and return email if valid.
+    Returns: (is_valid, email, error_message)
+    """
+    if not session_token:
+        return False, None, 'Session token is required'
+    
+    try:
+        response = sessions_table.get_item(
+            Key={'session_token': session_token}
+        )
+        
+        if 'Item' not in response:
+            return False, None, 'Invalid session token'
+        
+        session = response['Item']
+        
+        # Check if session has expired
+        expires_at = session.get('expires_at')
+        if expires_at:
+            # Parse the expiry time
+            if expires_at.endswith('Z'):
+                expires_at = expires_at[:-1] + '+00:00'
+            
+            try:
+                expiry_time = datetime.fromisoformat(expires_at)
+                current_time = datetime.now(timezone.utc)
+                
+                if expiry_time <= current_time:
+                    # Delete expired session
+                    sessions_table.delete_item(
+                        Key={'session_token': session_token}
+                    )
+                    return False, None, 'Session has expired'
+            except Exception as e:
+                print(f"Error parsing expiry time: {e}")
+                # If we can't parse the expiry, assume session is valid
+        
+        email = session.get('email')
+        if not email:
+            return False, None, 'Session does not contain email'
+        
+        return True, email, None
+        
+    except ClientError as e:
+        print(f"Error validating session: {e}")
+        return False, None, 'Failed to validate session'
+    except Exception as e:
+        print(f"Unexpected error validating session: {e}")
+        import traceback
+        traceback.print_exc()
+        return False, None, 'Failed to validate session'
+
+
+def parse_request_format(body, validated_email=None):
     """
     Parse request body and convert to normalized attendees format.
     Handles both legacy (first_name, last_name) and new (attendees array) formats.
+    
+    Args:
+        body: Request body dictionary
+        validated_email: Email from validated session token (optional)
     
     Returns:
         tuple: (attendees_list, email) where attendees_list is a list of attendee dicts
@@ -76,8 +136,8 @@ def parse_request_format(body):
     if 'attendees' in body and isinstance(body['attendees'], list):
         # New format with attendees array
         attendees = body['attendees']
-        # Extract email from the first volunteer attendee or from body
-        email = body.get('email')
+        # Extract email from the first volunteer attendee or from body or from validated session
+        email = body.get('email') or validated_email
         if not email:
             # Find the volunteer in attendees list
             for attendee in attendees:
@@ -87,7 +147,8 @@ def parse_request_format(body):
         return attendees, email
     else:
         # Legacy format - convert to single-attendee format
-        email = body.get('email')
+        # Use validated email from session if available, otherwise from body
+        email = validated_email or body.get('email')
         if not email:
             raise ValueError("Email is required")
         
@@ -198,6 +259,7 @@ def create_rsvp_records(event_id, attendees, guardian_email):
                 'first_name': attendee.get('first_name'),
                 'last_name': attendee.get('last_name'),
                 'email': attendee.get('email'),
+                'guardian_email': attendee.get('email'),  # For volunteers, they are their own guardian
                 'created_at': timestamp,
                 'updated_at': timestamp,
                 'submission_date': timestamp
@@ -271,6 +333,37 @@ def handler(event, context):
     try:
         # Parse request body
         body = json.loads(event.get('body', '{}'))
+        print(f"Request body: {json.dumps(body)}")
+        
+        # Check if session_token is provided (new authenticated flow)
+        session_token = body.get('session_token')
+        email_from_body = body.get('email')
+        
+        print(f"Session token present: {bool(session_token)}")
+        print(f"Email from body: {email_from_body}")
+        
+        if session_token:
+            # Validate session and extract email
+            print(f"Validating session token...")
+            is_valid, validated_email, error_msg = validate_session(session_token)
+            print(f"Session validation result: is_valid={is_valid}, email={validated_email}, error={error_msg}")
+            
+            if not is_valid:
+                return {
+                    'statusCode': 401,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'message': error_msg or 'Invalid or expired session'
+                    })
+                }
+            # Use validated email from session
+            email_from_session = validated_email
+            print(f"Using email from session: {email_from_session}")
+        else:
+            # Legacy flow without session token
+            email_from_session = None
+            print("No session token, using legacy flow")
         
         # Extract event_id and attendance_cap
         event_id = body.get('event_id')
@@ -286,7 +379,8 @@ def handler(event, context):
         
         # Parse request format (handles both legacy and new formats)
         try:
-            attendees, guardian_email = parse_request_format(body)
+            attendees, guardian_email = parse_request_format(body, email_from_session)
+            # If we have a validated email from session, use it (it's already set by parse_request_format)
         except ValueError as e:
             return {
                 'statusCode': 400,
@@ -393,10 +487,14 @@ def handler(event, context):
         
         # Update volunteer metrics for the guardian
         try:
+            # Use SET with if_not_exists to handle case where volunteer_metrics doesn't exist
             volunteers_table.update_item(
                 Key={'email': guardian_email},
-                UpdateExpression="ADD volunteer_metrics.total_rsvps :inc",
-                ExpressionAttributeValues={':inc': len(new_attendees)}
+                UpdateExpression="SET volunteer_metrics.total_rsvps = if_not_exists(volunteer_metrics.total_rsvps, :zero) + :inc",
+                ExpressionAttributeValues={
+                    ':inc': len(new_attendees),
+                    ':zero': 0
+                }
             )
         except ClientError as e:
             print(f"Error updating volunteer metrics: {e.response['Error']['Message']}")
