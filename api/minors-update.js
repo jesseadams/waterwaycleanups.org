@@ -175,6 +175,22 @@ exports.handler = async (event) => {
         };
       }
 
+      // Validate date of birth is not in the future
+      const dob = new Date(requestBody.date_of_birth);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
+      
+      if (dob > today) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            message: 'Date of birth cannot be in the future.'
+          })
+        };
+      }
+
       const age = calculateAge(requestBody.date_of_birth);
       if (age >= 18) {
         return {
@@ -183,6 +199,17 @@ exports.handler = async (event) => {
           body: JSON.stringify({
             success: false,
             message: 'Only minors (under 18 years old) can be on your account.'
+          })
+        };
+      }
+      
+      if (age < 0) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            message: 'Invalid date of birth.'
           })
         };
       }
