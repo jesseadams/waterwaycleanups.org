@@ -500,10 +500,27 @@
       useEffect(() => {
         // Check if user is already authenticated
         if (window.authClient && window.authClient.isAuthenticated()) {
-          setIsAuthenticated(true);
-          setEmail(window.authClient.getUserEmail());
-          setStep('dashboard');
-          loadDashboardData();
+          // Verify admin access
+          window.authClient.validateSession()
+            .then(sessionData => {
+              if (!sessionData.isAdmin || sessionData.isAdmin === 'false') {
+                setError('Access denied. This area is restricted to administrators only.');
+                window.authClient.logout();
+                setTimeout(() => {
+                  window.location.href = '/volunteer';
+                }, 2000);
+                return;
+              }
+              
+              setIsAuthenticated(true);
+              setEmail(window.authClient.getUserEmail());
+              setStep('dashboard');
+              loadDashboardData();
+            })
+            .catch(error => {
+              console.error('Session validation failed:', error);
+              setStep('email');
+            });
         } else {
           setStep('email');
         }
@@ -616,6 +633,20 @@
           setIsLoading(true);
           setError('');
           await window.authClient.verifyCode(email, validationCode);
+          
+          // Verify admin access by checking session context
+          const sessionData = await window.authClient.validateSession();
+          
+          // Check if user has admin privileges
+          if (!sessionData.isAdmin || sessionData.isAdmin === 'false') {
+            setError('Access denied. This area is restricted to administrators only.');
+            window.authClient.logout();
+            setTimeout(() => {
+              window.location.href = '/volunteer';
+            }, 2000);
+            return;
+          }
+          
           setSuccess('Successfully authenticated!');
           setIsAuthenticated(true);
           setStep('dashboard');

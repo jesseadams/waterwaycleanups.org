@@ -71,13 +71,24 @@ def handler(event, context):
                 'body': json.dumps({'error': 'Session has expired', 'valid': False})
             }
         
+        # Check if user is admin
+        email = item['email']
+        admin_emails = [
+            'admin@waterwaycleanups.org',
+            'contact@waterwaycleanups.org',
+            'jesse@techno-geeks.org',
+            'jesse@waterwaycleanups.org',
+        ]
+        is_admin = email.lower() in [admin_email.lower() for admin_email in admin_emails]
+        
         return {
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
                 'valid': True,
-                'email': item['email'],
-                'expires_at': item['expires_at']
+                'email': email,
+                'expires_at': item['expires_at'],
+                'isAdmin': is_admin
             })
         }
         
