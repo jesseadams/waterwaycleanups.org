@@ -153,7 +153,10 @@ function loadMorePosts() {
         var style = window.getComputedStyle(item);
         if(style.display == 'none') {
             if(i<pagesize) {
-                item.querySelector('img').src = item.querySelector('img').dataset.src;
+                var img = item.querySelector('img');
+                if(img && img.dataset.src) {
+                    img.src = img.dataset.src;
+                }
                 item.style.display = 'block';
             }
             i++;

@@ -6,7 +6,7 @@ dark_footer: true
 customcursor: false
 intersectionobserver: true
 filter_has_numbers: true
-page_size: 3
+#page_size: 6
 show_all_events: true
 show_all_services: true
 preheader: 
