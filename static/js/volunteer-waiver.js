@@ -19,6 +19,34 @@ document.addEventListener('DOMContentLoaded', function() {
   // Make sure the checkbox containers behave properly
   initializeCheckboxBehavior();
 
+  // Check if user is already authenticated
+  if (window.authClient && window.authClient.isAuthenticated()) {
+    const userEmail = window.authClient.getUserEmail();
+    console.log('User is authenticated:', userEmail);
+    
+    // Pre-fill the email field
+    if (emailField) {
+      emailField.value = userEmail;
+    }
+    
+    // Check their waiver status automatically
+    checkExistingWaiver(userEmail)
+      .then(response => {
+        if (response.hasWaiver) {
+          // User has a valid waiver
+          showMessage(`You have already completed a waiver. It is valid until ${response.expirationDate}.`, 'success');
+        } else {
+          // User needs to complete a new waiver - show the form directly
+          showWaiverForm();
+        }
+      })
+      .catch(error => {
+        console.error('Error checking waiver status:', error);
+        // If there's an error, just show the form
+        showWaiverForm();
+      });
+  }
+
   // Email Check Functionality
   if (form) {
     // Handle the form submission for email checking
@@ -64,28 +92,71 @@ document.addEventListener('DOMContentLoaded', function() {
       const today = new Date();
       const age = calculateAge(birthDate, today);
       
-      // Show appropriate fields based on age
+      // Get today's date in YYYY-MM-DD format
+      const todayFormatted = today.toISOString().split('T')[0];
+      
+      // Only allow adults (18+) to file their own waiver
       if (age >= 18) {
         adultFields.style.display = 'block';
         minorFields.style.display = 'none';
+        
+        // Auto-populate today's date for adults
+        const adultDateField = document.getElementById('adult_todays_date');
+        if (adultDateField) {
+          adultDateField.value = todayFormatted;
+          adultDateField.readOnly = true;
+          adultDateField.style.backgroundColor = '#f3f4f6';
+        }
         
         // Set minor fields as not required
         setFormFieldsRequired(minorFields, false);
         // Set adult fields as required
         setFormFieldsRequired(adultFields, true);
+        
+        // Show the submit button
+        if (submitButton) {
+          submitButton.parentElement.parentElement.style.display = 'block';
+        }
+        
+        // Hide warning box if it exists
+        const warningBox = document.getElementById('minor-warning-box');
+        if (warningBox) {
+          warningBox.style.display = 'none';
+        }
       } else {
-        minorFields.style.display = 'block';
+        // Minors cannot file their own waiver
+        minorFields.style.display = 'none';
         adultFields.style.display = 'none';
         
-        // Set adult fields as not required
-        setFormFieldsRequired(adultFields, false);
-        // Set minor fields as required
-        setFormFieldsRequired(minorFields, true);
-      }
-      
-      // Show the submit button
-      if (submitButton) {
-        submitButton.parentElement.parentElement.style.display = 'block';
+        // Hide submit button
+        if (submitButton) {
+          submitButton.parentElement.parentElement.style.display = 'none';
+        }
+        
+        // Show prominent warning message
+        showMessage('Minors under 18 cannot file their own waiver. Please have your parent or guardian create an account and add you as a minor on their volunteer dashboard.', 'error');
+        
+        // Also add a visible warning box in the form
+        let warningBox = document.getElementById('minor-warning-box');
+        if (!warningBox) {
+          warningBox = document.createElement('div');
+          warningBox.id = 'minor-warning-box';
+          warningBox.className = 'minor-warning-box';
+          warningBox.innerHTML = `
+            <div style="background-color: #fee2e2; border: 2px solid #ef4444; border-radius: 8px; padding: 20px; margin: 20px 0;">
+              <h3 style="color: #991b1b; margin-top: 0; font-size: 18px; font-weight: bold;">⚠️ Age Restriction</h3>
+              <p style="color: #7f1d1d; margin-bottom: 10px;">You must be 18 years or older to file your own volunteer waiver.</p>
+              <p style="color: #7f1d1d; margin-bottom: 0;"><strong>What to do:</strong> Ask your parent or guardian to:</p>
+              <ol style="color: #7f1d1d; margin-top: 5px;">
+                <li>Create an account at <a href="/volunteer" style="color: #991b1b; text-decoration: underline;">/volunteer</a></li>
+                <li>Complete their own waiver</li>
+                <li>Add you as a minor on their volunteer dashboard</li>
+              </ol>
+            </div>
+          `;
+          dobField.parentElement.parentElement.insertBefore(warningBox, dobField.parentElement.nextSibling);
+        }
+        warningBox.style.display = 'block';
       }
     });
   }

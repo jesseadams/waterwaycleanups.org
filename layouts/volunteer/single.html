@@ -396,7 +396,10 @@
         }
       } catch (error) {
         console.error('Error handling post-login action:', error);
-        setError(`Failed to complete action: ${error.message}`);
+        // Only show error if it's a meaningful error message
+        if (error.message && error.message !== 'Not authenticated') {
+          setError(`Failed to complete action: ${error.message}`);
+        }
       }
     };
 
