@@ -187,6 +187,8 @@ jobs:
           echo "api_base_url_volunteer=$(terraform output -raw api_base_url_volunteer)" >> $GITHUB_OUTPUT
           echo "events_api_url=$(terraform output -raw events_api_url)" >> $GITHUB_OUTPUT
 
+      - name: Display Terraform Outputs
+        run: echo toJSON(steps.tf-outputs.outputs)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
