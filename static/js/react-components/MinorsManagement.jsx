@@ -219,6 +219,7 @@ const MinorsManagement = ({ sessionToken, apiBase = '/api' }) => {
                   value={formData.date_of_birth}
                   onChange={handleInputChange}
                   className="input input-bordered"
+                  max={new Date().toISOString().split('T')[0]}
                   required
                 />
               </div>

@@ -1,0 +1,102 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Playwright Browsers
+      run: npx playwright install --with-deps ${{ matrix.browser }}
+
+    - name: Build site
+      run: npm run build
+
+    - name: Start Hugo server
+      run: |
+        npm run start &
+        sleep 10
+      env:
+        CI: true
+
+    - name: Run Playwright tests
+      run: npx playwright test --project=${{ matrix.browser }}
+      env:
+        TEST_ENV: ci
+        CI: true
+
+    - name: Upload test results (JSON)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-json-${{ matrix.browser }}
+        path: test-results/test-results.json
+        retention-days: 30
+
+    - name: Upload test results (JUnit XML)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-xml-${{ matrix.browser }}
+        path: test-results/test-results.xml
+        retention-days: 30
+
+    - name: Upload HTML report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report-${{ matrix.browser }}
+        path: test-results/html-report/
+        retention-days: 30
+
+    - name: Upload screenshots
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-screenshots-${{ matrix.browser }}
+        path: test-results/artifacts/**/*.png
+        retention-days: 30
+        if-no-files-found: ignore
+
+    - name: Upload videos
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-videos-${{ matrix.browser }}
+        path: test-results/artifacts/**/*.webm
+        retention-days: 30
+        if-no-files-found: ignore
+
+    - name: Upload traces
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: playwright-traces-${{ matrix.browser }}
+        path: test-results/artifacts/**/*.zip
+        retention-days: 30
+        if-no-files-found: ignore

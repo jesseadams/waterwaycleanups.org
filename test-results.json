@@ -1,0 +1,1152 @@
+🔐 Setting up authenticated session for tests...
+Test validation code inserted for test-1768506962901-zfk918l@waterwaycleanups-test.org: 468400
+✅ Authenticated as: test-1768506962901-zfk918l@waterwaycleanups-test.org
+✅ Global setup complete - storage state saved
+{
+  "config": {
+    "configFile": "/home/jesse/git/waterwaycleanups.org/playwright.config.ts",
+    "rootDir": "/home/jesse/git/waterwaycleanups.org/tests/e2e",
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": "/home/jesse/git/waterwaycleanups.org/tests/global-setup.ts",
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 12
+    },
+    "preserveOutput": "always",
+    "reporter": [
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "quiet": false,
+    "projects": [
+      {
+        "outputDir": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/jesse/git/waterwaycleanups.org/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/home/jesse/git/waterwaycleanups.org/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 12
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/home/jesse/git/waterwaycleanups.org/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.57.0",
+    "workers": 12,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "rsvp/rsvp-submission.spec.ts",
+      "file": "rsvp/rsvp-submission.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "RSVP Submission Flow",
+          "file": "rsvp/rsvp-submission.spec.ts",
+          "line": 23,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Property 10: RSVP creation - authenticated user with valid waiver can RSVP to available event",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 19465,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Waiver created successfully through UI\n"
+                        },
+                        {
+                          "text": "Initial RSVP count: \u001b[33m12\u001b[39m\n"
+                        },
+                        {
+                          "text": "New RSVP count: \u001b[33m13\u001b[39m\n"
+                        },
+                        {
+                          "text": "Found 2 RSVP items in container\n"
+                        },
+                        {
+                          "text": "RSVP item 0 text: brooke-road-and-thorny-point-road-cleanup-february-2026February 22, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 0: {\n  eventId: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventTitle: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'February 22, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 1 text: crows-nest-wetlands-accokeek-creek-cleanup-may-2026May 23, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 1: {\n  eventId: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventTitle: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'May 23, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Total RSVPs parsed: 2\n"
+                        },
+                        {
+                          "text": "Dashboard RSVPs found: \u001b[33m2\u001b[39m\n"
+                        },
+                        {
+                          "text": "Dashboard RSVPs: [\n  {\n    \"eventId\": \"brooke-road-and-thorny-point-road-cleanup-february-2026\",\n    \"eventTitle\": \"brooke-road-and-thorny-point-road-cleanup-february-2026\",\n    \"eventDisplayDate\": \"February 22, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"crows-nest-wetlands-accokeek-creek-cleanup-may-2026\",\n    \"eventTitle\": \"crows-nest-wetlands-accokeek-creek-cleanup-may-2026\",\n    \"eventDisplayDate\": \"May 23, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  }\n]\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:125:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.289Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-59b207d8b0ea7e741b04",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 78,
+              "column": 7
+            },
+            {
+              "title": "Property 11: Capacity enforcement - RSVP rejected when event at capacity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                        "line": 154,
+                        "column": 14
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 1,
+                      "status": "skipped",
+                      "duration": 10455,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Waiver created successfully through UI\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:179:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.183Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                            "line": 154,
+                            "column": 14
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-6c90f2f69f8a43a6a74f",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 137,
+              "column": 7
+            },
+            {
+              "title": "Property 12: Duplicate RSVP prevention - second RSVP attempt rejected",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 2,
+                      "status": "failed",
+                      "duration": 26235,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\n    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:221:25",
+                        "location": {
+                          "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                          "column": 27,
+                          "line": 131
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m../pages/EventPage.ts:131\n\n  129 |    */\n  130 |   async clickRsvpButton(): Promise<void> {\n> 131 |     await this.rsvpButton.click();\n      |                           ^\n  132 |     await this.page.waitForTimeout(500);\n  133 |   }\n  134 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                            "column": 27,
+                            "line": 131
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    19 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n\n   at ../pages/EventPage.ts:131\n\n  129 |    */\n  130 |   async clickRsvpButton(): Promise<void> {\n> 131 |     await this.rsvpButton.click();\n      |                           ^\n  132 |     await this.page.waitForTimeout(500);\n  133 |   }\n  134 |\n    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\n    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:221:25"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Waiver created successfully through UI\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:229:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.588Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d8691-econd-RSVP-attempt-rejected-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d8691-econd-RSVP-attempt-rejected-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                        "column": 27,
+                        "line": 131
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-c5c6d33110357d13607f",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 191,
+              "column": 7
+            },
+            {
+              "title": "Property 13: RSVP cancellation - cancelled RSVP updates dashboard",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 3,
+                      "status": "failed",
+                      "duration": 11689,
+                      "error": {
+                        "message": "ReferenceError: Cannot access 'initialRsvpCount' before initialization",
+                        "stack": "ReferenceError: Cannot access 'initialRsvpCount' before initialization\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:254:43",
+                        "location": {
+                          "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                          "column": 43,
+                          "line": 254
+                        },
+                        "snippet": "  252 |       \n  253 |       const initialCount = await eventPage.getAttendanceCount();\n> 254 |       console.log(\"Initial RSVP count:\" + initialRsvpCount);\n      |                                           ^\n  255 |       \n  256 |       const firstName = testUser.firstName;\n  257 |       const lastName = testUser.lastName;"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                            "column": 43,
+                            "line": 254
+                          },
+                          "message": "ReferenceError: Cannot access 'initialRsvpCount' before initialization\n\n  252 |       \n  253 |       const initialCount = await eventPage.getAttendanceCount();\n> 254 |       console.log(\"Initial RSVP count:\" + initialRsvpCount);\n      |                                           ^\n  255 |       \n  256 |       const firstName = testUser.firstName;\n  257 |       const lastName = testUser.lastName;\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:254:43"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Waiver created successfully through UI\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:298:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.643Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--2dd1e-lled-RSVP-updates-dashboard-chromium/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--2dd1e-lled-RSVP-updates-dashboard-chromium/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--2dd1e-lled-RSVP-updates-dashboard-chromium/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                        "column": 43,
+                        "line": 254
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-00784eca6130e5a1c290",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 241,
+              "column": 7
+            },
+            {
+              "title": "Property 14: Dashboard RSVP sorting - RSVPs sorted by date",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 4,
+                      "parallelIndex": 4,
+                      "status": "passed",
+                      "duration": 32035,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Waiver created successfully through UI\n"
+                        },
+                        {
+                          "text": "Found 4 RSVP items in container\n"
+                        },
+                        {
+                          "text": "RSVP item 0 text: brooke-road-and-thorny-point-road-cleanup-february-2026February 22, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 0: {\n  eventId: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventTitle: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'February 22, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 1 text: widewater-state-park-aquia-creek-cleanup-april-2026April 25, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 1: {\n  eventId: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventTitle: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'April 25, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 2 text: crows-nest-wetlands-accokeek-creek-cleanup-may-2026May 23, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 2: {\n  eventId: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventTitle: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'May 23, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 3 text: potomac-run-road-cleanup-june-2026June 20, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 3: {\n  eventId: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventTitle: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'June 20, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Total RSVPs parsed: 4\n"
+                        },
+                        {
+                          "text": "Property 14 - Dashboard RSVPs found: \u001b[33m4\u001b[39m\n"
+                        },
+                        {
+                          "text": "Property 14 - Dashboard RSVPs: [\n  {\n    \"eventId\": \"brooke-road-and-thorny-point-road-cleanup-february-2026\",\n    \"eventTitle\": \"brooke-road-and-thorny-point-road-cleanup-february-2026\",\n    \"eventDisplayDate\": \"February 22, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"widewater-state-park-aquia-creek-cleanup-april-2026\",\n    \"eventTitle\": \"widewater-state-park-aquia-creek-cleanup-april-2026\",\n    \"eventDisplayDate\": \"April 25, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"crows-nest-wetlands-accokeek-creek-cleanup-may-2026\",\n    \"eventTitle\": \"crows-nest-wetlands-accokeek-creek-cleanup-may-2026\",\n    \"eventDisplayDate\": \"May 23, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"potomac-run-road-cleanup-june-2026\",\n    \"eventTitle\": \"potomac-run-road-cleanup-june-2026\",\n    \"eventDisplayDate\": \"June 20, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "Found 4 RSVP items in container\n"
+                        },
+                        {
+                          "text": "RSVP item 0 text: brooke-road-and-thorny-point-road-cleanup-february-2026February 22, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 0: {\n  eventId: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventTitle: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'February 22, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 1 text: widewater-state-park-aquia-creek-cleanup-april-2026April 25, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 1: {\n  eventId: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventTitle: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'April 25, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 2 text: crows-nest-wetlands-accokeek-creek-cleanup-may-2026May 23, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 2: {\n  eventId: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventTitle: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'May 23, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 3 text: potomac-run-road-cleanup-june-2026June 20, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 3: {\n  eventId: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventTitle: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'June 20, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Total RSVPs parsed: 4\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:367:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:14.180Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-02a0f9f97489ce64be74",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 310,
+              "column": 7
+            },
+            {
+              "title": "Property 10: RSVP creation - authenticated user with valid waiver can RSVP to available event",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 5,
+                      "parallelIndex": 5,
+                      "status": "failed",
+                      "duration": 28876,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\n    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:96:23",
+                        "location": {
+                          "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                          "column": 27,
+                          "line": 131
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m../pages/EventPage.ts:131\n\n  129 |    */\n  130 |   async clickRsvpButton(): Promise<void> {\n> 131 |     await this.rsvpButton.click();\n      |                           ^\n  132 |     await this.page.waitForTimeout(500);\n  133 |   }\n  134 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                            "column": 27,
+                            "line": 131
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n\n   at ../pages/EventPage.ts:131\n\n  129 |    */\n  130 |   async clickRsvpButton(): Promise<void> {\n> 131 |     await this.rsvpButton.click();\n      |                           ^\n  132 |     await this.page.waitForTimeout(500);\n  133 |   }\n  134 |\n    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\n    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:96:23"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Waiver creation failed or already exists: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#waiver-form-fields') to be visible\u001b[22m\n\u001b[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\u001b[22m\n\n    at waitForElementStable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/wait-helpers.ts:125:17\u001b[90m)\u001b[39m\n    at WaiverPage.fillWaiverForm \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/WaiverPage.ts:81:31\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:57:26 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts'\u001b[39m,\n      line: \u001b[33m125\u001b[39m,\n      column: \u001b[33m17\u001b[39m,\n      function: \u001b[32m'waitForElementStable'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n    apiName: \u001b[32m'locator.waitFor'\u001b[39m,\n    params: {\n      selector: \u001b[32m'#waiver-form-fields'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      omitReturnValue: \u001b[33mtrue\u001b[39m,\n      state: \u001b[32m'visible'\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@40'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@40'\u001b[39m,\n      _title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n      _parentStep: \u001b[36m[TestStepInfoImpl]\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768506994188\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at waitForElementStable (/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts:125:17)\\n'\u001b[39m +\n        \u001b[32m'    at WaiverPage.fillWaiverForm (/home/jesse/git/waterwaycleanups.org/tests/pages/WaiverPage.ts:81:31)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:57:26'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Initial RSVP count: \u001b[33m13\u001b[39m\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:125:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:14.045Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d789b-can-RSVP-to-available-event-firefox/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d789b-can-RSVP-to-available-event-firefox/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d789b-can-RSVP-to-available-event-firefox/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                        "column": 27,
+                        "line": 131
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-34b0f6330bf2baeaa3ca",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 78,
+              "column": 7
+            },
+            {
+              "title": "Property 11: Capacity enforcement - RSVP rejected when event at capacity",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "skip",
+                      "location": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                        "line": 154,
+                        "column": 14
+                      }
+                    }
+                  ],
+                  "expectedStatus": "skipped",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 6,
+                      "parallelIndex": 6,
+                      "status": "skipped",
+                      "duration": 19240,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Waiver creation failed or already exists: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#waiver-form-fields') to be visible\u001b[22m\n\u001b[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\u001b[22m\n\n    at waitForElementStable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/wait-helpers.ts:125:17\u001b[90m)\u001b[39m\n    at WaiverPage.fillWaiverForm \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/WaiverPage.ts:81:31\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:57:26 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts'\u001b[39m,\n      line: \u001b[33m125\u001b[39m,\n      column: \u001b[33m17\u001b[39m,\n      function: \u001b[32m'waitForElementStable'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n    apiName: \u001b[32m'locator.waitFor'\u001b[39m,\n    params: {\n      selector: \u001b[32m'#waiver-form-fields'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      omitReturnValue: \u001b[33mtrue\u001b[39m,\n      state: \u001b[32m'visible'\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@40'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@40'\u001b[39m,\n      _title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n      _parentStep: \u001b[36m[TestStepInfoImpl]\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768506993365\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at waitForElementStable (/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts:125:17)\\n'\u001b[39m +\n        \u001b[32m'    at WaiverPage.fillWaiverForm (/home/jesse/git/waterwaycleanups.org/tests/pages/WaiverPage.ts:81:31)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:57:26'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:179:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.915Z",
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                            "line": 154,
+                            "column": 14
+                          }
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-629c113e26ad6e6881a2",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 137,
+              "column": 7
+            },
+            {
+              "title": "Property 12: Duplicate RSVP prevention - second RSVP attempt rejected",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 7,
+                      "status": "failed",
+                      "duration": 28684,
+                      "error": {
+                        "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n",
+                        "stack": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\n    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:205:23",
+                        "location": {
+                          "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                          "column": 27,
+                          "line": 131
+                        },
+                        "snippet": "\u001b[90m   at \u001b[39m../pages/EventPage.ts:131\n\n  129 |    */\n  130 |   async clickRsvpButton(): Promise<void> {\n> 131 |     await this.rsvpButton.click();\n      |                           ^\n  132 |     await this.page.waitForTimeout(500);\n  133 |   }\n  134 |"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                            "column": 27,
+                            "line": 131
+                          },
+                          "message": "TimeoutError: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n\n   at ../pages/EventPage.ts:131\n\n  129 |    */\n  130 |   async clickRsvpButton(): Promise<void> {\n> 131 |     await this.rsvpButton.click();\n      |                           ^\n  132 |     await this.page.waitForTimeout(500);\n  133 |   }\n  134 |\n    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\n    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:205:23"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Waiver creation failed or already exists: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#waiver-form-fields') to be visible\u001b[22m\n\u001b[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\u001b[22m\n\n    at waitForElementStable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/wait-helpers.ts:125:17\u001b[90m)\u001b[39m\n    at WaiverPage.fillWaiverForm \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/WaiverPage.ts:81:31\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:57:26 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts'\u001b[39m,\n      line: \u001b[33m125\u001b[39m,\n      column: \u001b[33m17\u001b[39m,\n      function: \u001b[32m'waitForElementStable'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n    apiName: \u001b[32m'locator.waitFor'\u001b[39m,\n    params: {\n      selector: \u001b[32m'#waiver-form-fields'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      omitReturnValue: \u001b[33mtrue\u001b[39m,\n      state: \u001b[32m'visible'\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@40'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@40'\u001b[39m,\n      _title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n      _parentStep: \u001b[36m[TestStepInfoImpl]\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768506995444\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at waitForElementStable (/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts:125:17)\\n'\u001b[39m +\n        \u001b[32m'    at WaiverPage.fillWaiverForm (/home/jesse/git/waterwaycleanups.org/tests/pages/WaiverPage.ts:81:31)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:57:26'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:229:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.932Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d8691-econd-RSVP-attempt-rejected-firefox/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d8691-econd-RSVP-attempt-rejected-firefox/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--d8691-econd-RSVP-attempt-rejected-firefox/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts",
+                        "column": 27,
+                        "line": 131
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-a9870963a9fc56560d08",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 191,
+              "column": 7
+            },
+            {
+              "title": "Property 13: RSVP cancellation - cancelled RSVP updates dashboard",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 8,
+                      "parallelIndex": 8,
+                      "status": "failed",
+                      "duration": 20051,
+                      "error": {
+                        "message": "ReferenceError: Cannot access 'initialRsvpCount' before initialization",
+                        "stack": "ReferenceError: Cannot access 'initialRsvpCount' before initialization\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:254:43",
+                        "location": {
+                          "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                          "column": 43,
+                          "line": 254
+                        },
+                        "snippet": "  252 |       \n  253 |       const initialCount = await eventPage.getAttendanceCount();\n> 254 |       console.log(\"Initial RSVP count:\" + initialRsvpCount);\n      |                                           ^\n  255 |       \n  256 |       const firstName = testUser.firstName;\n  257 |       const lastName = testUser.lastName;"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                            "column": 43,
+                            "line": 254
+                          },
+                          "message": "ReferenceError: Cannot access 'initialRsvpCount' before initialization\n\n  252 |       \n  253 |       const initialCount = await eventPage.getAttendanceCount();\n> 254 |       console.log(\"Initial RSVP count:\" + initialRsvpCount);\n      |                                           ^\n  255 |       \n  256 |       const firstName = testUser.firstName;\n  257 |       const lastName = testUser.lastName;\n    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:254:43"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "Waiver creation failed or already exists: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#waiver-form-fields') to be visible\u001b[22m\n\u001b[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\u001b[22m\n\n    at waitForElementStable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/wait-helpers.ts:125:17\u001b[90m)\u001b[39m\n    at WaiverPage.fillWaiverForm \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/WaiverPage.ts:81:31\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:57:26 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts'\u001b[39m,\n      line: \u001b[33m125\u001b[39m,\n      column: \u001b[33m17\u001b[39m,\n      function: \u001b[32m'waitForElementStable'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n    apiName: \u001b[32m'locator.waitFor'\u001b[39m,\n    params: {\n      selector: \u001b[32m'#waiver-form-fields'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      omitReturnValue: \u001b[33mtrue\u001b[39m,\n      state: \u001b[32m'visible'\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@40'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@40'\u001b[39m,\n      _title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n      _parentStep: \u001b[36m[TestStepInfoImpl]\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768506996165\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at waitForElementStable (/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts:125:17)\\n'\u001b[39m +\n        \u001b[32m'    at WaiverPage.fillWaiverForm (/home/jesse/git/waterwaycleanups.org/tests/pages/WaiverPage.ts:81:31)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:57:26'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:298:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.487Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--2dd1e-lled-RSVP-updates-dashboard-firefox/test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--2dd1e-lled-RSVP-updates-dashboard-firefox/video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "/home/jesse/git/waterwaycleanups.org/test-results/artifacts/rsvp-rsvp-submission-RSVP--2dd1e-lled-RSVP-updates-dashboard-firefox/error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "/home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts",
+                        "column": 43,
+                        "line": 254
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-45f1d97479a217fa460c",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 241,
+              "column": 7
+            },
+            {
+              "title": "Property 14: Dashboard RSVP sorting - RSVPs sorted by date",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [
+                    {
+                      "workerIndex": 9,
+                      "parallelIndex": 9,
+                      "status": "passed",
+                      "duration": 58066,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "Waiver creation failed or already exists: locator.waitFor: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#waiver-form-fields') to be visible\u001b[22m\n\u001b[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\u001b[22m\n\n    at waitForElementStable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/wait-helpers.ts:125:17\u001b[90m)\u001b[39m\n    at WaiverPage.fillWaiverForm \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/WaiverPage.ts:81:31\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:57:26 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts'\u001b[39m,\n      line: \u001b[33m125\u001b[39m,\n      column: \u001b[33m17\u001b[39m,\n      function: \u001b[32m'waitForElementStable'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n    apiName: \u001b[32m'locator.waitFor'\u001b[39m,\n    params: {\n      selector: \u001b[32m'#waiver-form-fields'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      omitReturnValue: \u001b[33mtrue\u001b[39m,\n      state: \u001b[32m'visible'\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@40'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@40'\u001b[39m,\n      _title: \u001b[32m\"Wait for selector locator('#waiver-form-fields')\"\u001b[39m,\n      _parentStep: \u001b[36m[TestStepInfoImpl]\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768506992211\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.waitFor: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m\"\\x1B[2m  - waiting for locator('#waiver-form-fields') to be visible\\x1B[22m\\n\"\u001b[39m +\n        \u001b[32m'\\x1B[2m    24 × locator resolved to hidden <div id=\"waiver-form-fields\">…</div>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at waitForElementStable (/home/jesse/git/waterwaycleanups.org/tests/utils/wait-helpers.ts:125:17)\\n'\u001b[39m +\n        \u001b[32m'    at WaiverPage.fillWaiverForm (/home/jesse/git/waterwaycleanups.org/tests/pages/WaiverPage.ts:81:31)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:57:26'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Could not RSVP to brooke-road-and-thorny-point-road-cleanup-february-2026: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at EventPage.clickRsvpButton \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/EventPage.ts:131:27\u001b[90m)\u001b[39m\n    at EventPage.completeRsvp \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/EventPage.ts:144:16\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:329:27 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts'\u001b[39m,\n      line: \u001b[33m131\u001b[39m,\n      column: \u001b[33m27\u001b[39m,\n      function: \u001b[32m'EventPage.clickRsvpButton'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m`Click locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')`\u001b[39m,\n    apiName: \u001b[32m'locator.click'\u001b[39m,\n    params: {\n      selector: \u001b[32m'.rsvp-toggle-button, button:has-text(\"RSVP\")'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@45'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@45'\u001b[39m,\n      _title: \u001b[32m`Click locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')`\u001b[39m,\n      _parentStep: \u001b[90mundefined\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768507003399\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.click: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m`\\x1B[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\\x1B[22m\\n`\u001b[39m +\n        \u001b[32m'\\x1B[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m  - attempting click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - waiting 20ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - waiting 100ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    18 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m     - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - waiting 500ms\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.click: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m`\\x1B[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\\x1B[22m\\n`\u001b[39m +\n        \u001b[32m'\\x1B[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m  - attempting click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - waiting 20ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - waiting 100ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    18 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m     - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - waiting 500ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\\n'\u001b[39m +\n        \u001b[32m'    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:329:27'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Could not RSVP to widewater-state-park-aquia-creek-cleanup-april-2026: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at EventPage.clickRsvpButton \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/EventPage.ts:131:27\u001b[90m)\u001b[39m\n    at EventPage.completeRsvp \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/EventPage.ts:144:16\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:329:27 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts'\u001b[39m,\n      line: \u001b[33m131\u001b[39m,\n      column: \u001b[33m27\u001b[39m,\n      function: \u001b[32m'EventPage.clickRsvpButton'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m`Click locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')`\u001b[39m,\n    apiName: \u001b[32m'locator.click'\u001b[39m,\n    params: {\n      selector: \u001b[32m'.rsvp-toggle-button, button:has-text(\"RSVP\")'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@48'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@48'\u001b[39m,\n      _title: \u001b[32m`Click locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')`\u001b[39m,\n      _parentStep: \u001b[90mundefined\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768507014472\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.click: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m`\\x1B[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\\x1B[22m\\n`\u001b[39m +\n        \u001b[32m'\\x1B[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m  - attempting click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - waiting 20ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - waiting 100ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    18 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m     - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - waiting 500ms\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.click: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m`\\x1B[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\\x1B[22m\\n`\u001b[39m +\n        \u001b[32m'\\x1B[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m  - attempting click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - waiting 20ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - waiting 100ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    18 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m     - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - waiting 500ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\\n'\u001b[39m +\n        \u001b[32m'    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:329:27'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Could not RSVP to potomac-run-road-cleanup-june-2026: locator.click: Timeout 10000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\u001b[22m\n\u001b[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not enabled\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    18 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m       - element is not enabled\u001b[22m\n\u001b[2m     - retrying click action\u001b[22m\n\u001b[2m       - waiting 500ms\u001b[22m\n\n    at EventPage.clickRsvpButton \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/EventPage.ts:131:27\u001b[90m)\u001b[39m\n    at EventPage.completeRsvp \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/pages/EventPage.ts:144:16\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:329:27 {\n  name: \u001b[32m'TimeoutError'\u001b[39m,\n  [\u001b[32mSymbol(step)\u001b[39m]: {\n    location: {\n      file: \u001b[32m'/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts'\u001b[39m,\n      line: \u001b[33m131\u001b[39m,\n      column: \u001b[33m27\u001b[39m,\n      function: \u001b[32m'EventPage.clickRsvpButton'\u001b[39m\n    },\n    category: \u001b[32m'pw:api'\u001b[39m,\n    title: \u001b[32m`Click locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')`\u001b[39m,\n    apiName: \u001b[32m'locator.click'\u001b[39m,\n    params: {\n      selector: \u001b[32m'.rsvp-toggle-button, button:has-text(\"RSVP\")'\u001b[39m,\n      strict: \u001b[33mtrue\u001b[39m,\n      timeout: \u001b[33m10000\u001b[39m\n    },\n    group: \u001b[90mundefined\u001b[39m,\n    stepId: \u001b[32m'pw:api@51'\u001b[39m,\n    boxedStack: \u001b[90mundefined\u001b[39m,\n    steps: [],\n    attachmentIndices: [],\n    info: TestStepInfoImpl {\n      annotations: [],\n      _testInfo: \u001b[36m[TestInfoImpl]\u001b[39m,\n      _stepId: \u001b[32m'pw:api@51'\u001b[39m,\n      _title: \u001b[32m`Click locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')`\u001b[39m,\n      _parentStep: \u001b[90mundefined\u001b[39m,\n      skip: \u001b[36m[Function (anonymous)]\u001b[39m\n    },\n    complete: \u001b[36m[Function: complete]\u001b[39m,\n    endWallTime: \u001b[33m1768507025553\u001b[39m,\n    error: {\n      message: \u001b[32m'TimeoutError: locator.click: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m`\\x1B[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\\x1B[22m\\n`\u001b[39m +\n        \u001b[32m'\\x1B[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m  - attempting click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - waiting 20ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - waiting 100ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    18 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m     - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - waiting 500ms\\x1B[22m\\n'\u001b[39m,\n      stack: \u001b[32m'TimeoutError: locator.click: Timeout 10000ms exceeded.\\n'\u001b[39m +\n        \u001b[32m'Call log:\\n'\u001b[39m +\n        \u001b[32m`\\x1B[2m  - waiting for locator('.rsvp-toggle-button, button:has-text(\"RSVP\")')\\x1B[22m\\n`\u001b[39m +\n        \u001b[32m'\\x1B[2m    - locator resolved to <button disabled type=\"button\" class=\"rsvp-toggle-button text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto bg-gray-400 cursor-not-allowed\">Already Registered</button>\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m  - attempting click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - waiting 20ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    2 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m      - waiting 100ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m    18 × waiting for element to be visible, enabled and stable\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - element is not enabled\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m     - retrying click action\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\x1B[2m       - waiting 500ms\\x1B[22m\\n'\u001b[39m +\n        \u001b[32m'\\n'\u001b[39m +\n        \u001b[32m'    at EventPage.clickRsvpButton (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:131:27)\\n'\u001b[39m +\n        \u001b[32m'    at EventPage.completeRsvp (/home/jesse/git/waterwaycleanups.org/tests/pages/EventPage.ts:144:16)\\n'\u001b[39m +\n        \u001b[32m'    at /home/jesse/git/waterwaycleanups.org/tests/e2e/rsvp/rsvp-submission.spec.ts:329:27'\u001b[39m,\n      cause: \u001b[90mundefined\u001b[39m\n    }\n  }\n}\n"
+                        },
+                        {
+                          "text": "Found 4 RSVP items in container\n"
+                        },
+                        {
+                          "text": "RSVP item 0 text: brooke-road-and-thorny-point-road-cleanup-february-2026February 22, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 0: {\n  eventId: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventTitle: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'February 22, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 1 text: widewater-state-park-aquia-creek-cleanup-april-2026April 25, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 1: {\n  eventId: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventTitle: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'April 25, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 2 text: crows-nest-wetlands-accokeek-creek-cleanup-may-2026May 23, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 2: {\n  eventId: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventTitle: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'May 23, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 3 text: potomac-run-road-cleanup-june-2026June 20, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 3: {\n  eventId: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventTitle: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'June 20, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Total RSVPs parsed: 4\n"
+                        },
+                        {
+                          "text": "Property 14 - Dashboard RSVPs found: \u001b[33m4\u001b[39m\n"
+                        },
+                        {
+                          "text": "Property 14 - Dashboard RSVPs: [\n  {\n    \"eventId\": \"brooke-road-and-thorny-point-road-cleanup-february-2026\",\n    \"eventTitle\": \"brooke-road-and-thorny-point-road-cleanup-february-2026\",\n    \"eventDisplayDate\": \"February 22, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"widewater-state-park-aquia-creek-cleanup-april-2026\",\n    \"eventTitle\": \"widewater-state-park-aquia-creek-cleanup-april-2026\",\n    \"eventDisplayDate\": \"April 25, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"crows-nest-wetlands-accokeek-creek-cleanup-may-2026\",\n    \"eventTitle\": \"crows-nest-wetlands-accokeek-creek-cleanup-may-2026\",\n    \"eventDisplayDate\": \"May 23, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  },\n  {\n    \"eventId\": \"potomac-run-road-cleanup-june-2026\",\n    \"eventTitle\": \"potomac-run-road-cleanup-june-2026\",\n    \"eventDisplayDate\": \"June 20, 2026 at 09:00 AM\",\n    \"status\": \"active\"\n  }\n]\n"
+                        },
+                        {
+                          "text": "Found 4 RSVP items in container\n"
+                        },
+                        {
+                          "text": "RSVP item 0 text: brooke-road-and-thorny-point-road-cleanup-february-2026February 22, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 0: {\n  eventId: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventTitle: \u001b[32m'brooke-road-and-thorny-point-road-cleanup-february-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'February 22, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 1 text: widewater-state-park-aquia-creek-cleanup-april-2026April 25, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 1: {\n  eventId: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventTitle: \u001b[32m'widewater-state-park-aquia-creek-cleanup-april-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'April 25, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 2 text: crows-nest-wetlands-accokeek-creek-cleanup-may-2026May 23, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 2: {\n  eventId: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventTitle: \u001b[32m'crows-nest-wetlands-accokeek-creek-cleanup-may-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'May 23, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "RSVP item 3 text: potomac-run-road-cleanup-june-2026June 20, 2026 at 09:00 AMRSVP'ed on January 15, 2026Registered (1)👤You\n"
+                        },
+                        {
+                          "text": "Parsed RSVP 3: {\n  eventId: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventTitle: \u001b[32m'potomac-run-road-cleanup-june-2026'\u001b[39m,\n  eventDisplayDate: \u001b[32m'June 20, 2026 at 09:00 AM'\u001b[39m,\n  status: \u001b[32m'active'\u001b[39m\n}\n"
+                        },
+                        {
+                          "text": "Total RSVPs parsed: 4\n"
+                        }
+                      ],
+                      "stderr": [
+                        {
+                          "text": "Error cleaning up test data for test-1768506962901-zfk918l@waterwaycleanups-test.org: Error: Failed to list minors: 403 - {\"message\":\"Forbidden\"}\n    at listMinors \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:446:11\u001b[90m)\u001b[39m\n    at deleteTestData \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/utils/api-helpers.ts:501:20\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mtests/e2e/rsvp/rsvp-submission.spec.ts:367:7\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:322:9\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:311:11\n    at TimeoutManager.withRunnable \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/timeoutManager.js:67:14\u001b[90m)\u001b[39m\n    at TestInfoImpl._runWithTimeout \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/testInfo.js:309:7\u001b[90m)\u001b[39m\n    at \u001b[90m/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:320:7\n    at WorkerMain._runTest \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:295:5\u001b[90m)\u001b[39m\n    at WorkerMain.runTestGroup \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/worker/workerMain.js:199:11\u001b[90m)\u001b[39m\n    at process.<anonymous> \u001b[90m(/home/jesse/git/waterwaycleanups.org/\u001b[39mnode_modules/\u001b[4mplaywright\u001b[24m/lib/common/process.js:65:22\u001b[90m)\u001b[39m\n"
+                        }
+                      ],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.127Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-c64270538481bec78611",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 310,
+              "column": 7
+            },
+            {
+              "title": "Property 10: RSVP creation - authenticated user with valid waiver can RSVP to available event",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 10,
+                      "parallelIndex": 10,
+                      "status": "failed",
+                      "duration": 22,
+                      "error": {
+                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.514Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-84fb656ddf012e24c480",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 78,
+              "column": 7
+            },
+            {
+              "title": "Property 11: Capacity enforcement - RSVP rejected when event at capacity",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 11,
+                      "parallelIndex": 11,
+                      "status": "failed",
+                      "duration": 26,
+                      "error": {
+                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:13.071Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-cf5a83b88010607167f6",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 137,
+              "column": 7
+            },
+            {
+              "title": "Property 12: Duplicate RSVP prevention - second RSVP attempt rejected",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 12,
+                      "parallelIndex": 11,
+                      "status": "failed",
+                      "duration": 13,
+                      "error": {
+                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:16.300Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-4aaf0dba53cc7ab68b4c",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 191,
+              "column": 7
+            },
+            {
+              "title": "Property 13: RSVP cancellation - cancelled RSVP updates dashboard",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 13,
+                      "parallelIndex": 10,
+                      "status": "failed",
+                      "duration": 30,
+                      "error": {
+                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:17.302Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-533f724a8962b99a4574",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 241,
+              "column": 7
+            },
+            {
+              "title": "Property 14: Dashboard RSVP sorting - RSVPs sorted by date",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "webkit",
+                  "projectName": "webkit",
+                  "results": [
+                    {
+                      "workerIndex": 14,
+                      "parallelIndex": 11,
+                      "status": "failed",
+                      "duration": 17,
+                      "error": {
+                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
+                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                      },
+                      "errors": [
+                        {
+                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libicu74                    ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-01-15T19:56:20.174Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "3ebcd84bb5045dad38ae-a7d4d0eca4754d0aa909",
+              "file": "rsvp/rsvp-submission.spec.ts",
+              "line": 310,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-01-15T19:56:02.641Z",
+    "duration": 70954.905,
+    "expected": 3,
+    "skipped": 2,
+    "unexpected": 10,
+    "flaky": 0
+  }
+}

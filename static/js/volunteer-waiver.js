@@ -189,14 +189,8 @@ document.addEventListener('DOMContentLoaded', function() {
       submitWaiverData(data)
         .then(response => {
           if (response.success) {
-            // Clear the form completely
-            const formContainer = form.parentElement;
-            formContainer.innerHTML = `
-              <div class="success-message">
-                <h3>Thank you for submitting your waiver!</h3>
-                <p>Your volunteer waiver has been received and recorded.</p>
-              </div>
-            `;
+            // Redirect to volunteer dashboard after successful submission
+            window.location.href = '/volunteer';
           } else {
             showMessage('There was an error submitting your waiver. Please try again.', 'error');
           }

@@ -256,6 +256,7 @@
               value: formData.date_of_birth,
               onChange: (e) => setFormData({...formData, date_of_birth: e.target.value}),
               className: "w-full px-3 py-2 border border-gray-300 rounded-md",
+              max: new Date().toISOString().split('T')[0],
               required: true
             })
           ]),

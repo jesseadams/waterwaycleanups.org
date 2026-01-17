@@ -64,3 +64,10 @@ terraform.tfstate*
 *.zip
 
 static/admin/**
+
+# Playwright test results
+test-results/
+playwright-report/
+playwright/.cache/
+.env.test
+tests/.auth/

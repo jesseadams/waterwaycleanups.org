@@ -176,11 +176,18 @@ exports.handler = async (event) => {
       }
 
       // Validate date of birth is not in the future
-      const dob = new Date(requestBody.date_of_birth);
+      // Parse the date string as UTC to avoid timezone issues
+      const dobParts = requestBody.date_of_birth.split('-');
+      const dob = new Date(Date.UTC(
+        parseInt(dobParts[0]), 
+        parseInt(dobParts[1]) - 1, 
+        parseInt(dobParts[2])
+      ));
+      
       const today = new Date();
       today.setHours(0, 0, 0, 0); // Reset time to start of day for fair comparison
       
-      if (dob > today) {
+      if (dob.getTime() > today.getTime()) {
         return {
           statusCode: 400,
           headers,
