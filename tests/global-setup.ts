@@ -1,4 +1,4 @@
-import { chromium, FullConfig } from '@playwright/test';
+import { chromium, firefox, webkit, FullConfig } from '@playwright/test';
 import { LoginPage } from './pages/LoginPage';
 import { generateTestUser, generateValidationCode } from './utils/data-generators';
 import { insertTestValidationCode } from './utils/api-helpers';
@@ -6,9 +6,26 @@ import { insertTestValidationCode } from './utils/api-helpers';
 /**
  * Global setup for Playwright tests
  * Authenticates a test user and saves the storage state for reuse across all tests
+ * Dynamically selects browser based on the project being run
  */
 async function globalSetup(config: FullConfig) {
-  const browser = await chromium.launch();
+  // Determine which browser to use based on the project
+  // If multiple projects or no specific project, default to chromium
+  const projectName = process.env.PLAYWRIGHT_PROJECT || config.projects?.[0]?.name || 'chromium';
+  
+  let browserType;
+  if (projectName.includes('firefox')) {
+    browserType = firefox;
+    console.log('🦊 Using Firefox for global setup');
+  } else if (projectName.includes('webkit')) {
+    browserType = webkit;
+    console.log('🧭 Using WebKit for global setup');
+  } else {
+    browserType = chromium;
+    console.log('🌐 Using Chromium for global setup');
+  }
+  
+  const browser = await browserType.launch();
   const context = await browser.newContext();
   const page = await context.newPage();
   

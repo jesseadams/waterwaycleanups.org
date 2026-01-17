@@ -65,6 +65,7 @@ jobs:
       env:
         TEST_ENV: ci
         CI: true
+        PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
 
     - name: Upload test results (JSON)
       uses: actions/upload-artifact@v4
