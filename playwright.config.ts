@@ -107,6 +107,15 @@ export default defineConfig({
         // No storageState - start unauthenticated
       },
     },
+    {
+      name: 'webkit-unauth',
+      testMatch: /.*auth\/authentication\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Safari'],
+        viewport: { width: 1280, height: 720 },
+        // No storageState - start unauthenticated
+      },
+    },
     
     // Authenticated projects for all other tests
     {
@@ -136,6 +145,16 @@ export default defineConfig({
       use: { 
         ...devices['Desktop Chrome'], 
         channel: 'chrome',
+        viewport: { width: 1280, height: 720 },
+        storageState: 'tests/.auth/user.json',
+      },
+    },
+    
+    {
+      name: 'webkit',
+      testIgnore: /.*auth\/authentication\.spec\.ts/,
+      use: { 
+        ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
         storageState: 'tests/.auth/user.json',
       },

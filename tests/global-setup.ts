@@ -21,6 +21,7 @@ async function globalSetup(config: FullConfig) {
     browserType = webkit;
     console.log('🧭 Using WebKit for global setup');
   } else {
+    // Default to chromium for 'chromium', 'Google Chrome', 'chrome', etc.
     browserType = chromium;
     console.log('🌐 Using Chromium for global setup');
   }
