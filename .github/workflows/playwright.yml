@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit, Google Chrome]
+        browser: [chromium, firefox, webkit, chrome]
     
     steps:
     - name: Checkout code
@@ -44,7 +44,7 @@ jobs:
     - name: Install Playwright Browsers
       run: |
         # Map project name to browser name for installation
-        if [ "${{ matrix.browser }}" = "Google Chrome" ]; then
+        if [ "${{ matrix.browser }}" = "chrome" ]; then
           npx playwright install --with-deps chromium
         else
           npx playwright install --with-deps ${{ matrix.browser }}

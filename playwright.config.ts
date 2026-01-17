@@ -140,7 +140,7 @@ export default defineConfig({
 
     /* Test against branded browsers. */
     {
-      name: 'Google Chrome',
+      name: 'chrome',
       testIgnore: /.*auth\/authentication\.spec\.ts/,
       use: { 
         ...devices['Desktop Chrome'], 
