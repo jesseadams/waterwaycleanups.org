@@ -183,6 +183,10 @@ resource "aws_iam_policy" "events_lambda_policy" {
           # RSVPs table and indexes
           aws_dynamodb_table.rsvps.arn,
           "${aws_dynamodb_table.rsvps.arn}/index/*",
+          # Minors table
+          aws_dynamodb_table.minors.arn,
+          # Volunteer waivers table
+          aws_dynamodb_table.volunteer_waivers.arn,
           # Auth tables for authorization
           aws_dynamodb_table.auth_sessions.arn,
           "${aws_dynamodb_table.auth_sessions.arn}/index/*"
@@ -438,6 +442,12 @@ data "archive_file" "volunteers_export_zip" {
   output_path = "${path.module}/lambda_volunteers_export.zip"
 }
 
+data "archive_file" "admin_volunteers_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambda_admin_volunteers.py"
+  output_path = "${path.module}/lambda_admin_volunteers.zip"
+}
+
 # ===== EVENT LIFECYCLE MANAGEMENT LAMBDA FUNCTION =====
 
 data "archive_file" "events_lifecycle_zip" {
@@ -670,6 +680,32 @@ resource "aws_lambda_function" "volunteers_export" {
 
   tags = {
     Name        = "volunteers-export${local.resource_suffix}"
+    Environment = var.environment
+    Project     = "waterwaycleanups"
+  }
+}
+
+# Lambda function for admin volunteers list
+resource "aws_lambda_function" "admin_volunteers" {
+  filename         = data.archive_file.admin_volunteers_zip.output_path
+  function_name    = "admin_volunteers${local.resource_suffix}"
+  role             = aws_iam_role.events_lambda_role.arn
+  handler          = "lambda_admin_volunteers.handler"
+  source_code_hash = data.archive_file.admin_volunteers_zip.output_base64sha256
+  runtime          = "python3.9"
+  timeout          = 30
+
+  environment {
+    variables = {
+      VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
+      MINORS_TABLE_NAME     = aws_dynamodb_table.minors.name
+      SESSION_TABLE_NAME    = aws_dynamodb_table.auth_sessions.name
+      WAIVERS_TABLE_NAME    = aws_dynamodb_table.volunteer_waivers.name
+    }
+  }
+
+  tags = {
+    Name        = "admin-volunteers${local.resource_suffix}"
     Environment = var.environment
     Project     = "waterwaycleanups"
   }

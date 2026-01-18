@@ -83,13 +83,21 @@ def handler(event, context):
         session_token = str(uuid.uuid4())
         session_expiry = datetime.utcnow() + timedelta(hours=24)
         
+        # Check if user is admin
+        admin_emails = [
+            'jesse@techno-geeks.org',
+            'admin@waterwaycleanups.org'
+        ]
+        is_admin = 'true' if email in admin_emails else 'false'
+        
         # Store session in DynamoDB
         sessions_table.put_item(
             Item={
                 'session_token': session_token,
                 'email': email,
                 'expires_at': session_expiry.isoformat(),
-                'created_at': datetime.utcnow().isoformat()
+                'created_at': datetime.utcnow().isoformat(),
+                'isAdmin': is_admin
             }
         )
         
@@ -106,7 +114,8 @@ def handler(event, context):
                 'message': 'Authentication successful',
                 'session_token': session_token,
                 'expires_at': session_expiry.isoformat(),
-                'email': email
+                'email': email,
+                'isAdmin': is_admin
             })
         }
         

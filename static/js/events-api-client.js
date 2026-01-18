@@ -57,7 +57,8 @@ class EventsAPIClient {
             throw new Error('EVENTS_API_URL not found. Build with HUGO_EVENTS_API_URL environment variable.');
         }
         
-        // For non-events endpoints, use standard API configuration
+        // For all other endpoints (auth, admin, etc.), use standard API configuration
+        // This includes auth endpoints, admin-volunteers, etc.
         if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
             return `${window.API_CONFIG.BASE_URL}/${endpoint}`;
         }
@@ -223,24 +224,12 @@ class EventsAPIClient {
 
     /**
      * Get list of all volunteers (admin only)
-     * For now, returns mock data since we don't have a volunteers list API
      */
     async getVolunteers(filters = {}) {
-        try {
-            // This would need to be implemented as a proper admin API endpoint
-            // For now, return empty array to prevent errors
-            console.warn('Volunteers API not yet implemented - returning empty list');
-            
-            return {
-                success: true,
-                volunteers: [],
-                total: 0
-            };
-            
-        } catch (error) {
-            console.error('Error loading volunteers:', error);
-            throw error;
-        }
+        // Use relative URL to hit Netlify Function or API Gateway
+        return this.makeRequest('admin-volunteers', {
+            method: 'GET'
+        });
     }
 
     /**

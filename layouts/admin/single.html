@@ -1048,9 +1048,92 @@
               className: "text-xl font-semibold mb-6"
             }, 'Volunteer Management'),
             React.createElement('div', {
-              key: 'content',
+              key: 'search',
+              className: "mb-4"
+            }, React.createElement('input', {
+              type: 'text',
+              placeholder: 'Search by name or email...',
+              value: volunteerFilters.search,
+              onChange: (e) => setVolunteerFilters({ ...volunteerFilters, search: e.target.value }),
+              className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            })),
+            React.createElement('div', {
+              key: 'volunteers-list',
+              className: "space-y-4"
+            }, filteredVolunteers.length > 0 ? filteredVolunteers.map(volunteer => React.createElement('div', {
+              key: volunteer.email,
+              className: "bg-white border border-gray-200 rounded-lg p-4"
+            }, [
+              React.createElement('div', {
+                key: 'volunteer-header',
+                className: "flex justify-between items-start mb-3"
+              }, [
+                React.createElement('div', {
+                  key: 'info',
+                  className: "flex-1"
+                }, [
+                  React.createElement('h4', {
+                    key: 'name',
+                    className: "text-lg font-semibold"
+                  }, volunteer.full_name || 'Unknown'),
+                  React.createElement('p', {
+                    key: 'email',
+                    className: "text-gray-600 text-sm"
+                  }, volunteer.email),
+                  volunteer.phone ? React.createElement('p', {
+                    key: 'phone',
+                    className: "text-gray-600 text-sm"
+                  }, `📞 ${volunteer.phone}`) : null
+                ]),
+                React.createElement('div', {
+                  key: 'badges',
+                  className: "flex flex-col items-end space-y-1"
+                }, [
+                  volunteer.has_waiver ? React.createElement('span', {
+                    key: 'waiver',
+                    className: "inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-800"
+                  }, '✓ Waiver Signed') : React.createElement('span', {
+                    key: 'no-waiver',
+                    className: "inline-block px-2 py-1 text-xs rounded bg-yellow-100 text-yellow-800"
+                  }, '⚠ No Waiver'),
+                  volunteer.minors && volunteer.minors.length > 0 ? React.createElement('span', {
+                    key: 'minors-badge',
+                    className: "inline-block px-2 py-1 text-xs rounded bg-blue-100 text-blue-800"
+                  }, `👨‍👩‍👧‍👦 ${volunteer.minors.length} Minor${volunteer.minors.length > 1 ? 's' : ''}`) : null
+                ])
+              ]),
+              volunteer.minors && volunteer.minors.length > 0 ? React.createElement('div', {
+                key: 'minors-section',
+                className: "mt-3 pt-3 border-t border-gray-200"
+              }, [
+                React.createElement('h5', {
+                  key: 'minors-title',
+                  className: "text-sm font-semibold text-gray-700 mb-2"
+                }, 'Associated Minors:'),
+                React.createElement('div', {
+                  key: 'minors-list',
+                  className: "space-y-2"
+                }, volunteer.minors.map((minor, idx) => React.createElement('div', {
+                  key: idx,
+                  className: "bg-gray-50 p-2 rounded text-sm"
+                }, [
+                  React.createElement('div', {
+                    key: 'minor-name',
+                    className: "font-medium"
+                  }, minor.full_name),
+                  React.createElement('div', {
+                    key: 'minor-details',
+                    className: "text-gray-600 text-xs"
+                  }, [
+                    `Age: ${minor.age || 'N/A'}`,
+                    minor.emergency_contact ? ` • Emergency: ${minor.emergency_contact}` : ''
+                  ].join(''))
+                ])))
+              ]) : null
+            ])) : React.createElement('div', {
+              key: 'no-volunteers',
               className: "text-center py-8 text-gray-500"
-            }, 'Volunteer management features coming soon...')
+            }, 'No volunteers found.'))
           ]) : null,
           activeTab === 'analytics' ? React.createElement('div', { key: 'analytics-tab' }, [
             React.createElement('h3', {
