@@ -548,6 +548,29 @@
       return `/events/${eventId}/`;
     };
 
+    const calculateDaysRemaining = (expirationDate) => {
+      if (!expirationDate) return -1;
+      
+      try {
+        const expiration = new Date(expirationDate);
+        const today = new Date();
+        const diffTime = expiration.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+      } catch (error) {
+        return -1;
+      }
+    };
+
+    const isWaiverExpired = (expirationDate) => {
+      const daysRemaining = calculateDaysRemaining(expirationDate);
+      return !(daysRemaining >= 0);
+    };
+
+    const isWaiverExpiringSoon = (expirationDate) => {
+      const daysRemaining = calculateDaysRemaining(expirationDate);
+      return daysRemaining >= 0 && !(daysRemaining > 30);
+    };
     const renderLoadingState = () => React.createElement('div', {
       className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
     }, [
@@ -728,23 +751,73 @@
             key: 'title',
             className: "text-lg font-semibold mb-3"
           }, 'Waiver Status'),
-          dashboardData.waiver.hasWaiver ? React.createElement('div', {
-            key: 'valid',
-            className: "text-green-600"
-          }, [
-            React.createElement('p', {
-              key: 'status',
-              className: "font-medium"
-            }, '✓ Valid waiver on file'),
-            React.createElement('p', {
-              key: 'expires',
-              className: "text-sm text-gray-600"
-            }, `Expires: ${formatDate(dashboardData.waiver.expirationDate)}`),
-            React.createElement('p', {
-              key: 'submitted',
-              className: "text-sm text-gray-600"
-            }, `Submitted: ${formatDate(dashboardData.waiver.submissionDate)}`)
-          ]) : React.createElement('div', {
+          // Check if waiver data exists (even if expired)
+          dashboardData.waiver.expirationDate ? (
+            // Waiver exists - check if expired or expiring
+            isWaiverExpired(dashboardData.waiver.expirationDate) ? React.createElement('div', {
+              key: 'expired',
+              className: "text-red-600"
+            }, [
+              React.createElement('p', {
+                key: 'status',
+                className: "font-medium"
+              }, '⚠ Waiver Expired'),
+              React.createElement('p', {
+                key: 'message',
+                className: "text-sm text-gray-600 mb-3"
+              }, `Your waiver expired on ${formatDate(dashboardData.waiver.expirationDate)}. Please renew to continue volunteering.`),
+              React.createElement('a', {
+                key: 'renew-link',
+                href: '/volunteer-waiver',
+                className: "inline-block bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              }, 'Renew Waiver')
+            ]) : isWaiverExpiringSoon(dashboardData.waiver.expirationDate) ? React.createElement('div', {
+              key: 'expiring',
+              className: "text-yellow-600"
+            }, [
+              React.createElement('p', {
+                key: 'status',
+                className: "font-medium"
+              }, '⚠ Waiver Expiring Soon'),
+              React.createElement('p', {
+                key: 'expires',
+                className: "text-sm text-gray-600"
+              }, `Expires: ${formatDate(dashboardData.waiver.expirationDate)}`),
+              React.createElement('p', {
+                key: 'days',
+                className: "text-sm text-gray-600 mb-2"
+              }, `${calculateDaysRemaining(dashboardData.waiver.expirationDate)} days remaining`),
+              React.createElement('p', {
+                key: 'message',
+                className: "text-sm text-gray-600 mb-3"
+              }, 'Please renew your waiver soon to avoid interruption.'),
+              React.createElement('a', {
+                key: 'renew-link',
+                href: '/volunteer-waiver',
+                className: "inline-block bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 text-sm"
+              }, 'Renew Waiver')
+            ]) : React.createElement('div', {
+              key: 'valid',
+              className: "text-green-600"
+            }, [
+              React.createElement('p', {
+                key: 'status',
+                className: "font-medium"
+              }, '✓ Valid waiver on file'),
+              React.createElement('p', {
+                key: 'expires',
+                className: "text-sm text-gray-600"
+              }, `Expires: ${formatDate(dashboardData.waiver.expirationDate)}`),
+              React.createElement('p', {
+                key: 'days',
+                className: "text-sm text-gray-600"
+              }, `${calculateDaysRemaining(dashboardData.waiver.expirationDate)} days remaining`),
+              React.createElement('p', {
+                key: 'submitted',
+                className: "text-sm text-gray-600"
+              }, `Submitted: ${formatDate(dashboardData.waiver.submissionDate)}`)
+            ])
+          ) : React.createElement('div', {
             key: 'invalid',
             className: "text-orange-600"
           }, [

@@ -1,5 +1,5 @@
-import { APIRequestContext } from '@playwright/test';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { APIRequestContext, Page } from '@playwright/test';
+import { DynamoDBClient, PutItemCommand, UpdateItemCommand, GetItemCommand } from '@aws-sdk/client-dynamodb';
 
 /**
  * API Helper utilities for direct API calls in tests
@@ -40,6 +40,45 @@ const getAuthTableName = (): string => {
       return 'auth_codes-prod';
     default:
       return 'auth_codes-staging';
+  }
+};
+
+// Get the volunteer waivers table name based on environment
+const getVolunteerWaiversTableName = (): string => {
+  const env = process.env.TEST_ENV || 'local';
+  switch (env) {
+    case 'staging':
+      return 'volunteer_waivers-staging';
+    case 'production':
+      return 'volunteer_waivers-prod';
+    default:
+      return 'volunteer_waivers-staging';
+  }
+};
+
+// Get the event RSVPs table name based on environment
+const getEventRsvpsTableName = (): string => {
+  const env = process.env.TEST_ENV || 'local';
+  switch (env) {
+    case 'staging':
+      return 'event_rsvps-staging';
+    case 'production':
+      return 'event_rsvps-prod';
+    default:
+      return 'event_rsvps-staging';
+  }
+};
+
+// Get the events table name based on environment
+const getEventsTableName = (): string => {
+  const env = process.env.TEST_ENV || 'local';
+  switch (env) {
+    case 'staging':
+      return 'events-staging';
+    case 'production':
+      return 'events-prod';
+    default:
+      return 'events-staging';
   }
 };
 
@@ -256,6 +295,58 @@ export async function getWaiverStatus(
 }
 
 /**
+ * Set waiver expiration date directly in DynamoDB for testing purposes
+ * This allows tests to simulate expired or expiring waivers
+ * @param email - Email address of the volunteer
+ * @param expirationDate - ISO date string for the new expiration date
+ */
+export async function setWaiverExpiration(
+  email: string,
+  expirationDate: string
+): Promise<void> {
+  const client = getDynamoDBClient();
+  const tableName = getVolunteerWaiversTableName();
+  
+  try {
+    // First, get the waiver_id for this email
+    const { QueryCommand } = await import('@aws-sdk/client-dynamodb');
+    const queryResult = await client.send(new QueryCommand({
+      TableName: tableName,
+      KeyConditionExpression: 'email = :email',
+      ExpressionAttributeValues: {
+        ':email': { S: email.toLowerCase().trim() }
+      },
+      Limit: 1
+    }));
+    
+    if (!queryResult.Items || queryResult.Items.length === 0) {
+      throw new Error(`No waiver found for email: ${email}`);
+    }
+    
+    const waiverId = queryResult.Items[0].waiver_id.S;
+    
+    // Update the expiration date
+    const command = new UpdateItemCommand({
+      TableName: tableName,
+      Key: {
+        email: { S: email.toLowerCase().trim() },
+        waiver_id: { S: waiverId! }
+      },
+      UpdateExpression: 'SET expiration_date = :expiration',
+      ExpressionAttributeValues: {
+        ':expiration': { S: expirationDate }
+      }
+    });
+    
+    await client.send(command);
+    console.log(`Waiver expiration updated for ${email}: ${expirationDate}`);
+  } catch (error) {
+    console.error(`Failed to set waiver expiration:`, error);
+    throw error;
+  }
+}
+
+/**
  * Event RSVP API Helpers
  */
 
@@ -268,18 +359,77 @@ export interface EventData {
 }
 
 /**
- * Note: Event creation is typically done through admin APIs
- * For testing, we'll work with existing events or mock event data
- * This is a placeholder for future implementation if needed
+ * Create a test event directly in DynamoDB for testing purposes
+ * This allows tests to create events with specific dates and properties
+ * @param eventData - Event data including id, title, date, capacity, location
+ * @returns Event ID
  */
 export async function createTestEvent(
-  request: APIRequestContext,
   eventData: EventData
 ): Promise<string> {
-  // This would require admin API access
-  // For now, return the eventId as-is
-  console.warn('createTestEvent: Using provided eventId, actual event creation not implemented');
-  return eventData.eventId;
+  const client = getDynamoDBClient();
+  const tableName = getEventsTableName();
+  
+  try {
+    const now = new Date().toISOString();
+    
+    // Create a slug from the event ID if not provided
+    const slug = eventData.eventId;
+    
+    const command = new PutItemCommand({
+      TableName: tableName,
+      Item: {
+        event_id: { S: eventData.eventId },
+        title: { S: eventData.title },
+        date: { S: eventData.date },
+        capacity: { N: eventData.capacity.toString() },
+        location: { S: eventData.location },
+        slug: { S: slug },
+        status: { S: 'active' },
+        created_at: { S: now },
+        updated_at: { S: now },
+        // Add default fields that might be expected
+        description: { S: `Test event: ${eventData.title}` },
+        start_time: { S: '09:00' },
+        end_time: { S: '12:00' },
+        attendance_count: { N: '0' }
+      }
+    });
+    
+    await client.send(command);
+    console.log(`✅ Test event created: ${eventData.eventId}`);
+    return eventData.eventId;
+  } catch (error) {
+    console.error(`Failed to create test event:`, error);
+    throw error;
+  }
+}
+
+/**
+ * Delete a test event from DynamoDB
+ * This cleans up test events after tests complete
+ * @param eventId - Event ID to delete
+ */
+export async function deleteTestEvent(eventId: string): Promise<void> {
+  const client = getDynamoDBClient();
+  const tableName = getEventsTableName();
+  
+  try {
+    const { DeleteItemCommand } = await import('@aws-sdk/client-dynamodb');
+    
+    const command = new DeleteItemCommand({
+      TableName: tableName,
+      Key: {
+        event_id: { S: eventId }
+      }
+    });
+    
+    await client.send(command);
+    console.log(`✅ Test event deleted: ${eventId}`);
+  } catch (error) {
+    console.error(`Failed to delete test event:`, error);
+    // Don't throw - cleanup is best effort
+  }
 }
 
 /**
@@ -319,6 +469,50 @@ export async function submitEventRsvp(
 }
 
 /**
+ * Create a multi-person RSVP directly in DynamoDB for testing purposes
+ * This allows tests to set up multi-person RSVP scenarios
+ * @param guardianEmail - Guardian's email address
+ * @param eventId - Event ID
+ * @param attendees - Array of attendee IDs (email for guardian, minor_id for minors)
+ */
+export async function createMultiPersonRsvp(
+  guardianEmail: string,
+  eventId: string,
+  attendees: string[]
+): Promise<void> {
+  const client = getDynamoDBClient();
+  const tableName = getEventRsvpsTableName();
+  
+  try {
+    const now = new Date().toISOString();
+    
+    for (const attendeeId of attendees) {
+      const isGuardian = attendeeId === guardianEmail;
+      const attendeeType = isGuardian ? 'volunteer' : 'minor';
+      
+      const command = new PutItemCommand({
+        TableName: tableName,
+        Item: {
+          event_id: { S: eventId },
+          attendee_id: { S: attendeeId },
+          attendee_type: { S: attendeeType },
+          guardian_email: { S: guardianEmail.toLowerCase().trim() },
+          email: { S: guardianEmail.toLowerCase().trim() },
+          rsvp_date: { S: now },
+          status: { S: 'confirmed' }
+        }
+      });
+      
+      await client.send(command);
+      console.log(`Multi-person RSVP created: ${attendeeId} for event ${eventId}`);
+    }
+  } catch (error) {
+    console.error(`Failed to create multi-person RSVP:`, error);
+    throw error;
+  }
+}
+
+/**
  * Get RSVP count for an event
  * @param request - Playwright API request context
  * @param eventId - Event ID
@@ -342,6 +536,44 @@ export async function getRsvpCount(
 
   const data = await response.json();
   return data.attendanceCount || 0;
+}
+
+/**
+ * Get event capacity from DynamoDB
+ * This retrieves the maximum capacity for an event
+ * @param eventId - Event ID
+ * @returns Event capacity number
+ */
+export async function getEventCapacity(eventId: string): Promise<number> {
+  const client = getDynamoDBClient();
+  const tableName = getEventsTableName();
+  
+  try {
+    const command = new GetItemCommand({
+      TableName: tableName,
+      Key: {
+        event_id: { S: eventId }
+      }
+    });
+    
+    const result = await client.send(command);
+    
+    if (!result.Item) {
+      throw new Error(`Event not found: ${eventId}`);
+    }
+    
+    // Capacity can be stored as N (number) or S (string)
+    const capacity = result.Item.capacity?.N || result.Item.capacity?.S;
+    
+    if (!capacity) {
+      throw new Error(`Event ${eventId} does not have a capacity field`);
+    }
+    
+    return parseInt(capacity, 10);
+  } catch (error) {
+    console.error(`Failed to get event capacity:`, error);
+    throw error;
+  }
 }
 
 /**
@@ -477,6 +709,41 @@ export async function deleteMinor(
   if (!response.ok()) {
     const body = await response.text();
     throw new Error(`Failed to delete minor: ${response.status()} - ${body}`);
+  }
+}
+
+/**
+ * Network Simulation Utilities
+ */
+
+/**
+ * Simulate network failure by setting the page to offline mode
+ * This allows testing of offline/network error scenarios
+ * @param page - Playwright Page object
+ */
+export async function simulateNetworkFailure(page: Page): Promise<void> {
+  try {
+    // Set the browser context to offline mode
+    await page.context().setOffline(true);
+    console.log('Network failure simulated - page is now offline');
+  } catch (error) {
+    console.error('Failed to simulate network failure:', error);
+    throw error;
+  }
+}
+
+/**
+ * Restore network connection after simulating failure
+ * @param page - Playwright Page object
+ */
+export async function restoreNetwork(page: Page): Promise<void> {
+  try {
+    // Restore the browser context to online mode
+    await page.context().setOffline(false);
+    console.log('Network connection restored - page is now online');
+  } catch (error) {
+    console.error('Failed to restore network:', error);
+    throw error;
   }
 }
 

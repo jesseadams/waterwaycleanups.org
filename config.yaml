@@ -26,7 +26,7 @@ params:
   api:
     # API Gateway base URLs - override with HUGO_API_BASE_URL environment variable
     base_url: "https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging"
-    base_url_volunteer: "https://ppiqomgl8a.execute-api.us-east-1.amazonaws.com/staging"
+    base_url_volunteer: "https://9ea4ntcq8f.execute-api.us-east-1.amazonaws.com/staging"
     events_api_url: "https://o2pkfnwqq4.execute-api.us-east-1.amazonaws.com/staging"
 
 languages:

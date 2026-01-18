@@ -155,28 +155,61 @@ def handler(event, context):
             }
         
         if submission_date > one_year_ago:
-            # Waiver is valid
-            expiration_date = (submission_date + timedelta(days=365)).strftime('%Y-%m-%d')
+            # Waiver is valid - use expiration_date from DB if available, otherwise calculate
+            if 'expiration_date' in latest_waiver and latest_waiver['expiration_date']:
+                expiration_date = latest_waiver['expiration_date']
+                # Check if the waiver is actually expired based on the stored expiration date
+                try:
+                    exp_date = datetime.strptime(expiration_date, '%Y-%m-%d')
+                    if exp_date < today:
+                        # Waiver has expired based on expiration_date field
+                        return {
+                            'statusCode': 200,
+                            'headers': headers,
+                            'body': json.dumps({
+                                'success': True,
+                                'hasWaiver': False,
+                                'isExpired': True,
+                                'message': 'Previous waiver has expired, a new one is required',
+                                'expirationDate': expiration_date,
+                                'previousWaiverDate': latest_waiver['submission_date']
+                            })
+                        }
+                except ValueError:
+                    # If parsing fails, calculate from submission date
+                    expiration_date = (submission_date + timedelta(days=365)).strftime('%Y-%m-%d')
+            else:
+                # Calculate expiration from submission date
+                expiration_date = (submission_date + timedelta(days=365)).strftime('%Y-%m-%d')
+            
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps({
                     'success': True,
                     'hasWaiver': True,
+                    'isExpired': False,
                     'message': f'User has a valid waiver until {expiration_date}',
                     'expirationDate': expiration_date,
                     'submissionDate': latest_waiver['submission_date']
                 })
             }
         else:
-            # Waiver has expired
+            # Waiver has expired based on submission date
+            if 'expiration_date' in latest_waiver and latest_waiver['expiration_date']:
+                expiration_date = latest_waiver['expiration_date']
+            else:
+                expiration_date = (submission_date + timedelta(days=365)).strftime('%Y-%m-%d')
+            
             return {
                 'statusCode': 200,
                 'headers': headers,
                 'body': json.dumps({
                     'success': True,
                     'hasWaiver': False,
+                    'isExpired': True,
                     'message': 'Previous waiver has expired, a new one is required',
+                    'expirationDate': expiration_date,
                     'previousWaiverDate': latest_waiver['submission_date']
                 })
             }

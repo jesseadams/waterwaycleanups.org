@@ -122,6 +122,30 @@ const VolunteerDashboard = () => {
     }
   };
 
+  const calculateDaysRemaining = (expirationDate) => {
+    if (!expirationDate) return -1;
+    
+    try {
+      const expiration = new Date(expirationDate);
+      const today = new Date();
+      const diffTime = expiration.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays;
+    } catch (error) {
+      return -1;
+    }
+  };
+
+  const isWaiverExpired = (expirationDate) => {
+    const daysRemaining = calculateDaysRemaining(expirationDate);
+    return daysRemaining < 0;
+  };
+
+  const isWaiverExpiringSoon = (expirationDate) => {
+    const daysRemaining = calculateDaysRemaining(expirationDate);
+    return daysRemaining >= 0 && daysRemaining <= 30;
+  };
+
   const getEventStatus = (rsvp) => {
     const now = new Date();
     const eventDate = rsvp.event_start_time ? new Date(rsvp.event_start_time) : null;
@@ -238,18 +262,57 @@ const VolunteerDashboard = () => {
           <div className="bg-gray-50 p-4 rounded-lg">
             <h3 className="text-lg font-semibold mb-3">Waiver Status</h3>
             {dashboardData.waiver.hasWaiver ? (
-              <div className="text-green-600">
-                <p className="font-medium">✓ Valid waiver on file</p>
-                <p className="text-sm text-gray-600">
-                  Expires: {formatDate(dashboardData.waiver.expirationDate)}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Submitted: {formatDate(dashboardData.waiver.submissionDate)}
-                </p>
-                {dashboardData.minors && dashboardData.minors.length > 0 && (
-                  <p className="text-sm text-gray-600 mt-2">
-                    ✓ Covers {dashboardData.minors.length} minor{dashboardData.minors.length !== 1 ? 's' : ''}
-                  </p>
+              <div>
+                {isWaiverExpired(dashboardData.waiver.expirationDate) ? (
+                  <div className="text-red-600">
+                    <p className="font-medium">⚠ Waiver Expired</p>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Your waiver expired on {formatDate(dashboardData.waiver.expirationDate)}. Please renew to continue volunteering.
+                    </p>
+                    <a
+                      href="/volunteer-waiver"
+                      className="inline-block bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                    >
+                      Renew Waiver
+                    </a>
+                  </div>
+                ) : isWaiverExpiringSoon(dashboardData.waiver.expirationDate) ? (
+                  <div className="text-yellow-600">
+                    <p className="font-medium">⚠ Waiver Expiring Soon</p>
+                    <p className="text-sm text-gray-600">
+                      Expires: {formatDate(dashboardData.waiver.expirationDate)}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {calculateDaysRemaining(dashboardData.waiver.expirationDate)} days remaining
+                    </p>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Please renew your waiver soon to avoid interruption.
+                    </p>
+                    <a
+                      href="/volunteer-waiver"
+                      className="inline-block bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 text-sm"
+                    >
+                      Renew Waiver
+                    </a>
+                  </div>
+                ) : (
+                  <div className="text-green-600">
+                    <p className="font-medium">✓ Valid waiver on file</p>
+                    <p className="text-sm text-gray-600">
+                      Expires: {formatDate(dashboardData.waiver.expirationDate)}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {calculateDaysRemaining(dashboardData.waiver.expirationDate)} days remaining
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Submitted: {formatDate(dashboardData.waiver.submissionDate)}
+                    </p>
+                    {dashboardData.minors && dashboardData.minors.length > 0 && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        ✓ Covers {dashboardData.minors.length} minor{dashboardData.minors.length !== 1 ? 's' : ''}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             ) : (
@@ -258,12 +321,12 @@ const VolunteerDashboard = () => {
                 <p className="text-sm text-gray-600 mb-3">
                   You need to complete a waiver to volunteer at events
                 </p>
-                <button
-                  onClick={() => setShowWaiverForm(true)}
-                  className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                <a
+                  href="/volunteer-waiver"
+                  className="inline-block bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
                 >
                   Complete Waiver
-                </button>
+                </a>
               </div>
             )}
           </div>

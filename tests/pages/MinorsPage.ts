@@ -441,6 +441,110 @@ export class MinorsPage {
   }
 
   /**
+   * Verify that an age transition notification is displayed (minor turning 18)
+   * Requirements: 8.1
+   */
+  async expectAgeTransitionNotification(): Promise<void> {
+    // Look for notification about minor turning 18 and needing their own account
+    const notification = this.page.locator('text=/18.*own account|adult.*create account|no longer.*minor/i');
+    await expect(notification).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Verify that a future date of birth error is displayed
+   * Requirements: 8.2
+   */
+  async expectFutureDateError(): Promise<void> {
+    // Look for error message about future date
+    const errorMessage = this.page.locator('text=/future date|date.*future|cannot be.*future|invalid.*date/i');
+    await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Verify that an adult date of birth error is displayed (18+ years old)
+   * Requirements: 8.3
+   */
+  async expectAdultDateError(): Promise<void> {
+    // Look for error message about adult age
+    const errorMessage = this.page.locator('text=/must be.*under 18|18.*older|adult|not.*minor/i');
+    await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Verify that a deletion warning is displayed for minors with active RSVPs
+   * Requirements: 8.4
+   */
+  async expectDeletionWarning(): Promise<void> {
+    // Look for warning about active RSVPs when deleting
+    const warningMessage = this.page.locator('text=/active.*rsvp|rsvp.*cancel|event.*registration/i');
+    await expect(warningMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Confirm deletion in a dialog/modal
+   * Requirements: 8.4
+   */
+  async confirmDeletion(): Promise<void> {
+    // Handle browser dialog
+    this.page.once('dialog', dialog => {
+      dialog.accept();
+    });
+    
+    // Also check for modal confirmation button
+    const confirmButton = this.page.locator('button:has-text("Confirm"), button:has-text("Delete"), button:has-text("Yes")');
+    const isModalVisible = await confirmButton.isVisible({ timeout: TIMEOUTS.SHORT }).catch(() => false);
+    
+    if (isModalVisible) {
+      await confirmButton.click();
+      await this.page.waitForTimeout(500);
+    }
+  }
+
+  /**
+   * Add a minor with special characters in the name
+   * Requirements: 8.5
+   * @param name - Full name with special characters (will be split into first/last)
+   * @param dob - Date of birth in YYYY-MM-DD format
+   */
+  async addMinorWithSpecialCharacters(name: string, dob: string): Promise<void> {
+    // Split name into first and last name
+    const nameParts = name.split(' ');
+    const firstName = nameParts[0] || name;
+    const lastName = nameParts.slice(1).join(' ') || name;
+    
+    // Click "Add Minor" button to show the form (if not already visible)
+    const addButton = this.page.locator('button:has-text("Add Minor")').first();
+    const isFormVisible = await this.page.locator('input[type="date"]').isVisible().catch(() => false);
+    
+    if (!isFormVisible) {
+      await addButton.click();
+      await this.page.waitForTimeout(500);
+    }
+    
+    // Find input fields by their labels
+    // First Name
+    const firstNameLabel = this.page.locator('text=First Name').first();
+    const firstNameInput = firstNameLabel.locator('..').locator('input');
+    await firstNameInput.fill(firstName);
+    
+    // Last Name
+    const lastNameLabel = this.page.locator('text=Last Name').first();
+    const lastNameInput = lastNameLabel.locator('..').locator('input');
+    await lastNameInput.fill(lastName);
+    
+    // Date of Birth
+    const dobInput = this.page.locator('input[type="date"]');
+    await dobInput.fill(dob);
+    
+    // Submit the form
+    const submitButton = this.page.locator('button').filter({ hasText: /Add Minor|Save Minor/ }).first();
+    await submitButton.click();
+    
+    // Wait for the API call to complete
+    await this.page.waitForTimeout(2000);
+  }
+
+  /**
    * Helper Methods
    */
 

@@ -26,6 +26,13 @@ export class EventPage {
   readonly capacityErrorMessage: Locator;
   readonly duplicateErrorMessage: Locator;
   readonly rsvpStatus: Locator;
+  
+  // Multi-person RSVP locators
+  readonly multiPersonSelector: Locator;
+  readonly attendeeCheckboxes: Locator;
+  readonly selectedAttendeesList: Locator;
+  readonly individualCancelButtons: Locator;
+  readonly multiPersonRsvpAttendees: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -49,6 +56,13 @@ export class EventPage {
     this.capacityErrorMessage = page.locator('.rsvp-error:has-text("capacity"), .rsvp-error:has-text("full")');
     this.duplicateErrorMessage = page.locator('.rsvp-error:has-text("already"), .rsvp-error:has-text("duplicate")');
     this.rsvpStatus = page.locator('.rsvp-status, [class*="rsvp-status"]');
+    
+    // Multi-person RSVP locators
+    this.multiPersonSelector = page.locator('.multi-person-selector, [class*="attendee-selector"], .attendee-selection');
+    this.attendeeCheckboxes = page.locator('.attendee-checkbox, input[type="checkbox"][name*="attendee"]');
+    this.selectedAttendeesList = page.locator('.selected-attendees, [class*="selected-attendees"]');
+    this.individualCancelButtons = page.locator('.cancel-attendee, button:has-text("Cancel"):not(.cancel-rsvp)');
+    this.multiPersonRsvpAttendees = page.locator('.rsvp-attendee, [class*="attendee-name"]');
   }
 
   /**
@@ -211,7 +225,8 @@ export class EventPage {
    * @returns Event date text
    */
   async getEventDate(): Promise<string> {
-    return await this.eventDate.textContent() || '';
+    // Use first() to handle multiple date elements on the page
+    return await this.eventDate.first().textContent() || '';
   }
 
   /**
@@ -376,7 +391,7 @@ export class EventPage {
     
     // Check if RSVP button shows "Already Registered" and is disabled
     // This is the primary indicator after a successful RSVP
-    const rsvpButtonText = await this.rsvpButton.textContent().catch(() => '');
+    const rsvpButtonText = await this.rsvpButton.textContent().catch(() => '') || '';
     const rsvpButtonDisabled = await this.rsvpButton.isDisabled().catch(() => false);
     
     if (rsvpButtonText.includes('Already Registered') && rsvpButtonDisabled) {
@@ -396,7 +411,7 @@ export class EventPage {
       .catch(() => false);
     
     if (successVisible) {
-      const successText = await this.rsvpSuccessMessage.textContent().catch(() => '');
+      const successText = await this.rsvpSuccessMessage.textContent().catch(() => '') || '';
       if (successText.includes('registered') || successText.includes('Registered')) {
         return true;
       }
@@ -433,5 +448,339 @@ export class EventPage {
       { selector: '.rsvp-count, [class*="attendance-count"]', expected: expectedCount },
       { timeout }
     );
+  }
+
+  /**
+   * Multi-Person RSVP Methods
+   */
+
+  /**
+   * Check if multi-person selector is displayed
+   * @returns True if multi-person selector UI is visible
+   */
+  async hasMultiPersonSelector(): Promise<boolean> {
+    return await this.multiPersonSelector.isVisible({ timeout: TIMEOUTS.SHORT })
+      .catch(() => false);
+  }
+
+  /**
+   * Select specific attendees from the multi-person selector
+   * @param attendees - Array of attendee names to select
+   */
+  async selectAttendees(attendees: string[]): Promise<void> {
+    // Wait for multi-person selector to be visible
+    await expect(this.multiPersonSelector).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+    
+    for (const attendeeName of attendees) {
+      // Find checkbox for this attendee by label text or data attribute
+      const checkbox = this.page.locator(
+        `input[type="checkbox"][value*="${attendeeName}"], ` +
+        `label:has-text("${attendeeName}") input[type="checkbox"], ` +
+        `input[type="checkbox"][data-attendee*="${attendeeName}"]`
+      ).first();
+      
+      // Check if already checked
+      const isChecked = await checkbox.isChecked().catch(() => false);
+      
+      if (!isChecked) {
+        await checkbox.check();
+        await this.page.waitForTimeout(200); // Wait for UI update
+      }
+    }
+  }
+
+  /**
+   * Get currently selected attendees from the multi-person selector
+   * @returns Array of selected attendee names
+   */
+  async getSelectedAttendees(): Promise<string[]> {
+    const selectedAttendees: string[] = [];
+    
+    // Get all checked checkboxes
+    const checkedBoxes = await this.page.locator('input[type="checkbox"]:checked').all();
+    
+    for (const checkbox of checkedBoxes) {
+      // Try to get attendee name from value, data attribute, or associated label
+      const value = await checkbox.getAttribute('value').catch(() => null);
+      const dataAttendee = await checkbox.getAttribute('data-attendee').catch(() => null);
+      
+      if (value) {
+        selectedAttendees.push(value);
+      } else if (dataAttendee) {
+        selectedAttendees.push(dataAttendee);
+      } else {
+        // Try to find associated label
+        const id = await checkbox.getAttribute('id').catch(() => null);
+        if (id) {
+          const label = await this.page.locator(`label[for="${id}"]`).textContent().catch(() => null);
+          if (label) {
+            selectedAttendees.push(label.trim());
+          }
+        }
+      }
+    }
+    
+    return selectedAttendees;
+  }
+
+  /**
+   * Cancel an individual attendee from a multi-person RSVP
+   * @param name - Name of the attendee to cancel
+   */
+  async cancelIndividualAttendee(name: string): Promise<void> {
+    // Find the cancel button for this specific attendee
+    const cancelButton = this.page.locator(
+      `button:has-text("Cancel"):near(:text("${name}")), ` +
+      `.cancel-attendee[data-attendee="${name}"], ` +
+      `[data-attendee-name="${name}"] button:has-text("Cancel")`
+    ).first();
+    
+    await expect(cancelButton).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+    
+    // Click cancel button
+    await cancelButton.click();
+    
+    // Handle confirmation dialog if present
+    this.page.on('dialog', dialog => dialog.accept());
+    
+    // Wait for cancellation to complete
+    await this.page.waitForTimeout(1000);
+  }
+
+  /**
+   * Get all attendees for the current multi-person RSVP
+   * @returns Array of attendee names
+   */
+  async getMultiPersonRsvpAttendees(): Promise<string[]> {
+    const attendees: string[] = [];
+    
+    // Wait for attendee list to be visible
+    const attendeeElements = await this.multiPersonRsvpAttendees.all();
+    
+    for (const element of attendeeElements) {
+      const name = await element.textContent();
+      if (name) {
+        attendees.push(name.trim());
+      }
+    }
+    
+    return attendees;
+  }
+
+  /**
+   * Assert that multi-person selector is visible
+   */
+  async expectMultiPersonSelectorVisible(): Promise<void> {
+    await expect(this.multiPersonSelector).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Assert that a specific attendee is selected
+   * @param name - Name of the attendee to check
+   */
+  async expectAttendeeSelected(name: string): Promise<void> {
+    // Find checkbox for this attendee
+    const checkbox = this.page.locator(
+      `input[type="checkbox"][value*="${name}"], ` +
+      `label:has-text("${name}") input[type="checkbox"], ` +
+      `input[type="checkbox"][data-attendee*="${name}"]`
+    ).first();
+    
+    await expect(checkbox).toBeChecked({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Time-Based Restriction Methods
+   */
+
+  /**
+   * Check if the event date has passed
+   * @returns True if event date is in the past
+   */
+  async isPastEvent(): Promise<boolean> {
+    // Get the event date text
+    const dateText = await this.getEventDate();
+    
+    // Try to parse the date from the text
+    // Common formats: "January 15, 2026", "2026-01-15", "Jan 15, 2026"
+    const dateMatch = dateText.match(/(\w+)\s+(\d+),?\s+(\d{4})|(\d{4})-(\d{2})-(\d{2})/);
+    
+    if (!dateMatch) {
+      // If we can't parse the date, check for "past" indicators in the UI
+      const pastIndicators = await this.page.locator(
+        '.event-past, .past-event, [class*="past"], ' +
+        ':has-text("This event has passed"), :has-text("Past Event")'
+      ).isVisible({ timeout: TIMEOUTS.SHORT }).catch(() => false);
+      
+      return pastIndicators;
+    }
+    
+    let eventDate: Date;
+    
+    if (dateMatch[1]) {
+      // Format: "Month Day, Year"
+      const monthStr = dateMatch[1];
+      const day = parseInt(dateMatch[2]);
+      const year = parseInt(dateMatch[3]);
+      
+      const monthMap: { [key: string]: number } = {
+        'january': 0, 'jan': 0,
+        'february': 1, 'feb': 1,
+        'march': 2, 'mar': 2,
+        'april': 3, 'apr': 3,
+        'may': 4,
+        'june': 5, 'jun': 5,
+        'july': 6, 'jul': 6,
+        'august': 7, 'aug': 7,
+        'september': 8, 'sep': 8, 'sept': 8,
+        'october': 9, 'oct': 9,
+        'november': 10, 'nov': 10,
+        'december': 11, 'dec': 11
+      };
+      
+      const month = monthMap[monthStr.toLowerCase()];
+      eventDate = new Date(year, month, day);
+    } else {
+      // Format: "YYYY-MM-DD"
+      const year = parseInt(dateMatch[4]);
+      const month = parseInt(dateMatch[5]) - 1; // JS months are 0-indexed
+      const day = parseInt(dateMatch[6]);
+      eventDate = new Date(year, month, day);
+    }
+    
+    // Compare with current date (ignore time)
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    eventDate.setHours(0, 0, 0, 0);
+    
+    return eventDate < now;
+  }
+
+  /**
+   * Get the cancellation deadline (24 hours before event start)
+   * @returns Date object representing the cancellation deadline
+   */
+  async getCancellationDeadline(): Promise<Date> {
+    // Get the event date text
+    const dateText = await this.getEventDate();
+    
+    // Try to parse the date and time from the text
+    // Look for time patterns like "10:00 AM", "14:30", etc.
+    const dateMatch = dateText.match(/(\w+)\s+(\d+),?\s+(\d{4})|(\d{4})-(\d{2})-(\d{2})/);
+    const timeMatch = dateText.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+    
+    if (!dateMatch) {
+      throw new Error('Unable to parse event date');
+    }
+    
+    let eventDate: Date;
+    
+    if (dateMatch[1]) {
+      // Format: "Month Day, Year"
+      const monthStr = dateMatch[1];
+      const day = parseInt(dateMatch[2]);
+      const year = parseInt(dateMatch[3]);
+      
+      const monthMap: { [key: string]: number } = {
+        'january': 0, 'jan': 0,
+        'february': 1, 'feb': 1,
+        'march': 2, 'mar': 2,
+        'april': 3, 'apr': 3,
+        'may': 4,
+        'june': 5, 'jun': 5,
+        'july': 6, 'jul': 6,
+        'august': 7, 'aug': 7,
+        'september': 8, 'sep': 8, 'sept': 8,
+        'october': 9, 'oct': 9,
+        'november': 10, 'nov': 10,
+        'december': 11, 'dec': 11
+      };
+      
+      const month = monthMap[monthStr.toLowerCase()];
+      eventDate = new Date(year, month, day);
+    } else {
+      // Format: "YYYY-MM-DD"
+      const year = parseInt(dateMatch[4]);
+      const month = parseInt(dateMatch[5]) - 1;
+      const day = parseInt(dateMatch[6]);
+      eventDate = new Date(year, month, day);
+    }
+    
+    // Set time if found, otherwise default to 9:00 AM
+    if (timeMatch) {
+      let hours = parseInt(timeMatch[1]);
+      const minutes = parseInt(timeMatch[2]);
+      const meridiem = timeMatch[3]?.toUpperCase();
+      
+      if (meridiem === 'PM' && hours !== 12) {
+        hours += 12;
+      } else if (meridiem === 'AM' && hours === 12) {
+        hours = 0;
+      }
+      
+      eventDate.setHours(hours, minutes, 0, 0);
+    } else {
+      // Default to 9:00 AM if no time specified
+      eventDate.setHours(9, 0, 0, 0);
+    }
+    
+    // Calculate deadline: 24 hours before event start
+    const deadline = new Date(eventDate.getTime() - (24 * 60 * 60 * 1000));
+    
+    return deadline;
+  }
+
+  /**
+   * Check if current time is within the 24-hour cancellation window
+   * @returns True if within 24 hours of event start
+   */
+  async isWithinCancellationWindow(): Promise<boolean> {
+    const deadline = await this.getCancellationDeadline();
+    const now = new Date();
+    
+    // Within cancellation window if current time is after the deadline
+    return now >= deadline;
+  }
+
+  /**
+   * Assert that cancellation is blocked due to time restrictions
+   */
+  async expectCancellationRestricted(): Promise<void> {
+    // Look for cancellation restriction messages
+    const restrictionMessage = this.page.locator(
+      '.cancellation-restricted, .cancel-error, ' +
+      ':has-text("cannot cancel"), :has-text("cancellation window"), ' +
+      ':has-text("24 hours"), :has-text("too late")'
+    );
+    
+    await expect(restrictionMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Assert that past event RSVP error is displayed
+   */
+  async expectPastEventError(): Promise<void> {
+    // Look for past event error messages
+    const pastEventError = this.page.locator(
+      '.past-event-error, .rsvp-error:has-text("past"), ' +
+      ':has-text("event has passed"), :has-text("already occurred"), ' +
+      ':has-text("no longer accepting")'
+    );
+    
+    await expect(pastEventError).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
+  }
+
+  /**
+   * Assert that cancellation window time restriction message is displayed
+   */
+  async expectCancellationWindowMessage(): Promise<void> {
+    // Look for cancellation window messages
+    const windowMessage = this.page.locator(
+      '.cancellation-window-message, ' +
+      ':has-text("24 hours"), :has-text("cancellation window"), ' +
+      ':has-text("cancellation deadline"), :has-text("too close to event")'
+    );
+    
+    await expect(windowMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
   }
 }

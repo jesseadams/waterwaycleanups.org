@@ -63,7 +63,7 @@ export class DashboardPage {
     this.checkEmailButton = page.locator('input[value="Check Email"], button:has-text("Check Email")');
     this.waiverSection = page.locator('[class*="waiver"], .waiver-status, #waiver-section');
     this.waiverStatusText = page.locator('text=/waiver/i').first();
-    this.waiverExpirationDate = page.locator('text=/expir/i, text=/valid until/i');
+    this.waiverExpirationDate = page.locator('text=/Expires:/, text=/expired on/, text=/valid until/i');
     this.submitWaiverButton = page.locator('a[href*="waiver"], button:has-text("Complete Waiver")');
     this.rsvpSection = page.locator('[class*="rsvp"], .rsvp-list, #rsvp-section');
     this.rsvpList = page.locator('.rsvp-list, [class*="rsvp-item"]').first();
@@ -82,8 +82,10 @@ export class DashboardPage {
    * Navigate to the volunteer dashboard
    */
   async goto(): Promise<void> {
-    await this.page.goto('/volunteer');
-    await waitForNetworkIdle(this.page, { timeout: TIMEOUTS.LONG });
+    await this.page.goto('/volunteer', { waitUntil: 'networkidle' });
+    // Force reload to bypass cache
+    await this.page.reload({ waitUntil: 'networkidle' });
+    await waitForNetworkIdle(this.page, TIMEOUTS.LONG);
   }
 
   /**
@@ -113,8 +115,10 @@ export class DashboardPage {
   async getWaiverStatus(): Promise<WaiverStatus> {
     await this.waitForDashboardLoad();
     
-    // Check if waiver section is visible
-    const waiverVisible = await this.waiverSection.isVisible({ timeout: TIMEOUTS.SHORT })
+    // Look for the waiver section using a more specific selector
+    // The waiver section is in a div.bg-gray-50 that contains an h3 with "Waiver Status"
+    const waiverSectionLocator = this.page.locator('div.bg-gray-50:has(h3:text-is("Waiver Status"))');
+    const waiverVisible = await waiverSectionLocator.isVisible({ timeout: TIMEOUTS.SHORT })
       .catch(() => false);
     
     if (!waiverVisible) {
@@ -125,25 +129,41 @@ export class DashboardPage {
       };
     }
     
-    // Get waiver status text
-    const statusText = await this.waiverStatusText.textContent() || '';
-    const hasWaiver = statusText.toLowerCase().includes('valid') || 
-                      statusText.toLowerCase().includes('active') ||
-                      statusText.toLowerCase().includes('complete');
+    // Get waiver status text from the section
+    const waiverSectionText = await waiverSectionLocator.textContent() || '';
     
-    // Try to extract expiration date
+    // Try to extract expiration date from the waiver section text
     let expirationDate: string | null = null;
-    const expirationVisible = await this.waiverExpirationDate.isVisible({ timeout: TIMEOUTS.SHORT })
-      .catch(() => false);
     
-    if (expirationVisible) {
-      const expirationText = await this.waiverExpirationDate.textContent() || '';
-      // Extract date from text (format: "valid until YYYY-MM-DD" or similar)
-      const dateMatch = expirationText.match(/\d{4}-\d{2}-\d{2}/);
-      if (dateMatch) {
-        expirationDate = dateMatch[0];
+    // Try ISO format first (YYYY-MM-DD)
+    let dateMatch = waiverSectionText.match(/\d{4}-\d{2}-\d{2}/);
+    if (dateMatch) {
+      expirationDate = dateMatch[0];
+    } else {
+      // Try to parse "Month DD, YYYY" format - handle both with and without quotes
+      const monthMatch = waiverSectionText.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i);
+      if (monthMatch) {
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthMatch[1].toLowerCase());
+        if (monthIndex !== -1) {
+          const year = monthMatch[3];
+          const month = String(monthIndex + 1).padStart(2, '0');
+          const day = String(monthMatch[2]).padStart(2, '0');
+          expirationDate = `${year}-${month}-${day}`;
+        }
       }
     }
+    
+    // hasWaiver is true if:
+    // 1. Status text indicates valid/active/complete waiver, OR
+    // 2. Status text indicates expired waiver (still a waiver on file), OR
+    // 3. An expiration date exists (even if expired)
+    const hasWaiver = waiverSectionText.toLowerCase().includes('valid') || 
+                      waiverSectionText.toLowerCase().includes('active') ||
+                      waiverSectionText.toLowerCase().includes('complete') ||
+                      waiverSectionText.toLowerCase().includes('expired') ||
+                      waiverSectionText.toLowerCase().includes('expiring') ||
+                      expirationDate !== null;
     
     return {
       hasWaiver,
@@ -493,5 +513,357 @@ export class DashboardPage {
   async getMinorsCount(): Promise<number> {
     const minors = await this.getMinorsList();
     return minors.length;
+  }
+
+  /**
+   * Waiver Expiration Methods (Task 6)
+   */
+
+  /**
+   * Get the waiver expiration warning text if displayed
+   * @returns Warning text or null if not displayed
+   */
+  async getWaiverExpirationWarning(): Promise<string | null> {
+    await this.waitForDashboardLoad();
+    
+    // Look for warning messages about waiver expiration
+    const warningLocators = [
+      this.page.locator('text=/waiver.*expir/i'),
+      this.page.locator('text=/expir.*waiver/i'),
+      this.page.locator('[class*="warning"]:has-text("waiver")'),
+      this.page.locator('[class*="alert"]:has-text("waiver")'),
+      this.page.locator('.text-yellow-600, .text-orange-600, .text-red-600').filter({ hasText: /waiver|expir/i }),
+    ];
+    
+    for (const locator of warningLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        const text = await locator.first().textContent();
+        return text?.trim() || null;
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Assert that a waiver renewal prompt is displayed
+   */
+  async expectRenewalPrompt(): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    // Look for renewal prompt elements
+    const renewalPrompts = [
+      this.page.locator('text=/renew.*waiver/i'),
+      this.page.locator('text=/waiver.*renew/i'),
+      this.page.locator('text=/waiver.*expired/i'),
+      this.page.locator('button:has-text("Renew"), a:has-text("Renew")').filter({ hasText: /waiver/i }),
+      this.page.locator('a[href*="waiver"]:has-text("Renew")'),
+    ];
+    
+    let found = false;
+    for (const locator of renewalPrompts) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        found = true;
+        break;
+      }
+    }
+    
+    expect(found).toBe(true);
+  }
+
+  /**
+   * Assert that an expiration warning is displayed for N days
+   * @param days - Expected number of days until expiration
+   */
+  async expectExpirationWarning(days: number): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    const warningText = await this.getWaiverExpirationWarning();
+    expect(warningText).toBeTruthy();
+    
+    // Check if the warning mentions the number of days
+    const daysPattern = new RegExp(`${days}\\s*day`, 'i');
+    expect(warningText).toMatch(daysPattern);
+  }
+
+  /**
+   * Get the number of days remaining until waiver expiration
+   * @returns Number of days remaining, or -1 if no waiver data
+   */
+  async getWaiverDaysRemaining(): Promise<number> {
+    const status = await this.getWaiverStatus();
+    
+    // Check if expiration date exists (works for both valid and expired waivers)
+    if (!status.expirationDate) {
+      return -1;
+    }
+    
+    const expirationDate = new Date(status.expirationDate);
+    const today = new Date();
+    
+    // Calculate days difference
+    const diffTime = expirationDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays;
+  }
+
+  /**
+   * Empty State Methods (Task 6)
+   */
+
+  /**
+   * Assert that the empty RSVP state is displayed with CTA
+   */
+  async expectEmptyRsvpState(): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    // Look for empty state messages
+    const emptyStateLocators = [
+      this.page.locator('text=/no.*rsvp/i'),
+      this.page.locator('text=/no.*event/i'),
+      this.page.locator('p:has-text("No event RSVPs yet")'),
+      this.page.locator('[class*="empty"]:has-text("RSVP")'),
+    ];
+    
+    let emptyStateFound = false;
+    for (const locator of emptyStateLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        emptyStateFound = true;
+        break;
+      }
+    }
+    
+    expect(emptyStateFound).toBe(true);
+    
+    // Look for CTA (call-to-action) button or link
+    const ctaLocators = [
+      this.page.locator('a[href*="events"]:has-text("Browse"), a[href*="events"]:has-text("View")'),
+      this.page.locator('button:has-text("Browse Events"), button:has-text("View Events")'),
+      this.page.locator('a:has-text("Find Events")'),
+    ];
+    
+    let ctaFound = false;
+    for (const locator of ctaLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        ctaFound = true;
+        break;
+      }
+    }
+    
+    expect(ctaFound).toBe(true);
+  }
+
+  /**
+   * Assert that the empty minors state is displayed with CTA
+   */
+  async expectEmptyMinorsState(): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    // Look for empty state messages
+    const emptyStateLocators = [
+      this.page.locator('text=/no.*minor/i'),
+      this.page.locator('p:has-text("No minors registered")'),
+      this.page.locator('[class*="empty"]:has-text("minor")'),
+    ];
+    
+    let emptyStateFound = false;
+    for (const locator of emptyStateLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        emptyStateFound = true;
+        break;
+      }
+    }
+    
+    expect(emptyStateFound).toBe(true);
+    
+    // Look for CTA button or link
+    const ctaLocators = [
+      this.page.locator('a[href*="minors"]:has-text("Add"), a[href*="minors"]:has-text("Register")'),
+      this.page.locator('button:has-text("Add Minor"), button:has-text("Register Minor")'),
+      this.page.locator('a:has-text("Manage Minors")'),
+    ];
+    
+    let ctaFound = false;
+    for (const locator of ctaLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        ctaFound = true;
+        break;
+      }
+    }
+    
+    expect(ctaFound).toBe(true);
+  }
+
+  /**
+   * Assert that the no waiver state is displayed with CTA
+   */
+  async expectNoWaiverState(): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    // Look for no waiver messages
+    const noWaiverLocators = [
+      this.page.locator('text=/no.*waiver/i'),
+      this.page.locator('text=/waiver.*required/i'),
+      this.page.locator('text=/complete.*waiver/i'),
+      this.page.locator('p:has-text("waiver")').filter({ hasText: /no|required|complete/i }),
+    ];
+    
+    let noWaiverFound = false;
+    for (const locator of noWaiverLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        noWaiverFound = true;
+        break;
+      }
+    }
+    
+    expect(noWaiverFound).toBe(true);
+    
+    // Look for CTA button or link
+    const ctaLocators = [
+      this.page.locator('a[href*="waiver"]:has-text("Complete"), a[href*="waiver"]:has-text("Submit")'),
+      this.page.locator('button:has-text("Complete Waiver"), button:has-text("Submit Waiver")'),
+      this.submitWaiverButton,
+    ];
+    
+    let ctaFound = false;
+    for (const locator of ctaLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        ctaFound = true;
+        break;
+      }
+    }
+    
+    expect(ctaFound).toBe(true);
+  }
+
+  /**
+   * Pagination and Filtering Methods (Task 6)
+   */
+
+  /**
+   * Get the RSVP pagination controls
+   * @returns Pagination information or null if not paginated
+   */
+  async getRsvpPagination(): Promise<any> {
+    await this.waitForDashboardLoad();
+    
+    // Look for pagination controls
+    const paginationLocators = [
+      this.page.locator('[class*="pagination"]'),
+      this.page.locator('nav[aria-label*="pagination"]'),
+      this.page.locator('.page-numbers, [class*="page-nav"]'),
+    ];
+    
+    for (const locator of paginationLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        // Extract pagination info
+        const text = await locator.first().textContent() || '';
+        const currentPageMatch = text.match(/page\s*(\d+)/i);
+        const totalPagesMatch = text.match(/of\s*(\d+)/i);
+        
+        return {
+          visible: true,
+          currentPage: currentPageMatch ? parseInt(currentPageMatch[1]) : 1,
+          totalPages: totalPagesMatch ? parseInt(totalPagesMatch[1]) : 1,
+          element: locator.first(),
+        };
+      }
+    }
+    
+    return null;
+  }
+
+  /**
+   * Filter RSVPs by status
+   * @param status - Status to filter by (e.g., 'active', 'cancelled', 'past')
+   */
+  async filterRsvpsByStatus(status: string): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    // Look for filter controls
+    const filterLocators = [
+      this.page.locator(`button:has-text("${status}")`).filter({ has: this.page.locator('[class*="filter"]') }),
+      this.page.locator(`[role="tab"]:has-text("${status}")`),
+      this.page.locator(`select[name*="status"], select[name*="filter"]`),
+      this.page.locator(`input[type="radio"][value="${status}"]`),
+    ];
+    
+    for (const locator of filterLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        const tagName = await locator.first().evaluate(el => el.tagName.toLowerCase());
+        
+        if (tagName === 'select') {
+          await locator.first().selectOption(status);
+        } else {
+          await locator.first().click();
+        }
+        
+        // Wait for filter to apply
+        await this.page.waitForTimeout(1000);
+        return;
+      }
+    }
+    
+    throw new Error(`Could not find filter control for status: ${status}`);
+  }
+
+  /**
+   * Assert that a specific filter is active
+   * @param status - Status filter that should be active
+   */
+  async expectActiveFilter(status: string): Promise<void> {
+    await this.waitForDashboardLoad();
+    
+    // Look for active filter indicators
+    const activeFilterLocators = [
+      this.page.locator(`button:has-text("${status}")`).filter({ has: this.page.locator('[class*="active"]') }),
+      this.page.locator(`[role="tab"][aria-selected="true"]:has-text("${status}")`),
+      this.page.locator(`button:has-text("${status}")[class*="selected"]`),
+      this.page.locator(`input[type="radio"][value="${status}"]:checked`),
+    ];
+    
+    let activeFound = false;
+    for (const locator of activeFilterLocators) {
+      const isVisible = await locator.first().isVisible({ timeout: TIMEOUTS.SHORT })
+        .catch(() => false);
+      
+      if (isVisible) {
+        activeFound = true;
+        break;
+      }
+    }
+    
+    expect(activeFound).toBe(true);
   }
 }

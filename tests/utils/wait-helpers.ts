@@ -86,19 +86,16 @@ export async function waitForMultipleApiResponses(
 /**
  * Wait for network to be idle (no pending requests)
  * @param page - Playwright page
- * @param options - Wait options
+ * @param timeout - Optional timeout in milliseconds (defaults to TIMEOUTS.LONG)
  */
 export async function waitForNetworkIdle(
   page: Page,
-  options: {
-    timeout?: number;
-    idleTime?: number;
-  } = {}
+  timeout?: number
 ): Promise<void> {
-  const timeout = options.timeout || TIMEOUTS.LONG;
-  const idleTime = options.idleTime || 500;
+  const timeoutMs = timeout || TIMEOUTS.LONG;
+  const idleTime = 500;
   
-  await page.waitForLoadState('networkidle', { timeout });
+  await page.waitForLoadState('networkidle', { timeout: timeoutMs });
   
   // Additional wait to ensure stability
   await page.waitForTimeout(idleTime);
@@ -378,4 +375,41 @@ export async function safeWaitForCondition(
   } catch {
     return false;
   }
+}
+
+/**
+ * Performance Measurement Utilities
+ */
+
+/**
+ * Measure page load time using Navigation Timing API
+ * @param page - Playwright page
+ * @returns Load time in milliseconds
+ */
+export async function measureLoadTime(page: Page): Promise<number> {
+  const loadTime = await page.evaluate(() => {
+    // Use modern Performance API instead of deprecated timing API
+    const perfEntries = performance.getEntriesByType('navigation');
+    if (perfEntries.length > 0) {
+      const navEntry = perfEntries[0] as PerformanceNavigationTiming;
+      return navEntry.loadEventEnd - navEntry.fetchStart;
+    }
+    
+    // Fallback to deprecated API if modern API not available
+    const perfData = window.performance.timing;
+    return perfData.loadEventEnd - perfData.navigationStart;
+  });
+  
+  return loadTime;
+}
+
+/**
+ * Assert that page load time is under a maximum threshold
+ * @param page - Playwright page
+ * @param maxMs - Maximum load time in milliseconds
+ */
+export async function expectLoadTimeUnder(page: Page, maxMs: number): Promise<void> {
+  const loadTime = await measureLoadTime(page);
+  
+  expect(loadTime).toBeLessThanOrEqual(maxMs);
 }

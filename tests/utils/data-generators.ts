@@ -58,11 +58,20 @@ export function generateTestUser(overrides: Partial<TestUser> = {}): TestUser {
   const firstName = overrides.firstName || randomElement(FIRST_NAMES);
   const lastName = overrides.lastName || randomElement(LAST_NAMES);
   
-  // Generate date of birth for adult (18-80 years old)
+  // Generate date of birth for adult (guaranteed to be 18+ years old)
+  // Subtract 18-80 years AND ensure birthday has already passed this year
   const age = randomInt(18, 80);
-  const birthYear = new Date().getFullYear() - age;
-  const birthMonth = String(randomInt(1, 12)).padStart(2, '0');
-  const birthDay = String(randomInt(1, 28)).padStart(2, '0');
+  const today = new Date();
+  const birthDate = new Date(today);
+  birthDate.setFullYear(today.getFullYear() - age);
+  
+  // Subtract an additional 1-365 days to ensure they've already had their birthday
+  const additionalDays = randomInt(1, 365);
+  birthDate.setDate(birthDate.getDate() - additionalDays);
+  
+  const birthYear = birthDate.getFullYear();
+  const birthMonth = String(birthDate.getMonth() + 1).padStart(2, '0');
+  const birthDay = String(birthDate.getDate()).padStart(2, '0');
   const dateOfBirth = `${birthYear}-${birthMonth}-${birthDay}`;
   
   // Generate phone number
@@ -147,6 +156,41 @@ export function generateIncompleteWaiverData(
 }
 
 /**
+ * Generate waiver data with past expiration date (for testing expired waivers)
+ * @param user - Test user data
+ * @returns Waiver form data with past expiration
+ */
+export function generateExpiredWaiver(user: TestUser): WaiverFormData {
+  // Generate waiver with date from 2 years ago (well past 1-year expiration)
+  const pastDate = new Date();
+  pastDate.setFullYear(pastDate.getFullYear() - 2);
+  const expiredDate = pastDate.toISOString().split('T')[0];
+  
+  return generateWaiverData(user, {
+    adultTodaysDate: expiredDate,
+  });
+}
+
+/**
+ * Generate waiver data expiring in N days (for testing expiration warnings)
+ * @param days - Number of days until expiration
+ * @param user - Test user data
+ * @returns Waiver form data expiring in N days
+ */
+export function generateWaiverExpiringIn(days: number, user: TestUser): WaiverFormData {
+  // Calculate the submission date that would result in expiration in N days
+  // If waiver expires in N days, it was submitted (365 - N) days ago
+  const submissionDate = new Date();
+  submissionDate.setDate(submissionDate.getDate() - (365 - days));
+  
+  const submissionDateStr = submissionDate.toISOString().split('T')[0];
+  
+  return generateWaiverData(user, {
+    adultTodaysDate: submissionDateStr,
+  });
+}
+
+/**
  * Event Data Generator
  */
 
@@ -221,13 +265,74 @@ export function generateTestEvent(overrides: Partial<EventData> = {}): EventData
 
 /**
  * Generate a past event (for testing historical data)
+ * @param daysAgo - Number of days in the past (default: random 1-365)
  * @param overrides - Optional overrides for specific fields
  * @returns Event data with past date
  */
-export function generatePastEvent(overrides: Partial<EventData> = {}): EventData {
-  const daysAgo = randomInt(1, 365);
+export function generatePastEvent(daysAgo?: number, overrides: Partial<EventData> = {}): EventData {
+  const daysInPast = daysAgo !== undefined ? daysAgo : randomInt(1, 365);
   const eventDate = new Date();
-  eventDate.setDate(eventDate.getDate() - daysAgo);
+  eventDate.setDate(eventDate.getDate() - daysInPast);
+  
+  const year = eventDate.getFullYear();
+  const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+  const day = String(eventDate.getDate()).padStart(2, '0');
+  const date = `${year}-${month}-${day}`;
+  
+  const displayDate = eventDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  return generateTestEvent({
+    date,
+    displayDate,
+    ...overrides,
+  });
+}
+
+/**
+ * Generate an event within the 24-hour cancellation window (for testing time restrictions)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Event data within 24 hours
+ */
+export function generateEventWithinCancellationWindow(overrides: Partial<EventData> = {}): EventData {
+  // Generate event 12 hours from now (within 24-hour window)
+  const hoursFromNow = randomInt(1, 23);
+  const eventDate = new Date();
+  eventDate.setHours(eventDate.getHours() + hoursFromNow);
+  
+  const year = eventDate.getFullYear();
+  const month = String(eventDate.getMonth() + 1).padStart(2, '0');
+  const day = String(eventDate.getDate()).padStart(2, '0');
+  const date = `${year}-${month}-${day}`;
+  
+  const displayDate = eventDate.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  
+  return generateTestEvent({
+    date,
+    displayDate,
+    ...overrides,
+  });
+}
+
+/**
+ * Generate an event outside the 24-hour cancellation window (for testing cancellation allowed)
+ * @param overrides - Optional overrides for specific fields
+ * @returns Event data more than 24 hours away
+ */
+export function generateEventOutsideCancellationWindow(overrides: Partial<EventData> = {}): EventData {
+  // Generate event 25-90 days from now (well outside 24-hour window)
+  const daysFromNow = randomInt(2, 90);
+  const eventDate = new Date();
+  eventDate.setDate(eventDate.getDate() + daysFromNow);
   
   const year = eventDate.getFullYear();
   const month = String(eventDate.getMonth() + 1).padStart(2, '0');

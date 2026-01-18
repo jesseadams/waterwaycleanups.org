@@ -181,36 +181,53 @@ def handler(event, context):
             )
             
             if waiver_response.get('Items'):
-                # Find the most recent valid waiver
-                valid_waivers = []
+                # Find the most recent waiver (valid or expired)
+                all_waivers = []
                 for waiver in waiver_response['Items']:
-                    # Check if waiver is still valid (1 year from submission)
-                    submission_date = datetime.fromisoformat(waiver['submission_date'].replace('Z', '+00:00'))
-                    expiration_date = submission_date.replace(year=submission_date.year + 1)
+                    # Check if waiver has explicit expiration_date field, otherwise calculate it
+                    if 'expiration_date' in waiver:
+                        expiration_date_str = waiver['expiration_date']
+                        expiration_date = datetime.fromisoformat(expiration_date_str.replace('Z', '+00:00'))
+                    else:
+                        # Calculate expiration as 1 year from submission
+                        submission_date = datetime.fromisoformat(waiver['submission_date'].replace('Z', '+00:00'))
+                        expiration_date = submission_date.replace(year=submission_date.year + 1)
+                        expiration_date_str = expiration_date.isoformat()
                     
-                    if datetime.utcnow().replace(tzinfo=expiration_date.tzinfo) < expiration_date:
-                        valid_waivers.append({
-                            'waiver_id': waiver['waiver_id'],
-                            'submission_date': waiver['submission_date'],
-                            'expiration_date': expiration_date.isoformat(),
-                            'full_legal_name': waiver.get('full_legal_name', ''),
-                            'submission_timestamp': submission_date.timestamp()
-                        })
+                    submission_date = datetime.fromisoformat(waiver['submission_date'].replace('Z', '+00:00'))
+                    is_expired = datetime.utcnow().replace(tzinfo=expiration_date.tzinfo) >= expiration_date
+                    
+                    all_waivers.append({
+                        'waiver_id': waiver['waiver_id'],
+                        'submission_date': waiver['submission_date'],
+                        'expiration_date': expiration_date_str,
+                        'full_legal_name': waiver.get('full_legal_name', ''),
+                        'submission_timestamp': submission_date.timestamp(),
+                        'is_expired': is_expired
+                    })
                 
-                if valid_waivers:
+                if all_waivers:
                     # Sort by submission date and get the most recent
-                    most_recent_waiver = max(valid_waivers, key=lambda x: x['submission_timestamp'])
+                    most_recent_waiver = max(all_waivers, key=lambda x: x['submission_timestamp'])
+                    
+                    # Return waiver data regardless of expiration status
+                    # The UI will handle displaying expired vs valid state
                     waiver_data = {
-                        'hasWaiver': True,
+                        'hasWaiver': not most_recent_waiver['is_expired'],  # True only if not expired
                         'waiver_id': most_recent_waiver['waiver_id'],
                         'submissionDate': most_recent_waiver['submission_date'],
                         'expirationDate': most_recent_waiver['expiration_date'],
                         'fullLegalName': most_recent_waiver['full_legal_name'],
-                        'totalWaivers': len(valid_waivers)
+                        'isExpired': most_recent_waiver['is_expired'],
+                        'totalWaivers': len(all_waivers)
                     }
-                    print(f"Found {len(valid_waivers)} valid waiver(s) for {email}")
+                    
+                    if most_recent_waiver['is_expired']:
+                        print(f"Most recent waiver for {email} is expired (expired: {most_recent_waiver['expiration_date']})")
+                    else:
+                        print(f"Found valid waiver for {email} (expires: {most_recent_waiver['expiration_date']})")
                 else:
-                    print(f"No valid waivers found for {email} (found {len(waiver_response['Items'])} expired waivers)")
+                    print(f"No waivers found for {email}")
             else:
                 print(f"No waivers found for {email}")
         except ClientError as e:

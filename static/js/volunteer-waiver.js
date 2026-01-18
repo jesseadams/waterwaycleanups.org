@@ -32,11 +32,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check their waiver status automatically
     checkExistingWaiver(userEmail)
       .then(response => {
-        if (response.hasWaiver) {
-          // User has a valid waiver
+        // Check if user has a valid, non-expired waiver
+        if (response.expirationDate && !response.isExpired) {
+          // User has a valid, non-expired waiver
           showMessage(`You have already completed a waiver. It is valid until ${response.expirationDate}.`, 'success');
         } else {
-          // User needs to complete a new waiver - show the form directly
+          // User either has no waiver or an expired waiver - show the form
+          if (response.isExpired && response.expirationDate) {
+            showMessage(`Your waiver expired on ${response.expirationDate}. Please complete a new waiver to continue volunteering.`, 'warning');
+          }
           showWaiverForm();
         }
       })
@@ -69,11 +73,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if the user has already completed a waiver
         checkExistingWaiver(email)
           .then(response => {
-            if (response.hasWaiver) {
-              // User has a valid waiver
+            // Check if user has a valid, non-expired waiver
+            if (response.expirationDate && !response.isExpired) {
+              // User has a valid, non-expired waiver
               showMessage(`You have already completed a waiver. It is valid until ${response.expirationDate}.`, 'success');
             } else {
-              // User needs to complete a new waiver
+              // User either has no waiver or an expired waiver - show the form
+              if (response.isExpired && response.expirationDate) {
+                showMessage(`Your waiver expired on ${response.expirationDate}. Please complete a new waiver to continue volunteering.`, 'warning');
+              }
               showWaiverForm();
             }
           })
