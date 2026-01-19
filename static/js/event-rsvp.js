@@ -4,7 +4,87 @@
  * This script handles the RSVP form functionality for events.
  */
 
+/**
+ * Initialize network status monitoring
+ * Shows an offline indicator when network connection is lost
+ */
+function initializeNetworkStatusMonitor() {
+  // Create offline indicator element
+  const offlineIndicator = document.createElement('div');
+  offlineIndicator.id = 'network-offline-indicator';
+  offlineIndicator.className = 'fixed top-0 left-0 right-0 bg-red-600 text-white text-center py-2 px-4 z-50 hidden';
+  offlineIndicator.innerHTML = `
+    <div class="flex items-center justify-center gap-2">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"></path>
+      </svg>
+      <span>No internet connection. Please check your network.</span>
+    </div>
+  `;
+  document.body.appendChild(offlineIndicator);
+  
+  // Store indicator reference globally for showOfflineIndicator/hideOfflineIndicator
+  window._offlineIndicator = offlineIndicator;
+  
+  // Monitor online/offline events
+  window.addEventListener('offline', () => {
+    console.log('Network connection lost');
+    showOfflineIndicator();
+  });
+  
+  window.addEventListener('online', () => {
+    console.log('Network connection restored');
+    hideOfflineIndicator();
+    
+    // Show a brief "back online" message
+    const onlineIndicator = document.createElement('div');
+    onlineIndicator.className = 'fixed top-0 left-0 right-0 bg-green-600 text-white text-center py-2 px-4 z-50';
+    onlineIndicator.innerHTML = `
+      <div class="flex items-center justify-center gap-2">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span>Connection restored</span>
+      </div>
+    `;
+    document.body.appendChild(onlineIndicator);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      onlineIndicator.remove();
+    }, 3000);
+  });
+  
+  // Check initial online status
+  if (!navigator.onLine) {
+    showOfflineIndicator();
+  }
+}
+
+/**
+ * Show the offline indicator
+ */
+function showOfflineIndicator() {
+  const indicator = window._offlineIndicator || document.getElementById('network-offline-indicator');
+  if (indicator) {
+    indicator.classList.remove('hidden');
+  }
+}
+
+/**
+ * Hide the offline indicator
+ */
+function hideOfflineIndicator() {
+  const indicator = window._offlineIndicator || document.getElementById('network-offline-indicator');
+  if (indicator) {
+    indicator.classList.add('hidden');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize network status monitor
+  initializeNetworkStatusMonitor();
+  
   // Check if we should auto-click the RSVP button after login
   const urlParams = new URLSearchParams(window.location.search);
   const autoRsvp = urlParams.get('auto_rsvp');
@@ -634,13 +714,14 @@ async function handleMultiPersonRsvpSubmission(widget, eventId, selectedAttendee
   } catch (error) {
     console.error('Error in multi-person RSVP submission:', error);
     
-    // Show error message with details
+    // Show error message with details in the widget's error element
     if (rsvpErrorMessage) {
       rsvpErrorMessage.textContent = error.message || 'Failed to submit RSVP. Please try again.';
       rsvpErrorMessage.classList.remove('hidden');
     }
     
-    throw error; // Re-throw to be handled by the caller
+    // Re-throw to allow test detection
+    throw error;
   }
 }
 
@@ -717,15 +798,42 @@ async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap) {
   console.log('Sending multi-person RSVP request to:', apiUrl);
   console.log('Payload:', payload);
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  let response;
+  let data;
+  
+  try {
+    response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    // Network error (timeout, offline, etc.)
+    // Show offline indicator for network failures
+    if (typeof showOfflineIndicator === 'function') {
+      showOfflineIndicator();
+    }
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    throw new Error('Unable to connect to the server. Please try again later.');
+  }
 
-  const data = await response.json();
+  try {
+    data = await response.json();
+  } catch (error) {
+    // Response parsing error
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Server error. Please try again later or contact support at info@waterwaycleanups.org');
+      }
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    throw new Error('Invalid response from server. Please try again.');
+  }
   
   if (!response.ok) {
     // Handle error responses with specific details
@@ -743,6 +851,12 @@ async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap) {
         throw new Error(data.error);
       }
     }
+    
+    // Server error with user-friendly message
+    if (response.status >= 500) {
+      throw new Error('Server error. Please try again later or contact support at info@waterwaycleanups.org');
+    }
+    
     throw new Error(data.message || 'Failed to submit RSVP');
   }
   
@@ -1082,12 +1196,16 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
       }, 500);
     }
   } catch (error) {
-    // Show error message
+    console.error('RSVP submission error:', error);
+    
+    // Show error message in the widget's error element
     if (rsvpErrorMessage) {
       rsvpErrorMessage.textContent = error.message || 'Failed to submit RSVP. Please try again.';
       rsvpErrorMessage.classList.remove('hidden');
     }
-    console.error('RSVP submission error:', error);
+    
+    // Re-throw to allow test detection
+    throw error;
   } finally {
     // Re-enable button
     if (rsvpButton) {
@@ -1137,17 +1255,48 @@ async function submitEventRsvpDirect(eventId, firstName, lastName, email, attend
   console.log('Sending RSVP request to:', apiUrl);
   console.log('Payload:', payload);
 
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
+  let response;
+  let data;
+  
+  try {
+    response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+  } catch (error) {
+    // Network error (timeout, offline, etc.)
+    // Show offline indicator for network failures
+    if (typeof showOfflineIndicator === 'function') {
+      showOfflineIndicator();
+    }
+    
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection and try again.');
+    }
+    throw new Error('Unable to connect to the server. Please try again later.');
+  }
 
-  const data = await response.json();
+  try {
+    data = await response.json();
+  } catch (error) {
+    // Response parsing error
+    if (!response.ok) {
+      if (response.status >= 500) {
+        throw new Error('Server error. Please try again later or contact support at info@waterwaycleanups.org');
+      }
+      throw new Error(`Error: ${response.status} ${response.statusText}`);
+    }
+    throw new Error('Invalid response from server. Please try again.');
+  }
   
   if (!response.ok) {
+    // Server error with user-friendly message
+    if (response.status >= 500) {
+      throw new Error('Server error. Please try again later or contact support at info@waterwaycleanups.org');
+    }
     throw new Error(data.message || data.error || 'Failed to submit RSVP');
   }
   
