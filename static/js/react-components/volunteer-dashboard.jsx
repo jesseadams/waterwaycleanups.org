@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import MinorsManagement from './MinorsManagement';
 
 const VolunteerDashboard = () => {
@@ -11,6 +11,8 @@ const VolunteerDashboard = () => {
   const [step, setStep] = useState('email'); // 'email', 'code', 'dashboard'
   const [dashboardData, setDashboardData] = useState(null);
   const [showWaiverForm, setShowWaiverForm] = useState(false);
+  const [rsvpPage, setRsvpPage] = useState(0);
+  const RSVPS_PER_PAGE = 10;
 
   useEffect(() => {
     // Check if user is already authenticated
@@ -27,6 +29,14 @@ const VolunteerDashboard = () => {
       setIsLoading(true);
       const data = await window.authClient.getDashboard();
       setDashboardData(data);
+      
+      // Check if user has no waiver and redirect to waiver page
+      if (data && !data.waiver.hasWaiver) {
+        console.log('No waiver found - redirecting to waiver page');
+        // Redirect to waiver page for first-time users
+        window.location.href = '/volunteer-waiver';
+        return;
+      }
     } catch (error) {
       setError(error.message);
       if (error.message.includes('authenticated') || error.message.includes('expired')) {
@@ -91,7 +101,7 @@ const VolunteerDashboard = () => {
     setSuccess('');
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = useCallback((dateString) => {
     if (!dateString) return 'Date TBD';
     
     try {
@@ -103,9 +113,9 @@ const VolunteerDashboard = () => {
     } catch (error) {
       return 'Date TBD';
     }
-  };
+  }, []);
 
-  const formatDateTime = (dateString) => {
+  const formatDateTime = useCallback((dateString) => {
     if (!dateString) return 'Date TBD';
     
     try {
@@ -120,9 +130,9 @@ const VolunteerDashboard = () => {
     } catch (error) {
       return 'Date TBD';
     }
-  };
+  }, []);
 
-  const calculateDaysRemaining = (expirationDate) => {
+  const calculateDaysRemaining = useCallback((expirationDate) => {
     if (!expirationDate) return -1;
     
     try {
@@ -134,19 +144,19 @@ const VolunteerDashboard = () => {
     } catch (error) {
       return -1;
     }
-  };
+  }, []);
 
-  const isWaiverExpired = (expirationDate) => {
+  const isWaiverExpired = useCallback((expirationDate) => {
     const daysRemaining = calculateDaysRemaining(expirationDate);
     return daysRemaining < 0;
-  };
+  }, [calculateDaysRemaining]);
 
-  const isWaiverExpiringSoon = (expirationDate) => {
+  const isWaiverExpiringSoon = useCallback((expirationDate) => {
     const daysRemaining = calculateDaysRemaining(expirationDate);
     return daysRemaining >= 0 && daysRemaining <= 30;
-  };
+  }, [calculateDaysRemaining]);
 
-  const getEventStatus = (rsvp) => {
+  const getEventStatus = useCallback((rsvp) => {
     const now = new Date();
     const eventDate = rsvp.event_start_time ? new Date(rsvp.event_start_time) : null;
     
@@ -157,7 +167,28 @@ const VolunteerDashboard = () => {
     } else {
       return 'past';
     }
-  };
+  }, []);
+
+  // Memoize paginated RSVPs
+  const paginatedRsvps = useMemo(() => {
+    if (!dashboardData?.rsvps) return [];
+    const start = rsvpPage * RSVPS_PER_PAGE;
+    const end = start + RSVPS_PER_PAGE;
+    return dashboardData.rsvps.slice(start, end);
+  }, [dashboardData?.rsvps, rsvpPage]);
+
+  const totalRsvpPages = useMemo(() => {
+    if (!dashboardData?.rsvps) return 0;
+    return Math.ceil(dashboardData.rsvps.length / RSVPS_PER_PAGE);
+  }, [dashboardData?.rsvps]);
+
+  const handleNextPage = useCallback(() => {
+    setRsvpPage(prev => Math.min(prev + 1, totalRsvpPages - 1));
+  }, [totalRsvpPages]);
+
+  const handlePrevPage = useCallback(() => {
+    setRsvpPage(prev => Math.max(prev - 1, 0));
+  }, []);
 
   const renderEmailStep = () => (
     <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-md">
@@ -366,54 +397,74 @@ const VolunteerDashboard = () => {
           <div className="bg-gray-50 p-4 rounded-lg md:col-span-2">
             <h3 className="text-lg font-semibold mb-3">Event RSVPs</h3>
             {dashboardData.rsvps && dashboardData.rsvps.length > 0 ? (
-              <div className="space-y-2">
-                {dashboardData.rsvps.slice(0, 5).map((rsvp, index) => {
-                  const eventStatus = getEventStatus(rsvp);
-                  const isUpcoming = eventStatus === 'upcoming';
-                  
-                  return (
-                    <div key={index} className={`p-3 rounded border ${isUpcoming ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">
-                            {rsvp.event_title || rsvp.event_id}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            {rsvp.event_display_date || formatDateTime(rsvp.event_start_time)}
-                          </p>
-                          {rsvp.event_location && rsvp.event_location.name && (
-                            <p className="text-xs text-gray-500">
-                              📍 {rsvp.event_location.name}
+              <>
+                <div className="space-y-2">
+                  {paginatedRsvps.map((rsvp, index) => {
+                    const eventStatus = getEventStatus(rsvp);
+                    const isUpcoming = eventStatus === 'upcoming';
+                    
+                    return (
+                      <div key={`${rsvp.event_id}-${index}`} className={`p-3 rounded border ${isUpcoming ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'}`}>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">
+                              {rsvp.event_title || rsvp.event_id}
                             </p>
-                          )}
+                            <p className="text-sm text-gray-600">
+                              {rsvp.event_display_date || formatDateTime(rsvp.event_start_time)}
+                            </p>
+                            {rsvp.event_location && rsvp.event_location.name && (
+                              <p className="text-xs text-gray-500">
+                                📍 {rsvp.event_location.name}
+                              </p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <span className={`inline-block px-2 py-1 text-xs rounded ${
+                              isUpcoming 
+                                ? 'bg-blue-100 text-blue-800' 
+                                : 'bg-gray-100 text-gray-600'
+                            }`}>
+                              {isUpcoming ? 'Upcoming' : 'Past'}
+                            </span>
+                            {rsvp.status && rsvp.status !== 'active' && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                Status: {rsvp.status}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <span className={`inline-block px-2 py-1 text-xs rounded ${
-                            isUpcoming 
-                              ? 'bg-blue-100 text-blue-800' 
-                              : 'bg-gray-100 text-gray-600'
-                          }`}>
-                            {isUpcoming ? 'Upcoming' : 'Past'}
-                          </span>
-                          {rsvp.status && rsvp.status !== 'active' && (
-                            <div className="text-xs text-gray-500 mt-1">
-                              Status: {rsvp.status}
-                            </div>
-                          )}
-                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          RSVP'd: {formatDate(rsvp.submission_date || rsvp.created_at)}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        RSVP'd: {formatDate(rsvp.submission_date || rsvp.created_at)}
-                      </p>
-                    </div>
-                  );
-                })}
-                {dashboardData.rsvps.length > 5 && (
-                  <p className="text-sm text-gray-600">
-                    ...and {dashboardData.rsvps.length - 5} more
-                  </p>
+                    );
+                  })}
+                </div>
+                
+                {/* Pagination Controls */}
+                {totalRsvpPages > 1 && (
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={handlePrevPage}
+                      disabled={rsvpPage === 0}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Page {rsvpPage + 1} of {totalRsvpPages} ({dashboardData.rsvps.length} total RSVPs)
+                    </span>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={rsvpPage >= totalRsvpPages - 1}
+                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700"
+                    >
+                      Next
+                    </button>
+                  </div>
                 )}
-              </div>
+              </>
             ) : (
               <p className="text-gray-600">No event RSVPs yet</p>
             )}

@@ -48,7 +48,7 @@
     "validate:deployment:prod": "node scripts/validate-deployment.js --environment=prod",
     "test:e2e": "playwright test --project=chromium --project=firefox",
     "test:e2e:headed": "playwright test --headed --project=chromium",
-    "test:e2e:ui": "playwright test --ui --project=chromium",
+    "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
@@ -59,7 +59,6 @@
     "test:e2e:minors": "playwright test tests/e2e/minors",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:report": "playwright show-report test-results/html-report",
-    "test:e2e:ui": "playwright test --ui",
     "test:e2e:ci": "playwright test --reporter=html,json,junit"
   },
   "dependencies": {
@@ -76,12 +75,14 @@
     "sonner": "^2.0.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.9",
     "@babel/preset-react": "^7.26.3",
     "@playwright/test": "^1.57.0",
     "@types/node": "^25.0.8",
     "autoprefixer": "^10.4.19",
+    "axe-core": "^4.11.1",
     "babel-loader": "^10.0.0",
     "concurrently": "^8.2.2",
     "css-loader": "^6.10.0",

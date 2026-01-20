@@ -456,7 +456,8 @@ export class MinorsPage {
    */
   async expectFutureDateError(): Promise<void> {
     // Look for error message about future date
-    const errorMessage = this.page.locator('text=/future date|date.*future|cannot be.*future|invalid.*date/i');
+    // The API returns: "Date of birth cannot be in the future."
+    const errorMessage = this.page.locator('text=/cannot be.*future|future/i');
     await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
   }
 
@@ -466,7 +467,8 @@ export class MinorsPage {
    */
   async expectAdultDateError(): Promise<void> {
     // Look for error message about adult age
-    const errorMessage = this.page.locator('text=/must be.*under 18|18.*older|adult|not.*minor/i');
+    // The API returns: "Only minors (under 18 years old) can be added to your account."
+    const errorMessage = this.page.locator('text=/under 18|minors.*under 18|18 years old/i');
     await expect(errorMessage).toBeVisible({ timeout: TIMEOUTS.DEFAULT });
   }
 
