@@ -45,7 +45,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : 1,
+  workers: process.env.CI ? 1 : 6,
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -116,7 +116,8 @@ export default defineConfig({
         // No storageState - start unauthenticated
       },
       // Skip webkit locally due to library dependency issues
-      grep: process.env.CI ? undefined : /$^/,
+      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
+      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
     },
     
     // Authenticated projects for all other tests
@@ -161,7 +162,8 @@ export default defineConfig({
         storageState: 'tests/.auth/user.json',
       },
       // Skip webkit locally due to library dependency issues
-      grep: process.env.CI ? undefined : /$^/,
+      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
+      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
     },
 
     /* Mobile device projects */
@@ -182,7 +184,8 @@ export default defineConfig({
         storageState: 'tests/.auth/user.json',
       },
       // Skip webkit locally due to library dependency issues
-      grep: process.env.CI ? undefined : /$^/,
+      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
+      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
     },
 
     /* Tablet device project */
@@ -194,7 +197,8 @@ export default defineConfig({
         storageState: 'tests/.auth/user.json',
       },
       // Skip webkit locally due to library dependency issues
-      grep: process.env.CI ? undefined : /$^/,
+      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
+      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
     },
   ],
 
