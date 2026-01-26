@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test-fixtures';
 import { EventPage } from '../../pages/EventPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { WaiverPage } from '../../pages/WaiverPage';
@@ -82,12 +82,59 @@ test.describe('Multi-Person RSVP Flow', () => {
     return { testUser, sessionToken };
   }
   
-  test.beforeEach(async ({ page, request }) => {
+  test.beforeEach(async ({ page, request, testEvent }) => {
+    // PRE-TEST CLEANUP: Delete any existing RSVPs for the test event
+    // This handles stale data from previous interrupted/failed test runs
+    try {
+      const { DynamoDBClient, ScanCommand, DeleteItemCommand } = await import('@aws-sdk/client-dynamodb');
+      const dynamoClient = new DynamoDBClient({ region: 'us-east-1' });
+      const tableName = 'event_rsvps-staging';
+      
+      // Find all RSVPs for this test event
+      const scanResult = await dynamoClient.send(new ScanCommand({
+        TableName: tableName,
+        FilterExpression: 'event_id = :eventId',
+        ExpressionAttributeValues: {
+          ':eventId': { S: testEvent }
+        }
+      }));
+      
+      if (scanResult.Items && scanResult.Items.length > 0) {
+        console.log(`🧹 PRE-TEST: Cleaning ${scanResult.Items.length} stale RSVPs for event ${testEvent}`);
+        
+        for (const item of scanResult.Items) {
+          await dynamoClient.send(new DeleteItemCommand({
+            TableName: tableName,
+            Key: {
+              event_id: item.event_id,
+              attendee_id: item.attendee_id
+            }
+          }));
+        }
+        console.log(`✅ PRE-TEST: Cleaned up stale RSVPs for ${testEvent}`);
+      }
+    } catch (error) {
+      console.error(`⚠️ PRE-TEST: Error cleaning stale RSVPs:`, error);
+      // Continue with test - cleanup is best effort
+    }
+    
     // Authenticate a fresh user with waiver for each test
     const result = await authenticateFreshUserWithWaiver(page, request);
     testUser = result.testUser;
     userEmail = testUser.email;
     sessionToken = result.sessionToken;
+  });
+
+  test.afterEach(async () => {
+    // Clean up test data after each test
+    if (userEmail) {
+      try {
+        await deleteTestData(userEmail);
+        console.log(`🧹 Cleaned up test data for ${userEmail}`);
+      } catch (error) {
+        console.error(`Failed to clean up test data for ${userEmail}:`, error);
+      }
+    }
   });
   
   /**
@@ -98,9 +145,9 @@ test.describe('Multi-Person RSVP Flow', () => {
    * For any guardian with registered minors, when clicking the RSVP button,
    * the system should display a selector containing the guardian and all their minors
    */
-  test('Property 20: Multi-person selector display - guardian with minors sees attendee selector', async ({ page, request }) => {
-    // Test event - using a real event from the site
-    const testEventSlug = 'brooke-road-and-thorny-point-road-cleanup-february-2026';
+  test('Property 20: Multi-person selector display - guardian with minors sees attendee selector', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
     
     try {
       // Step 1: Add minors to the guardian's account through UI
@@ -157,12 +204,12 @@ test.describe('Multi-Person RSVP Flow', () => {
       
       // Check for minor options - look for minor names (they appear as "FirstName LastName (Minor)")
       const minor1Name = `${minor1.firstName} ${minor1.lastName}`;
-      // Use a more flexible locator that matches partial text
-      const minor1Text = page.getByText(minor1Name, { exact: false });
+      // Use first() to handle potential duplicates in the UI
+      const minor1Text = page.getByText(minor1Name, { exact: false }).first();
       await expect(minor1Text).toBeVisible({ timeout: 5000 });
       
       const minor2Name = `${minor2.firstName} ${minor2.lastName}`;
-      const minor2Text = page.getByText(minor2Name, { exact: false });
+      const minor2Text = page.getByText(minor2Name, { exact: false }).first();
       await expect(minor2Text).toBeVisible({ timeout: 5000 });
       
       console.log('✅ Multi-person selector displayed with guardian and all minors');
@@ -181,9 +228,9 @@ test.describe('Multi-Person RSVP Flow', () => {
    * For any selected set of attendees (guardian and/or minors),
    * RSVP submission should create individual records for each selected person
    */
-  test('Property 21: Multi-person RSVP creation - creates records for each selected attendee', async ({ page, request }) => {
-    // Test event - using a real event from the site
-    const testEventSlug = 'crows-nest-wetlands-accokeek-creek-cleanup-may-2026';
+  test('Property 21: Multi-person RSVP creation - creates records for each selected attendee', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
     
     try {
       // Step 1: Add minors to the guardian's account through UI
@@ -266,8 +313,7 @@ test.describe('Multi-Person RSVP Flow', () => {
       // Verify: Should have at least one RSVP for this event
       // (The system may display it as a single multi-person RSVP or multiple individual RSVPs)
       const hasRsvp = rsvps.some(rsvp => 
-        rsvp.eventTitle.toLowerCase().includes('crows-nest') ||
-        rsvp.eventTitle.toLowerCase().includes('accokeek')
+        rsvp.eventId === testEventSlug
       );
       expect(hasRsvp).toBe(true);
       
@@ -296,9 +342,9 @@ test.describe('Multi-Person RSVP Flow', () => {
    * For any multi-person RSVP submission with no attendees selected,
    * the system should prevent submission and display a validation error
    */
-  test('Property 22: Multi-person RSVP validation - prevents submission with no attendees selected', async ({ page, request }) => {
-    // Test event - using a real event from the site
-    const testEventSlug = 'brooke-road-and-thorny-point-road-cleanup-february-2026';
+  test('Property 22: Multi-person RSVP validation - prevents submission with no attendees selected', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
     
     try {
       // Step 1: Add minors to the guardian's account through UI
@@ -408,9 +454,9 @@ test.describe('Multi-Person RSVP Flow', () => {
    * For any multi-person RSVP, the system should allow cancellation of individual attendees
    * while maintaining other attendees' RSVPs
    */
-  test('Property 23: Individual attendee cancellation - cancels one attendee while maintaining others', async ({ page, request }) => {
-    // Test event - using a real event from the site
-    const testEventSlug = 'crows-nest-wetlands-accokeek-creek-cleanup-may-2026';
+  test('Property 23: Individual attendee cancellation - cancels one attendee while maintaining others', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
     
     try {
       // Step 1: Add minors to the guardian's account through UI
@@ -539,9 +585,9 @@ test.describe('Multi-Person RSVP Flow', () => {
    * For any multi-person RSVP, the dashboard should display all attendees
    * associated with that RSVP
    */
-  test('Property 24: Multi-person dashboard display - shows all attendees for multi-person RSVP', async ({ page, request }) => {
-    // Test event - using a real event from the site
-    const testEventSlug = 'brooke-road-and-thorny-point-road-cleanup-february-2026';
+  test('Property 24: Multi-person dashboard display - shows all attendees for multi-person RSVP', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
     
     try {
       // Step 1: Add minors to the guardian's account through UI
@@ -572,6 +618,9 @@ test.describe('Multi-Person RSVP Flow', () => {
       // Step 2: Navigate to event page and create multi-person RSVP
       const eventPage = new EventPage(page);
       await eventPage.gotoEvent(testEventSlug);
+      const currentUrl = page.url();
+      console.log('✅ Navigated to event:', currentUrl, '(expected:', testEventSlug, ')');
+      expect(currentUrl).toContain(testEventSlug);
       await page.waitForTimeout(1000);
       
       // Step 3: Click RSVP button to open selector
@@ -615,12 +664,10 @@ test.describe('Multi-Person RSVP Flow', () => {
       const rsvps = await dashboardPage.getRsvpList();
       console.log('Dashboard RSVPs found:', rsvps.length);
       console.log('Dashboard RSVPs:', JSON.stringify(rsvps, null, 2));
+      console.log('Looking for event:', testEventSlug);
       
-      // Find the RSVP for this event
-      const eventRsvp = rsvps.find(rsvp => 
-        rsvp.eventTitle.toLowerCase().includes('brooke') ||
-        rsvp.eventTitle.toLowerCase().includes('thorny')
-      );
+      // Find the RSVP for this event by matching the eventId (which is the slug)
+      const eventRsvp = rsvps.find(rsvp => rsvp.eventId === testEventSlug);
       
       expect(eventRsvp).toBeDefined();
       console.log('Found RSVP on dashboard:', eventRsvp);

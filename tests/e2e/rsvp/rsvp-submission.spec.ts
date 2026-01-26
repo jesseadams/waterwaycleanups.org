@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../fixtures/test-fixtures';
 import { EventPage } from '../../pages/EventPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { WaiverPage } from '../../pages/WaiverPage';
@@ -81,12 +81,59 @@ test.describe('RSVP Submission Flow', () => {
     return { testUser, sessionToken };
   }
   
-  test.beforeEach(async ({ page, request }) => {
+  test.beforeEach(async ({ page, request, testEvent }) => {
+    // PRE-TEST CLEANUP: Delete any existing RSVPs for the test event
+    // This handles stale data from previous interrupted/failed test runs
+    try {
+      const { DynamoDBClient, ScanCommand, DeleteItemCommand } = await import('@aws-sdk/client-dynamodb');
+      const dynamoClient = new DynamoDBClient({ region: 'us-east-1' });
+      const tableName = 'event_rsvps-staging';
+      
+      // Find all RSVPs for this test event
+      const scanResult = await dynamoClient.send(new ScanCommand({
+        TableName: tableName,
+        FilterExpression: 'event_id = :eventId',
+        ExpressionAttributeValues: {
+          ':eventId': { S: testEvent }
+        }
+      }));
+      
+      if (scanResult.Items && scanResult.Items.length > 0) {
+        console.log(`🧹 PRE-TEST: Cleaning ${scanResult.Items.length} stale RSVPs for event ${testEvent}`);
+        
+        for (const item of scanResult.Items) {
+          await dynamoClient.send(new DeleteItemCommand({
+            TableName: tableName,
+            Key: {
+              event_id: item.event_id,
+              attendee_id: item.attendee_id
+            }
+          }));
+        }
+        console.log(`✅ PRE-TEST: Cleaned up stale RSVPs for ${testEvent}`);
+      }
+    } catch (error) {
+      console.error(`⚠️ PRE-TEST: Error cleaning stale RSVPs:`, error);
+      // Continue with test - cleanup is best effort
+    }
+    
     // Authenticate a fresh user with waiver for each test
     const result = await authenticateFreshUserWithWaiver(page, request);
     testUser = result.testUser;
     userEmail = testUser.email;
     sessionToken = result.sessionToken;
+  });
+
+  test.afterEach(async () => {
+    // Clean up test data after each test
+    if (userEmail) {
+      try {
+        await deleteTestData(userEmail);
+        console.log(`🧹 Cleaned up test data for ${userEmail}`);
+      } catch (error) {
+        console.error(`Failed to clean up test data for ${userEmail}:`, error);
+      }
+    }
   });
   
   /**
@@ -97,9 +144,19 @@ test.describe('RSVP Submission Flow', () => {
    * For any authenticated user with a valid waiver and available event,
    * RSVP submission should create an RSVP record and display confirmation
    */
-  test('Property 10: RSVP creation - authenticated user with valid waiver can RSVP to available event', async ({ page, request }) => {
-    // Test event - using a real event from the site
-    const testEventSlug = 'brooke-road-and-thorny-point-road-cleanup-february-2026';
+  test('Property 10: RSVP creation - authenticated user with valid waiver can RSVP to available event', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
+    
+    // Capture console logs
+    const consoleLogs: string[] = [];
+    page.on('console', msg => {
+      const text = msg.text();
+      consoleLogs.push(`[${msg.type()}] ${text}`);
+      if (text.includes('RSVP') || text.includes('error') || text.includes('Error')) {
+        console.log(`Browser console: [${msg.type()}] ${text}`);
+      }
+    });
     
     try {
       // Waiver is created in beforeEach hook
@@ -108,10 +165,35 @@ test.describe('RSVP Submission Flow', () => {
       const eventPage = new EventPage(page);
       await eventPage.gotoEvent(testEventSlug);
       
+      // Debug: Verify we're on the correct event page
+      const currentUrl = page.url();
+      console.log('Current URL after navigation:', currentUrl);
+      console.log('Expected event slug:', testEventSlug);
+      expect(currentUrl).toContain(testEventSlug);
+      
+      // Debug: Check auth state before RSVP
+      const authState = await page.evaluate(() => {
+        return {
+          hasAuthClient: !!window.authClient,
+          isAuthenticated: window.authClient?.isAuthenticated(),
+          email: window.authClient?.getUserEmail(),
+          sessionToken: localStorage.getItem('auth_session_token')
+        };
+      });
+      console.log('Auth state before RSVP:', authState);
+      
       // Submit RSVP
       const firstName = testUser.firstName;
       const lastName = testUser.lastName;
       await eventPage.completeRsvp(firstName, lastName);
+      
+      // Debug: Check for any JavaScript errors
+      const consoleErrors = await page.evaluate(() => {
+        return (window as any).__testErrors || [];
+      });
+      if (consoleErrors.length > 0) {
+        console.log('JavaScript errors:', consoleErrors);
+      }
       
       // Verify: RSVP success message is displayed
       await eventPage.expectRsvpSuccess();
@@ -127,11 +209,10 @@ test.describe('RSVP Submission Flow', () => {
       const rsvps = await dashboardPage.getRsvpList();
       console.log('Dashboard RSVPs found:', rsvps.length);
       console.log('Dashboard RSVPs:', JSON.stringify(rsvps, null, 2));
+      console.log('Looking for event:', testEventSlug);
       
-      const hasRsvp = rsvps.some(rsvp => 
-        rsvp.eventTitle.toLowerCase().includes('brooke-road') ||
-        rsvp.eventTitle.toLowerCase().includes('thorny point')
-      );
+      // Find the RSVP for this event by matching the eventId (which is the slug)
+      const hasRsvp = rsvps.some(rsvp => rsvp.eventId === testEventSlug);
       expect(hasRsvp).toBe(true);
       
     } finally {
@@ -252,9 +333,9 @@ test.describe('RSVP Submission Flow', () => {
    * For any RSVP cancelled more than 24 hours before the event,
    * the system should mark it as cancelled and update the dashboard
    */
-  test('Property 13: RSVP cancellation - cancelled RSVP updates dashboard', async ({ page, request }) => {
-    // Test event - using a real future event (more than 24 hours away)
-    const testEventSlug = 'widewater-state-park-potomac-river-cleanup-july-2026';
+  test('Property 13: RSVP cancellation - cancelled RSVP updates dashboard', async ({ page, request, testEvent }) => {
+    // Use worker-specific test event to avoid capacity conflicts
+    const testEventSlug = testEvent;
     
     try {
       // Waiver is created in beforeEach hook

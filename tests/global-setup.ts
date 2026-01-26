@@ -40,8 +40,8 @@ async function globalSetup(config: FullConfig) {
   const testCode = generateValidationCode();
   
   // Authenticate the user - use full URL
-  await page.goto(`${baseURL}/volunteer`);
-  await page.waitForLoadState('networkidle');
+  await page.goto(`${baseURL}/volunteer`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForTimeout(2000);
   
   await loginPage.enterEmail(testUser.email);
   await loginPage.clickSendCode();
@@ -56,10 +56,12 @@ async function globalSetup(config: FullConfig) {
   await page.waitForTimeout(500);
   await loginPage.enterValidationCode(testCode);
   await loginPage.clickVerifyCode();
-  await page.waitForTimeout(2000);
+  
+  // Wait for navigation and authentication to complete
+  await page.waitForTimeout(3000);
   
   // Verify authentication succeeded
-  const sessionToken = await page.evaluate(() => localStorage.getItem('auth_session_token'));
+  const sessionToken = await page.evaluate(() => localStorage.getItem('auth_session_token')).catch(() => null);
   if (!sessionToken) {
     throw new Error('Authentication failed - no session token found');
   }

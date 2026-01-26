@@ -82,10 +82,12 @@ export class DashboardPage {
    * Navigate to the volunteer dashboard
    */
   async goto(): Promise<void> {
-    await this.page.goto('/volunteer', { waitUntil: 'networkidle' });
+    // Use 'load' instead of 'networkidle' for better reliability across browsers
+    await this.page.goto('/volunteer', { waitUntil: 'load' });
     // Force reload to bypass cache
-    await this.page.reload({ waitUntil: 'networkidle' });
-    await waitForNetworkIdle(this.page, TIMEOUTS.LONG);
+    await this.page.reload({ waitUntil: 'load' });
+    // Wait for network to settle
+    await this.page.waitForTimeout(1000);
   }
 
   /**

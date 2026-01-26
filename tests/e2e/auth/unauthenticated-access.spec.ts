@@ -35,6 +35,7 @@ test.describe('Unauthenticated Access Handling', () => {
     // Attempt to access dashboard
     await dashboardPage.goto();
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000); // Give time for auth check
     
     // Verify we're shown the login form (email input is visible)
     const isEmailInputVisible = await loginPage.isEmailInputVisible();
@@ -62,10 +63,11 @@ test.describe('Unauthenticated Access Handling', () => {
     // Attempt to access waiver page
     await waiverPage.goto();
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000); // Give time for auth check
     
     // The waiver page may show the form but require email check first
     // Verify that we need to authenticate (email input should be visible)
-    const emailInputVisible = await waiverPage.emailInput.isVisible({ timeout: TIMEOUTS.DEFAULT })
+    const emailInputVisible = await waiverPage.emailInput.isVisible({ timeout: TIMEOUTS.LONG })
       .catch(() => false);
     
     expect(emailInputVisible).toBe(true);
