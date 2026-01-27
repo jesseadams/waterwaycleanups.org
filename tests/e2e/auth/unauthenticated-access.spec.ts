@@ -35,8 +35,8 @@ test.describe('Unauthenticated Access Handling', () => {
     await dashboardPage.goto();
     await page.waitForLoadState('networkidle');
     
-    // Webkit needs more time for auth checks and redirects
-    const waitTime = browserName === 'webkit' ? 3000 : 1000;
+    // All non-Chromium browsers need more time for auth checks and redirects in CI
+    const waitTime = browserName === 'chromium' ? 1000 : 4000;
     await page.waitForTimeout(waitTime);
     
     // Verify we're shown the login form (email input is visible)
@@ -97,9 +97,9 @@ test.describe('Unauthenticated Access Handling', () => {
     await page.goto('/events');
     await page.waitForLoadState('networkidle');
     
-    // Webkit needs more time for page rendering
-    if (browserName === 'webkit') {
-      await page.waitForTimeout(2000);
+    // Non-Chromium browsers need more time for page rendering in CI
+    if (browserName !== 'chromium') {
+      await page.waitForTimeout(3000);
     }
     
     // Try to find and click an RSVP button
@@ -110,8 +110,8 @@ test.describe('Unauthenticated Access Handling', () => {
     if (rsvpButtonVisible) {
       await rsvpButton.click();
       
-      // Webkit needs more time for navigation/redirects
-      const waitTime = browserName === 'webkit' ? 2000 : 1000;
+      // Non-Chromium browsers need more time for navigation/redirects in CI
+      const waitTime = browserName === 'chromium' ? 1000 : 3000;
       await page.waitForTimeout(waitTime);
       
       // After clicking RSVP without auth, should be prompted to login
@@ -148,8 +148,8 @@ test.describe('Unauthenticated Access Handling', () => {
     await page.goto('/volunteer-minors.html');
     await page.waitForLoadState('networkidle');
     
-    // Webkit needs more time for authentication checks and redirects
-    const waitTime = browserName === 'webkit' ? 3000 : 2000;
+    // Non-Chromium browsers need more time for authentication checks and redirects in CI
+    const waitTime = browserName === 'chromium' ? 2000 : 4000;
     await page.waitForTimeout(waitTime);
     
     // The minors page may be accessible but require authentication to function
