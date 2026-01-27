@@ -1,0 +1,23 @@
+# Dockerfile for running Playwright tests with webkit support
+# Based on Ubuntu 24.04 which has proper webkit dependencies
+
+FROM mcr.microsoft.com/playwright:v1.57.0-noble
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci
+
+# Copy the rest of the application
+COPY . .
+
+# Set environment variables
+ENV CI=true
+ENV TEST_ENV=ci
+
+# Default command runs all tests
+CMD ["npx", "playwright", "test"]

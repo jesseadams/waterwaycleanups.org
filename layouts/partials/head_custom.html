@@ -14,6 +14,7 @@
 <!-- Volunteer Form Handler -->
 <script src="/js/volunteer-form-handler.js"></script>
 
+{{ if not (or (eq (getenv "HUGO_ENV") "test") (eq (getenv "HUGO_ENV") "staging") (eq hugo.Environment "test") (eq hugo.Environment "staging")) }}
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q0NR461DCS"></script>
 <script>
@@ -31,3 +32,4 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-KDRJD92M');</script>
 <!-- End Google Tag Manager -->
+{{ end }}

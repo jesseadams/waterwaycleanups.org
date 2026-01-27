@@ -17,7 +17,7 @@ export const TIMEOUTS = {
   DEFAULT: 10000,
   
   // Long timeout for slow operations (API calls, page loads)
-  LONG: 30000,
+  LONG: 45000,
   
   // Extra long timeout for very slow operations
   EXTRA_LONG: 60000,

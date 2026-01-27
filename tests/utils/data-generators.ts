@@ -81,7 +81,7 @@ export function generateTestUser(overrides: Partial<TestUser> = {}): TestUser {
   const phoneNumber = `${areaCode}-${prefix}-${lineNumber}`;
   
   return {
-    email: `test-${uniqueId}@waterwaycleanups-test.org`,
+    email: `e2etests+test-${uniqueId}@waterwaycleanups.org`,
     firstName,
     lastName,
     dateOfBirth,

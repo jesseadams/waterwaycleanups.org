@@ -822,6 +822,12 @@ export async function deleteTestData(
   email: string,
   sessionToken: string
 ): Promise<void> {
+  // Skip cleanup if email is undefined or empty
+  if (!email || email.trim() === '') {
+    console.log(`\n🧹 Skipping cleanup - no email provided`);
+    return;
+  }
+  
   console.log(`\n🧹 Starting cleanup for ${email}...`);
   
   try {

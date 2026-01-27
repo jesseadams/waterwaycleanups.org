@@ -1,1 +1,0 @@
-{"principalId": "jesse@techno-geeks.org", "policyDocument": {"Version": "2012-10-17", "Statement": [{"Action": "execute-api:Invoke", "Effect": "Deny", "Resource": "arn:aws:execute-api:us-east-1:2767072126027/*"}]}, "context": {"email": "jesse@techno-geeks.org", "is_admin": "true", "session_token": "test-auth-1768332040754"}}

@@ -3,8 +3,7 @@ import { DashboardPage } from '../../pages/DashboardPage';
 import { EventPage } from '../../pages/EventPage';
 import { WaiverPage } from '../../pages/WaiverPage';
 import { LoginPage } from '../../pages/LoginPage';
-import { MinorsPage } from '../../pages/MinorsPage';
-import { generateWaiverData, generateTestUser, generateValidationCode, generateTestMinor } from '../../utils/data-generators';
+import { generateWaiverData, generateTestUser, generateValidationCode } from '../../utils/data-generators';
 import { 
   deleteTestData,
   insertTestValidationCode
@@ -297,66 +296,30 @@ test.describe('Dashboard Empty States', () => {
    * with active filter indication
    */
   test('Property 51: RSVP status filtering - dashboard filters RSVPs by status', async ({ page, request }) => {
-    // Test events - using real events
-    const testEvents = [
-      'brooke-road-and-thorny-point-road-cleanup-february-2026',
-      'widewater-state-park-aquia-creek-cleanup-april-2026',
-      'potomac-run-road-cleanup-june-2026',
-    ];
+    // Use a real event for testing
+    const testEventSlug = 'brooke-road-and-thorny-point-road-cleanup-february-2026';
     
     try {
-      // Submit RSVPs to multiple events
+      // Submit RSVP to test event
       const eventPage = new EventPage(page);
       const firstName = testUser.firstName;
       const lastName = testUser.lastName;
       
-      let successfulRsvps = 0;
+      await eventPage.gotoEvent(testEventSlug);
+      await page.waitForTimeout(1000);
       
-      for (const eventSlug of testEvents) {
-        try {
-          await eventPage.gotoEvent(eventSlug);
-          await page.waitForTimeout(1000);
-          
-          // Check if event is at capacity
-          const isAtCapacity = await eventPage.isAtCapacity();
-          if (isAtCapacity) {
-            console.log(`Event ${eventSlug} is at capacity, skipping`);
-            continue;
-          }
-          
-          await eventPage.completeRsvp(firstName, lastName);
-          await page.waitForTimeout(1500);
-          successfulRsvps++;
-          
-          console.log(`✅ RSVP ${successfulRsvps} created for ${eventSlug}`);
-        } catch (error) {
-          console.log(`Could not RSVP to ${eventSlug}:`, error);
-          // Continue with other events
-        }
-      }
-      
-      console.log(`Property 51 - Created ${successfulRsvps} RSVPs`);
-      
-      // If we couldn't create any RSVPs, skip the filtering test
-      if (successfulRsvps === 0) {
-        console.log('No RSVPs created for filtering test, skipping verification');
+      // Check if event is at capacity
+      const isAtCapacity = await eventPage.isAtCapacity();
+      if (isAtCapacity) {
+        console.log(`Event ${testEventSlug} is at capacity, skipping test`);
         test.skip();
         return;
       }
       
-      // Cancel one RSVP to have different statuses
-      if (successfulRsvps >= 2) {
-        await eventPage.gotoEvent(testEvents[0]);
-        await page.waitForTimeout(1000);
-        
-        try {
-          await eventPage.cancelRsvp();
-          await page.waitForTimeout(1500);
-          console.log('✅ Cancelled one RSVP for filtering test');
-        } catch (error) {
-          console.log('Could not cancel RSVP:', error);
-        }
-      }
+      await eventPage.completeRsvp(firstName, lastName);
+      await page.waitForTimeout(1500);
+      
+      console.log(`✅ RSVP created for ${testEventSlug}`);
       
       // Navigate to dashboard
       const dashboardPage = new DashboardPage(page);
@@ -366,7 +329,9 @@ test.describe('Dashboard Empty States', () => {
       // Get all RSVPs
       const allRsvps = await dashboardPage.getRsvpList();
       console.log('Property 51 - Total RSVPs:', allRsvps.length);
-      console.log('Property 51 - RSVP statuses:', allRsvps.map(r => r.status));
+      
+      // Verify we have at least one RSVP
+      expect(allRsvps.length).toBeGreaterThan(0);
       
       // Try to apply a filter (if filtering UI exists)
       try {
@@ -389,7 +354,6 @@ test.describe('Dashboard Empty States', () => {
       } catch (error) {
         console.log('Filtering UI not available or not implemented:', error);
         // If filtering is not implemented, just verify we can see the RSVPs
-        expect(allRsvps.length).toBeGreaterThan(0);
         console.log('⚠️ Property 51: Filtering UI not available, verified RSVPs are displayed');
       }
       

@@ -3,7 +3,6 @@ import { LoginPage } from '../../pages/LoginPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { WaiverPage } from '../../pages/WaiverPage';
 import { EventPage } from '../../pages/EventPage';
-import { MinorsPage } from '../../pages/MinorsPage';
 import { generateTestUser } from '../../utils/data-generators';
 import { TIMEOUTS } from '../../utils/wait-helpers';
 
@@ -24,7 +23,7 @@ test.describe('Unauthenticated Access Handling', () => {
    * Verifies that attempting to access the volunteer dashboard without
    * authentication redirects to the login page.
    */
-  test('should redirect to login when accessing dashboard without session', async ({ page }) => {
+  test('should redirect to login when accessing dashboard without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
     const dashboardPage = new DashboardPage(page);
     
@@ -35,6 +34,11 @@ test.describe('Unauthenticated Access Handling', () => {
     // Attempt to access dashboard
     await dashboardPage.goto();
     await page.waitForLoadState('networkidle');
+    
+    // All non-Chromium browsers need more time for auth checks and redirects in CI
+    // WebKit needs significantly more time than other browsers
+    const waitTime = browserName === 'chromium' ? 1000 : (browserName === 'webkit' ? 6000 : 4000);
+    await page.waitForTimeout(waitTime);
     
     // Verify we're shown the login form (email input is visible)
     const isEmailInputVisible = await loginPage.isEmailInputVisible();
@@ -62,10 +66,11 @@ test.describe('Unauthenticated Access Handling', () => {
     // Attempt to access waiver page
     await waiverPage.goto();
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(1000); // Give time for auth check
     
     // The waiver page may show the form but require email check first
     // Verify that we need to authenticate (email input should be visible)
-    const emailInputVisible = await waiverPage.emailInput.isVisible({ timeout: TIMEOUTS.DEFAULT })
+    const emailInputVisible = await waiverPage.emailInput.isVisible({ timeout: TIMEOUTS.LONG })
       .catch(() => false);
     
     expect(emailInputVisible).toBe(true);
@@ -81,9 +86,8 @@ test.describe('Unauthenticated Access Handling', () => {
    * Verifies that attempting to RSVP for an event without authentication
    * requires login first.
    */
-  test('should require login when attempting to RSVP without session', async ({ page }) => {
+  test('should require login when attempting to RSVP without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
-    const eventPage = new EventPage(page);
     
     // Ensure no session exists
     await page.goto('/volunteer');
@@ -94,6 +98,14 @@ test.describe('Unauthenticated Access Handling', () => {
     await page.goto('/events');
     await page.waitForLoadState('networkidle');
     
+    // Non-Chromium browsers need more time for page rendering in CI
+    // WebKit needs significantly more time than other browsers
+    if (browserName === 'webkit') {
+      await page.waitForTimeout(5000);
+    } else if (browserName !== 'chromium') {
+      await page.waitForTimeout(3000);
+    }
+    
     // Try to find and click an RSVP button
     const rsvpButton = page.locator('button:has-text("RSVP"), a:has-text("RSVP")').first();
     const rsvpButtonVisible = await rsvpButton.isVisible({ timeout: TIMEOUTS.SHORT })
@@ -101,7 +113,11 @@ test.describe('Unauthenticated Access Handling', () => {
     
     if (rsvpButtonVisible) {
       await rsvpButton.click();
-      await page.waitForTimeout(1000);
+      
+      // Non-Chromium browsers need more time for navigation/redirects in CI
+      // WebKit needs significantly more time than other browsers
+      const waitTime = browserName === 'chromium' ? 1000 : (browserName === 'webkit' ? 5000 : 3000);
+      await page.waitForTimeout(waitTime);
       
       // After clicking RSVP without auth, should be prompted to login
       // Check if we're redirected or shown a login prompt
@@ -126,7 +142,7 @@ test.describe('Unauthenticated Access Handling', () => {
    * Verifies that attempting to manage minors without authentication
    * redirects to the login page.
    */
-  test('should redirect to login when accessing minors page without session', async ({ page }) => {
+  test('should redirect to login when accessing minors page without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
     
     // Ensure no session exists
@@ -137,8 +153,10 @@ test.describe('Unauthenticated Access Handling', () => {
     await page.goto('/volunteer-minors.html');
     await page.waitForLoadState('networkidle');
     
-    // Wait a moment for any redirects or authentication checks
-    await page.waitForTimeout(2000);
+    // Non-Chromium browsers need more time for authentication checks and redirects in CI
+    // WebKit needs significantly more time than other browsers
+    const waitTime = browserName === 'chromium' ? 2000 : (browserName === 'webkit' ? 6000 : 4000);
+    await page.waitForTimeout(waitTime);
     
     // The minors page may be accessible but require authentication to function
     // Verify no session token exists (which means user is not authenticated)
@@ -328,13 +346,13 @@ test.describe('Unauthenticated Access Handling', () => {
     // 2. The intended URL is stored in storage
     // 3. We're still on the intended page (some apps don't redirect)
     
-    const isIntendedUrlPreserved = 
-      redirectParam === intendedUrl ||
-      storedRedirect === intendedUrl ||
-      currentUrl.includes(intendedUrl);
-    
     // Note: This assertion may need adjustment based on actual implementation
     // For now, we just verify that the login form is shown
     expect(emailInputVisible).toBe(true);
+    
+    // Optional: Log if redirect is preserved for debugging
+    if (redirectParam === intendedUrl || storedRedirect === intendedUrl || currentUrl.includes(intendedUrl)) {
+      console.log('✅ Intended URL preserved for post-login redirect');
+    }
   });
 });

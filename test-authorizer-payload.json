@@ -1,5 +1,0 @@
-{
-  "type": "TOKEN",
-  "authorizationToken": "Bearer test-auth-1768332040754",
-  "methodArn": "arn:aws:execute-api:us-east-1:767072126027:o2pkfnwqq4/staging/POST/events"
-}

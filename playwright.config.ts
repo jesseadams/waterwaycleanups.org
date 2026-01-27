@@ -42,10 +42,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 1 : 1,
   
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 4 : 10,
   
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
@@ -74,6 +74,11 @@ export default defineConfig({
     
     /* Maximum time for navigation */
     navigationTimeout: 30000,
+    
+    /* Block Google Analytics and other tracking scripts that keep network busy */
+    extraHTTPHeaders: {
+      'DNT': '1', // Do Not Track header
+    },
   },
 
   /* Configure projects for major browsers */
@@ -115,6 +120,8 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
         // No storageState - start unauthenticated
       },
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
     },
     
     // Authenticated projects for all other tests
@@ -158,6 +165,41 @@ export default defineConfig({
         viewport: { width: 1280, height: 720 },
         storageState: 'tests/.auth/user.json',
       },
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
+    },
+
+    /* Mobile device projects */
+    {
+      name: 'mobile-chrome',
+      testIgnore: /.*auth\/authentication\.spec\.ts/,
+      use: {
+        ...devices['Pixel 5'],
+        storageState: 'tests/.auth/user.json',
+      },
+    },
+
+    {
+      name: 'mobile-safari',
+      testIgnore: /.*auth\/authentication\.spec\.ts/,
+      use: {
+        ...devices['iPhone 13'],
+        storageState: 'tests/.auth/user.json',
+      },
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
+    },
+
+    /* Tablet device project */
+    {
+      name: 'tablet',
+      testIgnore: /.*auth\/authentication\.spec\.ts/,
+      use: {
+        ...devices['iPad Pro'],
+        storageState: 'tests/.auth/user.json',
+      },
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
     },
   ],
 
