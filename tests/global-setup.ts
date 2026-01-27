@@ -17,7 +17,7 @@ async function globalSetup(config: FullConfig) {
   if (projectName.includes('firefox')) {
     browserType = firefox;
     console.log('🦊 Using Firefox for global setup');
-  } else if (projectName.includes('webkit')) {
+  } else if (projectName.includes('webkit') || projectName.includes('safari') || projectName.includes('tablet')) {
     browserType = webkit;
     console.log('🧭 Using WebKit for global setup');
   } else {
