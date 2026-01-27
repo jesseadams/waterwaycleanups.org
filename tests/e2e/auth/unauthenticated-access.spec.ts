@@ -3,7 +3,6 @@ import { LoginPage } from '../../pages/LoginPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { WaiverPage } from '../../pages/WaiverPage';
 import { EventPage } from '../../pages/EventPage';
-import { MinorsPage } from '../../pages/MinorsPage';
 import { generateTestUser } from '../../utils/data-generators';
 import { TIMEOUTS } from '../../utils/wait-helpers';
 
@@ -88,7 +87,6 @@ test.describe('Unauthenticated Access Handling', () => {
    */
   test('should require login when attempting to RSVP without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
-    const eventPage = new EventPage(page);
     
     // Ensure no session exists
     await page.goto('/volunteer');
@@ -342,13 +340,13 @@ test.describe('Unauthenticated Access Handling', () => {
     // 2. The intended URL is stored in storage
     // 3. We're still on the intended page (some apps don't redirect)
     
-    const isIntendedUrlPreserved = 
-      redirectParam === intendedUrl ||
-      storedRedirect === intendedUrl ||
-      currentUrl.includes(intendedUrl);
-    
     // Note: This assertion may need adjustment based on actual implementation
     // For now, we just verify that the login form is shown
     expect(emailInputVisible).toBe(true);
+    
+    // Optional: Log if redirect is preserved for debugging
+    if (redirectParam === intendedUrl || storedRedirect === intendedUrl || currentUrl.includes(intendedUrl)) {
+      console.log('✅ Intended URL preserved for post-login redirect');
+    }
   });
 });

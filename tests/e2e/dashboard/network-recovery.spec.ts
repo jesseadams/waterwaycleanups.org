@@ -12,8 +12,7 @@ import {
 } from '../../utils/api-helpers';
 import { 
   simulateNetworkTimeout,
-  mockApiResponse,
-  waitForNetworkIdle
+  mockApiResponse
 } from '../../utils/wait-helpers';
 
 /**
