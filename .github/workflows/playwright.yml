@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit, chrome, mobile-chrome, mobile-safari, tablet]
+        browser: [chromium, firefox, webkit, chrome, mobile-chrome, mobile-safari]
     
     steps:
     - name: Checkout code
@@ -48,7 +48,9 @@ jobs:
           npx playwright install --with-deps chromium
         elif [ "${{ matrix.browser }}" = "mobile-chrome" ]; then
           npx playwright install --with-deps chromium
-        elif [ "${{ matrix.browser }}" = "mobile-safari" ] || [ "${{ matrix.browser }}" = "tablet" ]; then
+        elif [ "${{ matrix.browser }}" = "mobile-safari" ]; then
+          npx playwright install --with-deps webkit
+        elif [ "${{ matrix.browser }}" = "tablet" ]; then
           npx playwright install --with-deps webkit
         else
           npx playwright install --with-deps ${{ matrix.browser }}
