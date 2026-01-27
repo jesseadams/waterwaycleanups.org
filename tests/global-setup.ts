@@ -30,6 +30,23 @@ async function globalSetup(config: FullConfig) {
   const context = await browser.newContext();
   const page = await context.newPage();
   
+  // Block Google Analytics and other third-party scripts that keep network busy
+  await page.route('**/*', (route) => {
+    const url = route.request().url();
+    if (
+      url.includes('googletagmanager.com') ||
+      url.includes('google-analytics.com') ||
+      url.includes('analytics.google.com') ||
+      url.includes('doubleclick.net') ||
+      url.includes('facebook.com') ||
+      url.includes('facebook.net')
+    ) {
+      route.abort();
+    } else {
+      route.continue();
+    }
+  });
+  
   console.log('🔐 Setting up authenticated session for tests...');
   
   // Get base URL from config

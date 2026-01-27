@@ -62,6 +62,8 @@ jobs:
 
     - name: Build site
       run: npm run build
+      env:
+        HUGO_ENV: test
 
     - name: Start Hugo server
       run: |
@@ -69,6 +71,7 @@ jobs:
         sleep 10
       env:
         CI: true
+        HUGO_ENV: test
 
     - name: Run Playwright tests
       run: npx playwright test --project=${{ matrix.browser }}

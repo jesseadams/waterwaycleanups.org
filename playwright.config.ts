@@ -74,6 +74,31 @@ export default defineConfig({
     
     /* Maximum time for navigation */
     navigationTimeout: 30000,
+    
+    /* Block Google Analytics and other tracking scripts that keep network busy */
+    extraHTTPHeaders: {
+      'DNT': '1', // Do Not Track header
+    },
+  },
+  
+  /* Global test setup to block third-party scripts */
+  async beforeEach({ page }) {
+    // Block Google Analytics and other third-party scripts that prevent networkidle
+    await page.route('**/*', (route) => {
+      const url = route.request().url();
+      if (
+        url.includes('googletagmanager.com') ||
+        url.includes('google-analytics.com') ||
+        url.includes('analytics.google.com') ||
+        url.includes('doubleclick.net') ||
+        url.includes('facebook.com') ||
+        url.includes('facebook.net')
+      ) {
+        route.abort();
+      } else {
+        route.continue();
+      }
+    });
   },
 
   /* Configure projects for major browsers */
