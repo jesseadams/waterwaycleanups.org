@@ -133,8 +133,8 @@ test.describe('Network Failure Recovery', () => {
       }
       
       // All browsers need more time to process timeout errors in CI
-      // Increase wait time for non-Chromium browsers
-      const waitTime = browserName === 'chromium' ? 3000 : 6000;
+      // WebKit needs significantly more time than other browsers
+      const waitTime = browserName === 'chromium' ? 3000 : (browserName === 'webkit' ? 8000 : 6000);
       await page.waitForTimeout(waitTime);
       
       // Verify: Error message is displayed (flexible matching for all browsers)
