@@ -72,8 +72,8 @@ export default defineConfig({
     /* Maximum time each action such as `click()` can take */
     actionTimeout: 10000,
     
-    /* Maximum time for navigation - increased for CI environments */
-    navigationTimeout: process.env.CI ? 60000 : 30000,
+    /* Maximum time for navigation */
+    navigationTimeout: 30000,
   },
 
   /* Configure projects for major browsers */
