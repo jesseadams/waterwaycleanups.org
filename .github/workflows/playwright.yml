@@ -43,18 +43,19 @@ jobs:
 
     - name: Install Playwright Browsers
       run: |
-        # Map project name to browser name for installation
-        if [ "${{ matrix.browser }}" = "chrome" ]; then
-          npx playwright install --with-deps chromium
-        elif [ "${{ matrix.browser }}" = "mobile-chrome" ]; then
-          npx playwright install --with-deps chromium
+        # Global setup always uses chromium, so install it for all jobs
+        # Then install the specific browser for this matrix job
+        npx playwright install --with-deps chromium
+        
+        # Install additional browser if different from chromium
+        if [ "${{ matrix.browser }}" = "firefox" ]; then
+          npx playwright install --with-deps firefox
+        elif [ "${{ matrix.browser }}" = "webkit" ]; then
+          npx playwright install --with-deps webkit
         elif [ "${{ matrix.browser }}" = "mobile-safari" ]; then
           npx playwright install --with-deps webkit
-        elif [ "${{ matrix.browser }}" = "tablet" ]; then
-          npx playwright install --with-deps webkit
-        else
-          npx playwright install --with-deps ${{ matrix.browser }}
         fi
+        # chrome and mobile-chrome use chromium, already installed
 
     - name: Setup Hugo
       uses: peaceiris/actions-hugo@v3
