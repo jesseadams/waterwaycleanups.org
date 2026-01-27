@@ -80,26 +80,6 @@ export default defineConfig({
       'DNT': '1', // Do Not Track header
     },
   },
-  
-  /* Global test setup to block third-party scripts */
-  async beforeEach({ page }) {
-    // Block Google Analytics and other third-party scripts that prevent networkidle
-    await page.route('**/*', (route) => {
-      const url = route.request().url();
-      if (
-        url.includes('googletagmanager.com') ||
-        url.includes('google-analytics.com') ||
-        url.includes('analytics.google.com') ||
-        url.includes('doubleclick.net') ||
-        url.includes('facebook.com') ||
-        url.includes('facebook.net')
-      ) {
-        route.abort();
-      } else {
-        route.continue();
-      }
-    });
-  },
 
   /* Configure projects for major browsers */
   projects: [
@@ -139,14 +119,9 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
         // No storageState - start unauthenticated
-        // Webkit needs more time for some operations
-        actionTimeout: 15000,
-        navigationTimeout: 45000,
       },
       // Skip webkit locally unless in CI or Docker (CI env var set)
       grep: process.env.CI ? undefined : /$^/,
-      // Increase timeout for webkit tests
-      timeout: 90000,
     },
     
     // Authenticated projects for all other tests
@@ -189,14 +164,9 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
         storageState: 'tests/.auth/user.json',
-        // Webkit needs more time for some operations
-        actionTimeout: 15000,
-        navigationTimeout: 45000,
       },
       // Skip webkit locally unless in CI or Docker (CI env var set)
       grep: process.env.CI ? undefined : /$^/,
-      // Increase timeout for webkit tests
-      timeout: 90000,
     },
 
     /* Mobile device projects */
@@ -215,14 +185,9 @@ export default defineConfig({
       use: {
         ...devices['iPhone 13'],
         storageState: 'tests/.auth/user.json',
-        // Webkit needs more time for some operations
-        actionTimeout: 15000,
-        navigationTimeout: 45000,
       },
       // Skip webkit locally unless in CI or Docker (CI env var set)
       grep: process.env.CI ? undefined : /$^/,
-      // Increase timeout for webkit tests
-      timeout: 90000,
     },
 
     /* Tablet device project */
@@ -232,14 +197,9 @@ export default defineConfig({
       use: {
         ...devices['iPad Pro'],
         storageState: 'tests/.auth/user.json',
-        // Webkit needs more time for some operations
-        actionTimeout: 15000,
-        navigationTimeout: 45000,
       },
       // Skip webkit locally unless in CI or Docker (CI env var set)
       grep: process.env.CI ? undefined : /$^/,
-      // Increase timeout for webkit tests
-      timeout: 90000,
     },
   ],
 
