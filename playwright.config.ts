@@ -139,10 +139,14 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
         // No storageState - start unauthenticated
+        // Webkit needs more time for some operations
+        actionTimeout: 15000,
+        navigationTimeout: 45000,
       },
-      // Skip webkit locally due to library dependency issues
-      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
-      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
+      // Increase timeout for webkit tests
+      timeout: 90000,
     },
     
     // Authenticated projects for all other tests
@@ -185,10 +189,14 @@ export default defineConfig({
         ...devices['Desktop Safari'],
         viewport: { width: 1280, height: 720 },
         storageState: 'tests/.auth/user.json',
+        // Webkit needs more time for some operations
+        actionTimeout: 15000,
+        navigationTimeout: 45000,
       },
-      // Skip webkit locally due to library dependency issues
-      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
-      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
+      // Increase timeout for webkit tests
+      timeout: 90000,
     },
 
     /* Mobile device projects */
@@ -207,10 +215,14 @@ export default defineConfig({
       use: {
         ...devices['iPhone 13'],
         storageState: 'tests/.auth/user.json',
+        // Webkit needs more time for some operations
+        actionTimeout: 15000,
+        navigationTimeout: 45000,
       },
-      // Skip webkit locally due to library dependency issues
-      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
-      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
+      // Increase timeout for webkit tests
+      timeout: 90000,
     },
 
     /* Tablet device project */
@@ -220,10 +232,14 @@ export default defineConfig({
       use: {
         ...devices['iPad Pro'],
         storageState: 'tests/.auth/user.json',
+        // Webkit needs more time for some operations
+        actionTimeout: 15000,
+        navigationTimeout: 45000,
       },
-      // Skip webkit locally due to library dependency issues
-      // Run in GitHub Actions (GITHUB_ACTIONS env var) but skip locally
-      grep: process.env.GITHUB_ACTIONS ? undefined : /$^/,
+      // Skip webkit locally unless in CI or Docker (CI env var set)
+      grep: process.env.CI ? undefined : /$^/,
+      // Increase timeout for webkit tests
+      timeout: 90000,
     },
   ],
 

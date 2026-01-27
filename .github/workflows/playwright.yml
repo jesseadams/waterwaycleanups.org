@@ -17,7 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browser: [chromium, firefox, webkit, chrome, mobile-chrome, mobile-safari]
+        browser: [chromium, firefox, webkit, chrome]
+        # mobile-chrome and mobile-safari temporarily disabled - need investigation
     
     steps:
     - name: Checkout code

@@ -53,6 +53,8 @@
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:webkit:docker": "docker-compose -f docker-compose.playwright.yml run --rm playwright npx playwright test --project=webkit",
+    "test:e2e:webkit:build": "docker-compose -f docker-compose.playwright.yml build",
     "test:e2e:auth": "playwright test tests/e2e/auth",
     "test:e2e:waiver": "playwright test tests/e2e/waiver",
     "test:e2e:rsvp": "playwright test tests/e2e/rsvp",

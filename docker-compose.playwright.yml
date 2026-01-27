@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    volumes:
+      # Mount source code for live updates
+      - .:/app
+      # Preserve node_modules from container
+      - /app/node_modules
+      # Mount test results
+      - ./test-results:/app/test-results
+      # Mount AWS credentials from host
+      - ~/.aws:/root/.aws:ro
+    environment:
+      - CI=true
+      - TEST_ENV=ci
+      - AWS_REGION=us-east-1
+      - AWS_PROFILE=${AWS_PROFILE:-default}
+      # Allow environment variables to override if set
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
+    network_mode: host
+    command: npx playwright test --project=webkit
