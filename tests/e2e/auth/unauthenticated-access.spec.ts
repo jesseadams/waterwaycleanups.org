@@ -24,7 +24,7 @@ test.describe('Unauthenticated Access Handling', () => {
    * Verifies that attempting to access the volunteer dashboard without
    * authentication redirects to the login page.
    */
-  test('should redirect to login when accessing dashboard without session', async ({ page }) => {
+  test('should redirect to login when accessing dashboard without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
     const dashboardPage = new DashboardPage(page);
     
@@ -35,7 +35,10 @@ test.describe('Unauthenticated Access Handling', () => {
     // Attempt to access dashboard
     await dashboardPage.goto();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000); // Give time for auth check
+    
+    // Webkit needs more time for auth checks and redirects
+    const waitTime = browserName === 'webkit' ? 3000 : 1000;
+    await page.waitForTimeout(waitTime);
     
     // Verify we're shown the login form (email input is visible)
     const isEmailInputVisible = await loginPage.isEmailInputVisible();
@@ -83,7 +86,7 @@ test.describe('Unauthenticated Access Handling', () => {
    * Verifies that attempting to RSVP for an event without authentication
    * requires login first.
    */
-  test('should require login when attempting to RSVP without session', async ({ page }) => {
+  test('should require login when attempting to RSVP without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
     const eventPage = new EventPage(page);
     
@@ -96,6 +99,11 @@ test.describe('Unauthenticated Access Handling', () => {
     await page.goto('/events');
     await page.waitForLoadState('networkidle');
     
+    // Webkit needs more time for page rendering
+    if (browserName === 'webkit') {
+      await page.waitForTimeout(2000);
+    }
+    
     // Try to find and click an RSVP button
     const rsvpButton = page.locator('button:has-text("RSVP"), a:has-text("RSVP")').first();
     const rsvpButtonVisible = await rsvpButton.isVisible({ timeout: TIMEOUTS.SHORT })
@@ -103,7 +111,10 @@ test.describe('Unauthenticated Access Handling', () => {
     
     if (rsvpButtonVisible) {
       await rsvpButton.click();
-      await page.waitForTimeout(1000);
+      
+      // Webkit needs more time for navigation/redirects
+      const waitTime = browserName === 'webkit' ? 2000 : 1000;
+      await page.waitForTimeout(waitTime);
       
       // After clicking RSVP without auth, should be prompted to login
       // Check if we're redirected or shown a login prompt
@@ -128,7 +139,7 @@ test.describe('Unauthenticated Access Handling', () => {
    * Verifies that attempting to manage minors without authentication
    * redirects to the login page.
    */
-  test('should redirect to login when accessing minors page without session', async ({ page }) => {
+  test('should redirect to login when accessing minors page without session', async ({ page, browserName }) => {
     const loginPage = new LoginPage(page);
     
     // Ensure no session exists
@@ -139,8 +150,9 @@ test.describe('Unauthenticated Access Handling', () => {
     await page.goto('/volunteer-minors.html');
     await page.waitForLoadState('networkidle');
     
-    // Wait a moment for any redirects or authentication checks
-    await page.waitForTimeout(2000);
+    // Webkit needs more time for authentication checks and redirects
+    const waitTime = browserName === 'webkit' ? 3000 : 2000;
+    await page.waitForTimeout(waitTime);
     
     // The minors page may be accessible but require authentication to function
     // Verify no session token exists (which means user is not authenticated)
