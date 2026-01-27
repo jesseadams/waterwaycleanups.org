@@ -40,8 +40,7 @@ export class LoginPage {
    */
   async goto(): Promise<void> {
     await this.page.goto('/volunteer');
-    await this.page.waitForLoadState('load');
-    await this.page.waitForTimeout(500); // Brief wait for any dynamic content
+    await this.page.waitForLoadState('networkidle');
   }
 
   /**
