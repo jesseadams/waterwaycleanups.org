@@ -31,11 +31,13 @@ if (!['staging', 'prod'].includes(environment)) {
 }
 
 // Table names with environment suffix
-const suffix = environment === 'prod' ? '' : `-${environment}`;
+const suffix = environment === 'prod' ? '-production' : `-${environment}`;
 const EVENTS_TABLE = `events${suffix}`;
 const VOLUNTEERS_TABLE = `volunteers${suffix}`;
 const RSVPS_TABLE = `rsvps${suffix}`;
-const OLD_EVENT_RSVPS_TABLE = `event_rsvps${suffix}`;
+const WAIVERS_TABLE = `volunteer_waivers${suffix}`;
+const OLD_EVENT_RSVPS_TABLE = environment === 'prod' ? 'rsvps-original' : 'event_rsvps'; // Original prod table is rsvps-original
+const OLD_WAIVERS_TABLE = environment === 'prod' ? 'waivers-original' : null; // Original prod waivers table
 
 console.log(`🔄 Data Migration Script`);
 console.log(`Environment: ${environment}`);
@@ -188,17 +190,30 @@ function convertEventToRecord(filePath, frontMatter, content) {
  */
 function getExistingEventFiles() {
   const eventsDir = path.join(__dirname, '..', 'content', 'en', 'events');
+  const archiveDir = path.join(__dirname, '..', 'content', 'en', 'events-archive');
   
-  if (!fs.existsSync(eventsDir)) {
+  let files = [];
+  
+  // Get files from main events directory
+  if (fs.existsSync(eventsDir)) {
+    const eventFiles = fs.readdirSync(eventsDir)
+      .filter(file => file.endsWith('.md'))
+      .map(file => path.join(eventsDir, file));
+    files.push(...eventFiles);
+  } else {
     console.error(`Events directory not found: ${eventsDir}`);
-    return [];
   }
   
-  const files = fs.readdirSync(eventsDir)
-    .filter(file => file.endsWith('.md'))
-    .map(file => path.join(eventsDir, file));
+  // Get files from archive directory
+  if (fs.existsSync(archiveDir)) {
+    const archiveFiles = fs.readdirSync(archiveDir)
+      .filter(file => file.endsWith('.md'))
+      .map(file => path.join(archiveDir, file));
+    files.push(...archiveFiles);
+    log(`Found ${archiveFiles.length} archived event files`);
+  }
   
-  log(`Found ${files.length} event markdown files`);
+  log(`Found ${files.length} total event markdown files`);
   return files;
 }
 
@@ -265,6 +280,49 @@ async function getExistingRsvps() {
       return [];
     }
     console.error('Error scanning existing RSVPs:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Get all existing waiver records from old table
+ */
+async function getExistingWaivers() {
+  if (!OLD_WAIVERS_TABLE) {
+    log('⚠️  No old waivers table configured for this environment, skipping waiver migration');
+    return [];
+  }
+  
+  log('Scanning existing waiver records...');
+  
+  try {
+    const params = {
+      TableName: OLD_WAIVERS_TABLE
+    };
+    
+    const allItems = [];
+    let lastEvaluatedKey = null;
+    
+    do {
+      if (lastEvaluatedKey) {
+        params.ExclusiveStartKey = lastEvaluatedKey;
+      }
+      
+      const result = await dynamodb.scan(params).promise();
+      allItems.push(...result.Items);
+      lastEvaluatedKey = result.LastEvaluatedKey;
+      
+      log(`  Found ${result.Items.length} records (total: ${allItems.length})`);
+    } while (lastEvaluatedKey);
+    
+    log(`✅ Total existing waiver records: ${allItems.length}`);
+    return allItems;
+  } catch (error) {
+    if (error.code === 'ResourceNotFoundException') {
+      log(`⚠️  Old waiver table ${OLD_WAIVERS_TABLE} not found, skipping waiver migration`);
+      return [];
+    }
+    console.error('Error scanning existing waivers:', error.message);
     throw error;
   }
 }
@@ -491,18 +549,166 @@ async function writeRsvpsToDatabase(rsvps) {
 }
 
 /**
+ * Process waivers and separate into adult waivers, guardian volunteers, and minors
+ */
+function processWaivers(waivers) {
+  const adultWaivers = [];
+  const guardianVolunteers = new Map(); // email -> volunteer record
+  const minors = [];
+  
+  for (const waiver of waivers) {
+    if (waiver.is_adult) {
+      // Adult waiver - keep as is
+      adultWaivers.push(waiver);
+    } else {
+      // Minor waiver - extract guardian and minor info
+      const guardianEmail = waiver.guardian_email;
+      
+      if (!guardianEmail) {
+        log(`  ⚠️  Minor waiver ${waiver.waiver_id} missing guardian_email, skipping`);
+        continue;
+      }
+      
+      // Create or update guardian volunteer record
+      if (!guardianVolunteers.has(guardianEmail)) {
+        const guardianVolunteer = {
+          email: guardianEmail,
+          full_name: waiver.guardian_name || '',
+          first_name: (waiver.guardian_name || '').split(' ')[0] || '',
+          last_name: (waiver.guardian_name || '').split(' ').slice(1).join(' ') || '',
+          phone: waiver.phone_number || null,
+          created_at: waiver.submission_date || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          profile_complete: !!(waiver.guardian_name),
+          communication_preferences: {
+            email_notifications: true,
+            sms_notifications: false
+          },
+          volunteer_metrics: {
+            total_rsvps: 0,
+            total_cancellations: 0,
+            total_no_shows: 0,
+            total_attended: 0,
+            first_event_date: null,
+            last_event_date: null
+          }
+        };
+        guardianVolunteers.set(guardianEmail, guardianVolunteer);
+      }
+      
+      // Create minor record
+      const minor = {
+        guardian_email: guardianEmail,
+        minor_id: waiver.waiver_id, // Use waiver_id as minor_id
+        full_name: waiver.full_legal_name || '',
+        first_name: (waiver.full_legal_name || '').split(' ')[0] || '',
+        last_name: (waiver.full_legal_name || '').split(' ').slice(1).join(' ') || '',
+        date_of_birth: waiver.date_of_birth || null,
+        relationship: waiver.guardian_relationship || 'Parent',
+        created_at: waiver.submission_date || new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      minors.push(minor);
+    }
+  }
+  
+  return {
+    adultWaivers,
+    guardianVolunteers: Array.from(guardianVolunteers.values()),
+    minors
+  };
+}
+
+/**
+ * Write waivers to database
+ */
+async function writeWaiversToDatabase(waivers) {
+  log(`Writing ${waivers.length} waivers to database...`, true);
+  
+  let successCount = 0;
+  let errorCount = 0;
+  
+  for (const waiver of waivers) {
+    if (isDryRun) {
+      log(`  [DRY RUN] Would create waiver: ${waiver.email} - ${waiver.waiver_id}`);
+      successCount++;
+      continue;
+    }
+    
+    try {
+      await dynamodb.put({
+        TableName: WAIVERS_TABLE,
+        Item: waiver,
+        ConditionExpression: 'attribute_not_exists(email) AND attribute_not_exists(waiver_id)' // Prevent overwrites
+      }).promise();
+      
+      log(`  ✅ Created waiver: ${waiver.email} - ${waiver.waiver_id}`);
+      successCount++;
+    } catch (error) {
+      if (error.code === 'ConditionalCheckFailedException') {
+        log(`  ⚠️  Waiver already exists: ${waiver.email} - ${waiver.waiver_id}`);
+      } else {
+        log(`  ❌ Failed to create waiver ${waiver.email} - ${waiver.waiver_id}: ${error.message}`);
+        errorCount++;
+      }
+    }
+  }
+  
+  return { successCount, errorCount };
+}
+
+/**
+ * Write minors to database
+ */
+async function writeMinorsToDatabase(minors) {
+  log(`Writing ${minors.length} minors to database...`, true);
+  
+  let successCount = 0;
+  let errorCount = 0;
+  
+  for (const minor of minors) {
+    if (isDryRun) {
+      log(`  [DRY RUN] Would create minor: ${minor.guardian_email} - ${minor.full_name}`);
+      successCount++;
+      continue;
+    }
+    
+    try {
+      await dynamodb.put({
+        TableName: `minors${environment === 'prod' ? '-production' : `-${environment}`}`,
+        Item: minor,
+        ConditionExpression: 'attribute_not_exists(guardian_email) AND attribute_not_exists(minor_id)' // Prevent overwrites
+      }).promise();
+      
+      log(`  ✅ Created minor: ${minor.guardian_email} - ${minor.full_name}`);
+      successCount++;
+    } catch (error) {
+      if (error.code === 'ConditionalCheckFailedException') {
+        log(`  ⚠️  Minor already exists: ${minor.guardian_email} - ${minor.full_name}`);
+      } else {
+        log(`  ❌ Failed to create minor ${minor.guardian_email} - ${minor.full_name}: ${error.message}`);
+        errorCount++;
+      }
+    }
+  }
+  
+  return { successCount, errorCount };
+}
+
+/**
  * Validate data integrity after migration
  */
 async function validateDataIntegrity(events, volunteers, rsvps) {
   log('Validating data integrity...', true);
   
   const issues = [];
+  const warnings = [];
   
-  // Check that all RSVPs reference valid events
+  // Check that all RSVPs reference valid events (warning only - old events may not have markdown)
   const eventIds = new Set(events.map(e => e.event_id));
   const invalidEventRefs = rsvps.filter(rsvp => !eventIds.has(rsvp.event_id));
   if (invalidEventRefs.length > 0) {
-    issues.push(`${invalidEventRefs.length} RSVPs reference non-existent events`);
+    warnings.push(`${invalidEventRefs.length} RSVPs reference non-existent events (likely old events without markdown)`);
   }
   
   // Check that all RSVPs reference valid volunteers
@@ -534,6 +740,11 @@ async function validateDataIntegrity(events, volunteers, rsvps) {
   );
   if (duplicateRsvps.length > 0) {
     issues.push(`${duplicateRsvps.length} duplicate RSVPs found`);
+  }
+  
+  if (warnings.length > 0) {
+    log('⚠️  Data integrity warnings:');
+    warnings.forEach(warning => log(`  - ${warning}`));
   }
   
   if (issues.length === 0) {
@@ -569,23 +780,50 @@ async function runMigration() {
     const existingRsvps = await getExistingRsvps();
     console.log(`✅ Found ${existingRsvps.length} existing RSVPs\n`);
     
+    // Step 2b: Get existing waiver data
+    console.log('📋 Step 2b: Retrieving existing waiver data...');
+    const existingWaivers = await getExistingWaivers();
+    console.log(`✅ Found ${existingWaivers.length} existing waivers\n`);
+    
+    // Step 2c: Process waivers to extract guardians and minors
+    console.log('👨‍👩‍👧 Step 2c: Processing waivers for guardians and minors...');
+    const { adultWaivers, guardianVolunteers, minors } = processWaivers(existingWaivers);
+    console.log(`✅ Processed: ${adultWaivers.length} adult waivers, ${guardianVolunteers.length} guardians, ${minors.length} minors\n`);
+    
     // Step 3: Create event ID mapping
     console.log('🗺️  Step 3: Creating event ID mapping...');
     const eventIdMapping = createEventIdMapping(events, existingRsvps);
     console.log(`✅ Created ${Object.keys(eventIdMapping).length} event ID mappings\n`);
     
-    // Step 4: Create volunteers from RSVP data
+    // Step 4: Create volunteers from RSVP data and guardians
     console.log('👥 Step 4: Creating volunteer records...');
     const volunteerMap = new Map();
     
+    // Add volunteers from RSVPs
     for (const rsvp of existingRsvps) {
       if (!volunteerMap.has(rsvp.email)) {
         volunteerMap.set(rsvp.email, createVolunteerFromRsvp(rsvp));
       }
     }
     
+    // Add guardian volunteers (may override RSVP-based volunteers if same email)
+    for (const guardian of guardianVolunteers) {
+      if (!volunteerMap.has(guardian.email)) {
+        volunteerMap.set(guardian.email, guardian);
+      } else {
+        // Merge guardian info with existing volunteer
+        const existing = volunteerMap.get(guardian.email);
+        volunteerMap.set(guardian.email, {
+          ...existing,
+          full_name: guardian.full_name || existing.full_name,
+          first_name: guardian.first_name || existing.first_name,
+          last_name: guardian.last_name || existing.last_name
+        });
+      }
+    }
+    
     const volunteers = Array.from(volunteerMap.values());
-    console.log(`✅ Created ${volunteers.length} volunteer records\n`);
+    console.log(`✅ Created ${volunteers.length} volunteer records (${guardianVolunteers.length} guardians)\n`);
     
     // Step 5: Create normalized RSVP records
     console.log('📝 Step 5: Creating normalized RSVP records...');
@@ -615,6 +853,12 @@ async function runMigration() {
     
     const rsvpResults = await writeRsvpsToDatabase(normalizedRsvps);
     console.log(`RSVPs: ${rsvpResults.successCount} created, ${rsvpResults.errorCount} errors`);
+    
+    const waiverResults = await writeWaiversToDatabase(adultWaivers);
+    console.log(`Waivers: ${waiverResults.successCount} created, ${waiverResults.errorCount} errors`);
+    
+    const minorResults = await writeMinorsToDatabase(minors);
+    console.log(`Minors: ${minorResults.successCount} created, ${minorResults.errorCount} errors`);
     
     console.log('\n✅ Migration completed successfully!');
     

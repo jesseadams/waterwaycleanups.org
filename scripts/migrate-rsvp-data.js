@@ -28,8 +28,8 @@ if (!['staging', 'prod'].includes(environment)) {
 }
 
 // Table names with environment suffix
-const suffix = environment === 'prod' ? '' : `-${environment}`;
-const OLD_EVENT_RSVPS_TABLE = `event_rsvps${suffix}`;
+const suffix = environment === 'prod' ? '-production' : `-${environment}`;
+const OLD_EVENT_RSVPS_TABLE = `event_rsvps`; // Old table has no suffix
 const EVENTS_TABLE = `events${suffix}`;
 const VOLUNTEERS_TABLE = `volunteers${suffix}`;
 const RSVPS_TABLE = `rsvps${suffix}`;

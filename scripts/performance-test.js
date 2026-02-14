@@ -305,7 +305,7 @@ async function testConcurrentLoad(endpoints, concurrentUsers, duration) {
 async function testDatabasePerformance() {
   log('Testing database query performance...', true);
   
-  const suffix = environment === 'prod' ? '' : `-${environment}`;
+  const suffix = environment === 'prod' ? '-production' : `-${environment}`;
   const EVENTS_TABLE = `events${suffix}`;
   
   const queries = [

@@ -31,7 +31,7 @@ if (!['staging', 'prod'].includes(environment)) {
 }
 
 // Table name with environment suffix
-const suffix = environment === 'prod' ? '' : `-${environment}`;
+const suffix = environment === 'prod' ? '-production' : `-${environment}`;
 const EVENTS_TABLE = `events${suffix}`;
 
 console.log(`📅 Populate Events from Markdown`);

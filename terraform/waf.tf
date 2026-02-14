@@ -5,7 +5,7 @@
 # CloudWatch Log Group for WAF logging
 resource "aws_cloudwatch_log_group" "waf_log_group" {
   count             = local.is_production ? 1 : 0
-  name              = "aws-waf-logs-country-block-waf${local.resource_suffix}"
+  name              = "aws-waf-logs-country-block-waf"
   retention_in_days = 90
 
   tags = {
@@ -17,7 +17,7 @@ resource "aws_cloudwatch_log_group" "waf_log_group" {
 # Resource policy to allow WAF to write to CloudWatch Logs
 resource "aws_cloudwatch_log_resource_policy" "waf_log_policy" {
   count       = local.is_production ? 1 : 0
-  policy_name = "waf-log-policy${local.resource_suffix}"
+  policy_name = "waf-log-policy"
 
   policy_document = jsonencode({
     Version = "2012-10-17"
@@ -45,7 +45,7 @@ resource "aws_cloudwatch_log_resource_policy" "waf_log_policy" {
 # Create a Web ACL for CloudFront
 resource "aws_wafv2_web_acl" "geo_block" {
   count       = local.is_production ? 1 : 0
-  name        = "country-block-waf${local.resource_suffix}"
+  name        = "country-block-waf"
   description = "WAF Web ACL to block traffic from specific countries"
   scope       = "CLOUDFRONT" # Using CLOUDFRONT scope since we're associating it with CloudFront
 

@@ -39,7 +39,7 @@ AWS.config.update({
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 // Table names with environment suffix
-const suffix = environment === 'prod' ? '' : `-${environment}`;
+const suffix = environment === 'prod' ? '-production' : `-${environment}`;
 const EVENTS_TABLE = `events${suffix}`;
 const VOLUNTEERS_TABLE = `volunteers${suffix}`;
 const RSVPS_TABLE = `rsvps${suffix}`;
