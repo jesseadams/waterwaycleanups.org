@@ -1,13 +1,11 @@
 import { test, expect } from '../../fixtures/test-fixtures';
 import { EventPage } from '../../pages/EventPage';
 import { DashboardPage } from '../../pages/DashboardPage';
-import { WaiverPage } from '../../pages/WaiverPage';
-import { LoginPage } from '../../pages/LoginPage';
 import { MinorsPage } from '../../pages/MinorsPage';
-import { generateWaiverData, generateTestUser, generateValidationCode, generateTestMinor } from '../../utils/data-generators';
+import { authenticateFreshUserWithWaiver } from '../../utils/fast-auth';
+import { generateTestMinor } from '../../utils/data-generators';
 import { 
-  deleteTestData,
-  insertTestValidationCode
+  deleteTestData
 } from '../../utils/api-helpers';
 
 /**
@@ -32,94 +30,23 @@ test.describe('Multi-Person RSVP Flow', () => {
   let sessionToken: string;
   let testUser: any;
   
-  /**
-   * Helper function to authenticate a fresh user with waiver
-   * Uses the same pattern as working auth/waiver tests
-   */
-  async function authenticateFreshUserWithWaiver(page: any, _request: any) {
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
-    
-    // Step 1: Create waiver through UI
-    const waiverPage = new WaiverPage(page);
-    const waiverData = generateWaiverData(testUser);
-    
-    await waiverPage.goto();
-    await waiverPage.submitCompleteWaiver(testUser.email, waiverData);
-    await page.waitForTimeout(2000);
-    
-    console.log('✅ Waiver created for', testUser.email);
-    
-    // Step 2: Authenticate using LoginPage (same as working tests)
-    const loginPage = new LoginPage(page);
-    
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
-    
-    // Enter email and request code
-    await loginPage.enterEmail(testUser.email);
-    await loginPage.clickSendCode();
-    await page.waitForTimeout(2000);
-    
-    // Insert test validation code
-    await insertTestValidationCode(testUser.email, testCode);
-    await page.waitForTimeout(500);
-    
-    // Enter and verify code through UI
-    await loginPage.enterValidationCode(testCode);
-    await loginPage.clickVerifyCode();
-    await page.waitForTimeout(2000);
-    
-    // Get session token from localStorage
-    const sessionToken = await loginPage.getSessionToken();
-    
-    if (!sessionToken) {
-      throw new Error('No session token after authentication');
-    }
-    
-    console.log('✅ User authenticated:', testUser.email);
-    
-    return { testUser, sessionToken };
-  }
-  
   test.beforeEach(async ({ page, request, testEvent }) => {
     // PRE-TEST CLEANUP: Delete any existing RSVPs for the test event
     // This handles stale data from previous interrupted/failed test runs
     try {
-      const { DynamoDBClient, ScanCommand, DeleteItemCommand } = await import('@aws-sdk/client-dynamodb');
-      const dynamoClient = new DynamoDBClient({ region: 'us-east-1' });
-      const tableName = 'event_rsvps-staging';
+      const { cleanupEventRSVPs } = await import('../../utils/dynamodb-cleanup');
+      const deletedCount = await cleanupEventRSVPs(testEvent);
       
-      // Find all RSVPs for this test event
-      const scanResult = await dynamoClient.send(new ScanCommand({
-        TableName: tableName,
-        FilterExpression: 'event_id = :eventId',
-        ExpressionAttributeValues: {
-          ':eventId': { S: testEvent }
-        }
-      }));
-      
-      if (scanResult.Items && scanResult.Items.length > 0) {
-        console.log(`🧹 PRE-TEST: Cleaning ${scanResult.Items.length} stale RSVPs for event ${testEvent}`);
-        
-        for (const item of scanResult.Items) {
-          await dynamoClient.send(new DeleteItemCommand({
-            TableName: tableName,
-            Key: {
-              event_id: item.event_id,
-              attendee_id: item.attendee_id
-            }
-          }));
-        }
-        console.log(`✅ PRE-TEST: Cleaned up stale RSVPs for ${testEvent}`);
+      if (deletedCount > 0) {
+        console.log(`🧹 PRE-TEST: Cleaned ${deletedCount} stale RSVPs for event ${testEvent}`);
       }
     } catch (error) {
       console.error(`⚠️ PRE-TEST: Error cleaning stale RSVPs:`, error);
       // Continue with test - cleanup is best effort
     }
     
-    // Authenticate a fresh user with waiver for each test
-    const result = await authenticateFreshUserWithWaiver(page, request);
+    // Authenticate a fresh user with waiver (FAST PATH)
+    const result = await authenticateFreshUserWithWaiver(page);
     testUser = result.testUser;
     userEmail = testUser.email;
     sessionToken = result.sessionToken;

@@ -1,18 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { EventPage } from '../../pages/EventPage';
 import { DashboardPage } from '../../pages/DashboardPage';
-import { WaiverPage } from '../../pages/WaiverPage';
 import { LoginPage } from '../../pages/LoginPage';
+import { authenticateFreshUserWithWaiver } from '../../utils/fast-auth';
 import { 
-  generateWaiverData, 
-  generateTestUser, 
-  generateValidationCode,
   generateFullCapacityEvent,
   generateTestEvent
 } from '../../utils/data-generators';
 import { 
   deleteTestData,
-  insertTestValidationCode,
   createTestEvent,
   deleteTestEvent,
   getEventCapacity,
@@ -52,56 +48,6 @@ import {
 test.describe('Event Capacity Race Conditions', () => {
   // Don't use global storage state - each test creates its own users
   test.use({ storageState: { cookies: [], origins: [] } });
-  
-  /**
-   * Helper function to authenticate a fresh user with waiver
-   * Uses the same pattern as working auth/waiver tests
-   */
-  async function authenticateFreshUserWithWaiver(page: any, _request: any) {
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
-    
-    // Step 1: Create waiver through UI
-    const waiverPage = new WaiverPage(page);
-    const waiverData = generateWaiverData(testUser);
-    
-    await waiverPage.goto();
-    await waiverPage.submitCompleteWaiver(testUser.email, waiverData);
-    await page.waitForTimeout(2000);
-    
-    console.log('✅ Waiver created for', testUser.email);
-    
-    // Step 2: Authenticate using LoginPage
-    const loginPage = new LoginPage(page);
-    
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
-    
-    // Enter email and request code
-    await loginPage.enterEmail(testUser.email);
-    await loginPage.clickSendCode();
-    await page.waitForTimeout(2000);
-    
-    // Insert test validation code
-    await insertTestValidationCode(testUser.email, testCode);
-    await page.waitForTimeout(500);
-    
-    // Enter and verify code through UI
-    await loginPage.enterValidationCode(testCode);
-    await loginPage.clickVerifyCode();
-    await page.waitForTimeout(2000);
-    
-    // Get session token from localStorage
-    const sessionToken = await loginPage.getSessionToken();
-    
-    if (!sessionToken) {
-      throw new Error('No session token after authentication');
-    }
-    
-    console.log('✅ User authenticated:', testUser.email);
-    
-    return { testUser, sessionToken };
-  }
 
   /**
    * Property 57: Concurrent RSVP capacity handling
@@ -138,7 +84,7 @@ test.describe('Event Capacity Race Conditions', () => {
       
       // Authenticate all 3 users
       for (let i = 0; i < 3; i++) {
-        const result = await authenticateFreshUserWithWaiver(pages[i], request);
+        const result = await authenticateFreshUserWithWaiver(pages[i]);
         testUsers.push({
           email: result.testUser.email,
           sessionToken: result.sessionToken
@@ -268,7 +214,7 @@ test.describe('Event Capacity Race Conditions', () => {
       
       // Authenticate both users
       for (let i = 0; i < 2; i++) {
-        const result = await authenticateFreshUserWithWaiver(pages[i], request);
+        const result = await authenticateFreshUserWithWaiver(pages[i]);
         testUsers.push({
           email: result.testUser.email,
           sessionToken: result.sessionToken,
@@ -356,7 +302,7 @@ test.describe('Event Capacity Race Conditions', () => {
       console.log(`✅ Test event created: ${eventId} with capacity 5`);
       
       // Authenticate user
-      const result = await authenticateFreshUserWithWaiver(page, request);
+      const result = await authenticateFreshUserWithWaiver(page);
       userEmail = result.testUser.email;
       sessionToken = result.sessionToken;
       
@@ -383,7 +329,8 @@ test.describe('Event Capacity Race Conditions', () => {
       
       // Reload page to see updated count
       await page.reload();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Get updated capacity and count
       const updatedCount = await eventPage.getAttendanceCount();
@@ -437,7 +384,7 @@ test.describe('Event Capacity Race Conditions', () => {
       console.log(`✅ Test event created: ${eventId} with capacity 3`);
       
       // Authenticate user
-      const result = await authenticateFreshUserWithWaiver(page, request);
+      const result = await authenticateFreshUserWithWaiver(page);
       userEmail = result.testUser.email;
       sessionToken = result.sessionToken;
       
@@ -471,7 +418,8 @@ test.describe('Event Capacity Race Conditions', () => {
       
       // Reload page to see updated capacity
       await page.reload();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Get updated capacity
       const updatedCapacity = await eventPage.getAttendanceCap();
@@ -529,7 +477,7 @@ test.describe('Event Capacity Race Conditions', () => {
       
       // Authenticate all 3 users
       for (let i = 0; i < 3; i++) {
-        const result = await authenticateFreshUserWithWaiver(pages[i], request);
+        const result = await authenticateFreshUserWithWaiver(pages[i]);
         testUsers.push({
           email: result.testUser.email,
           sessionToken: result.sessionToken,
@@ -581,7 +529,8 @@ test.describe('Event Capacity Race Conditions', () => {
       
       // User 3: Reload page and verify spot is available
       await pages[2].reload();
-      await pages[2].waitForLoadState('networkidle');
+      await pages[2].waitForLoadState('domcontentloaded');
+      await pages[2].waitForTimeout(500);
       
       // Verify event is no longer at capacity
       await eventPage3.expectNotAtCapacity();

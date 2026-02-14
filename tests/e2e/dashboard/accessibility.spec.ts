@@ -1,13 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { WaiverPage } from '../../pages/WaiverPage';
 import { MinorsPage } from '../../pages/MinorsPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { LoginPage } from '../../pages/LoginPage';
 import { EventPage } from '../../pages/EventPage';
-import { generateWaiverData, generateTestUser, generateValidationCode } from '../../utils/data-generators';
+import { authenticateFreshUserWithWaiver } from '../../utils/fast-auth';
 import { 
-  deleteTestData,
-  insertTestValidationCode
+  deleteTestData
 } from '../../utils/api-helpers';
 import {
   checkA11y,
@@ -41,59 +39,9 @@ test.describe('Accessibility Compliance', () => {
   let sessionToken: string;
   let testUser: any;
   
-  /**
-   * Helper function to authenticate a fresh user with waiver
-   * Uses the same pattern as working auth/waiver tests
-   */
-  async function authenticateFreshUserWithWaiver(page: any, _request: any) {
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
-    
-    // Step 1: Create waiver through UI
-    const waiverPage = new WaiverPage(page);
-    const waiverData = generateWaiverData(testUser);
-    
-    await waiverPage.goto();
-    await waiverPage.submitCompleteWaiver(testUser.email, waiverData);
-    await page.waitForTimeout(2000);
-    
-    console.log('✅ Waiver created for', testUser.email);
-    
-    // Step 2: Authenticate using LoginPage (same as working tests)
-    const loginPage = new LoginPage(page);
-    
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
-    
-    // Enter email and request code
-    await loginPage.enterEmail(testUser.email);
-    await loginPage.clickSendCode();
-    await page.waitForTimeout(2000);
-    
-    // Insert test validation code
-    await insertTestValidationCode(testUser.email, testCode);
-    await page.waitForTimeout(500);
-    
-    // Enter and verify code through UI
-    await loginPage.enterValidationCode(testCode);
-    await loginPage.clickVerifyCode();
-    await page.waitForTimeout(2000);
-    
-    // Get session token from localStorage
-    const sessionToken = await loginPage.getSessionToken();
-    
-    if (!sessionToken) {
-      throw new Error('No session token after authentication');
-    }
-    
-    console.log('✅ User authenticated:', testUser.email);
-    
-    return { testUser, sessionToken };
-  }
-  
   test.beforeEach(async ({ page, request }) => {
-    // Authenticate a fresh user with waiver for each test
-    const result = await authenticateFreshUserWithWaiver(page, request);
+    // Authenticate a fresh user with waiver (FAST PATH)
+    const result = await authenticateFreshUserWithWaiver(page);
     testUser = result.testUser;
     userEmail = testUser.email;
     sessionToken = result.sessionToken;
@@ -460,7 +408,8 @@ test.describe('Accessibility Compliance', () => {
       
       // Test 3: Check events page
       await page.goto('/events');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       await page.waitForTimeout(1000);
       
       console.log('Running color contrast checks on events page...');

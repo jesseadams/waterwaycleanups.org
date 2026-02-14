@@ -1,19 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { authenticateFreshUserWithWaiver } from '../../utils/fast-auth';
 import { EventPage } from '../../pages/EventPage';
 import { DashboardPage } from '../../pages/DashboardPage';
-import { WaiverPage } from '../../pages/WaiverPage';
 import { LoginPage } from '../../pages/LoginPage';
 import { 
-  generateWaiverData, 
-  generateTestUser, 
-  generateValidationCode,
   generatePastEvent,
   generateEventWithinCancellationWindow,
   generateEventOutsideCancellationWindow
 } from '../../utils/data-generators';
 import { 
   deleteTestData,
-  insertTestValidationCode,
   createTestEvent,
   deleteTestEvent
 } from '../../utils/api-helpers';
@@ -39,59 +35,9 @@ test.describe('Time-Based RSVP Restrictions', () => {
   let sessionToken: string;
   let testUser: any;
   
-  /**
-   * Helper function to authenticate a fresh user with waiver
-   * Uses the same pattern as working auth/waiver tests
-   */
-  async function authenticateFreshUserWithWaiver(page: any, _request: any) {
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
-    
-    // Step 1: Create waiver through UI
-    const waiverPage = new WaiverPage(page);
-    const waiverData = generateWaiverData(testUser);
-    
-    await waiverPage.goto();
-    await waiverPage.submitCompleteWaiver(testUser.email, waiverData);
-    await page.waitForTimeout(2000);
-    
-    console.log('✅ Waiver created for', testUser.email);
-    
-    // Step 2: Authenticate using LoginPage (same as working tests)
-    const loginPage = new LoginPage(page);
-    
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
-    
-    // Enter email and request code
-    await loginPage.enterEmail(testUser.email);
-    await loginPage.clickSendCode();
-    await page.waitForTimeout(2000);
-    
-    // Insert test validation code
-    await insertTestValidationCode(testUser.email, testCode);
-    await page.waitForTimeout(500);
-    
-    // Enter and verify code through UI
-    await loginPage.enterValidationCode(testCode);
-    await loginPage.clickVerifyCode();
-    await page.waitForTimeout(2000);
-    
-    // Get session token from localStorage
-    const sessionToken = await loginPage.getSessionToken();
-    
-    if (!sessionToken) {
-      throw new Error('No session token after authentication');
-    }
-    
-    console.log('✅ User authenticated:', testUser.email);
-    
-    return { testUser, sessionToken };
-  }
-  
   test.beforeEach(async ({ page, request }) => {
-    // Authenticate a fresh user with waiver for each test
-    const result = await authenticateFreshUserWithWaiver(page, request);
+    // Authenticate a fresh user with waiver (FAST PATH)
+    const result = await authenticateFreshUserWithWaiver(page);
     testUser = result.testUser;
     userEmail = testUser.email;
     sessionToken = result.sessionToken;
@@ -120,7 +66,9 @@ test.describe('Time-Based RSVP Restrictions', () => {
       
       // Navigate to past event page
       const eventPage = new EventPage(page);
-      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'networkidle' });
+      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Check if page loaded successfully (not 404)
       if (!response || response.status() === 404) {
@@ -207,7 +155,7 @@ test.describe('Time-Based RSVP Restrictions', () => {
       const dashboardPage = new DashboardPage(page);
       await dashboardPage.goto();
       await dashboardPage.waitForDashboardLoad();
-      await page.waitForTimeout(2000);
+      // waitForDashboardLoad already ensures dashboard is ready
       
       const rsvps = await dashboardPage.getRsvpList();
       const hasPastEventRsvp = rsvps.some(rsvp => 
@@ -252,7 +200,9 @@ test.describe('Time-Based RSVP Restrictions', () => {
       
       // Navigate to event page
       const eventPage = new EventPage(page);
-      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'networkidle' });
+      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Check if page loaded successfully (not 404)
       if (!response || response.status() === 404) {
@@ -281,12 +231,14 @@ test.describe('Time-Based RSVP Restrictions', () => {
       const lastName = testUser.lastName;
       await eventPage.completeRsvp(firstName, lastName);
       await eventPage.expectRsvpSuccess();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(500); // Brief wait for backend processing
       
       console.log('✅ RSVP created successfully');
       
       // Navigate back to event page
-      await page.goto(`/events/${testEventId}`, { waitUntil: 'networkidle' });
+      await page.goto(`/events/${testEventId}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       await page.waitForTimeout(2000);
       
       // Attempt to cancel the RSVP
@@ -325,7 +277,7 @@ test.describe('Time-Based RSVP Restrictions', () => {
       const dashboardPage = new DashboardPage(page);
       await dashboardPage.goto();
       await dashboardPage.waitForDashboardLoad();
-      await page.waitForTimeout(2000);
+      // waitForDashboardLoad already ensures dashboard is ready
       
       const rsvps = await dashboardPage.getRsvpList();
       const hasRsvp = rsvps.some(rsvp => rsvp.eventId === testEventId);
@@ -368,7 +320,9 @@ test.describe('Time-Based RSVP Restrictions', () => {
       
       // Navigate to event page
       const eventPage = new EventPage(page);
-      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'networkidle' });
+      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Check if page loaded successfully (not 404)
       if (!response || response.status() === 404) {
@@ -397,7 +351,7 @@ test.describe('Time-Based RSVP Restrictions', () => {
       const lastName = testUser.lastName;
       await eventPage.completeRsvp(firstName, lastName);
       await eventPage.expectRsvpSuccess();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(500); // Brief wait for backend processing
       
       console.log('✅ RSVP created successfully');
       
@@ -405,7 +359,7 @@ test.describe('Time-Based RSVP Restrictions', () => {
       const dashboardPage = new DashboardPage(page);
       await dashboardPage.goto();
       await dashboardPage.waitForDashboardLoad();
-      await page.waitForTimeout(2000);
+      // waitForDashboardLoad already ensures dashboard is ready
       
       let rsvps = await dashboardPage.getRsvpList();
       let hasRsvp = rsvps.some(rsvp => rsvp.eventId === testEventId);
@@ -414,19 +368,21 @@ test.describe('Time-Based RSVP Restrictions', () => {
       console.log('✅ RSVP confirmed in dashboard');
       
       // Navigate back to event page and cancel
-      await page.goto(`/events/${testEventId}`, { waitUntil: 'networkidle' });
+      await page.goto(`/events/${testEventId}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       await page.waitForTimeout(2000);
       
       // Cancel the RSVP
       await eventPage.cancelRsvp();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(500); // Brief wait for backend processing
       
       console.log('✅ Cancellation completed');
       
       // Verify: RSVP removed from dashboard or marked as cancelled
       await dashboardPage.goto();
       await dashboardPage.waitForDashboardLoad();
-      await page.waitForTimeout(2000);
+      // waitForDashboardLoad already ensures dashboard is ready
       
       rsvps = await dashboardPage.getRsvpList();
       const activeRsvps = rsvps.filter(rsvp => 
@@ -471,7 +427,9 @@ test.describe('Time-Based RSVP Restrictions', () => {
       
       // Navigate to past event page
       const eventPage = new EventPage(page);
-      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'networkidle' });
+      const response = await page.goto(`/events/${testEventId}`, { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Check if page loaded successfully (not 404)
       if (!response || response.status() === 404) {
@@ -548,7 +506,7 @@ test.describe('Time-Based RSVP Restrictions', () => {
       const dashboardPage = new DashboardPage(page);
       await dashboardPage.goto();
       await dashboardPage.waitForDashboardLoad();
-      await page.waitForTimeout(2000);
+      // waitForDashboardLoad already ensures dashboard is ready
       
       const rsvps = await dashboardPage.getRsvpList();
       

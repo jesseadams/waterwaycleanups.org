@@ -129,12 +129,15 @@ test.describe('Authentication Flow Properties', () => {
     const mockSessionToken = 'test-session-token-' + Date.now();
     
     // Step 2: Set session token in localStorage
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await loginPage.setSessionToken(mockSessionToken, testUser.email);
     
     // Step 3: Navigate to authenticated page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     
     // Step 4: Verify session token persists across page loads
     const storedToken = await loginPage.getSessionToken();
@@ -142,7 +145,8 @@ test.describe('Authentication Flow Properties', () => {
     
     // Step 5: Navigate to another page
     await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     
     // Verify session token is still present after navigation
     const tokenAfterNavigation = await loginPage.getSessionToken();
@@ -171,12 +175,15 @@ test.describe('Authentication Flow Properties', () => {
     const expiredToken = 'expired-token-' + Date.now();
     
     // Step 2: Set the expired token in localStorage
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await loginPage.setSessionToken(expiredToken, testUser.email);
     
     // Step 3: Try to access an authenticated page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     
     // Step 4: Verify that we're redirected to login (email input is visible)
     // or that the session is cleared
@@ -212,10 +219,13 @@ test.describe('Authentication Flow Properties', () => {
     const mockSessionToken = 'test-session-token-' + Date.now();
     
     // Step 2: Set session token in localStorage
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'load', timeout: 30000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await loginPage.setSessionToken(mockSessionToken, testUser.email);
     await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     
     // Step 3: Verify session is active
     const tokenBeforeLogout = await loginPage.getSessionToken();
@@ -223,7 +233,8 @@ test.describe('Authentication Flow Properties', () => {
     
     // Step 4: Perform logout
     await loginPage.logout();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     
     // Step 5: Verify session data is cleared
     const tokenAfterLogout = await loginPage.getSessionToken();
@@ -239,7 +250,8 @@ test.describe('Authentication Flow Properties', () => {
     
     // Step 8: Try to access authenticated page again
     await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     
     // Should show login form since session is cleared
     const isEmailInputVisible = await loginPage.isEmailInputVisible();

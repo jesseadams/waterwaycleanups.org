@@ -4,6 +4,7 @@ import { WaiverPage } from '../../pages/WaiverPage';
 import { EventPage } from '../../pages/EventPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { MinorsPage } from '../../pages/MinorsPage';
+import { authenticateFreshUserWithWaiver } from '../../utils/fast-auth';
 import { 
   generateTestUser, 
   generateValidationCode, 
@@ -49,7 +50,7 @@ test.describe('Complete User Journey Integration', () => {
     try {
       // Step 1: Navigate to volunteer dashboard (requires authentication)
       await page.goto('/volunteer', { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(1000);
       
       // Step 2: Authenticate as a new user (no waiver yet)
       const loginPage = new LoginPage(page);
@@ -57,7 +58,7 @@ test.describe('Complete User Journey Integration', () => {
       // Enter email and request code
       await loginPage.enterEmail(testUser.email);
       await loginPage.clickSendCode();
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(1000);
       
       // Insert test validation code
       await insertTestValidationCode(testUser.email, testCode);
@@ -66,7 +67,9 @@ test.describe('Complete User Journey Integration', () => {
       // Enter and verify code
       await loginPage.enterValidationCode(testCode);
       await loginPage.clickVerifyCode();
-      await page.waitForTimeout(3000);
+      
+      // Wait for session token to be set
+      await page.waitForFunction(() => localStorage.getItem('sessionToken') !== null, { timeout: 5000 });
       
       // Get session token for cleanup
       sessionToken = await loginPage.getSessionToken();
@@ -114,56 +117,27 @@ test.describe('Complete User Journey Integration', () => {
    * Validates: Requirements 10.2
    */
   test('Property 63: Expired waiver event prompt - renewal prompt shown for active RSVP', async ({ page, request }) => {
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
+    let testUser: any;
     let sessionToken: string | null = null;
     
     try {
-      // Step 1: Create user with waiver
-      const loginPage = new LoginPage(page);
-      const waiverPage = new WaiverPage(page);
+      // Step 1: Create user with waiver using FAST PATH
+      const result = await authenticateFreshUserWithWaiver(page);
+      testUser = result.testUser;
+      sessionToken = result.sessionToken;
       
-      // Navigate to volunteer page with longer timeout
-      await page.goto('/volunteer', { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await page.waitForTimeout(2000);
-      
-      // Authenticate
-      await loginPage.enterEmail(testUser.email);
-      await loginPage.clickSendCode();
-      await page.waitForTimeout(2000);
-      
-      await insertTestValidationCode(testUser.email, testCode);
-      await page.waitForTimeout(500);
-      
-      await loginPage.enterValidationCode(testCode);
-      await loginPage.clickVerifyCode();
-      await page.waitForTimeout(3000);
-      
-      sessionToken = await loginPage.getSessionToken();
-      
-      if (!sessionToken) {
-        throw new Error('No session token after authentication');
-      }
-      
-      // Submit waiver
-      const waiverData = generateWaiverData(testUser);
-      await waiverPage.goto();
-      await waiverPage.fillWaiverForm(waiverData);
-      await waiverPage.submitWaiver();
-      await page.waitForTimeout(2000);
-      
-      console.log('✅ Waiver created for', testUser.email);
+      console.log('✅ User authenticated with waiver:', testUser.email);
       
       // Step 2: Create an RSVP for a future event
       const testEventSlug = 'widewater-state-park-potomac-river-cleanup-july-2026';
       const eventPage = new EventPage(page);
       
       await eventPage.gotoEvent(testEventSlug);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(500);
       
       // Submit RSVP
       await eventPage.completeRsvp(testUser.firstName, testUser.lastName);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(500);
       
       console.log('✅ RSVP created for future event');
       
@@ -203,44 +177,16 @@ test.describe('Complete User Journey Integration', () => {
    * Validates: Requirements 10.3
    */
   test('Property 64: Minor deletion RSVP cancellation - future RSVPs cancelled on deletion', async ({ page, request }) => {
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
+    let testUser: any;
     let sessionToken: string | null = null;
     
     try {
-      // Step 1: Create user with waiver
-      const loginPage = new LoginPage(page);
-      const waiverPage = new WaiverPage(page);
+      // Step 1: Create user with waiver using FAST PATH
+      const result = await authenticateFreshUserWithWaiver(page);
+      testUser = result.testUser;
+      sessionToken = result.sessionToken;
       
-      await page.goto('/volunteer', { waitUntil: 'domcontentloaded', timeout: 60000 });
-      await page.waitForTimeout(2000);
-      
-      // Authenticate
-      await loginPage.enterEmail(testUser.email);
-      await loginPage.clickSendCode();
-      await page.waitForTimeout(2000);
-      
-      await insertTestValidationCode(testUser.email, testCode);
-      await page.waitForTimeout(500);
-      
-      await loginPage.enterValidationCode(testCode);
-      await loginPage.clickVerifyCode();
-      await page.waitForTimeout(3000);
-      
-      sessionToken = await loginPage.getSessionToken();
-      
-      if (!sessionToken) {
-        throw new Error('No session token after authentication');
-      }
-      
-      // Submit waiver
-      const waiverData = generateWaiverData(testUser);
-      await waiverPage.goto();
-      await waiverPage.fillWaiverForm(waiverData);
-      await waiverPage.submitWaiver();
-      await page.waitForTimeout(2000);
-      
-      console.log('✅ Waiver created for', testUser.email);
+      console.log('✅ User authenticated with waiver:', testUser.email);
       
       // Step 2: Add a minor
       const minorData = generateTestMinor();

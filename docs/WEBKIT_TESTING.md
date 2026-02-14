@@ -1,81 +1,46 @@
-# WebKit Testing on Ubuntu 25.04
+# WebKit Testing
 
-## Problem
+## Overview
 
-WebKit (Safari) browser tests fail on Ubuntu 25.04 due to missing `libicu74` library dependency. This is a known issue with newer Ubuntu versions.
+WebKit (Safari) browser tests work perfectly in Docker but fail on Ubuntu 25.04 due to missing `libicu74` library dependency.
 
-## Solution: Docker Container
+## Recommended Approach: Docker Testing
 
-We use Docker to run webkit tests in an Ubuntu 24.04 environment where all dependencies are available.
-
-## Prerequisites
-
-- Docker or Podman installed
-- AWS credentials configured in `~/.aws/credentials` (automatically mounted)
-
-## Running WebKit Tests
-
-### First Time Setup
-
-Build the Docker image:
+Use the Docker testing environment which mirrors GitHub Actions:
 
 ```bash
-npm run test:e2e:webkit:build
+# Build the Docker image (first time only)
+npm run test:e2e:docker:build
+
+# Run all tests (all browsers)
+npm run test:e2e:docker
+
+# Run specific browser
+npm run test:e2e:docker:webkit
+npm run test:e2e:docker:firefox
+npm run test:e2e:docker:chromium
 ```
 
-### Run All WebKit Tests
+See `docs/DOCKER_TESTING.md` for complete documentation.
+
+## Legacy WebKit-Only Docker Setup
+
+The original webkit-only setup still works:
 
 ```bash
-npm run test:e2e:webkit:docker
+npm run test:e2e:webkit:build  # Build webkit-only image
+npm run test:e2e:webkit:docker # Run webkit tests only
 ```
 
-This will:
-1. Start a container with Ubuntu 24.04 and webkit dependencies
-2. Mount your local code and AWS credentials into the container
-3. Run the webkit test suite
-4. Save test results to `./test-results/`
+## Why Docker?
 
-### Run Specific WebKit Tests
-
-```bash
-docker-compose -f docker-compose.playwright.yml run --rm playwright \
-  npx playwright test tests/e2e/auth --project=webkit
-```
-
-Or run a single test file:
-
-```bash
-docker-compose -f docker-compose.playwright.yml run --rm playwright \
-  npx playwright test tests/e2e/dashboard/form-validation.spec.ts --project=webkit
-```
-
-### View Test Reports
-
-Test results are saved to your local `test-results/` directory:
-
-```bash
-npm run test:e2e:report
-```
-
-## How It Works
-
-The Docker setup:
-- Uses the official Playwright Docker image with webkit support
-- Mounts your `~/.aws` directory (read-only) for AWS credentials
-- Sets `CI=true` to enable webkit tests (they're skipped locally by default)
-- Uses `network_mode: host` to access localhost services
-- Preserves test results in your local filesystem
+The Docker environment:
+- Mirrors GitHub Actions (Ubuntu 24.04, Node 18, Hugo 0.147.1)
+- Includes all browser dependencies
+- Automatically mounts AWS credentials
+- Saves test results to local filesystem
+- Works consistently across all machines
 
 ## CI Environment
 
 GitHub Actions uses Ubuntu 22.04 which has proper webkit support, so webkit tests run normally in CI without Docker.
-
-## Alternative: Skip WebKit Locally
-
-If you don't need to run webkit tests locally, they're already configured to skip on non-CI environments in `playwright.config.ts`:
-
-```typescript
-grep: process.env.CI ? undefined : /$^/,
-```
-
-This means webkit tests only run when `CI=true` (in GitHub Actions or Docker).

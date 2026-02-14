@@ -64,8 +64,10 @@ export class WaiverPage {
    * Navigate to the volunteer waiver page
    */
   async goto(): Promise<void> {
-    await this.page.goto('/volunteer-waiver');
-    await this.page.waitForLoadState('networkidle');
+    // Use trailing slash to avoid redirect interruption in webkit
+    await this.page.goto('/volunteer-waiver/', { waitUntil: 'load', timeout: 30000 });
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**

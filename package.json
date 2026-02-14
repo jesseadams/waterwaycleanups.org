@@ -53,6 +53,11 @@
     "test:e2e:chromium": "playwright test --project=chromium",
     "test:e2e:firefox": "playwright test --project=firefox",
     "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:docker": "docker-compose -f docker-compose.test.yml run --rm playwright-test",
+    "test:e2e:docker:build": "docker-compose -f docker-compose.test.yml build",
+    "test:e2e:docker:chromium": "docker-compose -f docker-compose.test.yml run --rm playwright-test npx playwright test --project=chromium",
+    "test:e2e:docker:firefox": "docker-compose -f docker-compose.test.yml run --rm playwright-test npx playwright test --project=firefox",
+    "test:e2e:docker:webkit": "docker-compose -f docker-compose.test.yml run --rm playwright-test npx playwright test --project=webkit",
     "test:e2e:webkit:docker": "docker-compose -f docker-compose.playwright.yml run --rm playwright npx playwright test --project=webkit",
     "test:e2e:webkit:build": "docker-compose -f docker-compose.playwright.yml build",
     "test:e2e:auth": "playwright test tests/e2e/auth",
@@ -61,6 +66,7 @@
     "test:e2e:minors": "playwright test tests/e2e/minors",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:report": "playwright show-report test-results/html-report",
+    "test:e2e:report:open": "open test-results/html-report/index.html || xdg-open test-results/html-report/index.html || start test-results/html-report/index.html",
     "test:e2e:ci": "playwright test --reporter=html,json,junit"
   },
   "dependencies": {

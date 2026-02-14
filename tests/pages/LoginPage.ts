@@ -39,8 +39,9 @@ export class LoginPage {
    * Navigate to the volunteer login page
    */
   async goto(): Promise<void> {
-    await this.page.goto('/volunteer');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.goto('/volunteer', { waitUntil: 'load', timeout: 30000 });
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**

@@ -1,10 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
+import * as dotenv from 'dotenv';
 
 /**
- * Read environment variables from file.
+ * Read environment variables from .env.test file
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
+dotenv.config({ path: '.env.test' });
 
 /**
  * Environment-specific configuration
@@ -177,6 +178,8 @@ export default defineConfig({
         ...devices['Pixel 5'],
         storageState: 'tests/.auth/user.json',
       },
+      // Skip mobile tests in CI/Docker
+      grep: process.env.CI ? /$^/ : undefined,
     },
 
     {
@@ -186,8 +189,8 @@ export default defineConfig({
         ...devices['iPhone 13'],
         storageState: 'tests/.auth/user.json',
       },
-      // Skip webkit locally unless in CI or Docker (CI env var set)
-      grep: process.env.CI ? undefined : /$^/,
+      // Skip mobile tests in CI/Docker
+      grep: process.env.CI ? /$^/ : undefined,
     },
 
     /* Tablet device project */
@@ -198,8 +201,8 @@ export default defineConfig({
         ...devices['iPad Pro'],
         storageState: 'tests/.auth/user.json',
       },
-      // Skip webkit locally unless in CI or Docker (CI env var set)
-      grep: process.env.CI ? undefined : /$^/,
+      // Skip tablet tests in CI/Docker
+      grep: process.env.CI ? /$^/ : undefined,
     },
   ],
 

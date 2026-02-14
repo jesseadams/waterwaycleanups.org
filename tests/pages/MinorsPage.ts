@@ -77,7 +77,8 @@ export class MinorsPage {
    */
   async goto(): Promise<void> {
     await this.page.goto('/volunteer');
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -85,7 +86,8 @@ export class MinorsPage {
    */
   async waitForMinorsAppLoad(): Promise<void> {
     // Wait for page to load
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
     await this.page.waitForTimeout(2000);
     
     // Look for the "Add Minor" button which indicates the minors section is loaded
