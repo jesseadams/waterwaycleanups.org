@@ -11,7 +11,8 @@ locals {
   is_staging    = local.workspace == "staging" || local.workspace == "default"
 
   # Resource name suffix - append to AWS resource names to avoid conflicts
-  resource_suffix = local.is_production ? "" : "-staging"
+  # Uses workspace name directly (e.g., -staging, -production, -dev)
+  resource_suffix = local.workspace == "default" ? "-staging" : "-${local.workspace}"
 
   # Bucket names
   bucket_name = local.is_production ? "waterwaycleanups.org" : "staging.waterwaycleanups.org"
