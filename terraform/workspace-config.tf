@@ -11,8 +11,13 @@ locals {
   is_staging    = local.workspace == "staging" || local.workspace == "default"
 
   # Resource name suffix - append to AWS resource names to avoid conflicts
-  # Uses workspace name directly (e.g., -staging, -production, -dev)
-  resource_suffix = local.workspace == "default" ? "-staging" : "-${local.workspace}"
+  # Production has no suffix to maintain compatibility with existing resources
+  # Other workspaces get their name as suffix
+  resource_suffix = local.is_production ? "" : (local.workspace == "default" ? "-staging" : "-${local.workspace}")
+
+  # DynamoDB table suffix - always includes workspace name for consistency
+  # This allows production and staging tables to coexist
+  dynamodb_suffix = local.workspace == "default" ? "-staging" : "-${local.workspace}"
 
   # Bucket names
   bucket_name = local.is_production ? "waterwaycleanups.org" : "staging.waterwaycleanups.org"

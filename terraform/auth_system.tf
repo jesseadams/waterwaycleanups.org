@@ -2,7 +2,7 @@
 
 # Create DynamoDB tables for authentication system
 resource "aws_dynamodb_table" "auth_codes" {
-  name         = "auth_codes${local.resource_suffix}"
+  name         = "auth_codes${local.dynamodb_suffix}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "email"
 
@@ -28,7 +28,7 @@ resource "aws_dynamodb_table" "auth_codes" {
 }
 
 resource "aws_dynamodb_table" "auth_sessions" {
-  name         = "auth_sessions${local.resource_suffix}"
+  name         = "auth_sessions${local.dynamodb_suffix}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "session_token"
 

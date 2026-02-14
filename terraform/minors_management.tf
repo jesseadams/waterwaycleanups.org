@@ -3,7 +3,7 @@
 
 # Create DynamoDB table for minors
 resource "aws_dynamodb_table" "minors" {
-  name         = "minors${local.resource_suffix}"
+  name         = "minors${local.dynamodb_suffix}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "guardian_email"
   range_key    = "minor_id"

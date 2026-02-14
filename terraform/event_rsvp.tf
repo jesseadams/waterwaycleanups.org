@@ -7,7 +7,7 @@ locals {
 
 # Create DynamoDB table for storing event RSVPs
 resource "aws_dynamodb_table" "event_rsvps" {
-  name         = "${local.event_rsvps_schema.table_name}${local.resource_suffix}"
+  name         = "${local.event_rsvps_schema.table_name}${local.dynamodb_suffix}"
   billing_mode = local.event_rsvps_schema.billing_mode
   hash_key     = local.event_rsvps_schema.hash_key
   range_key    = local.event_rsvps_schema.range_key

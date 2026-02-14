@@ -14,7 +14,7 @@ locals {
 
 # Create DynamoDB table for storing events
 resource "aws_dynamodb_table" "events" {
-  name         = "${local.events_schema.table_name}${local.resource_suffix}"
+  name         = "${local.events_schema.table_name}${local.dynamodb_suffix}"
   billing_mode = local.events_schema.billing_mode
   hash_key     = local.events_schema.hash_key
 
@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "events" {
 
 # Create DynamoDB table for storing volunteer profiles
 resource "aws_dynamodb_table" "volunteers" {
-  name         = "${local.volunteers_schema.table_name}${local.resource_suffix}"
+  name         = "${local.volunteers_schema.table_name}${local.dynamodb_suffix}"
   billing_mode = local.volunteers_schema.billing_mode
   hash_key     = local.volunteers_schema.hash_key
 
@@ -87,7 +87,7 @@ resource "aws_dynamodb_table" "volunteers" {
 
 # Create DynamoDB table for storing normalized RSVP data
 resource "aws_dynamodb_table" "rsvps" {
-  name         = "${local.rsvps_schema.table_name}${local.resource_suffix}"
+  name         = "${local.rsvps_schema.table_name}${local.dynamodb_suffix}"
   billing_mode = local.rsvps_schema.billing_mode
   hash_key     = local.rsvps_schema.hash_key
   range_key    = local.rsvps_schema.range_key

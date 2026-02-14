@@ -7,7 +7,7 @@ locals {
 
 # Create DynamoDB table for storing volunteer waivers
 resource "aws_dynamodb_table" "volunteer_waivers" {
-  name         = "${local.volunteer_waivers_schema.table_name}${local.resource_suffix}"
+  name         = "${local.volunteer_waivers_schema.table_name}${local.dynamodb_suffix}"
   billing_mode = local.volunteer_waivers_schema.billing_mode
   hash_key     = local.volunteer_waivers_schema.hash_key
   range_key    = local.volunteer_waivers_schema.range_key
