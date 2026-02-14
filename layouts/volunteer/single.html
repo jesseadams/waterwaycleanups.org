@@ -2,7 +2,7 @@
 <!-- Load volunteer dashboard CSS -->
 <link rel="stylesheet" href="{{ "css/volunteer-dashboard.css" | relURL }}" />
 
-<div id="volunteer-dashboard-root">
+<main id="volunteer-dashboard-root" role="main">
   <!-- Fallback content while React loads -->
   <div class="min-h-screen bg-gray-100 py-8">
     <div class="container mx-auto px-4">
@@ -12,7 +12,7 @@
       </div>
     </div>
   </div>
-</div>
+</main>
 
 <!-- Load React and dependencies -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -435,6 +435,15 @@
         setIsLoading(true);
         const data = await window.authClient.getDashboard();
         setDashboardData(data);
+        
+        // Check if user has no waiver at all (not just expired) and redirect to waiver page
+        // Only redirect if they've never submitted a waiver (no expiration date exists)
+        if (data && !data.waiver.expirationDate) {
+          console.log('No waiver found - redirecting to waiver page');
+          // Redirect to waiver page for first-time users
+          window.location.href = '/volunteer-waiver';
+          return;
+        }
       } catch (error) {
         setError(error.message);
         if (error.message.includes('authenticated') || error.message.includes('expired')) {

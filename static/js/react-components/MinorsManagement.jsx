@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 const MinorsManagement = ({ sessionToken, apiBase = '/api' }) => {
   const [minors, setMinors] = useState([]);
@@ -7,6 +7,8 @@ const MinorsManagement = ({ sessionToken, apiBase = '/api' }) => {
   const [success, setSuccess] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMinor, setEditingMinor] = useState(null);
+  const [minorPage, setMinorPage] = useState(0);
+  const MINORS_PER_PAGE = 10;
 
   // Form state
   const [formData, setFormData] = useState({
@@ -21,6 +23,25 @@ const MinorsManagement = ({ sessionToken, apiBase = '/api' }) => {
       loadMinors();
     }
   }, [sessionToken]);
+
+  // Memoize paginated minors
+  const paginatedMinors = useMemo(() => {
+    const start = minorPage * MINORS_PER_PAGE;
+    const end = start + MINORS_PER_PAGE;
+    return minors.slice(start, end);
+  }, [minors, minorPage]);
+
+  const totalMinorPages = useMemo(() => {
+    return Math.ceil(minors.length / MINORS_PER_PAGE);
+  }, [minors.length]);
+
+  const handleNextPage = useCallback(() => {
+    setMinorPage(prev => Math.min(prev + 1, totalMinorPages - 1));
+  }, [totalMinorPages]);
+
+  const handlePrevPage = useCallback(() => {
+    setMinorPage(prev => Math.max(prev - 1, 0));
+  }, []);
 
   const loadMinors = async () => {
     setLoading(true);
@@ -268,48 +289,73 @@ const MinorsManagement = ({ sessionToken, apiBase = '/api' }) => {
           <p>No minors on your account yet. Add one above!</p>
         </div>
       ) : (
-        <div className="grid gap-4">
-          {minors.map(minor => (
-            <div key={minor.minor_id} className="card bg-base-100 shadow-md">
-              <div className="card-body">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="card-title">
-                      {minor.first_name} {minor.last_name}
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Age: {minor.age} years old
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      Date of Birth: {minor.date_of_birth}
-                    </p>
-                    {minor.email && (
+        <>
+          <div className="grid gap-4">
+            {paginatedMinors.map(minor => (
+              <div key={minor.minor_id} className="card bg-base-100 shadow-md">
+                <div className="card-body">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="card-title">
+                        {minor.first_name} {minor.last_name}
+                      </h3>
                       <p className="text-sm text-gray-600">
-                        Email: {minor.email}
+                        Age: {minor.age} years old
                       </p>
-                    )}
-                  </div>
-                  <div className="card-actions">
-                    <button
-                      onClick={() => handleEdit(minor)}
-                      className="btn btn-sm btn-ghost"
-                      disabled={loading}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(minor.minor_id)}
-                      className="btn btn-sm btn-error btn-outline"
-                      disabled={loading}
-                    >
-                      Remove
-                    </button>
+                      <p className="text-sm text-gray-600">
+                        Date of Birth: {minor.date_of_birth}
+                      </p>
+                      {minor.email && (
+                        <p className="text-sm text-gray-600">
+                          Email: {minor.email}
+                        </p>
+                      )}
+                    </div>
+                    <div className="card-actions">
+                      <button
+                        onClick={() => handleEdit(minor)}
+                        className="btn btn-sm btn-ghost"
+                        disabled={loading}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(minor.minor_id)}
+                        className="btn btn-sm btn-error btn-outline"
+                        disabled={loading}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+          
+          {/* Pagination Controls */}
+          {totalMinorPages > 1 && (
+            <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
+              <button
+                onClick={handlePrevPage}
+                disabled={minorPage === 0}
+                className="btn btn-sm btn-primary"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">
+                Page {minorPage + 1} of {totalMinorPages} ({minors.length} total minors)
+              </span>
+              <button
+                onClick={handleNextPage}
+                disabled={minorPage >= totalMinorPages - 1}
+                className="btn btn-sm btn-primary"
+              >
+                Next
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

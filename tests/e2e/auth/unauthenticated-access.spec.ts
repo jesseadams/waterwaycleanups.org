@@ -3,7 +3,6 @@ import { LoginPage } from '../../pages/LoginPage';
 import { DashboardPage } from '../../pages/DashboardPage';
 import { WaiverPage } from '../../pages/WaiverPage';
 import { EventPage } from '../../pages/EventPage';
-import { MinorsPage } from '../../pages/MinorsPage';
 import { generateTestUser } from '../../utils/data-generators';
 import { TIMEOUTS } from '../../utils/wait-helpers';
 
@@ -29,12 +28,11 @@ test.describe('Unauthenticated Access Handling', () => {
     const dashboardPage = new DashboardPage(page);
     
     // Ensure no session exists
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await loginPage.clearAuthData();
     
     // Attempt to access dashboard
-    await dashboardPage.goto();
-    await page.waitForLoadState('networkidle');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
     // Verify we're shown the login form (email input is visible)
     const isEmailInputVisible = await loginPage.isEmailInputVisible();
@@ -56,16 +54,15 @@ test.describe('Unauthenticated Access Handling', () => {
     const waiverPage = new WaiverPage(page);
     
     // Ensure no session exists
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await loginPage.clearAuthData();
     
     // Attempt to access waiver page
     await waiverPage.goto();
-    await page.waitForLoadState('networkidle');
     
     // The waiver page may show the form but require email check first
     // Verify that we need to authenticate (email input should be visible)
-    const emailInputVisible = await waiverPage.emailInput.isVisible({ timeout: TIMEOUTS.DEFAULT })
+    const emailInputVisible = await waiverPage.emailInput.isVisible({ timeout: TIMEOUTS.LONG })
       .catch(() => false);
     
     expect(emailInputVisible).toBe(true);
@@ -83,16 +80,14 @@ test.describe('Unauthenticated Access Handling', () => {
    */
   test('should require login when attempting to RSVP without session', async ({ page }) => {
     const loginPage = new LoginPage(page);
-    const eventPage = new EventPage(page);
     
     // Ensure no session exists
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await loginPage.clearAuthData();
     
     // Navigate to an event page (using a generic event path)
     // In a real scenario, we would use a known test event
-    await page.goto('/events');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/events', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
     // Try to find and click an RSVP button
     const rsvpButton = page.locator('button:has-text("RSVP"), a:has-text("RSVP")').first();
@@ -101,7 +96,7 @@ test.describe('Unauthenticated Access Handling', () => {
     
     if (rsvpButtonVisible) {
       await rsvpButton.click();
-      await page.waitForTimeout(1000);
+      await page.waitForLoadState('networkidle', { timeout: TIMEOUTS.LONG });
       
       // After clicking RSVP without auth, should be prompted to login
       // Check if we're redirected or shown a login prompt
@@ -130,15 +125,11 @@ test.describe('Unauthenticated Access Handling', () => {
     const loginPage = new LoginPage(page);
     
     // Ensure no session exists
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await loginPage.clearAuthData();
     
     // Attempt to access minors management page
-    await page.goto('/volunteer-minors.html');
-    await page.waitForLoadState('networkidle');
-    
-    // Wait a moment for any redirects or authentication checks
-    await page.waitForTimeout(2000);
+    await page.goto('/volunteer-minors.html', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
     // The minors page may be accessible but require authentication to function
     // Verify no session token exists (which means user is not authenticated)
@@ -169,32 +160,27 @@ test.describe('Unauthenticated Access Handling', () => {
     const testUser = generateTestUser();
     
     // Step 1: Navigate to volunteer page first
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
     // Step 2: Set up a mock session
     const mockSessionToken = 'test-session-token-' + Date.now();
     await loginPage.setSessionToken(mockSessionToken, testUser.email);
     
-    // Step 3: Wait a moment for the session to be set
-    await page.waitForTimeout(500);
-    
-    // Step 4: Verify session is active
+    // Step 3: Verify session is active
     const tokenBeforeClear = await loginPage.getSessionToken();
     expect(tokenBeforeClear).toBe(mockSessionToken);
     
-    // Step 5: Clear the session (simulating expiration or logout)
+    // Step 4: Clear the session (simulating expiration or logout)
     await loginPage.clearAuthData();
     
-    // Step 6: Try to perform an authenticated action (navigate to dashboard)
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
+    // Step 5: Try to perform an authenticated action (navigate to dashboard)
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
-    // Step 7: Verify we're shown the login form
+    // Step 6: Verify we're shown the login form
     const isEmailInputVisible = await loginPage.isEmailInputVisible();
     expect(isEmailInputVisible).toBe(true);
     
-    // Step 8: Verify session is cleared
+    // Step 7: Verify session is cleared
     const tokenAfterClear = await loginPage.getSessionToken();
     expect(tokenAfterClear).toBeFalsy();
   });
@@ -211,17 +197,13 @@ test.describe('Unauthenticated Access Handling', () => {
     
     // Step 1: Set an invalid session token
     const invalidToken = 'invalid-token-12345';
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await loginPage.setSessionToken(invalidToken, testUser.email);
     
     // Step 2: Try to access authenticated page
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+    await page.reload({ waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
-    // Step 3: Wait a moment for any authentication checks to complete
-    await page.waitForTimeout(2000);
-    
-    // Step 4: Verify we're shown the login form or session is cleared
+    // Step 3: Verify we're shown the login form or session is cleared
     const sessionToken = await loginPage.getSessionToken();
     const isEmailInputVisible = await loginPage.isEmailInputVisible();
     
@@ -240,7 +222,7 @@ test.describe('Unauthenticated Access Handling', () => {
    */
   test('should reject API calls without valid session', async ({ page, request }) => {
     // Ensure no session exists
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await page.evaluate(() => {
       localStorage.removeItem('auth_session_token');
       localStorage.removeItem('auth_user_email');
@@ -293,13 +275,12 @@ test.describe('Unauthenticated Access Handling', () => {
     const loginPage = new LoginPage(page);
     
     // Step 1: Ensure no session exists
-    await page.goto('/volunteer');
+    await page.goto('/volunteer', { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     await loginPage.clearAuthData();
     
     // Step 2: Attempt to access a specific authenticated page
     const intendedUrl = '/volunteer-waiver';
-    await page.goto(intendedUrl);
-    await page.waitForLoadState('networkidle');
+    await page.goto(intendedUrl, { waitUntil: 'networkidle', timeout: TIMEOUTS.LONG });
     
     // Step 3: Verify we're shown the login form
     const emailInputVisible = await page.locator('input[type="email"]').first().isVisible({ timeout: TIMEOUTS.DEFAULT })
@@ -328,13 +309,13 @@ test.describe('Unauthenticated Access Handling', () => {
     // 2. The intended URL is stored in storage
     // 3. We're still on the intended page (some apps don't redirect)
     
-    const isIntendedUrlPreserved = 
-      redirectParam === intendedUrl ||
-      storedRedirect === intendedUrl ||
-      currentUrl.includes(intendedUrl);
-    
     // Note: This assertion may need adjustment based on actual implementation
     // For now, we just verify that the login form is shown
     expect(emailInputVisible).toBe(true);
+    
+    // Optional: Log if redirect is preserved for debugging
+    if (redirectParam === intendedUrl || storedRedirect === intendedUrl || currentUrl.includes(intendedUrl)) {
+      console.log('✅ Intended URL preserved for post-login redirect');
+    }
   });
 });

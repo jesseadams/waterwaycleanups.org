@@ -67,7 +67,8 @@ export const test = base.extend<AuthFixture>({
       await page.reload();
       
       // Wait for authentication to be processed
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Provide authenticated page to test
       await use(page);

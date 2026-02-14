@@ -43,7 +43,8 @@ test.describe('Waiver Lifecycle Properties', () => {
     
     // Step 1: Authenticate
     await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await loginPage.enterEmail(testUser.email);
     await loginPage.clickSendCode();
     await page.waitForTimeout(2000);
@@ -70,7 +71,8 @@ test.describe('Waiver Lifecycle Properties', () => {
     await waiverPage.goto();
     await waiverPage.fillWaiverForm(waiverData);
     await waiverPage.submitWaiver();
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await page.waitForTimeout(3000);
     
     // Verify we're on the dashboard (waiver submitted successfully)
@@ -180,7 +182,8 @@ test.describe('Waiver Lifecycle Properties', () => {
       
       await waiverPage.fillWaiverForm(renewalWaiverData);
       await waiverPage.submitWaiver();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       await page.waitForTimeout(3000);
       
       // Navigate to dashboard

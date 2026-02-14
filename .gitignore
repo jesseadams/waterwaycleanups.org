@@ -71,3 +71,6 @@ playwright-report/
 playwright/.cache/
 .env.test
 tests/.auth/
+
+test-results*.json/*
+*.log

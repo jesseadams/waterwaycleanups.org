@@ -76,7 +76,8 @@ export class EventPage {
   async gotoEvent(eventId: string): Promise<void> {
     // Event URLs are typically /events/{event-slug}
     await this.page.goto(`/events/${eventId}`);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -85,7 +86,8 @@ export class EventPage {
    */
   async gotoEventByPath(eventPath: string): Promise<void> {
     await this.page.goto(eventPath);
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**

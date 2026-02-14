@@ -23,7 +23,8 @@ async function authenticateUser(page: Page): Promise<{ email: string; sessionTok
   
   // Navigate to login page (will show login form if not authenticated)
   await page.goto('/volunteer');
-  await page.waitForLoadState('networkidle');
+  await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
   
   // Check if already authenticated (from global setup)
   const existingToken = await loginPage.getSessionToken();
@@ -45,7 +46,9 @@ async function authenticateUser(page: Page): Promise<{ email: string; sessionTok
   
   await loginPage.enterValidationCode(testCode);
   await loginPage.clickVerifyCode();
-  await page.waitForTimeout(2000);
+  
+  // Wait for session token to be set
+  await page.waitForFunction(() => localStorage.getItem('sessionToken') !== null, { timeout: 5000 });
   
   const sessionToken = await loginPage.getSessionToken();
   
@@ -100,7 +103,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 6: Verify that attempting to access authenticated content prompts for re-auth
       await page.reload();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Should show login form since session expired
       const isEmailInputVisible = await loginPage.isEmailInputVisible();
@@ -141,7 +145,8 @@ test.describe('Session Management Edge Cases', () => {
       const loginPage2 = new LoginPage(page2);
       
       await page2.goto('/volunteer');
-      await page2.waitForLoadState('networkidle');
+      await page2.waitForLoadState('domcontentloaded');
+      await page2.waitForTimeout(500);
       
       // Step 4: Verify session is shared in second tab (same browser context)
       const token2 = await loginPage2.getSessionToken();
@@ -193,7 +198,8 @@ test.describe('Session Management Edge Cases', () => {
       const loginPage2 = new LoginPage(page2);
       
       await page2.goto('/volunteer');
-      await page2.waitForLoadState('networkidle');
+      await page2.waitForLoadState('domcontentloaded');
+      await page2.waitForTimeout(500);
       
       // Step 3: Verify both tabs have the session
       const token1Before = await loginPage1.getSessionToken();
@@ -203,7 +209,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 4: Logout from first tab
       await loginPage1.logout();
-      await page1.waitForLoadState('networkidle');
+      await page1.waitForLoadState('domcontentloaded');
+      await page1.waitForTimeout(500);
       
       // Step 5: Verify session is cleared in first tab
       const token1After = await loginPage1.getSessionToken();
@@ -211,7 +218,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 6: Reload second tab and verify session is also cleared there
       await page2.reload();
-      await page2.waitForLoadState('networkidle');
+      await page2.waitForLoadState('domcontentloaded');
+      await page2.waitForTimeout(500);
       
       const token2After = await loginPage2.getSessionToken();
       expect(token2After).toBeFalsy();
@@ -299,7 +307,8 @@ test.describe('Session Management Edge Cases', () => {
     
     // Step 7: Navigate to authenticated page
     await page2.goto('/volunteer');
-    await page2.waitForLoadState('networkidle');
+    await page2.waitForLoadState('domcontentloaded');
+    await page2.waitForTimeout(500);
     
     // Step 8: Verify session is restored
     const tokenAfter = await loginPage2.getSessionToken();
@@ -339,7 +348,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 3: Navigate to another page
       await page.goto('/');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Step 4: Verify session persists on public page
       const tokenOnPublicPage = await loginPage.getSessionToken();
@@ -347,7 +357,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 5: Navigate to events page
       await page.goto('/events');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Step 6: Verify session still persists
       const tokenOnEventsPage = await loginPage.getSessionToken();
@@ -355,7 +366,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 7: Use browser back button
       await page.goBack();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Step 8: Verify session maintained after back navigation
       const tokenAfterBack = await loginPage.getSessionToken();
@@ -363,7 +375,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 9: Use browser forward button
       await page.goForward();
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Step 10: Verify session maintained after forward navigation
       const tokenAfterForward = await loginPage.getSessionToken();
@@ -371,7 +384,8 @@ test.describe('Session Management Edge Cases', () => {
       
       // Step 11: Navigate back to volunteer dashboard
       await page.goto('/volunteer');
-      await page.waitForLoadState('networkidle');
+      await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
       
       // Step 12: Verify session is still active
       const finalToken = await loginPage.getSessionToken();

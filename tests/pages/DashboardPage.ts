@@ -82,10 +82,11 @@ export class DashboardPage {
    * Navigate to the volunteer dashboard
    */
   async goto(): Promise<void> {
-    await this.page.goto('/volunteer', { waitUntil: 'networkidle' });
-    // Force reload to bypass cache
-    await this.page.reload({ waitUntil: 'networkidle' });
-    await waitForNetworkIdle(this.page, TIMEOUTS.LONG);
+    // Use 'load' instead of 'networkidle' for better reliability across browsers
+    await this.page.goto('/volunteer', { waitUntil: 'load', timeout: 30000 });
+    // Wait for page to be ready
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -179,16 +180,16 @@ export class DashboardPage {
   async getRsvpList(): Promise<RsvpItem[]> {
     await this.waitForDashboardLoad();
     
-    // Wait a bit for React to render the dashboard data
-    await this.page.waitForTimeout(2000);
+    // Wait for React to render by checking for the RSVP heading
+    const rsvpHeading = this.page.locator('h3:has-text("Event RSVPs")');
+    await rsvpHeading.waitFor({ state: 'visible', timeout: TIMEOUTS.DEFAULT }).catch(() => {});
     
     // The RSVPs are rendered by React in a specific structure:
     // - Container: div with "Event RSVPs" heading
     // - List: div.space-y-2 containing RSVP items
     // - Items: div.bg-white.p-3.rounded.border for each RSVP
     
-    // First check if there's an "Event RSVPs" section
-    const rsvpHeading = this.page.locator('h3:has-text("Event RSVPs")');
+    // Check if there's an "Event RSVPs" section
     const headingVisible = await rsvpHeading.isVisible({ timeout: TIMEOUTS.SHORT })
       .catch(() => false);
     
@@ -340,7 +341,8 @@ export class DashboardPage {
    */
   async clickSubmitWaiver(): Promise<void> {
     await this.submitWaiverButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**
@@ -348,7 +350,8 @@ export class DashboardPage {
    */
   async clickManageMinors(): Promise<void> {
     await this.manageMinorsButton.click();
-    await this.page.waitForLoadState('networkidle');
+    await this.page.waitForLoadState('domcontentloaded');
+    await this.page.waitForTimeout(500);
   }
 
   /**

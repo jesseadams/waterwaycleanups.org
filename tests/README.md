@@ -23,6 +23,21 @@ npx playwright install
 
 2. Update the environment variables in `.env.test` based on your testing needs.
 
+3. **DynamoDB Configuration**: The tests use direct DynamoDB operations for faster test execution. Configure the table names in `.env.test`:
+   ```bash
+   # DynamoDB Table Names (for direct test data operations)
+   DYNAMODB_WAIVERS_TABLE=waivers-staging
+   DYNAMODB_VALIDATION_CODES_TABLE=validation_codes-staging
+   DYNAMODB_EVENT_RSVPS_TABLE=event_rsvps-staging
+   DYNAMODB_MINORS_TABLE=minors-staging
+   DYNAMODB_USER_SESSIONS_TABLE=user_sessions-staging
+   ```
+
+4. **AWS Credentials**: Ensure your AWS credentials are configured either through:
+   - Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
+   - AWS credentials file (`~/.aws/credentials`)
+   - IAM role (if running in AWS environment)
+
 ## Running Tests
 
 ### All Tests

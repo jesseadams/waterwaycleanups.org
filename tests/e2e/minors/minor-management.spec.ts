@@ -1,15 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { MinorsPage } from '../../pages/MinorsPage';
-import { LoginPage } from '../../pages/LoginPage';
-import { WaiverPage } from '../../pages/WaiverPage';
+import { authenticateFreshUserWithWaiver } from '../../utils/fast-auth';
 import { 
-  generateTestUser, 
-  generateValidationCode, 
-  generateWaiverData,
   generateTestMinor,
   calculateAge
 } from '../../utils/data-generators';
-import { insertTestValidationCode } from '../../utils/api-helpers';
 
 /**
  * Minor Management Property-Based Tests
@@ -25,68 +20,6 @@ test.describe('Minor Management Properties', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
   
   /**
-   * Helper function to authenticate a fresh user and submit waiver
-   */
-  async function authenticateUserWithWaiver(page: any) {
-    const loginPage = new LoginPage(page);
-    const waiverPage = new WaiverPage(page);
-    const testUser = generateTestUser();
-    const testCode = generateValidationCode();
-    
-    // Step 1: Authenticate
-    await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
-    await loginPage.enterEmail(testUser.email);
-    await loginPage.clickSendCode();
-    await page.waitForTimeout(2000);
-    await insertTestValidationCode(testUser.email, testCode);
-    await page.waitForTimeout(500);
-    await loginPage.enterValidationCode(testCode);
-    await loginPage.clickVerifyCode();
-    await page.waitForTimeout(3000);
-    
-    // Verify all auth data is set
-    const authData = await page.evaluate(() => ({
-      sessionToken: localStorage.getItem('auth_session_token'),
-      userEmail: localStorage.getItem('auth_user_email'),
-      sessionExpiry: localStorage.getItem('auth_session_expiry')
-    }));
-    
-    if (!authData.sessionToken || !authData.userEmail || !authData.sessionExpiry) {
-      console.error('Auth data missing:', authData);
-      throw new Error('Authentication data not properly set');
-    }
-    
-    // Step 2: Submit waiver (required before managing minors)
-    const waiverData = generateWaiverData(testUser);
-    await waiverPage.goto();
-    await waiverPage.fillWaiverForm(waiverData);
-    await waiverPage.submitWaiver();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(3000);
-    
-    // Verify we're on the dashboard (waiver submitted successfully)
-    const currentUrl = page.url();
-    if (!currentUrl.includes('/volunteer')) {
-      throw new Error('Waiver submission did not redirect to dashboard');
-    }
-    
-    // Verify auth data is still present after waiver submission
-    const authDataAfterWaiver = await page.evaluate(() => ({
-      sessionToken: localStorage.getItem('auth_session_token'),
-      userEmail: localStorage.getItem('auth_user_email'),
-      sessionExpiry: localStorage.getItem('auth_session_expiry')
-    }));
-    
-    if (!authDataAfterWaiver.sessionToken || !authDataAfterWaiver.userEmail || !authDataAfterWaiver.sessionExpiry) {
-      console.error('Auth data lost after waiver:', authDataAfterWaiver);
-      throw new Error('Authentication data lost after waiver submission');
-    }
-    
-    return testUser;
-  }
-  
-  /**
    * Property 15: Minor creation
    * Feature: volunteer-ux-playwright-testing, Property 15: Minor creation
    * 
@@ -99,7 +32,7 @@ test.describe('Minor Management Properties', () => {
     const minorsPage = new MinorsPage(page);
     
     // Authenticate user with waiver
-    await authenticateUserWithWaiver(page);
+    const { testUser } = await authenticateFreshUserWithWaiver(page);
     
     // Generate test minor data
     const minorData = generateTestMinor();
@@ -145,7 +78,7 @@ test.describe('Minor Management Properties', () => {
     const minorsPage = new MinorsPage(page);
     
     // Authenticate user with waiver
-    await authenticateUserWithWaiver(page);
+    const { testUser } = await authenticateFreshUserWithWaiver(page);
     
     // Generate test minor data
     const minorData = generateTestMinor();
@@ -190,7 +123,7 @@ test.describe('Minor Management Properties', () => {
     const minorsPage = new MinorsPage(page);
     
     // Authenticate user with waiver
-    await authenticateUserWithWaiver(page);
+    const { testUser } = await authenticateFreshUserWithWaiver(page);
     
     // Generate test minor data
     const minorData = generateTestMinor();
@@ -230,7 +163,7 @@ test.describe('Minor Management Properties', () => {
     const minorsPage = new MinorsPage(page);
     
     // Authenticate user with waiver
-    await authenticateUserWithWaiver(page);
+    const { testUser } = await authenticateFreshUserWithWaiver(page);
     
     // Generate test minor data
     const minorData = generateTestMinor();
@@ -276,7 +209,7 @@ test.describe('Minor Management Properties', () => {
     const minorsPage = new MinorsPage(page);
     
     // Authenticate user with waiver
-    await authenticateUserWithWaiver(page);
+    const { testUser } = await authenticateFreshUserWithWaiver(page);
     
     // Generate minor with future date of birth (invalid)
     const futureDate = new Date();

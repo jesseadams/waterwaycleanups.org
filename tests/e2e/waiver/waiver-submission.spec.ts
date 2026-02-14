@@ -27,7 +27,8 @@ test.describe('Waiver Submission Properties', () => {
     const testCode = generateValidationCode();
     
     await page.goto('/volunteer');
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await loginPage.enterEmail(testUser.email);
     await loginPage.clickSendCode();
     await page.waitForTimeout(2000);
@@ -67,7 +68,8 @@ test.describe('Waiver Submission Properties', () => {
     //await page.waitForURL('/volunteer', { timeout: 10000 });
 
     // Wait for the volunteer dashboard components to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await page.waitForTimeout(2000);
     
     // Verify we successfully redirected to the volunteer dashboard
@@ -201,11 +203,13 @@ test.describe('Waiver Submission Properties', () => {
     //await page.waitForURL('/volunteer', { timeout: 10000 });
 
     // Wait for the volunteer dashboard components to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await page.waitForTimeout(2000);
     
     // Wait for the volunteer dashboard components to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await page.waitForTimeout(2000);
     
     // Look for expiration date in the dashboard content
@@ -247,7 +251,8 @@ test.describe('Waiver Submission Properties', () => {
     //await page.waitForURL('/volunteer', { timeout: 10000 });
     
     // Wait for the volunteer dashboard components to load
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+    await page.waitForTimeout(500);
     await page.waitForTimeout(2000);
     
     // Verify we're on the volunteer dashboard
