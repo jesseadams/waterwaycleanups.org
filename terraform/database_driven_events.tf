@@ -83,51 +83,6 @@ resource "aws_dynamodb_table" "volunteers" {
   }
 }
 
-# ===== RSVPS TABLE (NORMALIZED) =====
-
-# Create DynamoDB table for storing normalized RSVP data
-resource "aws_dynamodb_table" "rsvps" {
-  name         = "${local.rsvps_schema.table_name}${local.dynamodb_suffix}"
-  billing_mode = local.rsvps_schema.billing_mode
-  hash_key     = local.rsvps_schema.hash_key
-  range_key    = local.rsvps_schema.range_key
-
-  # Create attributes dynamically from schema
-  dynamic "attribute" {
-    for_each = local.rsvps_schema.attributes
-    content {
-      name = attribute.value.name
-      type = attribute.value.type
-    }
-  }
-
-  # Global Secondary Index for querying RSVPs by volunteer email
-  global_secondary_index {
-    name            = "email-created_at-index"
-    hash_key        = "email"
-    range_key       = "created_at"
-    projection_type = "ALL"
-  }
-
-  # Global Secondary Index for querying RSVPs by status
-  global_secondary_index {
-    name            = "status-index"
-    hash_key        = "status"
-    projection_type = "ALL"
-  }
-
-  point_in_time_recovery {
-    enabled = true
-  }
-
-  tags = {
-    Name        = "rsvps${local.resource_suffix}"
-    Environment = var.environment
-    Project     = "waterwaycleanups"
-    Schema      = "rsvps-table.json"
-  }
-}
-
 # ===== IAM ROLES AND POLICIES =====
 
 # IAM Role for Lambda functions to access the new DynamoDB tables
@@ -181,8 +136,8 @@ resource "aws_iam_policy" "events_lambda_policy" {
           # Volunteers table
           aws_dynamodb_table.volunteers.arn,
           # RSVPs table and indexes
-          aws_dynamodb_table.rsvps.arn,
-          "${aws_dynamodb_table.rsvps.arn}/index/*",
+          aws_dynamodb_table.event_rsvps.arn,
+          "${aws_dynamodb_table.event_rsvps.arn}/index/*",
           # Minors table
           aws_dynamodb_table.minors.arn,
           # Volunteer waivers table
@@ -264,7 +219,7 @@ output "volunteers_table_name" {
 
 output "rsvps_table_name" {
   description = "Name of the RSVPs DynamoDB table"
-  value       = aws_dynamodb_table.rsvps.name
+  value       = aws_dynamodb_table.event_rsvps.name
 }
 
 output "events_lambda_role_arn" {
@@ -526,7 +481,7 @@ resource "aws_lambda_function" "events_update" {
     variables = {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
     }
   }
 
@@ -551,7 +506,7 @@ resource "aws_lambda_function" "events_delete" {
   environment {
     variables = {
       EVENTS_TABLE_NAME = aws_dynamodb_table.events.name
-      RSVPS_TABLE_NAME  = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
     }
   }
 
@@ -575,7 +530,7 @@ resource "aws_lambda_function" "events_list_rsvps" {
   environment {
     variables = {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
     }
   }
@@ -602,7 +557,7 @@ resource "aws_lambda_function" "volunteers_get" {
   environment {
     variables = {
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
     }
   }
 
@@ -649,7 +604,7 @@ resource "aws_lambda_function" "volunteers_rsvps" {
   environment {
     variables = {
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
     }
   }
@@ -674,7 +629,7 @@ resource "aws_lambda_function" "volunteers_export" {
   environment {
     variables = {
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
     }
   }
 
@@ -724,7 +679,7 @@ resource "aws_lambda_function" "events_lifecycle" {
   environment {
     variables = {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
       SNS_TOPIC_ARN         = aws_sns_topic.events_topic.arn
     }
@@ -1454,7 +1409,7 @@ resource "aws_ssm_parameter" "rsvps_table_name" {
   name        = "/waterwaycleanups${local.resource_suffix}/rsvps_table_name"
   description = "Name of the RSVPs DynamoDB table"
   type        = "String"
-  value       = aws_dynamodb_table.rsvps.name
+  value       = aws_dynamodb_table.event_rsvps.name
 
   tags = {
     Environment = var.environment
@@ -1522,7 +1477,7 @@ resource "aws_lambda_function" "events_export" {
   environment {
     variables = {
       EVENTS_TABLE_NAME = aws_dynamodb_table.events.name
-      RSVPS_TABLE_NAME  = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
     }
   }
 
@@ -1546,7 +1501,7 @@ resource "aws_lambda_function" "analytics" {
   environment {
     variables = {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
     }
   }
@@ -1571,7 +1526,7 @@ resource "aws_lambda_function" "volunteer_metrics" {
   environment {
     variables = {
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
     }
   }

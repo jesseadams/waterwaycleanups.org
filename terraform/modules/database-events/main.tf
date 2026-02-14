@@ -150,7 +150,7 @@ resource "aws_ssm_parameter" "rsvps_table_name" {
   name        = "/waterwaycleanups${var.resource_suffix}/rsvps_table_name"
   description = "Name of the RSVPs DynamoDB table"
   type        = "String"
-  value       = aws_dynamodb_table.rsvps.name
+  value       = aws_dynamodb_table.event_rsvps.name
 
   tags = var.common_tags
 }

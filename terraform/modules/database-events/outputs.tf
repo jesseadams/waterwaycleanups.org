@@ -22,12 +22,12 @@ output "volunteers_table_arn" {
 
 output "rsvps_table_name" {
   description = "Name of the RSVPs DynamoDB table"
-  value       = aws_dynamodb_table.rsvps.name
+  value       = aws_dynamodb_table.event_rsvps.name
 }
 
 output "rsvps_table_arn" {
   description = "ARN of the RSVPs DynamoDB table"
-  value       = aws_dynamodb_table.rsvps.arn
+  value       = aws_dynamodb_table.event_rsvps.arn
 }
 
 output "table_arns" {
@@ -36,8 +36,8 @@ output "table_arns" {
     aws_dynamodb_table.events.arn,
     "${aws_dynamodb_table.events.arn}/index/*",
     aws_dynamodb_table.volunteers.arn,
-    aws_dynamodb_table.rsvps.arn,
-    "${aws_dynamodb_table.rsvps.arn}/index/*"
+    aws_dynamodb_table.event_rsvps.arn,
+    "${aws_dynamodb_table.event_rsvps.arn}/index/*"
   ]
 }
 

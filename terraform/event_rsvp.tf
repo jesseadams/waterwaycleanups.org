@@ -91,8 +91,6 @@ resource "aws_iam_policy" "event_rsvp_lambda_policy" {
           "${aws_dynamodb_table.events.arn}/index/*",
           aws_dynamodb_table.volunteers.arn,
           "${aws_dynamodb_table.volunteers.arn}/index/*",
-          aws_dynamodb_table.rsvps.arn,
-          "${aws_dynamodb_table.rsvps.arn}/index/*",
           # Auth sessions table for session validation
           aws_dynamodb_table.auth_sessions.arn,
           "${aws_dynamodb_table.auth_sessions.arn}/index/*",
@@ -191,7 +189,7 @@ resource "aws_lambda_function" "event_rsvp_check" {
     variables = {
       EVENTS_TABLE_NAME       = aws_dynamodb_table.events.name
       VOLUNTEERS_TABLE_NAME   = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME        = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME        = aws_dynamodb_table.event_rsvps.name
       EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
     }
   }
@@ -213,7 +211,7 @@ resource "aws_lambda_function" "event_rsvp_submit" {
     variables = {
       EVENTS_TABLE_NAME       = aws_dynamodb_table.events.name
       VOLUNTEERS_TABLE_NAME   = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME        = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME        = aws_dynamodb_table.event_rsvps.name
       EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
       MINORS_TABLE_NAME       = aws_dynamodb_table.minors.name
       SESSIONS_TABLE_NAME     = aws_dynamodb_table.auth_sessions.name
@@ -237,7 +235,7 @@ resource "aws_lambda_function" "event_rsvp_list" {
     variables = {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
     }
   }
 }
@@ -258,7 +256,7 @@ resource "aws_lambda_function" "event_rsvp_cancel" {
     variables = {
       EVENTS_TABLE_NAME       = aws_dynamodb_table.events.name
       VOLUNTEERS_TABLE_NAME   = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME        = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME        = aws_dynamodb_table.event_rsvps.name
       EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
       SESSIONS_TABLE_NAME     = aws_dynamodb_table.auth_sessions.name
       MINORS_TABLE_NAME       = aws_dynamodb_table.minors.name
@@ -281,7 +279,7 @@ resource "aws_lambda_function" "event_rsvp_noshow" {
     variables = {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.rsvps.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
     }
   }
 }

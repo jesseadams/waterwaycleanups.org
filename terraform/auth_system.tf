@@ -124,7 +124,7 @@ resource "aws_iam_policy" "auth_lambda_policy" {
           # New normalized tables
           aws_dynamodb_table.events.arn,
           aws_dynamodb_table.volunteers.arn,
-          aws_dynamodb_table.rsvps.arn,
+          aws_dynamodb_table.event_rsvps.arn,
           "${aws_dynamodb_table.auth_codes.arn}/index/*",
           "${aws_dynamodb_table.auth_sessions.arn}/index/*",
           "${aws_dynamodb_table.volunteer_waivers.arn}/index/*",
@@ -132,7 +132,7 @@ resource "aws_iam_policy" "auth_lambda_policy" {
           # New normalized table indexes
           "${aws_dynamodb_table.events.arn}/index/*",
           "${aws_dynamodb_table.volunteers.arn}/index/*",
-          "${aws_dynamodb_table.rsvps.arn}/index/*"
+          "${aws_dynamodb_table.event_rsvps.arn}/index/*"
         ],
         Effect = "Allow"
       },
