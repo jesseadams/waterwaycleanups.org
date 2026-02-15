@@ -19,8 +19,8 @@ Join us for a community cleanup day along Brooke Road and Thorny Point Road, inc
 ---
 ## Location
 
-Patawomeck Band Memorial Park<br/>
-2803-2801, Co Rd 608, Stafford, VA 22554
+Crows Nest Canoe Launch<br/>
+2500 Brooke Rd, Stafford, VA 22554
 
 ---
 ## What We Provide
