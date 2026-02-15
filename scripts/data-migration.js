@@ -34,7 +34,7 @@ if (!['staging', 'prod'].includes(environment)) {
 const suffix = environment === 'prod' ? '-production' : `-${environment}`;
 const EVENTS_TABLE = `events${suffix}`;
 const VOLUNTEERS_TABLE = `volunteers${suffix}`;
-const RSVPS_TABLE = `rsvps${suffix}`;
+const RSVPS_TABLE = `event_rsvps${suffix}`;
 const WAIVERS_TABLE = `volunteer_waivers${suffix}`;
 const OLD_EVENT_RSVPS_TABLE = environment === 'prod' ? 'rsvps-original' : 'event_rsvps'; // Original prod table is rsvps-original
 const OLD_WAIVERS_TABLE = environment === 'prod' ? 'waivers-original' : null; // Original prod waivers table

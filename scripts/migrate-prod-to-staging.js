@@ -39,7 +39,7 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 const TABLES = {
   events: { prod: 'events', staging: 'events-staging' },
   volunteers: { prod: 'volunteers', staging: 'volunteers-staging' },
-  rsvps: { prod: 'rsvps', staging: 'rsvps-staging' },
+  rsvps: { prod: 'event_rsvps', staging: 'event_rsvps-staging' },
   event_rsvps_legacy: { prod: 'event_rsvps', staging: 'event_rsvps-staging' }, // Legacy RSVP table
   minors: { prod: 'minors', staging: 'minors-staging' },
   volunteer_waivers: { prod: 'volunteer_waivers', staging: 'volunteer_waivers-staging' },

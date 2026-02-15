@@ -42,7 +42,7 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 const suffix = environment === 'prod' ? '-production' : `-${environment}`;
 const EVENTS_TABLE = `events${suffix}`;
 const VOLUNTEERS_TABLE = `volunteers${suffix}`;
-const RSVPS_TABLE = `rsvps${suffix}`;
+const RSVPS_TABLE = `event_rsvps${suffix}`;
 
 // API configuration
 const API_BASE_URL = environment === 'prod' 
