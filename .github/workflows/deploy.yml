@@ -29,7 +29,7 @@ on:
         type: string
 
 env:
-  DEPLOY_ENV: ${{ github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' && 'production' || inputs.environment || 'staging' }}
+  DEPLOY_ENV: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production') || (github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' && 'production') || inputs.environment || 'staging' }}
   IS_PR: ${{ github.event_name == 'pull_request' }}
   IS_PROD_SCHEDULE: ${{ github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' }}
 
