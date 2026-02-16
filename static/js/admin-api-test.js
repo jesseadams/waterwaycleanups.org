@@ -119,7 +119,6 @@ window.AdminAPITest = {
       if (error.message.includes('CORS')) {
         console.log('🔍 CORS Error Detected:');
         console.log('   - The API server is not allowing requests from this origin');
-        console.log('   - Try enabling demo mode: window.AdminDemoMode.enable()');
       } else if (error.message.includes('Network')) {
         console.log('🔍 Network Error Detected:');
         console.log('   - Check internet connection');
@@ -146,9 +145,8 @@ window.AdminAPITest = {
     
     if (!results.eventsAPI && !results.rawFetch) {
       console.log('\n💡 Recommendations:');
-      console.log('   1. Enable demo mode: window.AdminDemoMode.enable()');
-      console.log('   2. Check if staging API is deployed');
-      console.log('   3. Verify CORS configuration on API Gateway');
+      console.log('   1. Check if staging API is deployed');
+      console.log('   2. Verify CORS configuration on API Gateway');
     }
     
     return results;

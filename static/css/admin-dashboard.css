@@ -363,3 +363,40 @@
   outline-offset: 2px !important;
   border-color: #3b82f6 !important;
 }
+
+/* RSVP table styles */
+.innerbody #admin-dashboard-root table {
+  border-collapse: collapse !important;
+  width: 100% !important;
+}
+
+.innerbody #admin-dashboard-root th {
+  font-weight: 600 !important;
+  text-align: left !important;
+}
+
+.innerbody #admin-dashboard-root td,
+.innerbody #admin-dashboard-root th {
+  padding: 0.5rem 0.75rem !important;
+}
+
+.innerbody #admin-dashboard-root .bg-red-50 {
+  background-color: #fef2f2 !important;
+}
+
+.innerbody #admin-dashboard-root .bg-purple-600 {
+  background-color: #9333ea !important;
+}
+
+.innerbody #admin-dashboard-root .hover\:bg-purple-700:hover {
+  background-color: #7c3aed !important;
+}
+
+.innerbody #admin-dashboard-root .py-0\.5 {
+  padding-top: 0.125rem !important;
+  padding-bottom: 0.125rem !important;
+}
+
+.innerbody #admin-dashboard-root .overflow-x-auto {
+  overflow-x: auto !important;
+}

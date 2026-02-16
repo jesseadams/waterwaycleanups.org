@@ -44,14 +44,17 @@ class EventsAPIClient {
      * Get API URL based on environment (same logic as AuthClient)
      */
     getApiUrl(endpoint) {
+        // Strip leading slash for consistent matching
+        const cleanEndpoint = endpoint.replace(/^\//, '');
+        
         // For events-specific endpoints, use the Events API Gateway
         const eventsEndpoints = ['events', 'analytics', 'volunteers/metrics', 'volunteers/export'];
-        const isEventsEndpoint = eventsEndpoints.some(ep => endpoint.startsWith(ep));
+        const isEventsEndpoint = eventsEndpoints.some(ep => cleanEndpoint.startsWith(ep));
         
         if (isEventsEndpoint) {
             // Use Hugo-injected Events API URL
             if (window.API_CONFIG && window.API_CONFIG.EVENTS_API_URL) {
-                return `${window.API_CONFIG.EVENTS_API_URL}/${endpoint}`;
+                return `${window.API_CONFIG.EVENTS_API_URL}/${cleanEndpoint}`;
             }
             
             throw new Error('EVENTS_API_URL not found. Build with HUGO_EVENTS_API_URL environment variable.');
@@ -60,7 +63,7 @@ class EventsAPIClient {
         // For all other endpoints (auth, admin, etc.), use standard API configuration
         // This includes auth endpoints, admin-volunteers, etc.
         if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
-            return `${window.API_CONFIG.BASE_URL}/${endpoint}`;
+            return `${window.API_CONFIG.BASE_URL}/${cleanEndpoint}`;
         }
         
         throw new Error('API_CONFIG not found. Build with HUGO_API_BASE_URL environment variable.');
@@ -189,6 +192,20 @@ class EventsAPIClient {
     async getEventRSVPs(eventId) {
         return this.makeRequest(`/events/${encodeURIComponent(eventId)}/rsvps`, {
             method: 'GET'
+        });
+    }
+
+    /**
+     * Mark an RSVP as no-show or remove no-show status (admin only)
+     */
+    async markNoShow(eventId, email, noShow = true) {
+        return this.makeRequest('mark-event-noshow', {
+            method: 'POST',
+            body: JSON.stringify({
+                event_id: eventId,
+                email: email,
+                no_show: noShow
+            })
         });
     }
 

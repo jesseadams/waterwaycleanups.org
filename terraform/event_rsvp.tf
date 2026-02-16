@@ -317,6 +317,107 @@ resource "aws_api_gateway_resource" "mark_noshow" {
   path_part   = "mark-event-noshow"
 }
 
+# POST method for mark-event-noshow endpoint
+resource "aws_api_gateway_method" "mark_noshow_post" {
+  rest_api_id   = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id   = aws_api_gateway_resource.mark_noshow.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "mark_noshow_integration" {
+  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id = aws_api_gateway_resource.mark_noshow.id
+  http_method = aws_api_gateway_method.mark_noshow_post.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.event_rsvp_noshow.invoke_arn
+}
+
+resource "aws_api_gateway_method_response" "mark_noshow_post_response" {
+  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id = aws_api_gateway_resource.mark_noshow.id
+  http_method = aws_api_gateway_method.mark_noshow_post.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "mark_noshow_post_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id = aws_api_gateway_resource.mark_noshow.id
+  http_method = aws_api_gateway_method.mark_noshow_post.http_method
+  status_code = aws_api_gateway_method_response.mark_noshow_post_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
+  }
+
+  depends_on = [aws_api_gateway_integration.mark_noshow_integration]
+}
+
+# OPTIONS method for CORS support - mark-noshow endpoint
+resource "aws_api_gateway_method" "mark_noshow_options" {
+  rest_api_id   = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id   = aws_api_gateway_resource.mark_noshow.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "mark_noshow_options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id = aws_api_gateway_resource.mark_noshow.id
+  http_method = aws_api_gateway_method.mark_noshow_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "mark_noshow_options_response" {
+  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id = aws_api_gateway_resource.mark_noshow.id
+  http_method = aws_api_gateway_method.mark_noshow_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+    "method.response.header.Access-Control-Max-Age"       = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "mark_noshow_options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
+  resource_id = aws_api_gateway_resource.mark_noshow.id
+  http_method = aws_api_gateway_method.mark_noshow_options.http_method
+  status_code = aws_api_gateway_method_response.mark_noshow_options_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+    "method.response.header.Access-Control-Max-Age"       = "'86400'"
+  }
+}
+
+# Lambda permission for mark-noshow endpoint
+resource "aws_lambda_permission" "mark_noshow_lambda_permission" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.event_rsvp_noshow.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.volunteer_waiver_api.execution_arn}/*/${aws_api_gateway_method.mark_noshow_post.http_method}${aws_api_gateway_resource.mark_noshow.path}"
+}
 
 
 # Methods for check-event-rsvp endpoint
@@ -779,21 +880,27 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
     aws_api_gateway_integration.list_rsvps_options_integration,
     aws_api_gateway_integration.cancel_rsvp_integration,
     aws_api_gateway_integration.cancel_rsvp_options_integration,
+    # Mark no-show endpoints
+    aws_api_gateway_integration.mark_noshow_integration,
+    aws_api_gateway_integration.mark_noshow_options_integration,
     # Method responses for POST endpoints
     aws_api_gateway_method_response.check_rsvp_post_response,
     aws_api_gateway_method_response.submit_rsvp_post_response,
     aws_api_gateway_method_response.list_rsvps_post_response,
     aws_api_gateway_method_response.cancel_rsvp_post_response,
+    aws_api_gateway_method_response.mark_noshow_post_response,
     # Integration responses for POST endpoints
     aws_api_gateway_integration_response.check_rsvp_post_integration_response,
     aws_api_gateway_integration_response.submit_rsvp_post_integration_response,
     aws_api_gateway_integration_response.list_rsvps_post_integration_response,
     aws_api_gateway_integration_response.cancel_rsvp_post_integration_response,
+    aws_api_gateway_integration_response.mark_noshow_post_integration_response,
     # Integration responses for OPTIONS endpoints
     aws_api_gateway_integration_response.check_rsvp_options_integration_response,
     aws_api_gateway_integration_response.submit_rsvp_options_integration_response,
     aws_api_gateway_integration_response.list_rsvps_options_integration_response,
     aws_api_gateway_integration_response.cancel_rsvp_options_integration_response,
+    aws_api_gateway_integration_response.mark_noshow_options_integration_response,
     # Auth endpoints
     aws_api_gateway_integration.auth_send_code_integration,
     aws_api_gateway_integration.auth_verify_code_integration,

@@ -48,9 +48,6 @@
 <!-- Load admin integration test (development only) -->
 <script src="{{ "js/admin-integration-test.js" | relURL }}"></script>
 
-<!-- Load admin demo mode (development only) -->
-<script src="{{ "js/admin-demo-mode.js" | relURL }}"></script>
-
 <!-- Load admin API test functions (development only) -->
 <script src="{{ "js/admin-api-test.js" | relURL }}"></script>
 
@@ -487,6 +484,12 @@
       const [selectedVolunteer, setSelectedVolunteer] = useState(null);
       const [volunteerRSVPs, setVolunteerRSVPs] = useState([]);
 
+      // Event RSVPs state (for no-show management)
+      const [selectedEventForRSVPs, setSelectedEventForRSVPs] = useState(null);
+      const [eventRSVPs, setEventRSVPs] = useState([]);
+      const [rsvpsLoading, setRsvpsLoading] = useState(false);
+      const [noShowUpdating, setNoShowUpdating] = useState(null);
+
       // Analytics state
       const [analytics, setAnalytics] = useState({
         totalEvents: 0,
@@ -744,6 +747,52 @@
           setVolunteerRSVPs(response.rsvps || []);
         } catch (error) {
           setError(error.message);
+        }
+      };
+
+      const handleViewEventRSVPs = async (event) => {
+        try {
+          setSelectedEventForRSVPs(event);
+          setRsvpsLoading(true);
+          setError('');
+          const response = await window.eventsAPI.getEventRSVPs(event.event_id);
+          setEventRSVPs(response.rsvps || response.Items || []);
+        } catch (err) {
+          console.error('Error loading RSVPs:', err);
+          setError(err.message || 'Failed to load RSVPs');
+          setEventRSVPs([]);
+        } finally {
+          setRsvpsLoading(false);
+        }
+      };
+
+      const handleCloseEventRSVPs = () => {
+        setSelectedEventForRSVPs(null);
+        setEventRSVPs([]);
+      };
+
+      const handleToggleNoShow = async (rsvp) => {
+        const attendeeEmail = rsvp.email || rsvp.attendee_id;
+        if (!attendeeEmail || !selectedEventForRSVPs) return;
+
+        const currentlyNoShow = rsvp.no_show === true;
+        const action = currentlyNoShow ? 'remove no-show status from' : 'mark as no-show';
+        if (!confirm(`Are you sure you want to ${action} ${rsvp.first_name || ''} ${rsvp.last_name || ''} (${attendeeEmail})?`)) {
+          return;
+        }
+
+        try {
+          setNoShowUpdating(attendeeEmail);
+          setError('');
+          await window.eventsAPI.markNoShow(selectedEventForRSVPs.event_id, attendeeEmail, !currentlyNoShow);
+          setSuccess(`Successfully ${currentlyNoShow ? 'removed no-show status' : 'marked as no-show'}`);
+          // Refresh the RSVP list
+          await handleViewEventRSVPs(selectedEventForRSVPs);
+        } catch (err) {
+          console.error('Error updating no-show status:', err);
+          setError(err.message || 'Failed to update no-show status');
+        } finally {
+          setNoShowUpdating(null);
         }
       };
 
@@ -1026,6 +1075,11 @@
                   className: "flex space-x-2 ml-4"
                 }, [
                   React.createElement('button', {
+                    key: 'rsvps',
+                    onClick: () => handleViewEventRSVPs(event),
+                    className: "bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700"
+                  }, 'RSVPs'),
+                  React.createElement('button', {
                     key: 'edit',
                     onClick: () => handleEventEdit(event),
                     className: "bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
@@ -1040,7 +1094,103 @@
             ])) : React.createElement('div', {
               key: 'no-events',
               className: "text-center py-8 text-gray-500"
-            }, 'No events found.'))
+            }, 'No events found.')),
+
+            // RSVP Panel - shown when an event is selected
+            selectedEventForRSVPs ? React.createElement('div', {
+              key: 'rsvp-panel',
+              className: "mt-6 bg-white border border-gray-200 rounded-lg p-6"
+            }, [
+              React.createElement('div', {
+                key: 'rsvp-header',
+                className: "flex justify-between items-center mb-4"
+              }, [
+                React.createElement('h4', {
+                  key: 'title',
+                  className: "text-lg font-semibold"
+                }, `RSVPs: ${selectedEventForRSVPs.title}`),
+                React.createElement('button', {
+                  key: 'close',
+                  onClick: handleCloseEventRSVPs,
+                  className: "text-gray-500 hover:text-gray-700 text-sm"
+                }, '✕ Close')
+              ]),
+              rsvpsLoading ? React.createElement('div', {
+                key: 'loading',
+                className: "text-center py-4 text-gray-500"
+              }, 'Loading RSVPs...') :
+              eventRSVPs.length === 0 ? React.createElement('div', {
+                key: 'empty',
+                className: "text-center py-4 text-gray-500"
+              }, 'No RSVPs for this event.') :
+              React.createElement('div', {
+                key: 'rsvp-list',
+                className: "overflow-x-auto"
+              }, React.createElement('table', {
+                className: "w-full text-sm"
+              }, [
+                React.createElement('thead', { key: 'thead' },
+                  React.createElement('tr', {
+                    className: "border-b bg-gray-50"
+                  }, [
+                    React.createElement('th', { key: 'name', className: "text-left py-2 px-3" }, 'Name'),
+                    React.createElement('th', { key: 'email', className: "text-left py-2 px-3" }, 'Email'),
+                    React.createElement('th', { key: 'type', className: "text-left py-2 px-3" }, 'Type'),
+                    React.createElement('th', { key: 'status', className: "text-left py-2 px-3" }, 'Status'),
+                    React.createElement('th', { key: 'date', className: "text-left py-2 px-3" }, 'RSVP Date'),
+                    React.createElement('th', { key: 'actions', className: "text-right py-2 px-3" }, 'No-Show')
+                  ])
+                ),
+                React.createElement('tbody', { key: 'tbody' },
+                  eventRSVPs.map((rsvp, idx) => {
+                    const attendeeEmail = rsvp.email || rsvp.attendee_id;
+                    const isNoShow = rsvp.no_show === true;
+                    const isCancelled = rsvp.status === 'cancelled';
+                    const isUpdating = noShowUpdating === attendeeEmail;
+                    return React.createElement('tr', {
+                      key: attendeeEmail || idx,
+                      className: `border-b ${isNoShow ? 'bg-red-50' : isCancelled ? 'bg-gray-50' : ''}`
+                    }, [
+                      React.createElement('td', { key: 'name', className: "py-2 px-3" },
+                        `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || rsvp.volunteer_name || 'Unknown'
+                      ),
+                      React.createElement('td', { key: 'email', className: "py-2 px-3 text-gray-600" }, attendeeEmail),
+                      React.createElement('td', { key: 'type', className: "py-2 px-3" },
+                        React.createElement('span', {
+                          className: `inline-block px-2 py-0.5 text-xs rounded ${
+                            rsvp.attendee_type === 'minor' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                          }`
+                        }, rsvp.attendee_type || 'volunteer')
+                      ),
+                      React.createElement('td', { key: 'status', className: "py-2 px-3" },
+                        React.createElement('span', {
+                          className: `inline-block px-2 py-0.5 text-xs rounded ${
+                            isNoShow ? 'bg-red-100 text-red-800' :
+                            isCancelled ? 'bg-gray-200 text-gray-700' :
+                            'bg-green-100 text-green-800'
+                          }`
+                        }, isNoShow ? 'NO-SHOW' : isCancelled ? 'CANCELLED' : 'ACTIVE')
+                      ),
+                      React.createElement('td', { key: 'date', className: "py-2 px-3 text-gray-600" },
+                        rsvp.created_at ? new Date(rsvp.created_at).toLocaleDateString() : '—'
+                      ),
+                      React.createElement('td', { key: 'actions', className: "py-2 px-3 text-right" },
+                        isCancelled ? React.createElement('span', {
+                          className: "text-xs text-gray-400"
+                        }, '—') :
+                        React.createElement('button', {
+                          onClick: () => handleToggleNoShow(rsvp),
+                          disabled: isUpdating,
+                          className: isNoShow
+                            ? "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                            : "bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 disabled:opacity-50"
+                        }, isUpdating ? '...' : isNoShow ? 'Undo' : 'No-Show')
+                      )
+                    ]);
+                  })
+                )
+              ]))
+            ]) : null
           ]) : null,
           activeTab === 'volunteers' ? React.createElement('div', { key: 'volunteers-tab' }, [
             React.createElement('h3', {
