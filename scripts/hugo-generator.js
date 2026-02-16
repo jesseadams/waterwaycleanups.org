@@ -25,7 +25,7 @@ class HugoGenerator {
     });
     
     // Table names with environment suffix
-    const suffix = this.environment === 'prod' ? '' : `-${this.environment}`;
+    const suffix = (this.environment === 'prod' || this.environment === 'production') ? '-production' : `-${this.environment}`;
     this.eventsTableName = `events${suffix}`;
     
     // Hugo content directory
@@ -419,6 +419,8 @@ const options = {
   dryRun: args.includes('--dry-run') || args.includes('-d'),
   verbose: args.includes('--verbose') || args.includes('-v'),
   environment: (() => {
+    const envArg = args.find(arg => arg.startsWith('--environment=') || arg.startsWith('-e='));
+    if (envArg) return envArg.split('=')[1];
     const envIndex = args.findIndex(arg => arg === '--environment' || arg === '-e');
     return envIndex !== -1 && args[envIndex + 1] ? args[envIndex + 1] : 'staging';
   })()

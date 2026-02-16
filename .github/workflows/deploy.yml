@@ -237,7 +237,7 @@ jobs:
         if: env.IS_PR != 'true'
         run: |
           echo "Generating Hugo files from database events..."
-          npm run generate-hugo${{ env.DEPLOY_ENV == 'production' && ':prod' || '' }} -- --environment=${{ env.DEPLOY_ENV }}
+          node scripts/hugo-generator.js --environment=${{ env.DEPLOY_ENV }}
         env:
           AWS_REGION: us-east-1
 
