@@ -73,19 +73,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Get latest release tag
+        id: latest_release
+        run: |
+          LATEST_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // ""')
+          echo "tag=$LATEST_TAG" >> "$GITHUB_OUTPUT"
+          echo "Latest release tag: ${LATEST_TAG:-none}"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate next date-based release tag
         id: generate_release_tag
-        uses: "amitsingh-007/next-release-tag@v6.3.0" #
+        uses: "amitsingh-007/next-release-tag@v6.3.0"
         with:
           tag_prefix: "deploy/*"
-          tag_template: "yyyy.mm.dd.i" # Example format: 2026.01.09.1
+          tag_template: "yyyy.mm.dd.i"
+          previous_tag: ${{ steps.latest_release.outputs.tag }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.generate_release_tag.outputs.next_release_tag }}
-          name: "Release ${{ steps.generate_tag.outputs.next_release_tag }}"
+          name: "Release ${{ steps.generate_release_tag.outputs.next_release_tag }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           # draft: false
           # prerelease: false
