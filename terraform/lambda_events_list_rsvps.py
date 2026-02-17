@@ -1,8 +1,16 @@
 import json
 import os
+from decimal import Decimal
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return int(obj) if obj % 1 == 0 else float(obj)
+        return super().default(obj)
 
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
@@ -155,7 +163,7 @@ def handler(event, context):
                         'attendance_cap': event_data.get('attendance_cap', 50)
                     },
                     'success': True
-                })
+                }, cls=DecimalEncoder)
             }
             
         except ClientError as e:

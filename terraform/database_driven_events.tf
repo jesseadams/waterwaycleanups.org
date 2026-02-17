@@ -1024,6 +1024,51 @@ resource "aws_api_gateway_integration" "events_rsvps_get" {
   uri                     = aws_lambda_function.events_list_rsvps.invoke_arn
 }
 
+# OPTIONS /events/{event_id}/rsvps - CORS preflight
+resource "aws_api_gateway_method" "events_rsvps_options" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  resource_id   = aws_api_gateway_resource.events_rsvps.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "events_rsvps_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_rsvps.id
+  http_method = aws_api_gateway_method.events_rsvps_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "events_rsvps_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_rsvps.id
+  http_method = aws_api_gateway_method.events_rsvps_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "events_rsvps_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_rsvps.id
+  http_method = aws_api_gateway_method.events_rsvps_options.http_method
+  status_code = aws_api_gateway_method_response.events_rsvps_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
 # ===== VOLUNTEER API METHODS AND INTEGRATIONS =====
 
 # GET /volunteers - List volunteers
@@ -1209,6 +1254,7 @@ resource "aws_api_gateway_deployment" "events_api" {
     aws_api_gateway_integration.volunteers_metrics_get,
     aws_api_gateway_integration.volunteers_metrics_by_email_get,
     # CORS endpoints for new resources
+    aws_api_gateway_integration.events_rsvps_options,
     aws_api_gateway_integration.events_export_options,
     aws_api_gateway_integration.analytics_options,
     aws_api_gateway_integration.volunteers_metrics_options
@@ -1226,7 +1272,8 @@ resource "aws_api_gateway_deployment" "events_api" {
       aws_api_gateway_method.volunteers_metrics_get.id,
       aws_api_gateway_method.volunteers_metrics_by_email_get.id,
       aws_api_gateway_authorizer.events_authorizer.id,
-      "force-redeploy-12-fix-authorizer-credentials"
+      aws_api_gateway_method.events_rsvps_options.id,
+      "force-redeploy-13-add-rsvps-cors"
     ]))
   }
 
