@@ -60,22 +60,38 @@ def handler(event, context):
         # For now, this is an admin-only function that should be protected
         
         # Check if the RSVP exists
+        # The table key is (event_id, attendee_id). For volunteers, attendee_id == email.
+        # For minors, attendee_id is different, so we may need to query the email-index GSI.
         try:
+            # First try direct lookup assuming attendee_id == email (common for volunteers)
             response = rsvps_table.get_item(
                 Key={
                     'event_id': event_id,
-                    'email': email
+                    'attendee_id': email
                 }
             )
             
             if 'Item' not in response:
-                return {
-                    'statusCode': 404,
-                    'headers': headers,
-                    'body': json.dumps({'error': 'RSVP not found'})
-                }
+                # Fallback: query the email-index GSI to find the RSVP by email
+                query_response = rsvps_table.query(
+                    IndexName='email-index',
+                    KeyConditionExpression=Key('email').eq(email),
+                    FilterExpression='event_id = :eid',
+                    ExpressionAttributeValues={':eid': event_id}
+                )
+                items = query_response.get('Items', [])
+                if not items:
+                    return {
+                        'statusCode': 404,
+                        'headers': headers,
+                        'body': json.dumps({'error': 'RSVP not found'})
+                    }
+                existing_rsvp = items[0]
+            else:
+                existing_rsvp = response['Item']
             
-            existing_rsvp = response['Item']
+            # Resolve the actual attendee_id for the update call
+            attendee_id = existing_rsvp.get('attendee_id', email)
             
             # Don't mark cancelled RSVPs as no-shows
             if existing_rsvp.get('status') == 'cancelled':
@@ -126,7 +142,7 @@ def handler(event, context):
             rsvps_table.update_item(
                 Key={
                     'event_id': event_id,
-                    'email': email
+                    'attendee_id': attendee_id
                 },
                 UpdateExpression=update_expression,
                 ExpressionAttributeValues=expression_attribute_values

@@ -97,12 +97,17 @@ def handler(event, context):
                             'event_id': rsvp['event_id'],
                             'email': rsvp['email'],
                             'status': rsvp.get('status', 'active'),
+                            'no_show': rsvp.get('no_show', False),
+                            'no_show_marked_at': rsvp.get('no_show_marked_at'),
+                            'attendee_type': rsvp.get('attendee_type', 'volunteer'),
                             'created_at': rsvp.get('created_at'),
                             'updated_at': rsvp.get('updated_at'),
                             'cancelled_at': rsvp.get('cancelled_at'),
                             'hours_before_event': rsvp.get('hours_before_event'),
                             'additional_comments': rsvp.get('additional_comments'),
-                            # Volunteer data
+                            # Volunteer data - include first/last at top level for UI
+                            'first_name': volunteer.get('first_name'),
+                            'last_name': volunteer.get('last_name'),
                             'volunteer_name': volunteer.get('full_name', f"{volunteer.get('first_name', '')} {volunteer.get('last_name', '')}").strip(),
                             'volunteer_first_name': volunteer.get('first_name'),
                             'volunteer_last_name': volunteer.get('last_name'),
@@ -117,11 +122,16 @@ def handler(event, context):
                             'event_id': rsvp['event_id'],
                             'email': rsvp['email'],
                             'status': rsvp.get('status', 'active'),
+                            'no_show': rsvp.get('no_show', False),
+                            'no_show_marked_at': rsvp.get('no_show_marked_at'),
+                            'attendee_type': rsvp.get('attendee_type', 'volunteer'),
                             'created_at': rsvp.get('created_at'),
                             'updated_at': rsvp.get('updated_at'),
                             'cancelled_at': rsvp.get('cancelled_at'),
                             'hours_before_event': rsvp.get('hours_before_event'),
                             'additional_comments': rsvp.get('additional_comments'),
+                            'first_name': rsvp.get('first_name'),
+                            'last_name': rsvp.get('last_name'),
                             'volunteer_name': rsvp['email'],  # Fallback to email
                             'volunteer_first_name': None,
                             'volunteer_last_name': None,
@@ -145,7 +155,7 @@ def handler(event, context):
             total_rsvps = len(enriched_rsvps)
             active_rsvps = len([r for r in enriched_rsvps if r.get('status') == 'active'])
             cancelled_rsvps = len([r for r in enriched_rsvps if r.get('status') == 'cancelled'])
-            no_show_rsvps = len([r for r in enriched_rsvps if r.get('status') == 'no_show'])
+            no_show_rsvps = len([r for r in enriched_rsvps if r.get('no_show') == True])
             attended_rsvps = len([r for r in enriched_rsvps if r.get('status') == 'attended'])
             
             return {
