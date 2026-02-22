@@ -23,6 +23,10 @@ resource "aws_sns_topic_subscription" "email_issues_subscription" {
   topic_arn = aws_sns_topic.email_issues[0].arn
   protocol  = "email"
   endpoint  = "jesse@waterwaycleanups.org"
+
+  lifecycle {
+    ignore_changes = [endpoint, protocol]
+  }
 }
 
 # Create event destination for the configuration set
