@@ -252,13 +252,28 @@ def create_rsvp_records(event_id, attendees, guardian_email):
         
         if attendee_type == 'volunteer':
             attendee_id = attendee.get('email')
+            first_name = attendee.get('first_name')
+            last_name = attendee.get('last_name')
+            
+            # Look up volunteer name from volunteers table if missing
+            if not first_name or not last_name:
+                try:
+                    vol_response = volunteers_table.get_item(Key={'email': attendee_id})
+                    if 'Item' in vol_response:
+                        vol = vol_response['Item']
+                        first_name = first_name or vol.get('first_name', '')
+                        last_name = last_name or vol.get('last_name', '')
+                        print(f"Looked up volunteer name: {first_name} {last_name}")
+                except Exception as e:
+                    print(f"Error looking up volunteer name: {e}")
+            
             item = {
                 'event_id': event_id,
                 'attendee_id': attendee_id,
                 'attendee_type': 'volunteer',
                 'status': 'active',
-                'first_name': attendee.get('first_name'),
-                'last_name': attendee.get('last_name'),
+                'first_name': first_name or '',
+                'last_name': last_name or '',
                 'email': attendee.get('email'),
                 'guardian_email': attendee.get('email'),  # For volunteers, they are their own guardian
                 'created_at': timestamp,

@@ -734,13 +734,14 @@ async function handleMultiPersonRsvpSubmission(widget, eventId, selectedAttendee
 function buildAttendeesArray(selectedAttendees) {
   return selectedAttendees.map(attendee => {
     if (attendee.type === 'volunteer') {
-      // Volunteer attendee
-      return {
+      // Volunteer attendee - include name if available (backend will look up from volunteers table if missing)
+      const result = {
         type: 'volunteer',
-        email: attendee.email,
-        first_name: attendee.first_name || 'Volunteer',
-        last_name: attendee.last_name || 'User'
+        email: attendee.email
       };
+      if (attendee.first_name) result.first_name = attendee.first_name;
+      if (attendee.last_name) result.last_name = attendee.last_name;
+      return result;
     } else if (attendee.type === 'minor') {
       // Minor attendee
       return {
