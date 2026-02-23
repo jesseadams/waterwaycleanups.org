@@ -256,6 +256,7 @@ def create_rsvp_records(event_id, attendees, guardian_email):
                 'event_id': event_id,
                 'attendee_id': attendee_id,
                 'attendee_type': 'volunteer',
+                'status': 'active',
                 'first_name': attendee.get('first_name'),
                 'last_name': attendee.get('last_name'),
                 'email': attendee.get('email'),
@@ -270,6 +271,7 @@ def create_rsvp_records(event_id, attendees, guardian_email):
                 'event_id': event_id,
                 'attendee_id': attendee_id,
                 'attendee_type': 'minor',
+                'status': 'active',
                 'first_name': attendee.get('first_name'),
                 'last_name': attendee.get('last_name'),
                 'email': guardian_email,  # Guardian's email for queries
@@ -485,20 +487,43 @@ def handler(event, context):
                 })
             }
         
-        # Update volunteer metrics for the guardian
+        # Update volunteer record for the guardian (name + metrics)
         try:
-            # Use SET with if_not_exists to handle case where volunteer_metrics doesn't exist
+            # Find the guardian's name from the attendees
+            guardian_first = ''
+            guardian_last = ''
+            for att in new_attendees:
+                if att.get('type') == 'volunteer':
+                    guardian_first = att.get('first_name', '')
+                    guardian_last = att.get('last_name', '')
+                    break
+
+            update_expr = "SET volunteer_metrics.total_rsvps = if_not_exists(volunteer_metrics.total_rsvps, :zero) + :inc, updated_at = :now"
+            expr_values = {
+                ':inc': len(new_attendees),
+                ':zero': 0,
+                ':now': datetime.utcnow().isoformat()
+            }
+
+            # Always update names if we have them — keeps volunteer table in sync with latest RSVP
+            if guardian_first:
+                update_expr += ", first_name = :fn"
+                expr_values[':fn'] = guardian_first
+            if guardian_last:
+                update_expr += ", last_name = :ln"
+                expr_values[':ln'] = guardian_last
+            if guardian_first or guardian_last:
+                update_expr += ", full_name = :full"
+                expr_values[':full'] = f"{guardian_first} {guardian_last}".strip()
+
             volunteers_table.update_item(
                 Key={'email': guardian_email},
-                UpdateExpression="SET volunteer_metrics.total_rsvps = if_not_exists(volunteer_metrics.total_rsvps, :zero) + :inc",
-                ExpressionAttributeValues={
-                    ':inc': len(new_attendees),
-                    ':zero': 0
-                }
+                UpdateExpression=update_expr,
+                ExpressionAttributeValues=expr_values
             )
         except ClientError as e:
-            print(f"Error updating volunteer metrics: {e.response['Error']['Message']}")
-            # Continue even if metrics update fails
+            print(f"Error updating volunteer record: {e.response['Error']['Message']}")
+            # Continue even if update fails
         
         # Send SNS notification
         try:

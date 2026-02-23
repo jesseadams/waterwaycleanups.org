@@ -489,6 +489,11 @@
       const [eventRSVPs, setEventRSVPs] = useState([]);
       const [rsvpsLoading, setRsvpsLoading] = useState(false);
       const [noShowUpdating, setNoShowUpdating] = useState(null);
+      const [attendanceUpdating, setAttendanceUpdating] = useState(null);
+      const [showWalkInForm, setShowWalkInForm] = useState(false);
+      const [walkInData, setWalkInData] = useState({ first_name: '', last_name: '', email: '' });
+      const [showMinorForm, setShowMinorForm] = useState(false);
+      const [minorData, setMinorData] = useState({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
 
       // Analytics state
       const [analytics, setAnalytics] = useState({
@@ -750,15 +755,15 @@
         }
       };
 
-      const handleViewEventRSVPs = async (event) => {
+      const handleViewEventRSVPs = async (event, silent = false) => {
         try {
-          // Toggle: if clicking the same event, close the panel
-          if (selectedEventForRSVPs && selectedEventForRSVPs.event_id === event.event_id) {
+          // Toggle: if clicking the same event, close the panel (only on explicit click)
+          if (!silent && selectedEventForRSVPs && selectedEventForRSVPs.event_id === event.event_id) {
             handleCloseEventRSVPs();
             return;
           }
           setSelectedEventForRSVPs(event);
-          setRsvpsLoading(true);
+          if (!silent) setRsvpsLoading(true);
           setError('');
           const response = await window.eventsAPI.getEventRSVPs(event.event_id);
           console.log('RSVPs response:', JSON.stringify(response).substring(0, 500));
@@ -768,39 +773,156 @@
         } catch (err) {
           console.error('Error loading RSVPs:', err);
           setError(err.message || 'Failed to load RSVPs');
-          setEventRSVPs([]);
+          if (!silent) setEventRSVPs([]);
         } finally {
-          setRsvpsLoading(false);
+          if (!silent) setRsvpsLoading(false);
+        }
+      };
+
+      const refreshRSVPs = async () => {
+        if (selectedEventForRSVPs) {
+          await handleViewEventRSVPs(selectedEventForRSVPs, true);
         }
       };
 
       const handleCloseEventRSVPs = () => {
         setSelectedEventForRSVPs(null);
         setEventRSVPs([]);
+        setShowWalkInForm(false);
+        setWalkInData({ first_name: '', last_name: '', email: '' });
+        setShowMinorForm(false);
+        setMinorData({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
       };
 
       const handleToggleNoShow = async (rsvp) => {
-        const attendeeEmail = rsvp.email || rsvp.attendee_id;
-        if (!attendeeEmail || !selectedEventForRSVPs) return;
+        const attendeeId = rsvp.attendee_id || rsvp.email;
+        if (!attendeeId || !selectedEventForRSVPs) return;
 
         const currentlyNoShow = rsvp.no_show === true;
+        const name = `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || attendeeId;
         const action = currentlyNoShow ? 'remove no-show status from' : 'mark as no-show';
-        if (!confirm(`Are you sure you want to ${action} ${rsvp.first_name || ''} ${rsvp.last_name || ''} (${attendeeEmail})?`)) {
-          return;
-        }
+        if (!confirm(`Are you sure you want to ${action} ${name}?`)) return;
 
         try {
-          setNoShowUpdating(attendeeEmail);
+          setNoShowUpdating(attendeeId);
           setError('');
-          await window.eventsAPI.markNoShow(selectedEventForRSVPs.event_id, attendeeEmail, !currentlyNoShow);
+          await window.eventsAPI.markNoShow(selectedEventForRSVPs.event_id, attendeeId, !currentlyNoShow);
           setSuccess(`Successfully ${currentlyNoShow ? 'removed no-show status' : 'marked as no-show'}`);
-          // Refresh the RSVP list
-          await handleViewEventRSVPs(selectedEventForRSVPs);
+          await refreshRSVPs();
         } catch (err) {
           console.error('Error updating no-show status:', err);
           setError(err.message || 'Failed to update no-show status');
         } finally {
           setNoShowUpdating(null);
+        }
+      };
+
+      const handleConfirmAttendance = async (rsvp) => {
+        const attendeeId = rsvp.attendee_id || rsvp.email;
+        if (!attendeeId || !selectedEventForRSVPs) return;
+
+        try {
+          setAttendanceUpdating(attendeeId);
+          setError('');
+          await window.eventsAPI.confirmAttendance(selectedEventForRSVPs.event_id, attendeeId);
+          setSuccess('Attendance confirmed');
+          await refreshRSVPs();
+        } catch (err) {
+          console.error('Error confirming attendance:', err);
+          setError(err.message || 'Failed to confirm attendance');
+        } finally {
+          setAttendanceUpdating(null);
+        }
+      };
+
+      const handleAddWalkIn = async (e) => {
+        e.preventDefault();
+        if (!walkInData.first_name.trim() || !walkInData.last_name.trim() || !selectedEventForRSVPs) return;
+
+        try {
+          setAttendanceUpdating('walk-in');
+          setError('');
+          await window.eventsAPI.addWalkIn(
+            selectedEventForRSVPs.event_id,
+            walkInData.first_name.trim(),
+            walkInData.last_name.trim(),
+            walkInData.email.trim()
+          );
+          setSuccess(`Walk-in ${walkInData.first_name} ${walkInData.last_name} added`);
+          setWalkInData({ first_name: '', last_name: '', email: '' });
+          setShowWalkInForm(false);
+          await refreshRSVPs();
+        } catch (err) {
+          console.error('Error adding walk-in:', err);
+          setError(err.message || 'Failed to add walk-in participant');
+        } finally {
+          setAttendanceUpdating(null);
+        }
+      };
+
+      const handleBulkConfirm = async () => {
+        if (!selectedEventForRSVPs) return;
+        const activeCount = eventRSVPs.filter(r => r.status === 'active' && !r.no_show).length;
+        if (!confirm(`Mark ${activeCount} remaining active RSVPs as attended?`)) return;
+
+        try {
+          setAttendanceUpdating('bulk');
+          setError('');
+          const result = await window.eventsAPI.bulkConfirmAttendance(selectedEventForRSVPs.event_id);
+          setSuccess(result.message || 'Bulk attendance confirmed');
+          await refreshRSVPs();
+        } catch (err) {
+          console.error('Error bulk confirming:', err);
+          setError(err.message || 'Failed to bulk confirm attendance');
+        } finally {
+          setAttendanceUpdating(null);
+        }
+      };
+
+      const handleAddMinor = async (e) => {
+        e.preventDefault();
+        if (!minorData.first_name.trim() || !minorData.last_name.trim() || !minorData.guardian_email.trim() || !minorData.date_of_birth || !selectedEventForRSVPs) return;
+
+        try {
+          setAttendanceUpdating('minor');
+          setError('');
+          await window.eventsAPI.addMinor(
+            selectedEventForRSVPs.event_id,
+            minorData.first_name.trim(),
+            minorData.last_name.trim(),
+            minorData.guardian_email.trim(),
+            minorData.date_of_birth
+          );
+          setSuccess(`Minor ${minorData.first_name} ${minorData.last_name} added`);
+          setMinorData({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
+          setShowMinorForm(false);
+          await refreshRSVPs();
+        } catch (err) {
+          console.error('Error adding minor:', err);
+          setError(err.message || 'Failed to add minor');
+        } finally {
+          setAttendanceUpdating(null);
+        }
+      };
+
+      const handleDeleteRSVP = async (rsvp) => {
+        const attendeeId = rsvp.attendee_id || rsvp.email;
+        if (!attendeeId || !selectedEventForRSVPs) return;
+
+        const name = `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || attendeeId;
+        if (!confirm(`Permanently delete RSVP for ${name}? This cannot be undone.`)) return;
+
+        try {
+          setAttendanceUpdating(attendeeId);
+          setError('');
+          await window.eventsAPI.deleteRSVP(selectedEventForRSVPs.event_id, attendeeId);
+          setSuccess(`RSVP for ${name} deleted`);
+          await refreshRSVPs();
+        } catch (err) {
+          console.error('Error deleting RSVP:', err);
+          setError(err.message || 'Failed to delete RSVP');
+        } finally {
+          setAttendanceUpdating(null);
         }
       };
 
@@ -1101,25 +1223,158 @@
                   }, 'Delete')
                 ])
               ]),
-              // Inline RSVP panel - shown directly under this event card
+              // Inline Attendance Management panel
               selectedEventForRSVPs && selectedEventForRSVPs.event_id === event.event_id ? React.createElement('div', {
                 key: 'rsvp-panel',
                 className: "mt-4 pt-4 border-t border-gray-200"
               }, [
+                // Header with title, action buttons, and close
                 React.createElement('div', {
                   key: 'rsvp-header',
-                  className: "flex justify-between items-center mb-3"
+                  className: "flex flex-wrap justify-between items-center mb-3 gap-2"
                 }, [
                   React.createElement('h4', {
                     key: 'title',
                     className: "text-md font-semibold text-purple-700"
-                  }, `RSVPs (${eventRSVPs.length})`),
-                  React.createElement('button', {
-                    key: 'close',
-                    onClick: handleCloseEventRSVPs,
-                    className: "text-gray-400 hover:text-gray-600 text-sm"
-                  }, '✕ Close')
+                  }, `Attendance (${eventRSVPs.length})`),
+                  React.createElement('div', {
+                    key: 'header-actions',
+                    className: "flex space-x-2"
+                  }, [
+                    React.createElement('button', {
+                      key: 'add-walkin',
+                      onClick: () => { setShowWalkInForm(!showWalkInForm); setShowMinorForm(false); },
+                      className: showWalkInForm
+                        ? "bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"
+                        : "bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700"
+                    }, showWalkInForm ? 'Cancel' : '+ Walk-in'),
+                    React.createElement('button', {
+                      key: 'add-minor',
+                      onClick: () => { setShowMinorForm(!showMinorForm); setShowWalkInForm(false); },
+                      className: showMinorForm
+                        ? "bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"
+                        : "bg-indigo-600 text-white px-3 py-1 rounded text-xs hover:bg-indigo-700"
+                    }, showMinorForm ? 'Cancel' : '+ Minor'),
+                    React.createElement('button', {
+                      key: 'bulk-confirm',
+                      onClick: handleBulkConfirm,
+                      disabled: attendanceUpdating === 'bulk' || eventRSVPs.filter(r => r.status === 'active' && !r.no_show).length === 0,
+                      className: "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                    }, attendanceUpdating === 'bulk' ? '...' : '✓ Confirm All'),
+                    React.createElement('button', {
+                      key: 'close',
+                      onClick: handleCloseEventRSVPs,
+                      className: "text-gray-400 hover:text-gray-600 text-sm"
+                    }, '✕')
+                  ])
                 ]),
+                // Walk-in form
+                showWalkInForm ? React.createElement('form', {
+                  key: 'walkin-form',
+                  onSubmit: handleAddWalkIn,
+                  className: "mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200"
+                }, [
+                  React.createElement('div', {
+                    key: 'walkin-title',
+                    className: "text-sm font-medium text-blue-800 mb-2"
+                  }, 'Add Walk-in Participant'),
+                  React.createElement('div', {
+                    key: 'walkin-fields',
+                    className: "grid grid-cols-1 md:grid-cols-4 gap-2"
+                  }, [
+                    React.createElement('input', {
+                      key: 'fn',
+                      type: 'text',
+                      placeholder: 'First name *',
+                      value: walkInData.first_name,
+                      onChange: (e) => setWalkInData({...walkInData, first_name: e.target.value}),
+                      required: true,
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    }),
+                    React.createElement('input', {
+                      key: 'ln',
+                      type: 'text',
+                      placeholder: 'Last name *',
+                      value: walkInData.last_name,
+                      onChange: (e) => setWalkInData({...walkInData, last_name: e.target.value}),
+                      required: true,
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    }),
+                    React.createElement('input', {
+                      key: 'email',
+                      type: 'email',
+                      placeholder: 'Email (optional)',
+                      value: walkInData.email,
+                      onChange: (e) => setWalkInData({...walkInData, email: e.target.value}),
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    }),
+                    React.createElement('button', {
+                      key: 'submit',
+                      type: 'submit',
+                      disabled: attendanceUpdating === 'walk-in',
+                      className: "bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                    }, attendanceUpdating === 'walk-in' ? 'Adding...' : 'Add')
+                  ])
+                ]) : null,
+                // Minor form
+                showMinorForm ? React.createElement('form', {
+                  key: 'minor-form',
+                  onSubmit: handleAddMinor,
+                  className: "mb-4 p-3 bg-indigo-50 rounded-lg border border-indigo-200"
+                }, [
+                  React.createElement('div', {
+                    key: 'minor-title',
+                    className: "text-sm font-medium text-indigo-800 mb-2"
+                  }, 'Add Minor Participant'),
+                  React.createElement('div', {
+                    key: 'minor-fields',
+                    className: "grid grid-cols-1 md:grid-cols-5 gap-2"
+                  }, [
+                    React.createElement('input', {
+                      key: 'fn',
+                      type: 'text',
+                      placeholder: 'First name *',
+                      value: minorData.first_name,
+                      onChange: (e) => setMinorData({...minorData, first_name: e.target.value}),
+                      required: true,
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    }),
+                    React.createElement('input', {
+                      key: 'ln',
+                      type: 'text',
+                      placeholder: 'Last name *',
+                      value: minorData.last_name,
+                      onChange: (e) => setMinorData({...minorData, last_name: e.target.value}),
+                      required: true,
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    }),
+                    React.createElement('input', {
+                      key: 'email',
+                      type: 'email',
+                      placeholder: 'Guardian email *',
+                      value: minorData.guardian_email,
+                      onChange: (e) => setMinorData({...minorData, guardian_email: e.target.value}),
+                      required: true,
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    }),
+                    React.createElement('input', {
+                      key: 'dob',
+                      type: 'date',
+                      placeholder: 'Date of birth *',
+                      value: minorData.date_of_birth,
+                      onChange: (e) => setMinorData({...minorData, date_of_birth: e.target.value}),
+                      required: true,
+                      className: "px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    }),
+                    React.createElement('button', {
+                      key: 'submit',
+                      type: 'submit',
+                      disabled: attendanceUpdating === 'minor',
+                      className: "bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 disabled:opacity-50"
+                    }, attendanceUpdating === 'minor' ? 'Adding...' : 'Add')
+                  ])
+                ]) : null,
+                // RSVP table
                 rsvpsLoading ? React.createElement('div', {
                   key: 'loading',
                   className: "text-center py-3 text-gray-500 text-sm"
@@ -1142,57 +1397,137 @@
                       React.createElement('th', { key: 'email', className: "text-left py-2 px-3" }, 'Email'),
                       React.createElement('th', { key: 'type', className: "text-left py-2 px-3" }, 'Type'),
                       React.createElement('th', { key: 'status', className: "text-left py-2 px-3" }, 'Status'),
-                      React.createElement('th', { key: 'date', className: "text-left py-2 px-3" }, 'RSVP Date'),
-                      React.createElement('th', { key: 'actions', className: "text-right py-2 px-3" }, 'No-Show')
+                      React.createElement('th', { key: 'date', className: "text-left py-2 px-3" }, 'Date'),
+                      React.createElement('th', { key: 'actions', className: "text-right py-2 px-3" }, 'Actions')
                     ])
                   ),
                   React.createElement('tbody', { key: 'tbody' },
-                    eventRSVPs.map((rsvp, idx) => {
-                      const attendeeEmail = rsvp.email || rsvp.attendee_id;
-                      const isNoShow = rsvp.no_show === true;
-                      const isCancelled = rsvp.status === 'cancelled';
-                      const isUpdating = noShowUpdating === attendeeEmail;
-                      return React.createElement('tr', {
-                        key: attendeeEmail || idx,
-                        className: `border-b ${isNoShow ? 'bg-red-50' : isCancelled ? 'bg-gray-50' : ''}`
-                      }, [
-                        React.createElement('td', { key: 'name', className: "py-2 px-3" },
-                          `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || rsvp.volunteer_name || 'Unknown'
-                        ),
-                        React.createElement('td', { key: 'email', className: "py-2 px-3 text-gray-600" }, attendeeEmail),
-                        React.createElement('td', { key: 'type', className: "py-2 px-3" },
-                          React.createElement('span', {
-                            className: `inline-block px-2 py-0.5 text-xs rounded ${
-                              rsvp.attendee_type === 'minor' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                            }`
-                          }, rsvp.attendee_type || 'volunteer')
-                        ),
-                        React.createElement('td', { key: 'status', className: "py-2 px-3" },
-                          React.createElement('span', {
-                            className: `inline-block px-2 py-0.5 text-xs rounded ${
-                              isNoShow ? 'bg-red-100 text-red-800' :
-                              isCancelled ? 'bg-gray-200 text-gray-700' :
-                              'bg-green-100 text-green-800'
-                            }`
-                          }, isNoShow ? 'NO-SHOW' : isCancelled ? 'CANCELLED' : 'ACTIVE')
-                        ),
-                        React.createElement('td', { key: 'date', className: "py-2 px-3 text-gray-600" },
-                          rsvp.created_at ? new Date(rsvp.created_at).toLocaleDateString() : '—'
-                        ),
-                        React.createElement('td', { key: 'actions', className: "py-2 px-3 text-right" },
-                          isCancelled ? React.createElement('span', {
-                            className: "text-xs text-gray-400"
-                          }, '—') :
-                          React.createElement('button', {
-                            onClick: () => handleToggleNoShow(rsvp),
-                            disabled: isUpdating,
-                            className: isNoShow
-                              ? "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
-                              : "bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 disabled:opacity-50"
-                          }, isUpdating ? '...' : isNoShow ? 'Undo' : 'No-Show')
-                        )
-                      ]);
-                    })
+                    (() => {
+                      // Group minors under their guardians
+                      const guardians = eventRSVPs.filter(r => r.attendee_type !== 'minor');
+                      const minors = eventRSVPs.filter(r => r.attendee_type === 'minor');
+                      const minorsByGuardian = {};
+                      const orphanMinors = [];
+                      minors.forEach(m => {
+                        const ge = (m.guardian_email || '').toLowerCase();
+                        if (ge && guardians.some(g => (g.email || '').toLowerCase() === ge)) {
+                          if (!minorsByGuardian[ge]) minorsByGuardian[ge] = [];
+                          minorsByGuardian[ge].push(m);
+                        } else {
+                          orphanMinors.push(m);
+                        }
+                      });
+
+                      const renderRow = (rsvp, idx, isMinorRow) => {
+                        const attendeeId = rsvp.attendee_id || rsvp.email;
+                        const isNoShow = rsvp.no_show === true;
+                        const isCancelled = rsvp.status === 'cancelled';
+                        const isAttended = rsvp.status === 'attended';
+                        const isWalkIn = rsvp.walk_in === true;
+                        const hasWaiver = rsvp.has_waiver === true;
+                        const isUpdating = noShowUpdating === attendeeId || attendanceUpdating === attendeeId;
+                        const displayName = `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || rsvp.volunteer_name || 'Unknown';
+                        return React.createElement('tr', {
+                          key: attendeeId || idx,
+                          className: `border-b ${isMinorRow ? 'bg-indigo-50/40' : ''} ${isNoShow ? 'bg-red-50' : isAttended ? 'bg-green-50' : isCancelled ? 'bg-gray-50' : ''}`
+                        }, [
+                          React.createElement('td', { key: 'name', className: `py-2 px-3 ${isMinorRow ? 'pl-8' : ''}` }, [
+                            isMinorRow ? React.createElement('span', { key: 'indent', className: "text-indigo-400 mr-1" }, '↳') : null,
+                            displayName,
+                            isWalkIn ? React.createElement('span', {
+                              key: 'walkin-badge',
+                              className: "ml-1 inline-block px-1.5 py-0.5 text-xs bg-blue-100 text-blue-700 rounded"
+                            }, 'walk-in') : null,
+                            isMinorRow && rsvp.date_of_birth ? React.createElement('span', {
+                              key: 'dob-badge',
+                              className: "ml-1 inline-block px-1.5 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded"
+                            }, `DOB: ${rsvp.date_of_birth}`) : null,
+                            hasWaiver ? React.createElement('span', {
+                              key: 'waiver-badge',
+                              className: "ml-1 inline-block px-1.5 py-0.5 text-xs bg-green-100 text-green-700 rounded"
+                            }, '✓ waiver') : !isWalkIn || rsvp.email ? React.createElement('span', {
+                              key: 'no-waiver-badge',
+                              className: "ml-1 inline-block px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-700 rounded"
+                            }, '⚠ no waiver') : null
+                          ]),
+                          React.createElement('td', { key: 'email', className: "py-2 px-3 text-gray-600" },
+                            isMinorRow ? React.createElement('span', { className: "text-gray-400 italic text-xs" }, rsvp.guardian_email || '—') : (rsvp.email || '—')
+                          ),
+                          React.createElement('td', { key: 'type', className: "py-2 px-3" },
+                            React.createElement('span', {
+                              className: `inline-block px-2 py-0.5 text-xs rounded ${
+                                rsvp.attendee_type === 'minor' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
+                              }`
+                            }, rsvp.attendee_type === 'minor' ? 'minor' : (rsvp.attendee_type || 'volunteer'))
+                          ),
+                          React.createElement('td', { key: 'status', className: "py-2 px-3" },
+                            React.createElement('span', {
+                              className: `inline-block px-2 py-0.5 text-xs rounded ${
+                                isNoShow ? 'bg-red-100 text-red-800' :
+                                isAttended ? 'bg-green-100 text-green-800' :
+                                isCancelled ? 'bg-gray-200 text-gray-700' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`
+                            }, isNoShow ? 'NO-SHOW' : isAttended ? 'ATTENDED' : isCancelled ? 'CANCELLED' : 'ACTIVE')
+                          ),
+                          React.createElement('td', { key: 'date', className: "py-2 px-3 text-gray-600" },
+                            rsvp.created_at ? new Date(rsvp.created_at).toLocaleDateString() : '—'
+                          ),
+                          React.createElement('td', { key: 'actions', className: "py-2 px-3 text-right" },
+                            React.createElement('div', { className: "flex justify-end space-x-1" }, [
+                              !isAttended && !isNoShow && !isCancelled ? React.createElement('button', {
+                                key: 'attend',
+                                onClick: () => handleConfirmAttendance(rsvp),
+                                disabled: isUpdating,
+                                className: "bg-green-600 text-white px-2 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50",
+                                title: "Confirm attended"
+                              }, isUpdating ? '...' : '✓') : null,
+                              !isCancelled ? React.createElement('button', {
+                                key: 'noshow',
+                                onClick: () => handleToggleNoShow(rsvp),
+                                disabled: isUpdating,
+                                className: isNoShow
+                                  ? "bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600 disabled:opacity-50"
+                                  : "bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700 disabled:opacity-50",
+                                title: isNoShow ? "Undo no-show" : "Mark no-show"
+                              }, isUpdating ? '...' : isNoShow ? '↩' : '✗') : null,
+                              React.createElement('button', {
+                                key: 'delete',
+                                onClick: () => handleDeleteRSVP(rsvp),
+                                disabled: isUpdating,
+                                className: "bg-gray-500 text-white px-2 py-1 rounded text-xs hover:bg-gray-700 disabled:opacity-50",
+                                title: "Delete RSVP"
+                              }, isUpdating ? '...' : '🗑'),
+                              !isMinorRow && rsvp.email ? React.createElement('button', {
+                                key: 'add-minor',
+                                onClick: () => {
+                                  setMinorData({ first_name: '', last_name: '', guardian_email: rsvp.email, date_of_birth: '' });
+                                  setShowMinorForm(true);
+                                  setShowWalkInForm(false);
+                                },
+                                className: "bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600",
+                                title: "Add minor for this guardian"
+                              }, '+👶') : null
+                            ])
+                          )
+                        ]);
+                      };
+
+                      const rows = [];
+                      guardians.forEach((g, idx) => {
+                        rows.push(renderRow(g, `g-${idx}`, false));
+                        const ge = (g.email || '').toLowerCase();
+                        if (minorsByGuardian[ge]) {
+                          minorsByGuardian[ge].forEach((m, mIdx) => {
+                            rows.push(renderRow(m, `m-${ge}-${mIdx}`, true));
+                          });
+                        }
+                      });
+                      orphanMinors.forEach((m, idx) => {
+                        rows.push(renderRow(m, `orphan-${idx}`, true));
+                      });
+                      return rows;
+                    })()
                   )
                 ]))
               ]) : null

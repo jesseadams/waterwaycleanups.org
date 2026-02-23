@@ -199,12 +199,75 @@ class EventsAPIClient {
      * Mark an RSVP as no-show or remove no-show status (admin only)
      */
     async markNoShow(eventId, email, noShow = true) {
-        return this.makeRequest('mark-event-noshow', {
+        return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
             method: 'POST',
             body: JSON.stringify({
-                event_id: eventId,
-                email: email,
-                no_show: noShow
+                action: noShow ? 'no_show' : 'undo_no_show',
+                attendee_id: email,
+                email: email
+            })
+        });
+    }
+
+    /**
+     * Confirm attendance for a specific RSVP (admin only)
+     */
+    async confirmAttendance(eventId, attendeeId) {
+        return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'attended',
+                attendee_id: attendeeId
+            })
+        });
+    }
+
+    /**
+     * Add a walk-in participant who didn't RSVP (admin only)
+     */
+    async addWalkIn(eventId, firstName, lastName, email = '') {
+        return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'walk_in',
+                first_name: firstName,
+                last_name: lastName,
+                email: email
+            })
+        });
+    }
+
+    /**
+     * Bulk confirm attendance for all remaining active RSVPs (admin only)
+     */
+    async bulkConfirmAttendance(eventId) {
+        return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'bulk_confirm'
+            })
+        });
+    }
+
+    async deleteRSVP(eventId, attendeeId) {
+        return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'delete',
+                attendee_id: attendeeId
+            })
+        });
+    }
+
+    async addMinor(eventId, firstName, lastName, guardianEmail, dateOfBirth) {
+        return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'add_minor',
+                first_name: firstName,
+                last_name: lastName,
+                guardian_email: guardianEmail,
+                date_of_birth: dateOfBirth
             })
         });
     }

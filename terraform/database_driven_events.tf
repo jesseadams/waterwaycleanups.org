@@ -532,6 +532,7 @@ resource "aws_lambda_function" "events_list_rsvps" {
       EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
       RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
+      WAIVERS_TABLE_NAME    = aws_dynamodb_table.volunteer_waivers.name
     }
   }
 
@@ -1064,9 +1065,122 @@ resource "aws_api_gateway_integration_response" "events_rsvps_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
+}
+
+# ===== ATTENDANCE MANAGEMENT (ADMIN) =====
+
+# Create /events/{event_id}/attendance resource
+resource "aws_api_gateway_resource" "events_attendance" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  parent_id   = aws_api_gateway_resource.events_by_id.id
+  path_part   = "attendance"
+}
+
+# ZIP the attendance Lambda
+data "archive_file" "events_attendance_zip" {
+  type        = "zip"
+  source_file = "${path.module}/lambda_events_attendance.py"
+  output_path = "${path.module}/lambda_events_attendance.zip"
+}
+
+# Lambda function for attendance management
+resource "aws_lambda_function" "events_attendance" {
+  filename         = data.archive_file.events_attendance_zip.output_path
+  function_name    = "events_attendance${local.resource_suffix}"
+  role             = aws_iam_role.events_lambda_role.arn
+  handler          = "lambda_events_attendance.handler"
+  source_code_hash = data.archive_file.events_attendance_zip.output_base64sha256
+  runtime          = "python3.9"
+  timeout          = 30
+
+  environment {
+    variables = {
+      EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
+      VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
+    }
+  }
+
+  tags = {
+    Name        = "events-attendance${local.resource_suffix}"
+    Environment = var.environment
+    Project     = "waterwaycleanups"
+  }
+}
+
+# POST /events/{event_id}/attendance - Admin attendance management (protected)
+resource "aws_api_gateway_method" "events_attendance_post" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  resource_id   = aws_api_gateway_resource.events_attendance.id
+  http_method   = "POST"
+  authorization = "CUSTOM"
+  authorizer_id = aws_api_gateway_authorizer.events_authorizer.id
+}
+
+resource "aws_api_gateway_integration" "events_attendance_post" {
+  rest_api_id             = aws_api_gateway_rest_api.events_api.id
+  resource_id             = aws_api_gateway_resource.events_attendance.id
+  http_method             = aws_api_gateway_method.events_attendance_post.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.events_attendance.invoke_arn
+}
+
+# OPTIONS /events/{event_id}/attendance - CORS preflight
+resource "aws_api_gateway_method" "events_attendance_options" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  resource_id   = aws_api_gateway_resource.events_attendance.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "events_attendance_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_attendance.id
+  http_method = aws_api_gateway_method.events_attendance_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "events_attendance_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_attendance.id
+  http_method = aws_api_gateway_method.events_attendance_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "events_attendance_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_attendance.id
+  http_method = aws_api_gateway_method.events_attendance_options.http_method
+  status_code = aws_api_gateway_method_response.events_attendance_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
+# Lambda permission for attendance endpoint
+resource "aws_lambda_permission" "events_attendance_api" {
+  statement_id  = "AllowExecutionFromAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.events_attendance.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.events_api.execution_arn}/*/*"
 }
 
 # ===== VOLUNTEER API METHODS AND INTEGRATIONS =====
@@ -1257,7 +1371,10 @@ resource "aws_api_gateway_deployment" "events_api" {
     aws_api_gateway_integration.events_rsvps_options,
     aws_api_gateway_integration.events_export_options,
     aws_api_gateway_integration.analytics_options,
-    aws_api_gateway_integration.volunteers_metrics_options
+    aws_api_gateway_integration.volunteers_metrics_options,
+    # Attendance management endpoint
+    aws_api_gateway_integration.events_attendance_post,
+    aws_api_gateway_integration.events_attendance_options
   ]
 
   rest_api_id = aws_api_gateway_rest_api.events_api.id
@@ -1273,7 +1390,7 @@ resource "aws_api_gateway_deployment" "events_api" {
       aws_api_gateway_method.volunteers_metrics_by_email_get.id,
       aws_api_gateway_authorizer.events_authorizer.id,
       aws_api_gateway_method.events_rsvps_options.id,
-      "force-redeploy-13-add-rsvps-cors"
+      "force-redeploy-14-add-attendance-endpoint"
     ]))
   }
 
