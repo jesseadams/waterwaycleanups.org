@@ -141,7 +141,9 @@ exports.handler = async (event) => {
     let waiverStatus = {
       hasWaiver: false,
       expirationDate: null,
-      submissionDate: null
+      submissionDate: null,
+      firstName: null,
+      lastName: null
     };
 
     try {
@@ -173,7 +175,9 @@ exports.handler = async (event) => {
             waiverStatus = {
               hasWaiver: true,
               expirationDate: expirationDate.toISOString().split('T')[0],
-              submissionDate: latestWaiver.submission_date
+              submissionDate: latestWaiver.submission_date,
+              firstName: latestWaiver.first_name || null,
+              lastName: latestWaiver.last_name || null
             };
           }
         }

@@ -92,7 +92,7 @@ exports.handler = async (event) => {
     const email = session.email;
 
     // Validate required fields
-    const requiredFields = ['full_legal_name', 'phone_number', 'date_of_birth', 'waiver_acknowledgement'];
+    const requiredFields = ['first_name', 'last_name', 'phone_number', 'date_of_birth', 'waiver_acknowledgement'];
     const missingFields = requiredFields.filter(field => !requestBody[field]);
 
     if (missingFields.length > 0) {
@@ -175,7 +175,8 @@ exports.handler = async (event) => {
         email: email, // Use email from authenticated session
         waiver_id: waiverId,
         submission_date: submissionDate,
-        full_legal_name: requestBody.full_legal_name,
+        first_name: requestBody.first_name,
+        last_name: requestBody.last_name,
         phone_number: requestBody.phone_number,
         date_of_birth: requestBody.date_of_birth,
         is_adult: isAdult,

@@ -95,13 +95,13 @@ test.describe('Waiver Submission Properties', () => {
     // Navigate to waiver page
     await waiverPage.goto();
     
-    // Generate incomplete waiver data (missing fullLegalName)
-    const incompleteData = generateIncompleteWaiverData(['fullLegalName']);
+    // Generate incomplete waiver data (missing firstName)
+    const incompleteData = generateIncompleteWaiverData(['firstName']);
     
     // Wait for form to appear
     await waiverPage.expectFormFieldsVisible();
     
-    // Try to fill form with incomplete data (skip fullLegalName)
+    // Try to fill form with incomplete data (skip firstName)
     if (incompleteData.phoneNumber) {
       await waiverPage.phoneNumberInput.fill(incompleteData.phoneNumber);
     }
@@ -138,7 +138,7 @@ test.describe('Waiver Submission Properties', () => {
     }
     
     // Try to submit - this should be prevented
-    // The fullLegalName field is required, so submission should fail
+    // The firstName field is required, so submission should fail
     
     // Check if submit button is disabled (HTML5 validation)
     const submitEnabled = await waiverPage.isSubmitButtonEnabled();

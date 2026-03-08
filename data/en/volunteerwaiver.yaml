@@ -22,9 +22,13 @@ fields:
 - name: waiver_form_fields
   input_type: html
   label: <div id="waiver-form-fields" style="display:none;">
-- name: full_legal_name
+- name: first_name
   input_type: text
-  label: Full Legal Name
+  label: First Name
+  required: false
+- name: last_name
+  input_type: text
+  label: Last Name
   required: false
 - name: phone_number
   input_type: tel

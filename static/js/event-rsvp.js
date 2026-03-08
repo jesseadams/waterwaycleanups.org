@@ -1160,10 +1160,18 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
       throw new Error('Unable to get user email. Please refresh and try again.');
     }
 
-    // For direct RSVP, we need to get the user's name from their profile
-    // For now, we'll use placeholder values and let them update later
-    const firstName = 'Volunteer'; // This could be enhanced to get real name from profile
-    const lastName = 'User';
+    // For direct RSVP, get the user's name from their waiver
+    let firstName = 'Volunteer';
+    let lastName = 'User';
+    try {
+      const dashboard = await window.authClient.getDashboard();
+      if (dashboard && dashboard.waiver) {
+        if (dashboard.waiver.firstName) firstName = dashboard.waiver.firstName;
+        if (dashboard.waiver.lastName) lastName = dashboard.waiver.lastName;
+      }
+    } catch (nameError) {
+      console.error('Error fetching volunteer name:', nameError);
+    }
 
     // Submit the RSVP using direct API call
     const result = await submitEventRsvpDirect(eventId, firstName, lastName, userEmail, attendanceCap);

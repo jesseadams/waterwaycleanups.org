@@ -411,8 +411,18 @@
           throw new Error('Email not available. Please try signing up for the event again.');
         }
         
-        const firstName = 'Volunteer'; // Default name - user can update later
-        const lastName = 'User';
+        // Get volunteer's real name from their waiver data
+        let firstName = 'Volunteer';
+        let lastName = 'User';
+        try {
+          const dashboard = await window.authClient.getDashboard();
+          if (dashboard && dashboard.waiver) {
+            if (dashboard.waiver.firstName) firstName = dashboard.waiver.firstName;
+            if (dashboard.waiver.lastName) lastName = dashboard.waiver.lastName;
+          }
+        } catch (nameError) {
+          console.error('Error fetching volunteer name for RSVP:', nameError);
+        }
         
         console.log('Calling submitEventRsvp with:', { eventId, firstName, lastName });
         

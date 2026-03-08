@@ -5,7 +5,8 @@ import { waitForElementStable, waitForApiResponse, TIMEOUTS } from '../utils/wai
  * Interface for waiver form data
  */
 export interface WaiverFormData {
-  fullLegalName: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
   dateOfBirth: string;
   waiverAcknowledgement: boolean;
@@ -24,7 +25,8 @@ export class WaiverPage {
   readonly waiverForm: Locator;
   readonly emailInput: Locator;
   readonly checkEmailButton: Locator;
-  readonly fullLegalNameInput: Locator;
+  readonly firstNameInput: Locator;
+  readonly lastNameInput: Locator;
   readonly phoneNumberInput: Locator;
   readonly dateOfBirthInput: Locator;
   readonly waiverAcknowledgementCheckbox: Locator;
@@ -43,7 +45,8 @@ export class WaiverPage {
     this.waiverForm = page.locator('#volunteerwaiver, form[name="volunteerwaiver"]');
     this.emailInput = page.locator('#email, input[name="email"]');
     this.checkEmailButton = page.locator('input[value="Check Email"], button:has-text("Check Email")');
-    this.fullLegalNameInput = page.locator('#full_legal_name, input[name="full_legal_name"]');
+    this.firstNameInput = page.locator('#first_name, input[name="first_name"]');
+    this.lastNameInput = page.locator('#last_name, input[name="last_name"]');
     this.phoneNumberInput = page.locator('#phone_number, input[name="phone_number"]');
     this.dateOfBirthInput = page.locator('#date_of_birth, input[name="date_of_birth"]');
     this.waiverAcknowledgementCheckbox = page.locator('#waiver_acknowledgement, input[name="waiver_acknowledgement"]');
@@ -82,9 +85,13 @@ export class WaiverPage {
     // Wait for form fields to be visible
     await waitForElementStable(this.page, '#waiver-form-fields', { timeout: TIMEOUTS.DEFAULT });
     
-    // Fill full legal name
-    await this.fullLegalNameInput.clear();
-    await this.fullLegalNameInput.fill(data.fullLegalName);
+    // Fill first name
+    await this.firstNameInput.clear();
+    await this.firstNameInput.fill(data.firstName);
+    
+    // Fill last name
+    await this.lastNameInput.clear();
+    await this.lastNameInput.fill(data.lastName);
     
     // Fill phone number
     await this.phoneNumberInput.clear();

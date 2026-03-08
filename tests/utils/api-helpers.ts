@@ -217,7 +217,8 @@ export async function validateSession(
 
 export interface WaiverData {
   email: string;
-  fullLegalName: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
   dateOfBirth: string;
   waiverAcknowledgement: boolean;
@@ -239,7 +240,8 @@ export async function createTestWaiver(
   // Convert camelCase to snake_case for API
   const apiPayload = {
     session_token: sessionToken,
-    full_legal_name: waiverData.fullLegalName,
+    first_name: waiverData.firstName,
+    last_name: waiverData.lastName,
     phone_number: waiverData.phoneNumber,
     date_of_birth: waiverData.dateOfBirth,
     waiver_acknowledgement: waiverData.waiverAcknowledgement,

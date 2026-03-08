@@ -201,7 +201,8 @@ def handler(event, context):
                         'waiver_id': waiver['waiver_id'],
                         'submission_date': waiver['submission_date'],
                         'expiration_date': expiration_date_str,
-                        'full_legal_name': waiver.get('full_legal_name', ''),
+                        'first_name': waiver.get('first_name', ''),
+                        'last_name': waiver.get('last_name', ''),
                         'submission_timestamp': submission_date.timestamp(),
                         'is_expired': is_expired
                     })
@@ -217,7 +218,8 @@ def handler(event, context):
                         'waiver_id': most_recent_waiver['waiver_id'],
                         'submissionDate': most_recent_waiver['submission_date'],
                         'expirationDate': most_recent_waiver['expiration_date'],
-                        'fullLegalName': most_recent_waiver['full_legal_name'],
+                        'firstName': most_recent_waiver['first_name'],
+                        'lastName': most_recent_waiver['last_name'],
                         'isExpired': most_recent_waiver['is_expired'],
                         'totalWaivers': len(all_waivers)
                     }

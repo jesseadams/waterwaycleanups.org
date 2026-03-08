@@ -104,7 +104,8 @@ export function generateTestUsers(count: number): TestUser[] {
  */
 
 export interface WaiverFormData {
-  fullLegalName: string;
+  firstName: string;
+  lastName: string;
   phoneNumber: string;
   dateOfBirth: string;
   waiverAcknowledgement: boolean;
@@ -125,7 +126,8 @@ export function generateWaiverData(
   const today = new Date().toISOString().split('T')[0];
   
   return {
-    fullLegalName: `${user.firstName} ${user.lastName}`,
+    firstName: user.firstName,
+    lastName: user.lastName,
     phoneNumber: user.phoneNumber,
     dateOfBirth: user.dateOfBirth,
     waiverAcknowledgement: true,

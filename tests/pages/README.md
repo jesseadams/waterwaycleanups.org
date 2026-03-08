@@ -77,7 +77,8 @@ Handles volunteer waiver form submission and validation.
 const waiverPage = new WaiverPage(page);
 await waiverPage.goto();
 await waiverPage.submitCompleteWaiver('test@example.com', {
-  fullLegalName: 'John Doe',
+  firstName: 'John',
+  lastName: 'Doe',
   phoneNumber: '555-1234',
   dateOfBirth: '1990-01-01',
   waiverAcknowledgement: true,

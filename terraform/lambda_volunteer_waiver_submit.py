@@ -52,7 +52,7 @@ def handler(event, context):
         body = json.loads(event['body'])
         
         # Validate required fields
-        required_fields = ['email', 'full_legal_name', 'phone_number', 'date_of_birth', 'waiver_acknowledgement']
+        required_fields = ['email', 'first_name', 'last_name', 'phone_number', 'date_of_birth', 'waiver_acknowledgement']
         
         missing_fields = [field for field in required_fields if field not in body or not body[field]]
         
@@ -124,7 +124,8 @@ def handler(event, context):
             'email': body['email'].lower(),  # Normalize email to lowercase
             'waiver_id': waiver_id,
             'submission_date': submission_date,
-            'full_legal_name': body['full_legal_name'],
+            'first_name': body['first_name'],
+            'last_name': body['last_name'],
             'phone_number': body['phone_number'],
             'date_of_birth': body['date_of_birth'],
             'is_adult': is_adult,
@@ -160,7 +161,8 @@ def handler(event, context):
                     "waiver_id": waiver_id,
                     "submission_date": submission_date,
                     "details": {
-                        "full_legal_name": body['full_legal_name'],
+                        "first_name": body['first_name'],
+                        "last_name": body['last_name'],
                         "email": body['email'],
                         "phone_number": body['phone_number'],
                         "date_of_birth": body['date_of_birth'],
@@ -174,7 +176,7 @@ def handler(event, context):
                 }, indent=2)
                 
                 # Create a more readable subject line
-                subject = f"New Volunteer Waiver: {body['full_legal_name']}"
+                subject = f"New Volunteer Waiver: {body['first_name']} {body['last_name']}"
                 
                 # Publish to SNS topic
                 logger.info(f"Sending notification to SNS topic: {sns_topic_arn}")
