@@ -443,6 +443,431 @@
       ]);
     };
 
+    // Content Editor Component - create/edit events, queue changes, publish to S3
+    const ContentEditor = () => {
+      const [pendingEdits, setPendingEdits] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [publishing, setPublishing] = useState(false);
+      const [error, setError] = useState('');
+      const [successMsg, setSuccessMsg] = useState('');
+      const [showForm, setShowForm] = useState(false);
+      const [editingId, setEditingId] = useState(null);
+      const [existingFile, setExistingFile] = useState(null);
+      const [formData, setFormData] = useState({
+        title: '',
+        seo_description: '',
+        description: '',
+        start_time: '',
+        end_time: '',
+        location_name: '',
+        location_address: '',
+        location_url: '',
+        image: '/uploads/waterway-cleanups/default.jpg',
+        tags: '',
+        attendance_cap: 20,
+        preheader_is_light: false
+      });
+
+      const contentSyncUrl = (() => {
+        if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
+          return window.API_CONFIG.BASE_URL + '/admin-content-sync';
+        }
+        return '/api/admin-content-sync';
+      })();
+
+      const apiCall = async (action, extra = {}) => {
+        const token = localStorage.getItem('session_token');
+        const res = await fetch(contentSyncUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_token: token, action, ...extra })
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'API error');
+        return data;
+      };
+
+      const loadEdits = async () => {
+        try {
+          setLoading(true);
+          const data = await apiCall('list_edits');
+          setPendingEdits(data.edits || []);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      useEffect(() => { loadEdits(); }, []);
+
+      const resetForm = () => {
+        setFormData({
+          title: '', seo_description: '', description: '',
+          start_time: '', end_time: '',
+          location_name: '', location_address: '', location_url: '',
+          image: '/uploads/waterway-cleanups/default.jpg',
+          tags: '', attendance_cap: 20, preheader_is_light: false
+        });
+        setEditingId(null);
+        setExistingFile(null);
+      };
+
+      const handleEditDraft = (edit) => {
+        const ed = edit.event_data;
+        setFormData({
+          title: ed.title || '',
+          seo_description: ed.seo_description || '',
+          description: ed.description || '',
+          start_time: ed.start_time ? ed.start_time.slice(0, 16) : '',
+          end_time: ed.end_time ? ed.end_time.slice(0, 16) : '',
+          location_name: ed.location_name || '',
+          location_address: ed.location_address || '',
+          location_url: ed.location_url || '',
+          image: ed.image || '/uploads/waterway-cleanups/default.jpg',
+          tags: (ed.tags || []).join(', '),
+          attendance_cap: ed.attendance_cap || 20,
+          preheader_is_light: ed.preheader_is_light || false
+        });
+        setEditingId(edit.edit_id);
+        setExistingFile(edit.edit_type === 'update' ? edit.file_path : null);
+        setShowForm(true);
+      };
+
+      const handleSaveDraft = async (e) => {
+        e.preventDefault();
+        setError('');
+        try {
+          const tags = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+          const startWithTz = formData.start_time ? formData.start_time + ':00-05:00' : '';
+          const endWithTz = formData.end_time ? formData.end_time + ':00-05:00' : '';
+
+          const eventData = {
+            title: formData.title,
+            seo_description: formData.seo_description,
+            description: formData.description,
+            start_time: startWithTz,
+            end_time: endWithTz,
+            location_name: formData.location_name,
+            location_address: formData.location_address,
+            location_url: formData.location_url,
+            image: formData.image,
+            tags: tags,
+            attendance_cap: parseInt(formData.attendance_cap) || 20,
+            preheader_is_light: formData.preheader_is_light
+          };
+
+          await apiCall('save_draft', {
+            event_data: eventData,
+            edit_id: editingId || undefined,
+            existing_file: existingFile || undefined
+          });
+
+          setSuccessMsg('Draft saved');
+          setTimeout(() => setSuccessMsg(''), 3000);
+          setShowForm(false);
+          resetForm();
+          await loadEdits();
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+
+      const handleDeleteEdit = async (editId) => {
+        if (!confirm('Discard this pending edit?')) return;
+        try {
+          await apiCall('delete_edit', { edit_id: editId });
+          await loadEdits();
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+
+      const handlePublishAll = async () => {
+        if (!confirm(`Publish ${pendingEdits.length} pending change(s) to S3? This will update the live site.`)) return;
+        try {
+          setPublishing(true);
+          setError('');
+          const data = await apiCall('publish');
+          setSuccessMsg(data.message);
+          setTimeout(() => setSuccessMsg(''), 5000);
+          await loadEdits();
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setPublishing(false);
+        }
+      };
+
+      const handlePublishOne = async (editId) => {
+        if (!confirm('Publish this single change to S3?')) return;
+        try {
+          setPublishing(true);
+          const data = await apiCall('publish', { edit_ids: [editId] });
+          setSuccessMsg(data.message);
+          setTimeout(() => setSuccessMsg(''), 5000);
+          await loadEdits();
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setPublishing(false);
+        }
+      };
+
+      const updateField = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+
+      // --- Render ---
+      const formEl = showForm ? React.createElement('div', {
+        className: "bg-white border rounded-lg p-6 mb-6"
+      }, [
+        React.createElement('div', {
+          key: 'form-header',
+          className: "flex justify-between items-center mb-4"
+        }, [
+          React.createElement('h4', { key: 't', className: "text-lg font-semibold" },
+            editingId ? 'Edit Draft' : 'New Cleanup Event'),
+          React.createElement('button', {
+            key: 'close',
+            onClick: () => { setShowForm(false); resetForm(); },
+            className: "text-gray-400 hover:text-gray-600 text-xl"
+          }, '✕')
+        ]),
+        React.createElement('form', {
+          key: 'form',
+          onSubmit: handleSaveDraft,
+          className: "space-y-4"
+        }, [
+          // Title
+          React.createElement('div', { key: 'title' }, [
+            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Event Title *'),
+            React.createElement('input', {
+              key: 'i', type: 'text', required: true, value: formData.title,
+              onChange: (e) => updateField('title', e.target.value),
+              placeholder: 'e.g. Potomac Run Road Cleanup - June 2026',
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            })
+          ]),
+          // SEO Description
+          React.createElement('div', { key: 'seo' }, [
+            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'SEO Description'),
+            React.createElement('input', {
+              key: 'i', type: 'text', value: formData.seo_description,
+              onChange: (e) => updateField('seo_description', e.target.value),
+              placeholder: 'Brief description for search engines',
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            })
+          ]),
+          // Description
+          React.createElement('div', { key: 'desc' }, [
+            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Event Description *'),
+            React.createElement('textarea', {
+              key: 'i', required: true, rows: 3, value: formData.description,
+              onChange: (e) => updateField('description', e.target.value),
+              placeholder: 'Join us for a community cleanup day...',
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            })
+          ]),
+          // Date/Time row
+          React.createElement('div', { key: 'dates', className: "grid grid-cols-1 md:grid-cols-2 gap-4" }, [
+            React.createElement('div', { key: 'start' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Start Time *'),
+              React.createElement('input', {
+                key: 'i', type: 'datetime-local', required: true, value: formData.start_time,
+                onChange: (e) => updateField('start_time', e.target.value),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ]),
+            React.createElement('div', { key: 'end' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'End Time *'),
+              React.createElement('input', {
+                key: 'i', type: 'datetime-local', required: true, value: formData.end_time,
+                onChange: (e) => updateField('end_time', e.target.value),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ])
+          ]),
+          // Location row
+          React.createElement('div', { key: 'loc', className: "grid grid-cols-1 md:grid-cols-2 gap-4" }, [
+            React.createElement('div', { key: 'name' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Location Name *'),
+              React.createElement('input', {
+                key: 'i', type: 'text', required: true, value: formData.location_name,
+                onChange: (e) => updateField('location_name', e.target.value),
+                placeholder: 'e.g. Widewater State Park',
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ]),
+            React.createElement('div', { key: 'addr' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Address *'),
+              React.createElement('input', {
+                key: 'i', type: 'text', required: true, value: formData.location_address,
+                onChange: (e) => updateField('location_address', e.target.value),
+                placeholder: '1571 Widewater Beach Rd, Stafford, VA 22554',
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ])
+          ]),
+          // Map URL
+          React.createElement('div', { key: 'mapurl' }, [
+            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Map/Directions URL (optional)'),
+            React.createElement('input', {
+              key: 'i', type: 'url', value: formData.location_url,
+              onChange: (e) => updateField('location_url', e.target.value),
+              placeholder: 'https://www.google.com/maps/...',
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            })
+          ]),
+          // Image, Tags, Cap row
+          React.createElement('div', { key: 'meta', className: "grid grid-cols-1 md:grid-cols-3 gap-4" }, [
+            React.createElement('div', { key: 'img' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Image Path'),
+              React.createElement('input', {
+                key: 'i', type: 'text', value: formData.image,
+                onChange: (e) => updateField('image', e.target.value),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ]),
+            React.createElement('div', { key: 'tags' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Tags (comma-separated)'),
+              React.createElement('input', {
+                key: 'i', type: 'text', value: formData.tags,
+                onChange: (e) => updateField('tags', e.target.value),
+                placeholder: 'aquia-creek, state-park',
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ]),
+            React.createElement('div', { key: 'cap' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Attendance Cap'),
+              React.createElement('input', {
+                key: 'i', type: 'number', min: 1, value: formData.attendance_cap,
+                onChange: (e) => updateField('attendance_cap', e.target.value),
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ])
+          ]),
+          // Submit
+          React.createElement('div', { key: 'actions', className: "flex space-x-3 pt-2" }, [
+            React.createElement('button', {
+              key: 'save', type: 'submit',
+              className: "bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700"
+            }, editingId ? 'Update Draft' : 'Save as Draft'),
+            React.createElement('button', {
+              key: 'cancel', type: 'button',
+              onClick: () => { setShowForm(false); resetForm(); },
+              className: "bg-gray-300 text-gray-700 px-6 py-2 rounded-md hover:bg-gray-400"
+            }, 'Cancel')
+          ])
+        ])
+      ]) : null;
+
+      return React.createElement('div', { className: "space-y-4" }, [
+        // Header
+        React.createElement('div', {
+          key: 'header',
+          className: "flex justify-between items-center"
+        }, [
+          React.createElement('h3', { key: 't', className: "text-xl font-semibold" }, 'Content Editor'),
+          React.createElement('div', { key: 'btns', className: "flex space-x-3" }, [
+            React.createElement('button', {
+              key: 'new',
+              onClick: () => { resetForm(); setShowForm(true); },
+              className: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            }, '+ New Event'),
+            pendingEdits.length > 0 ? React.createElement('button', {
+              key: 'publish',
+              onClick: handlePublishAll,
+              disabled: publishing,
+              className: "bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50"
+            }, publishing ? 'Publishing...' : `Publish All (${pendingEdits.length})`) : null
+          ])
+        ]),
+        // Messages
+        error ? React.createElement('div', {
+          key: 'err',
+          className: "bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
+        }, error) : null,
+        successMsg ? React.createElement('div', {
+          key: 'ok',
+          className: "bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+        }, successMsg) : null,
+        // Form
+        React.createElement('div', { key: 'form-container' }, formEl),
+        // Pending Edits Table
+        React.createElement('div', {
+          key: 'table',
+          className: "bg-white border rounded-lg overflow-hidden"
+        }, [
+          React.createElement('div', {
+            key: 'table-header',
+            className: "bg-gray-50 px-4 py-3 border-b"
+          }, React.createElement('h4', { className: "font-semibold text-gray-700" },
+            `Pending Changes (${pendingEdits.length})`)),
+          loading ? React.createElement('div', {
+            key: 'loading',
+            className: "text-center py-6 text-gray-500"
+          }, 'Loading...') :
+          pendingEdits.length === 0 ? React.createElement('div', {
+            key: 'empty',
+            className: "text-center py-6 text-gray-500"
+          }, 'No pending changes. Create a new event or edit an existing one.') :
+          React.createElement('table', {
+            key: 'edits-table',
+            className: "w-full text-sm"
+          }, [
+            React.createElement('thead', { key: 'thead' },
+              React.createElement('tr', { className: "border-b bg-gray-50" }, [
+                React.createElement('th', { key: 'type', className: "text-left py-2 px-4" }, 'Type'),
+                React.createElement('th', { key: 'title', className: "text-left py-2 px-4" }, 'Title'),
+                React.createElement('th', { key: 'file', className: "text-left py-2 px-4" }, 'File'),
+                React.createElement('th', { key: 'by', className: "text-left py-2 px-4" }, 'By'),
+                React.createElement('th', { key: 'date', className: "text-left py-2 px-4" }, 'Updated'),
+                React.createElement('th', { key: 'actions', className: "text-right py-2 px-4" }, 'Actions')
+              ])
+            ),
+            React.createElement('tbody', { key: 'tbody' },
+              pendingEdits.map(edit => React.createElement('tr', {
+                key: edit.edit_id,
+                className: "border-b hover:bg-gray-50"
+              }, [
+                React.createElement('td', { key: 'type', className: "py-2 px-4" },
+                  React.createElement('span', {
+                    className: `inline-block px-2 py-0.5 text-xs rounded ${
+                      edit.edit_type === 'create' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    }`
+                  }, edit.edit_type === 'create' ? 'NEW' : 'EDIT')
+                ),
+                React.createElement('td', { key: 'title', className: "py-2 px-4 font-medium" }, edit.title),
+                React.createElement('td', { key: 'file', className: "py-2 px-4 text-gray-600 text-xs font-mono" }, edit.file_path),
+                React.createElement('td', { key: 'by', className: "py-2 px-4 text-gray-600" }, edit.created_by),
+                React.createElement('td', { key: 'date', className: "py-2 px-4 text-gray-600" },
+                  new Date(edit.updated_at).toLocaleString()),
+                React.createElement('td', { key: 'actions', className: "py-2 px-4 text-right" },
+                  React.createElement('div', { className: "flex justify-end space-x-2" }, [
+                    React.createElement('button', {
+                      key: 'edit',
+                      onClick: () => handleEditDraft(edit),
+                      className: "bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600"
+                    }, 'Edit'),
+                    React.createElement('button', {
+                      key: 'pub',
+                      onClick: () => handlePublishOne(edit.edit_id),
+                      disabled: publishing,
+                      className: "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                    }, 'Publish'),
+                    React.createElement('button', {
+                      key: 'del',
+                      onClick: () => handleDeleteEdit(edit.edit_id),
+                      className: "bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
+                    }, 'Discard')
+                  ])
+                )
+              ]))
+            )
+          ])
+        ])
+      ]);
+    };
+
     const AdminDashboard = () => {
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [email, setEmail] = useState('');
@@ -1116,6 +1541,7 @@
           className: "flex space-x-8 px-6"
         }, [
           { id: 'events', label: 'Events', icon: '📅' },
+          { id: 'content', label: 'Content Editor', icon: '✏️' },
           { id: 'volunteers', label: 'Volunteers', icon: '👥' },
           { id: 'analytics', label: 'Analytics', icon: '📊' }
         ].map(tab => React.createElement('button', {
@@ -1536,6 +1962,9 @@
               className: "text-center py-8 text-gray-500"
             }, 'No events found.'))
           ]) : null,
+          activeTab === 'content' ? React.createElement('div', { key: 'content-tab' },
+            React.createElement(ContentEditor, {})
+          ) : null,
           activeTab === 'volunteers' ? React.createElement('div', { key: 'volunteers-tab' }, [
             React.createElement('h3', {
               key: 'title',
