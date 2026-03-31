@@ -948,7 +948,12 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
     aws_api_gateway_integration.admin_volunteers_integration,
     aws_api_gateway_integration.admin_volunteers_options_integration,
     aws_api_gateway_method_response.admin_volunteers_options_response,
-    aws_api_gateway_integration_response.admin_volunteers_options_integration_response
+    aws_api_gateway_integration_response.admin_volunteers_options_integration_response,
+    # Admin content sync endpoint
+    aws_api_gateway_integration.admin_content_sync_integration,
+    aws_api_gateway_integration.admin_content_sync_options_integration,
+    aws_api_gateway_method_response.admin_content_sync_options_response,
+    aws_api_gateway_integration_response.admin_content_sync_options_integration_response
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
@@ -1029,6 +1034,11 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
       aws_api_gateway_integration.admin_volunteers_options_integration,
       aws_api_gateway_method_response.admin_volunteers_options_response,
       aws_api_gateway_integration_response.admin_volunteers_options_integration_response,
+      # Admin content sync endpoint
+      aws_api_gateway_integration.admin_content_sync_integration,
+      aws_api_gateway_integration.admin_content_sync_options_integration,
+      aws_api_gateway_method_response.admin_content_sync_options_response,
+      aws_api_gateway_integration_response.admin_content_sync_options_integration_response,
       # Force redeployment timestamp
       timestamp()
     ]))

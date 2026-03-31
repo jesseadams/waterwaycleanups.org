@@ -39,3 +39,22 @@ variable "deploy_staging" {
   type        = bool
   default     = false
 }
+
+variable "github_token" {
+  description = "GitHub personal access token for triggering workflows"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "github_repo" {
+  description = "GitHub repository in format owner/repo"
+  type        = string
+  default     = "jesseadams/waterwaycleanups.org"
+}
+
+variable "github_branch" {
+  description = "GitHub branch to trigger workflows on"
+  type        = string
+  default     = "main"
+}

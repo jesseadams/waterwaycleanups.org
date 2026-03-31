@@ -1,20 +1,19 @@
 // API Endpoint: /api/admin-content-sync
-// Manages event content: save drafts to DynamoDB, publish to S3, invalidate CloudFront
+// Manages event content: save drafts to DynamoDB, publish to events table, trigger rebuild
 
-const AWS = require('aws-sdk');
+const { DynamoDBClient } = require('@aws-sdk/client-dynamodb');
+const { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, DeleteCommand } = require('@aws-sdk/lib-dynamodb');
+const https = require('https');
 
-AWS.config.update({
-  region: process.env.AWS_REGION || 'us-east-1'
-});
-
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const s3 = new AWS.S3();
-const cloudfront = new AWS.CloudFront();
+const client = new DynamoDBClient({ region: process.env.AWS_REGION || 'us-east-1' });
+const dynamoDB = DynamoDBDocumentClient.from(client);
 
 const sessionTableName = process.env.SESSION_TABLE_NAME || 'user_sessions';
 const contentEditsTable = process.env.CONTENT_EDITS_TABLE_NAME || 'content_edits';
-const contentBucket = process.env.CONTENT_BUCKET_NAME || 'waterwaycleanups-content';
-const cloudfrontDistributionId = process.env.CLOUDFRONT_DISTRIBUTION_ID || '';
+const eventsTableName = process.env.EVENTS_TABLE_NAME || 'events';
+const githubToken = process.env.GITHUB_TOKEN || '';
+const githubRepo = process.env.GITHUB_REPO || 'waterwaycleanups/waterwaycleanups.org';
+const githubBranch = process.env.GITHUB_BRANCH || 'main';
 
 // Admin email whitelist
 const ADMIN_EMAILS = [
@@ -25,14 +24,12 @@ const ADMIN_EMAILS = [
 ];
 
 async function validateAdminSession(sessionToken) {
-  const result = await dynamoDB.query({
+  const result = await dynamoDB.send(new GetCommand({
     TableName: sessionTableName,
-    IndexName: 'session-token-index',
-    KeyConditionExpression: 'session_token = :token',
-    ExpressionAttributeValues: { ':token': sessionToken }
-  }).promise();
+    Key: { session_token: sessionToken }
+  }));
 
-  const session = (result.Items || [])[0];
+  const session = result.Item;
   if (!session || new Date(session.expires_at) <= new Date()) return null;
   return ADMIN_EMAILS.includes(session.email.toLowerCase()) ? session : null;
 }
@@ -46,71 +43,65 @@ function slugify(title) {
     .replace(/^-+|-+$/g, '');
 }
 
-// Format a date for the Hugo shortcode display string
-function formatDateDisplay(startTime, endTime) {
-  const start = new Date(startTime);
-  const end = new Date(endTime);
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const month = months[start.getMonth()];
-  const day = start.getDate();
-  const year = start.getFullYear();
-
-  const fmt = (d) => {
-    let h = d.getHours();
-    const m = d.getMinutes();
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    h = h % 12 || 12;
-    return m === 0 ? `${h}:00 ${ampm}` : `${h}:${m.toString().padStart(2,'0')} ${ampm}`;
-  };
-
-  return `${month} ${day}, ${year} | ${fmt(start)}-${fmt(end)}`;
+// Generate event_id from title and date
+function generateEventId(title, startTime) {
+  const slug = slugify(title);
+  const date = new Date(startTime);
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${slug}-${month}-${year}`;
 }
 
-// Generate Hugo markdown content from event data
-function generateMarkdown(eventData) {
-  const tags = (eventData.tags || []).map(t => `  - ${t}`).join('\n');
-  const dateDisplay = formatDateDisplay(eventData.start_time, eventData.end_time);
-  const locationHtml = eventData.location_url
-    ? `${eventData.location_name}<br/>\n${eventData.location_address}\n<a href="${eventData.location_url}">Map</a>`
-    : `${eventData.location_name}<br/>\n${eventData.location_address}`;
+// Helper to make GitHub API requests
+function githubRequest(method, path, data = null) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.github.com',
+      path: path,
+      method: method,
+      headers: {
+        'User-Agent': 'waterwaycleanups-admin',
+        'Authorization': `token ${githubToken}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      }
+    };
 
-  return `---
-title: "${eventData.title}"
-seo:
-  description: "${eventData.seo_description}"
-image: "${eventData.image || '/uploads/waterway-cleanups/default.jpg'}"
-tags:
-${tags}
-preheader_is_light: ${eventData.preheader_is_light ? 'true' : 'false'}
-start_time: "${eventData.start_time}"
-end_time: "${eventData.end_time}"
----
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(body || '{}'));
+        } else {
+          reject(new Error(`GitHub API error: ${res.statusCode} ${body}`));
+        }
+      });
+    });
 
-{{< date_with_icon date="${dateDisplay}" class="large-date" >}}
-{{< tabs >}}
-## Event Details
+    req.on('error', reject);
+    if (data) req.write(JSON.stringify(data));
+    req.end();
+  });
+}
 
-${eventData.description}
-
----
-## Location
-
-${locationHtml}
-
----
-## What We Provide
-
-- Trash grabbers
-- Gloves
-- Reflective vests
-- Trash bags
-- First Aid Kit
-
-Bring water, wear sturdy shoes, and dress for the weather. All ages welcome—kids under 18 must be accompanied by an adult.
-{{< /tabs >}}
-
-{{< event_rsvp attendance_cap="${eventData.attendance_cap || 20}" >}}
-`;
+// Trigger GitHub Actions workflow
+async function triggerWorkflow(environment = 'staging') {
+  if (!githubToken) {
+    console.warn('GITHUB_TOKEN not set, skipping workflow trigger');
+    return null;
+  }
+  
+  try {
+    await githubRequest('POST', `/repos/${githubRepo}/actions/workflows/deploy.yml/dispatches`, {
+      ref: githubBranch,
+      inputs: { environment }
+    });
+    return { triggered: true, environment };
+  } catch (err) {
+    console.error('Failed to trigger workflow:', err.message);
+    return { triggered: false, error: err.message };
+  }
 }
 
 const CORS_HEADERS = {
@@ -134,16 +125,20 @@ exports.handler = async (event) => {
 
   let body;
   try {
-    body = JSON.parse(event.body);
+    body = JSON.parse(event.body || '{}');
   } catch (e) {
     return respond(400, { success: false, message: 'Invalid JSON body' });
   }
 
-  if (!body.session_token) {
+  // Extract session token from Authorization header (Bearer token)
+  const authHeader = event.headers?.Authorization || event.headers?.authorization;
+  const sessionToken = authHeader?.replace(/^Bearer\s+/i, '');
+  
+  if (!sessionToken) {
     return respond(401, { success: false, message: 'Session token required' });
   }
 
-  const session = await validateAdminSession(body.session_token);
+  const session = await validateAdminSession(sessionToken);
   if (!session) {
     return respond(403, { success: false, message: 'Admin access required' });
   }
@@ -157,16 +152,16 @@ exports.handler = async (event) => {
         return await handleListEdits(body, session);
       case 'delete_edit':
         return await handleDeleteEdit(body, session);
-      case 'publish':
-        return await handlePublish(body, session);
       case 'load_event':
         return await handleLoadEvent(body, session);
+      case 'publish':
+        return await handlePublish(body, session);
       default:
         return respond(400, { success: false, message: `Unknown action: ${action}` });
     }
   } catch (err) {
     console.error(`Error handling ${action}:`, err);
-    return respond(500, { success: false, message: 'Internal server error' });
+    return respond(500, { success: false, message: 'Internal server error', error: err.message });
   }
 };
 
@@ -177,19 +172,35 @@ async function handleSaveDraft(body, session) {
     return respond(400, { success: false, message: 'Missing required event fields (title, start_time, end_time)' });
   }
 
-  const slug = eventData.slug || slugify(eventData.title);
+  const eventId = body.event_id || generateEventId(eventData.title, eventData.start_time);
   const editId = body.edit_id || `edit_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
-  const isNew = !body.existing_file;
-  const filePath = `content/en/events/${slug}.md`;
-  const markdown = generateMarkdown(eventData);
+  const isNew = !body.event_id;
+
+  // Prepare event data for DynamoDB events table format
+  const dbEventData = {
+    event_id: eventId,
+    title: eventData.title,
+    description: eventData.description,
+    start_time: eventData.start_time,
+    end_time: eventData.end_time,
+    location: {
+      name: eventData.location_name,
+      address: eventData.location_address
+    },
+    attendance_cap: parseInt(eventData.attendance_cap) || 20,
+    status: 'active',
+    hugo_config: {
+      image: eventData.image || '/uploads/waterway-cleanups/default.jpg',
+      tags: eventData.tags || [],
+      preheader_is_light: eventData.preheader_is_light || false
+    }
+  };
 
   const item = {
     edit_id: editId,
-    file_path: filePath,
-    slug: slug,
+    event_id: eventId,
     title: eventData.title,
-    event_data: eventData,
-    markdown_content: markdown,
+    event_data: dbEventData,
     edit_type: isNew ? 'create' : 'update',
     status: 'pending',
     created_by: session.email,
@@ -202,8 +213,7 @@ async function handleSaveDraft(body, session) {
   return respond(200, {
     success: true,
     edit_id: editId,
-    file_path: filePath,
-    slug: slug,
+    event_id: eventId,
     message: `Draft ${isNew ? 'created' : 'updated'} successfully`
   });
 }
@@ -238,34 +248,34 @@ async function handleDeleteEdit(body, session) {
   return respond(200, { success: true, message: 'Edit deleted' });
 }
 
-// Load an existing event file from S3 for editing
+// Load an existing event from the events table for editing
 async function handleLoadEvent(body, session) {
-  if (!body.file_path) {
-    return respond(400, { success: false, message: 'file_path required' });
+  if (!body.event_id) {
+    return respond(400, { success: false, message: 'event_id required' });
   }
 
   try {
-    const obj = await s3.getObject({
-      Bucket: contentBucket,
-      Key: body.file_path
+    const result = await dynamoDB.get({
+      TableName: eventsTableName,
+      Key: { event_id: body.event_id }
     }).promise();
 
-    const content = obj.Body.toString('utf-8');
-    return respond(200, { success: true, content, file_path: body.file_path });
-  } catch (err) {
-    if (err.code === 'NoSuchKey') {
-      return respond(404, { success: false, message: 'File not found in S3' });
+    if (!result.Item) {
+      return respond(404, { success: false, message: 'Event not found' });
     }
-    throw err;
+
+    return respond(200, { success: true, event: result.Item });
+  } catch (err) {
+    console.error('Error loading event:', err);
+    return respond(500, { success: false, message: 'Failed to load event' });
   }
 }
 
-// Publish all pending edits (or specific ones) to S3 and invalidate CloudFront
+// Publish pending edits to the events table and trigger rebuild
 async function handlePublish(body, session) {
   // Get edits to publish
   let editsToPublish;
   if (body.edit_ids && body.edit_ids.length > 0) {
-    // Publish specific edits
     const results = await Promise.all(
       body.edit_ids.map(id =>
         dynamoDB.get({ TableName: contentEditsTable, Key: { edit_id: id } }).promise()
@@ -273,7 +283,6 @@ async function handlePublish(body, session) {
     );
     editsToPublish = results.map(r => r.Item).filter(Boolean);
   } else {
-    // Publish all pending
     const result = await dynamoDB.scan({
       TableName: contentEditsTable,
       FilterExpression: '#s = :status',
@@ -287,20 +296,30 @@ async function handlePublish(body, session) {
     return respond(200, { success: true, message: 'No pending edits to publish', published: 0 });
   }
 
-  const publishedPaths = [];
+  const publishedEvents = [];
   const errors = [];
 
   for (const edit of editsToPublish) {
     try {
-      // Upload markdown to S3
-      await s3.putObject({
-        Bucket: contentBucket,
-        Key: edit.file_path,
-        Body: edit.markdown_content,
-        ContentType: 'text/markdown; charset=utf-8'
+      // Write to events table
+      const eventItem = {
+        ...edit.event_data,
+        updated_at: new Date().toISOString(),
+        updated_by: session.email
+      };
+
+      // If it's a new event, add created_at
+      if (edit.edit_type === 'create') {
+        eventItem.created_at = new Date().toISOString();
+        eventItem.created_by = session.email;
+      }
+
+      await dynamoDB.put({
+        TableName: eventsTableName,
+        Item: eventItem
       }).promise();
 
-      // Mark as published
+      // Mark edit as published
       await dynamoDB.update({
         TableName: contentEditsTable,
         Key: { edit_id: edit.edit_id },
@@ -313,45 +332,23 @@ async function handlePublish(body, session) {
         }
       }).promise();
 
-      publishedPaths.push(edit.file_path);
-      console.log(`Published: ${edit.file_path}`);
+      publishedEvents.push(edit.event_id);
+      console.log(`Published event: ${edit.event_id}`);
     } catch (err) {
-      console.error(`Failed to publish ${edit.file_path}:`, err);
-      errors.push({ file_path: edit.file_path, error: err.message });
+      console.error(`Failed to publish ${edit.event_id}:`, err);
+      errors.push({ event_id: edit.event_id, error: err.message });
     }
   }
 
-  // Invalidate CloudFront cache
-  let invalidationId = null;
-  if (publishedPaths.length > 0 && cloudfrontDistributionId) {
-    try {
-      const invalidation = await cloudfront.createInvalidation({
-        DistributionId: cloudfrontDistributionId,
-        InvalidationBatch: {
-          CallerReference: `publish-${Date.now()}`,
-          Paths: {
-            Quantity: publishedPaths.length + 1,
-            Items: [
-              ...publishedPaths.map(p => `/${p}`),
-              '/events/*'
-            ]
-          }
-        }
-      }).promise();
-      invalidationId = invalidation.Invalidation.Id;
-      console.log(`CloudFront invalidation created: ${invalidationId}`);
-    } catch (err) {
-      console.error('CloudFront invalidation failed:', err);
-      errors.push({ file_path: 'cloudfront', error: err.message });
-    }
-  }
+  // Trigger GitHub Actions workflow to rebuild site
+  const workflowResult = await triggerWorkflow('staging');
 
   return respond(200, {
     success: true,
-    published: publishedPaths.length,
-    published_paths: publishedPaths,
-    invalidation_id: invalidationId,
+    published: publishedEvents.length,
+    published_events: publishedEvents,
+    workflow: workflowResult,
     errors: errors.length > 0 ? errors : undefined,
-    message: `Published ${publishedPaths.length} file(s)${invalidationId ? ', CloudFront invalidation started' : ''}`
+    message: `Published ${publishedEvents.length} event(s)${workflowResult?.triggered ? ', site rebuild triggered' : ''}`
   });
 }

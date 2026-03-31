@@ -76,3 +76,6 @@ test-results*.json/*
 *.log
 
 *.pyc
+
+
+terraform.tfvars

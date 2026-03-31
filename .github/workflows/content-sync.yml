@@ -1,0 +1,127 @@
+name: Content Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to sync'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+        default: staging
+
+env:
+  DEPLOY_ENV: ${{ inputs.environment || 'staging' }}
+
+jobs:
+  sync-content:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
+          aws-region: us-east-1
+          role-session-name: github-actions-content-sync
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.10.0"
+          terraform_wrapper: false
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          terraform init
+
+      - name: Select Terraform Workspace
+        run: |
+          cd terraform
+          terraform workspace select ${{ env.DEPLOY_ENV }}
+          echo "Using workspace: $(terraform workspace show)"
+
+      - name: Get Terraform Outputs
+        id: tf-outputs
+        run: |
+          cd terraform
+          echo "bucket_name=$(terraform output -raw website_bucket_name)" >> $GITHUB_OUTPUT
+          echo "distribution_id=$(terraform output -raw main_cloudfront_distribution_id)" >> $GITHUB_OUTPUT
+          echo "website_url=$(terraform output -raw website_url)" >> $GITHUB_OUTPUT
+          echo "api_base_url=$(terraform output -raw api_base_url)" >> $GITHUB_OUTPUT
+          echo "api_base_url_volunteer=$(terraform output -raw api_base_url_volunteer)" >> $GITHUB_OUTPUT
+          echo "events_api_url=$(terraform output -raw events_api_url)" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build assets (Webpack)
+        run: npm run build:assets
+
+      - name: Generate Hugo files from database
+        run: node scripts/hugo-generator.js --environment=${{ env.DEPLOY_ENV }}
+        env:
+          AWS_REGION: us-east-1
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.147.1"
+          extended: true
+
+      - name: Build Hugo site
+        run: hugo --minify
+        env:
+          HUGO_ENV: ${{ env.DEPLOY_ENV }}
+          HUGO_API_BASE_URL: ${{ steps.tf-outputs.outputs.api_base_url }}
+          HUGO_API_BASE_URL_VOLUNTEER: ${{ steps.tf-outputs.outputs.api_base_url_volunteer }}
+          HUGO_EVENTS_API_URL: ${{ steps.tf-outputs.outputs.events_api_url }}
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/
+
+      - name: Invalidate CloudFront Cache
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ steps.tf-outputs.outputs.distribution_id }} --paths "/*"
+
+      - name: Validate deployment
+        run: |
+          echo "Verifying Hugo output exists..."
+          if [ -d "public" ] && [ "$(ls -A public)" ]; then
+            echo "✅ Hugo output directory exists and is not empty"
+          else
+            echo "❌ Hugo output directory missing or empty"
+            exit 1
+          fi
+
+      - name: Slack Notification
+        if: always()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text: "*Content Sync to ${{ env.DEPLOY_ENV }}*: ${{ job.status }}"
+            blocks:
+              - type: "section"
+                text:
+                  type: "mrkdwn"
+                  text: "${{ job.status == 'success' && '✅' || '❌' }} Content Sync to *${{ env.DEPLOY_ENV }}*: ${{ job.status }}${{ steps.tf-outputs.outputs.website_url && format('\nURL: {0}', steps.tf-outputs.outputs.website_url) || '' }}\nRun: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View logs>"
