@@ -19,16 +19,39 @@ class DecimalEncoder(json.JSONEncoder):
         return super(DecimalEncoder, self).default(obj)
 
 dynamodb = boto3.resource('dynamodb')
+ssm = boto3.client('ssm')
+
 session_table_name = os.environ.get('SESSION_TABLE_NAME', 'auth_sessions')
 content_edits_table_name = os.environ.get('CONTENT_EDITS_TABLE_NAME', 'content_edits')
 events_table_name = os.environ.get('EVENTS_TABLE_NAME', 'events')
-github_token = os.environ.get('GITHUB_TOKEN', '')
+github_token_parameter = os.environ.get('GITHUB_TOKEN_PARAMETER', '')
 github_repo = os.environ.get('GITHUB_REPO', 'waterwaycleanups/waterwaycleanups.org')
 github_branch = os.environ.get('GITHUB_BRANCH', 'main')
 
 session_table = dynamodb.Table(session_table_name)
 content_edits_table = dynamodb.Table(content_edits_table_name)
 events_table = dynamodb.Table(events_table_name)
+
+# Cache for GitHub token
+_github_token_cache = None
+
+def get_github_token():
+    """Get GitHub token from SSM Parameter Store with caching"""
+    global _github_token_cache
+    
+    if _github_token_cache is not None:
+        return _github_token_cache
+    
+    if not github_token_parameter:
+        return ''
+    
+    try:
+        response = ssm.get_parameter(Name=github_token_parameter, WithDecryption=True)
+        _github_token_cache = response['Parameter']['Value']
+        return _github_token_cache
+    except Exception as e:
+        print(f"Error fetching GitHub token from SSM: {e}")
+        return ''
 
 ADMIN_EMAILS = [
     'admin@waterwaycleanups.org',
@@ -93,8 +116,10 @@ def generate_event_id(title, start_time):
 
 def trigger_workflow(environment='staging'):
     """Trigger GitHub Actions content-sync workflow"""
+    github_token = get_github_token()
+    
     if not github_token:
-        print("GITHUB_TOKEN not set, skipping workflow trigger")
+        print("GitHub token not available, skipping workflow trigger")
         return {'triggered': False, 'error': 'No GitHub token'}
     
     try:

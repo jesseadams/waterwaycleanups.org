@@ -69,7 +69,7 @@ resource "aws_iam_role" "content_sync_lambda_role" {
 
 resource "aws_iam_policy" "content_sync_lambda_policy" {
   name        = "content_sync_lambda_policy${local.resource_suffix}"
-  description = "IAM policy for content sync lambda to access DynamoDB tables and sessions"
+  description = "IAM policy for content sync lambda to access DynamoDB tables, sessions, and SSM parameters"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -90,6 +90,15 @@ resource "aws_iam_policy" "content_sync_lambda_policy" {
           "${aws_dynamodb_table.auth_sessions.arn}/index/*",
           aws_dynamodb_table.events.arn,
           "${aws_dynamodb_table.events.arn}/index/*"
+        ],
+        Effect = "Allow"
+      },
+      {
+        Action = [
+          "ssm:GetParameter"
+        ],
+        Resource = [
+          data.aws_ssm_parameter.github_token.arn
         ],
         Effect = "Allow"
       },
@@ -140,7 +149,7 @@ resource "aws_lambda_function" "admin_content_sync" {
       SESSION_TABLE_NAME       = aws_dynamodb_table.auth_sessions.name
       CONTENT_EDITS_TABLE_NAME = aws_dynamodb_table.content_edits.name
       EVENTS_TABLE_NAME        = aws_dynamodb_table.events.name
-      GITHUB_TOKEN             = var.github_token
+      GITHUB_TOKEN_PARAMETER   = data.aws_ssm_parameter.github_token.name
       GITHUB_REPO              = var.github_repo
       GITHUB_BRANCH            = var.github_branch
     }
