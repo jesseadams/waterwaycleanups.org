@@ -5,8 +5,9 @@
     {{- end -}}
 {{- end -}}
 {{- $events := where page.Site.RegularPages "Section" "events" -}}
+{{- $public_events := where $events "Params.private" "!=" true -}}
 {{- $current_time := now.Format "2006-01-02T15:04:05-07:00" }}
-{{- $upcoming_events := where $events "Params.start_time" "ge" $current_time }}
+{{- $upcoming_events := where $public_events "Params.start_time" "ge" $current_time }}
 {{- $sorted := $upcoming_events.ByParam "start_time" -}}
 <section class="posts" id="cleanups">
     {{ if $inner }}<div class="container small">
@@ -15,8 +16,15 @@
     <div class="container">
         <div class="filter">
             <select id="filter" class="multiselecttags numbers_{{ page.Site.Data.settings.filter_has_numbers }}" multiple autocomplete="off">
-                {{ range $name, $taxonomy := page.Site.Taxonomies.tags }}
-                    <option value="{{ $name | urlize }}">{{ $name }}</option>
+                {{- $public_tags := slice -}}
+                {{- range $public_events -}}
+                  {{- range .Params.tags -}}
+                    {{- $public_tags = $public_tags | append . -}}
+                  {{- end -}}
+                {{- end -}}
+                {{- $unique_tags := $public_tags | uniq | sort -}}
+                {{ range $unique_tags }}
+                    <option value="{{ . | urlize }}">{{ . }}</option>
                 {{ end }}
             </select>
         </div>

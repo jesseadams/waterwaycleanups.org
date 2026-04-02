@@ -182,6 +182,7 @@ def handle_save_draft(body, session):
         'event_id': event_id,
         'event_data': db_event_data,
         'status': 'draft',
+        'edit_type': 'update',  # 'update' or 'delete'
         'is_new_event': is_new,
         'created_at': datetime.utcnow().isoformat() + 'Z',
         'updated_at': datetime.utcnow().isoformat() + 'Z',
@@ -246,6 +247,47 @@ def handle_load_event(body, session):
         print(f"Error loading event: {e}")
         return respond(500, {'success': False, 'message': str(e)})
 
+def handle_queue_delete(body, session):
+    """Queue an event for deletion"""
+    event_id = body.get('event_id')
+    if not event_id:
+        return respond(400, {'success': False, 'message': 'event_id required'})
+    
+    try:
+        # Check if event exists
+        response = events_table.get_item(Key={'event_id': event_id})
+        event = response.get('Item')
+        
+        if not event:
+            return respond(404, {'success': False, 'message': 'Event not found'})
+        
+        # Create deletion edit
+        edit_id = f"edit_{int(datetime.now().timestamp())}_{os.urandom(3).hex()}"
+        
+        item = {
+            'edit_id': edit_id,
+            'event_id': event_id,
+            'event_data': event,  # Store original event data for reference
+            'status': 'draft',
+            'edit_type': 'delete',
+            'is_new_event': False,
+            'created_at': datetime.utcnow().isoformat() + 'Z',
+            'updated_at': datetime.utcnow().isoformat() + 'Z',
+            'created_by': session['email']
+        }
+        
+        content_edits_table.put_item(Item=item)
+        
+        return respond(200, {
+            'success': True,
+            'edit_id': edit_id,
+            'event_id': event_id,
+            'message': 'Event queued for deletion'
+        })
+    except Exception as e:
+        print(f"Error queuing delete: {e}")
+        return respond(500, {'success': False, 'message': str(e)})
+
 def handle_publish(body, session):
     """Publish all pending edits to the events table and trigger rebuild"""
     try:
@@ -263,9 +305,20 @@ def handle_publish(body, session):
         
         # Publish each edit to events table
         published_count = 0
+        deleted_count = 0
+        
         for edit in edits:
-            event_data = edit['event_data']
-            events_table.put_item(Item=event_data)
+            edit_type = edit.get('edit_type', 'update')
+            event_id = edit['event_id']
+            
+            if edit_type == 'delete':
+                # Delete event from events table
+                events_table.delete_item(Key={'event_id': event_id})
+                deleted_count += 1
+            else:
+                # Update or create event in events table
+                event_data = edit['event_data']
+                events_table.put_item(Item=event_data)
             
             # Mark edit as published
             content_edits_table.update_item(
@@ -282,10 +335,15 @@ def handle_publish(body, session):
         # Trigger GitHub Actions workflow to rebuild site
         workflow_result = trigger_workflow('staging')
         
+        message_parts = [f'Published {published_count} change(s)']
+        if deleted_count > 0:
+            message_parts.append(f'{deleted_count} deletion(s)')
+        
         return respond(200, {
             'success': True,
-            'message': f'Published {published_count} edits',
+            'message': ', '.join(message_parts),
             'published_count': published_count,
+            'deleted_count': deleted_count,
             'workflow': workflow_result
         })
     except Exception as e:
@@ -337,6 +395,8 @@ def handler(event, context):
             return handle_delete_edit(body, session)
         elif action == 'load_event':
             return handle_load_event(body, session)
+        elif action == 'queue_delete':
+            return handle_queue_delete(body, session)
         elif action == 'publish':
             return handle_publish(body, session)
         else:

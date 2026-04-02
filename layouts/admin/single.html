@@ -832,22 +832,26 @@
                 React.createElement('td', { key: 'type', className: "py-2 px-4" },
                   React.createElement('span', {
                     className: `inline-block px-2 py-0.5 text-xs rounded ${
-                      edit.edit_type === 'create' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                      edit.edit_type === 'delete' ? 'bg-red-100 text-red-800' :
+                      edit.edit_type === 'create' ? 'bg-green-100 text-green-800' : 
+                      'bg-yellow-100 text-yellow-800'
                     }`
-                  }, edit.edit_type === 'create' ? 'NEW' : 'EDIT')
+                  }, edit.edit_type === 'delete' ? 'DELETE' : edit.edit_type === 'create' ? 'NEW' : 'EDIT')
                 ),
-                React.createElement('td', { key: 'title', className: "py-2 px-4 font-medium" }, edit.title),
-                React.createElement('td', { key: 'file', className: "py-2 px-4 text-gray-600 text-xs font-mono" }, edit.file_path),
+                React.createElement('td', { key: 'title', className: "py-2 px-4 font-medium" }, 
+                  edit.event_data?.title || edit.title || 'Untitled'),
+                React.createElement('td', { key: 'file', className: "py-2 px-4 text-gray-600 text-xs font-mono" }, 
+                  edit.event_id || edit.file_path || 'N/A'),
                 React.createElement('td', { key: 'by', className: "py-2 px-4 text-gray-600" }, edit.created_by),
                 React.createElement('td', { key: 'date', className: "py-2 px-4 text-gray-600" },
                   new Date(edit.updated_at).toLocaleString()),
                 React.createElement('td', { key: 'actions', className: "py-2 px-4 text-right" },
                   React.createElement('div', { className: "flex justify-end space-x-2" }, [
-                    React.createElement('button', {
+                    edit.edit_type !== 'delete' ? React.createElement('button', {
                       key: 'edit',
                       onClick: () => handleEditDraft(edit),
                       className: "bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600"
-                    }, 'Edit'),
+                    }, 'Edit') : null,
                     React.createElement('button', {
                       key: 'pub',
                       onClick: () => handlePublishOne(edit.edit_id),
@@ -880,6 +884,8 @@
       
       // Events state
       const [events, setEvents] = useState([]);
+      const [pendingDeletions, setPendingDeletions] = useState(new Set());
+      const [pendingEdits, setPendingEdits] = useState(new Map()); // Map of event_id -> edit object
       const [eventFilters, setEventFilters] = useState({
         status: '',
         start_date: '',
@@ -986,11 +992,55 @@
           
           const response = await window.eventsAPI.getEvents(eventFilters);
           setEvents(response.events || []);
+          
+          // Load pending deletions
+          await loadPendingDeletions();
         } catch (error) {
           console.error('Error loading events:', error);
           // Set empty array to prevent infinite loading
           setEvents([]);
           throw error;
+        }
+      };
+
+      const loadPendingDeletions = async () => {
+        try {
+          const contentSyncUrl = window.API_CONFIG && window.API_CONFIG.BASE_URL 
+            ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
+            : '/api/admin-content-sync';
+          
+          const token = localStorage.getItem('session_token');
+          const res = await fetch(contentSyncUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              session_token: token, 
+              action: 'list_edits'
+            })
+          });
+          
+          const data = await res.json();
+          if (data.success && data.edits) {
+            // Extract event_ids that have pending deletions
+            const deletionSet = new Set(
+              data.edits
+                .filter(edit => edit.edit_type === 'delete')
+                .map(edit => edit.event_id)
+            );
+            setPendingDeletions(deletionSet);
+            
+            // Extract pending edits (updates) - Map of event_id -> edit object
+            const editsMap = new Map(
+              data.edits
+                .filter(edit => edit.edit_type === 'update')
+                .map(edit => [edit.event_id, edit])
+            );
+            setPendingEdits(editsMap);
+          }
+        } catch (error) {
+          console.error('Error loading pending deletions:', error);
+          setPendingDeletions(new Set());
+          setPendingEdits(new Map());
         }
       };
 
@@ -1107,9 +1157,43 @@
           setError('');
 
           if (editingEvent) {
-            await window.eventsAPI.updateEvent(editingEvent.event_id, eventFormData);
-            setSuccess('Event updated successfully!');
+            // Queue the update via content sync API
+            const contentSyncUrl = window.API_CONFIG && window.API_CONFIG.BASE_URL 
+              ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
+              : '/api/admin-content-sync';
+            
+            const token = localStorage.getItem('session_token');
+            
+            // Check if there's already a pending edit for this event
+            const pendingEdit = pendingEdits.get(editingEvent.event_id);
+            
+            const res = await fetch(contentSyncUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                session_token: token, 
+                action: 'save_draft',
+                event_id: editingEvent.event_id,
+                edit_id: pendingEdit ? pendingEdit.edit_id : undefined, // Update existing draft if present
+                event_data: {
+                  title: eventFormData.title,
+                  description: eventFormData.description,
+                  start_time: eventFormData.start_time,
+                  end_time: eventFormData.end_time,
+                  location_name: eventFormData.location.name,
+                  location_address: eventFormData.location.address,
+                  attendance_cap: eventFormData.attendance_cap,
+                  tags: eventFormData.hugo_config?.tags || []
+                }
+              })
+            });
+            
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || 'Failed to queue update');
+            
+            setSuccess('Event changes queued. Go to Content Editor tab to publish changes.');
           } else {
+            // For new events, still use the Events API directly
             await window.eventsAPI.createEvent(eventFormData);
             setSuccess('Event created successfully!');
           }
@@ -1126,15 +1210,37 @@
       };
 
       const handleEventDelete = async (eventId) => {
-        if (!confirm('Are you sure you want to delete this event? This will also delete all associated RSVPs.')) {
+        if (!confirm('Queue this event for deletion? It will be removed from the live site when you publish changes in the Content Editor tab.')) {
           return;
         }
 
         try {
           setIsLoading(true);
-          await window.eventsAPI.deleteEvent(eventId);
-          setSuccess('Event deleted successfully!');
-          await loadEvents();
+          setError('');
+          
+          // Call the content sync API to queue the deletion
+          const contentSyncUrl = window.API_CONFIG && window.API_CONFIG.BASE_URL 
+            ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
+            : '/api/admin-content-sync';
+          
+          const token = localStorage.getItem('session_token');
+          const res = await fetch(contentSyncUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              session_token: token, 
+              action: 'queue_delete',
+              event_id: eventId
+            })
+          });
+          
+          const data = await res.json();
+          if (!data.success) throw new Error(data.message || 'Failed to queue deletion');
+          
+          setSuccess('Event queued for deletion. Go to Content Editor tab to publish changes.');
+          
+          // Reload pending deletions to update UI
+          await loadPendingDeletions();
         } catch (error) {
           setError(error.message);
         } finally {
@@ -1144,15 +1250,22 @@
 
       const handleEventEdit = (event) => {
         setEditingEvent(event);
+        
+        // Check if there's a pending edit for this event
+        const pendingEdit = pendingEdits.get(event.event_id);
+        
+        // If there's a pending edit, use the draft data; otherwise use the live event data
+        const dataToEdit = pendingEdit ? pendingEdit.event_data : event;
+        
         setEventFormData({
-          title: event.title,
-          description: event.description,
-          start_time: event.start_time,
-          end_time: event.end_time,
-          location: event.location,
-          attendance_cap: event.attendance_cap,
-          status: event.status,
-          hugo_config: event.hugo_config || { tags: [], preheader_is_light: false }
+          title: dataToEdit.title,
+          description: dataToEdit.description,
+          start_time: dataToEdit.start_time,
+          end_time: dataToEdit.end_time,
+          location: dataToEdit.location,
+          attendance_cap: dataToEdit.attendance_cap,
+          status: dataToEdit.status,
+          hugo_config: dataToEdit.hugo_config || { tags: [], preheader_is_light: false }
         });
         setShowEventForm(true);
       };
@@ -1617,14 +1730,25 @@
                   React.createElement('div', {
                     key: 'status',
                     className: "mt-2"
-                  }, React.createElement('span', {
-                    className: `inline-block px-2 py-1 text-xs rounded ${
-                      event.status === 'active' ? 'bg-green-100 text-green-800' :
-                      event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      event.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`
-                  }, event.status.toUpperCase()))
+                  }, [
+                    React.createElement('span', {
+                      key: 'event-status',
+                      className: `inline-block px-2 py-1 text-xs rounded ${
+                        event.status === 'active' ? 'bg-green-100 text-green-800' :
+                        event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        event.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`
+                    }, event.status.toUpperCase()),
+                    pendingDeletions.has(event.event_id) ? React.createElement('span', {
+                      key: 'deletion-badge',
+                      className: "inline-block px-2 py-1 text-xs rounded bg-orange-100 text-orange-800 ml-2"
+                    }, '⏳ QUEUED FOR DELETION') : null,
+                    pendingEdits.has(event.event_id) ? React.createElement('span', {
+                      key: 'edit-badge',
+                      className: "inline-block px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 ml-2"
+                    }, '✏️ HAS PENDING EDITS') : null
+                  ])
                 ]),
                 React.createElement('div', {
                   key: 'actions',
@@ -1645,8 +1769,11 @@
                   React.createElement('button', {
                     key: 'delete',
                     onClick: () => handleEventDelete(event.event_id),
-                    className: "bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
-                  }, 'Delete')
+                    disabled: pendingDeletions.has(event.event_id),
+                    className: pendingDeletions.has(event.event_id)
+                      ? "bg-gray-400 text-white px-3 py-1 rounded text-sm cursor-not-allowed opacity-50"
+                      : "bg-red-500 text-white px-3 py-1 rounded text-sm hover:bg-red-600"
+                  }, pendingDeletions.has(event.event_id) ? 'Queued' : 'Delete')
                 ])
               ]),
               // Inline Attendance Management panel
@@ -1960,7 +2087,129 @@
             ])) : React.createElement('div', {
               key: 'no-events',
               className: "text-center py-8 text-gray-500"
-            }, 'No events found.'))
+            }, 'No events found.')),
+            // Event Form Modal
+            showEventForm ? React.createElement('div', {
+              key: 'event-form-modal',
+              className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            }, [
+              React.createElement('div', {
+                key: 'modal-header',
+                className: "flex justify-between items-center p-6 border-b"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "text-xl font-semibold"
+                }, editingEvent ? 'Edit Event' : 'Create New Event'),
+                React.createElement('button', {
+                  key: 'close',
+                  onClick: () => { setShowEventForm(false); setEditingEvent(null); resetEventForm(); },
+                  className: "text-gray-400 hover:text-gray-600 text-2xl"
+                }, '×')
+              ]),
+              React.createElement('form', {
+                key: 'form',
+                onSubmit: handleEventSubmit,
+                className: "p-6 space-y-4"
+              }, [
+                React.createElement('div', { key: 'title-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Title *'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'text',
+                    required: true,
+                    value: eventFormData.title,
+                    onChange: (e) => setEventFormData({...eventFormData, title: e.target.value}),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'desc-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Description *'),
+                  React.createElement('textarea', {
+                    key: 'input',
+                    required: true,
+                    rows: 3,
+                    value: eventFormData.description,
+                    onChange: (e) => setEventFormData({...eventFormData, description: e.target.value}),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'times', className: "grid grid-cols-2 gap-4" }, [
+                  React.createElement('div', { key: 'start' }, [
+                    React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Start Time *'),
+                    React.createElement('input', {
+                      key: 'input',
+                      type: 'datetime-local',
+                      required: true,
+                      value: formatDateForInput(eventFormData.start_time),
+                      onChange: (e) => setEventFormData({...eventFormData, start_time: e.target.value}),
+                      className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    })
+                  ]),
+                  React.createElement('div', { key: 'end' }, [
+                    React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'End Time *'),
+                    React.createElement('input', {
+                      key: 'input',
+                      type: 'datetime-local',
+                      required: true,
+                      value: formatDateForInput(eventFormData.end_time),
+                      onChange: (e) => setEventFormData({...eventFormData, end_time: e.target.value}),
+                      className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                    })
+                  ])
+                ]),
+                React.createElement('div', { key: 'location-name' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Location Name *'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'text',
+                    required: true,
+                    value: eventFormData.location.name,
+                    onChange: (e) => setEventFormData({...eventFormData, location: {...eventFormData.location, name: e.target.value}}),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'location-address' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Location Address *'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'text',
+                    required: true,
+                    value: eventFormData.location.address,
+                    onChange: (e) => setEventFormData({...eventFormData, location: {...eventFormData.location, address: e.target.value}}),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'cap-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Attendance Cap *'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    required: true,
+                    min: 1,
+                    value: eventFormData.attendance_cap,
+                    onChange: (e) => setEventFormData({...eventFormData, attendance_cap: parseInt(e.target.value)}),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-4" }, [
+                  React.createElement('button', {
+                    key: 'cancel',
+                    type: 'button',
+                    onClick: () => { setShowEventForm(false); setEditingEvent(null); resetEventForm(); },
+                    className: "px-4 py-2 border rounded-md hover:bg-gray-50"
+                  }, 'Cancel'),
+                  React.createElement('button', {
+                    key: 'submit',
+                    type: 'submit',
+                    disabled: isLoading,
+                    className: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  }, isLoading ? 'Saving...' : (editingEvent ? 'Update Event' : 'Create Event'))
+                ])
+              ])
+            ])) : null
           ]) : null,
           activeTab === 'content' ? React.createElement('div', { key: 'content-tab' },
             React.createElement(ContentEditor, {})
