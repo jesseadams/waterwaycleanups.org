@@ -98,7 +98,7 @@ resource "aws_iam_policy" "content_sync_lambda_policy" {
           "ssm:GetParameter"
         ],
         Resource = [
-          data.aws_ssm_parameter.github_token.arn
+          "arn:aws:ssm:${var.aws_region}:*:parameter/waterwaycleanups/shared/github_token"
         ],
         Effect = "Allow"
       },
@@ -149,7 +149,7 @@ resource "aws_lambda_function" "admin_content_sync" {
       SESSION_TABLE_NAME       = aws_dynamodb_table.auth_sessions.name
       CONTENT_EDITS_TABLE_NAME = aws_dynamodb_table.content_edits.name
       EVENTS_TABLE_NAME        = aws_dynamodb_table.events.name
-      GITHUB_TOKEN_PARAMETER   = data.aws_ssm_parameter.github_token.name
+      GITHUB_TOKEN_PARAMETER   = "/waterwaycleanups/shared/github_token"
       GITHUB_REPO              = var.github_repo
       GITHUB_BRANCH            = var.github_branch
     }
