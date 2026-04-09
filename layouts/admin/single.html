@@ -1213,9 +1213,34 @@
             
             setSuccess('Event changes queued. Go to Content Editor tab to publish changes.');
           } else {
-            // For new events, still use the Events API directly
-            await window.eventsAPI.createEvent(eventFormData);
-            setSuccess('Event created successfully!');
+            // For new events, use content sync draft system
+            const contentSyncUrl = window.API_CONFIG && window.API_CONFIG.BASE_URL 
+              ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
+              : '/api/admin-content-sync';
+            
+            const token = localStorage.getItem('session_token');
+            const res = await fetch(contentSyncUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                session_token: token, 
+                action: 'save_draft',
+                event_data: {
+                  title: eventFormData.title,
+                  description: eventFormData.description,
+                  start_time: eventFormData.start_time,
+                  end_time: eventFormData.end_time,
+                  location_name: eventFormData.location.name,
+                  location_address: eventFormData.location.address,
+                  attendance_cap: eventFormData.attendance_cap,
+                  tags: eventFormData.hugo_config?.tags || [],
+                  private: eventFormData.private
+                }
+              })
+            });
+            const data = await res.json();
+            if (!data.success) throw new Error(data.message || 'Failed to save draft');
+            setSuccess('New event saved as draft. Go to Content Editor tab to publish.');
           }
 
           setShowEventForm(false);
