@@ -106,6 +106,11 @@ class HugoGenerator {
       frontmatter.end_time = event.end_time;
     }
 
+    // Add private flag if set
+    if (event.private === true) {
+      frontmatter.private = true;
+    }
+
     return frontmatter;
   }
 
