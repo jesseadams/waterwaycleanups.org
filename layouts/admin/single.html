@@ -477,7 +477,7 @@
       })();
 
       const apiCall = async (action, extra = {}) => {
-        const token = localStorage.getItem('session_token');
+        const token = localStorage.getItem('auth_session_token');
         const res = await fetch(contentSyncUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1043,7 +1043,7 @@
             ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
             : '/api/admin-content-sync';
           
-          const token = localStorage.getItem('session_token');
+          const token = localStorage.getItem('auth_session_token');
           const res = await fetch(contentSyncUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1216,7 +1216,7 @@
               ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
               : '/api/admin-content-sync';
             
-            const token = localStorage.getItem('session_token');
+            const token = localStorage.getItem('auth_session_token');
             
             // Check if there's already a pending edit for this event
             const pendingEdit = pendingEdits.get(editingEvent.event_id);
@@ -1253,7 +1253,7 @@
               ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
               : '/api/admin-content-sync';
             
-            const token = localStorage.getItem('session_token');
+            const token = localStorage.getItem('auth_session_token');
             const res = await fetch(contentSyncUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -1303,7 +1303,7 @@
             ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
             : '/api/admin-content-sync';
           
-          const token = localStorage.getItem('session_token');
+          const token = localStorage.getItem('auth_session_token');
           const res = await fetch(contentSyncUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
