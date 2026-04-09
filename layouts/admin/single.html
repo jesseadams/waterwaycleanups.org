@@ -542,21 +542,22 @@
         try {
           const tags = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
           
-          // Compute correct Eastern time offset (EST=-05:00, EDT=-04:00)
+          // The datetime-local input gives Eastern wall-clock time (e.g. "2026-06-15T18:00").
+          // Determine if EDT (-04:00) or EST (-05:00) applies for the given date.
           const getEasternOffset = (dateStr) => {
-            if (!dateStr) return '';
-            const d = new Date(dateStr + ':00Z'); // treat input as UTC temporarily
-            const utcStr = d.toLocaleString('en-US', { timeZone: 'UTC' });
-            const etStr = d.toLocaleString('en-US', { timeZone: 'America/New_York' });
-            const diffMs = new Date(utcStr) - new Date(etStr);
-            const diffHrs = diffMs / 3600000;
-            return diffHrs >= 0 ? `-${String(Math.abs(diffHrs)).padStart(2,'0')}:00` : `+${String(Math.abs(diffHrs)).padStart(2,'0')}:00`;
+            if (!dateStr) return '-05:00';
+            const [datePart] = dateStr.split('T');
+            const [y, m, d] = datePart.split('-').map(Number);
+            // Format a date in that month in Eastern and check if timezone name contains "DT" (Daylight)
+            const testDate = new Date(Date.UTC(y, m - 1, d, 12, 0)); // noon UTC to avoid edge cases
+            const tzName = new Intl.DateTimeFormat('en-US', {
+              timeZone: 'America/New_York', timeZoneName: 'short'
+            }).formatToParts(testDate).find(p => p.type === 'timeZoneName')?.value || '';
+            return tzName.includes('DT') ? '-04:00' : '-05:00';
           };
           
-          const startOffset = getEasternOffset(formData.start_time);
-          const endOffset = getEasternOffset(formData.end_time);
-          const startWithTz = formData.start_time ? formData.start_time + ':00' + startOffset : '';
-          const endWithTz = formData.end_time ? formData.end_time + ':00' + endOffset : '';
+          const startWithTz = formData.start_time ? formData.start_time + ':00' + getEasternOffset(formData.start_time) : '';
+          const endWithTz = formData.end_time ? formData.end_time + ':00' + getEasternOffset(formData.end_time) : '';
 
           const eventData = {
             title: formData.title,
@@ -1189,6 +1190,26 @@
           setIsLoading(true);
           setError('');
 
+          // Ensure times have Eastern timezone offset
+          const addEasternOffset = (dateStr) => {
+            if (!dateStr) return '';
+            // Already has offset (contains + or - after the time portion)
+            if (/T\d{2}:\d{2}(:\d{2})?[+-]/.test(dateStr)) return dateStr;
+            const [datePart] = dateStr.split('T');
+            const [y, m, d] = datePart.split('-').map(Number);
+            const testDate = new Date(Date.UTC(y, m - 1, d, 12, 0));
+            const tzName = new Intl.DateTimeFormat('en-US', {
+              timeZone: 'America/New_York', timeZoneName: 'short'
+            }).formatToParts(testDate).find(p => p.type === 'timeZoneName')?.value || '';
+            const offset = tzName.includes('DT') ? '-04:00' : '-05:00';
+            // Add seconds if missing, then offset
+            const base = dateStr.length === 16 ? dateStr + ':00' : dateStr;
+            return base + offset;
+          };
+
+          const startTimeWithTz = addEasternOffset(eventFormData.start_time);
+          const endTimeWithTz = addEasternOffset(eventFormData.end_time);
+
           if (editingEvent) {
             // Queue the update via content sync API
             const contentSyncUrl = window.API_CONFIG && window.API_CONFIG.BASE_URL 
@@ -1211,8 +1232,8 @@
                 event_data: {
                   title: eventFormData.title,
                   description: eventFormData.description,
-                  start_time: eventFormData.start_time,
-                  end_time: eventFormData.end_time,
+                  start_time: startTimeWithTz,
+                  end_time: endTimeWithTz,
                   location_name: eventFormData.location.name,
                   location_address: eventFormData.location.address,
                   attendance_cap: eventFormData.attendance_cap,
@@ -1242,8 +1263,8 @@
                 event_data: {
                   title: eventFormData.title,
                   description: eventFormData.description,
-                  start_time: eventFormData.start_time,
-                  end_time: eventFormData.end_time,
+                  start_time: startTimeWithTz,
+                  end_time: endTimeWithTz,
                   location_name: eventFormData.location.name,
                   location_address: eventFormData.location.address,
                   attendance_cap: eventFormData.attendance_cap,
