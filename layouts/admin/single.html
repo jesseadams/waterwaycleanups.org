@@ -541,8 +541,22 @@
         setError('');
         try {
           const tags = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
-          const startWithTz = formData.start_time ? formData.start_time + ':00-05:00' : '';
-          const endWithTz = formData.end_time ? formData.end_time + ':00-05:00' : '';
+          
+          // Compute correct Eastern time offset (EST=-05:00, EDT=-04:00)
+          const getEasternOffset = (dateStr) => {
+            if (!dateStr) return '';
+            const d = new Date(dateStr + ':00Z'); // treat input as UTC temporarily
+            const utcStr = d.toLocaleString('en-US', { timeZone: 'UTC' });
+            const etStr = d.toLocaleString('en-US', { timeZone: 'America/New_York' });
+            const diffMs = new Date(utcStr) - new Date(etStr);
+            const diffHrs = diffMs / 3600000;
+            return diffHrs >= 0 ? `-${String(Math.abs(diffHrs)).padStart(2,'0')}:00` : `+${String(Math.abs(diffHrs)).padStart(2,'0')}:00`;
+          };
+          
+          const startOffset = getEasternOffset(formData.start_time);
+          const endOffset = getEasternOffset(formData.end_time);
+          const startWithTz = formData.start_time ? formData.start_time + ':00' + startOffset : '';
+          const endWithTz = formData.end_time ? formData.end_time + ':00' + endOffset : '';
 
           const eventData = {
             title: formData.title,
@@ -1529,7 +1543,16 @@
       const formatDateForInput = (dateString) => {
         if (!dateString) return '';
         try {
-          return new Date(dateString).toISOString().slice(0, 16);
+          // Format in Eastern time for the datetime-local input
+          const d = new Date(dateString);
+          const eastern = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/New_York',
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hour12: false
+          }).formatToParts(d);
+          const parts = {};
+          eastern.forEach(p => parts[p.type] = p.value);
+          return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
         } catch (error) {
           return '';
         }
