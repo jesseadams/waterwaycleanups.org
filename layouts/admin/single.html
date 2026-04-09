@@ -465,7 +465,8 @@
         image: '/uploads/waterway-cleanups/default.jpg',
         tags: '',
         attendance_cap: 20,
-        preheader_is_light: false
+        preheader_is_light: false,
+        private: false
       });
 
       const contentSyncUrl = (() => {
@@ -507,7 +508,7 @@
           start_time: '', end_time: '',
           location_name: '', location_address: '', location_url: '',
           image: '/uploads/waterway-cleanups/default.jpg',
-          tags: '', attendance_cap: 20, preheader_is_light: false
+          tags: '', attendance_cap: 20, preheader_is_light: false, private: false
         });
         setEditingId(null);
         setExistingFile(null);
@@ -527,7 +528,8 @@
           image: ed.image || '/uploads/waterway-cleanups/default.jpg',
           tags: (ed.tags || []).join(', '),
           attendance_cap: ed.attendance_cap || 20,
-          preheader_is_light: ed.preheader_is_light || false
+          preheader_is_light: ed.preheader_is_light || false,
+          private: ed.private || false
         });
         setEditingId(edit.edit_id);
         setExistingFile(edit.edit_type === 'update' ? edit.file_path : null);
@@ -554,7 +556,8 @@
             image: formData.image,
             tags: tags,
             attendance_cap: parseInt(formData.attendance_cap) || 20,
-            preheader_is_light: formData.preheader_is_light
+            preheader_is_light: formData.preheader_is_light,
+            private: formData.private
           };
 
           await apiCall('save_draft', {
@@ -743,6 +746,21 @@
                 onChange: (e) => updateField('attendance_cap', e.target.value),
                 className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
               })
+            ]),
+            React.createElement('div', { key: 'private', className: "flex items-center space-x-3 pt-2" }, [
+              React.createElement('input', {
+                key: 'i', type: 'checkbox', id: 'content-private-toggle',
+                checked: formData.private,
+                onChange: (e) => updateField('private', e.target.checked),
+                className: "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              }),
+              React.createElement('label', {
+                key: 'l', htmlFor: 'content-private-toggle',
+                className: "text-sm font-medium text-gray-700"
+              }, 'Private Event'),
+              React.createElement('span', {
+                key: 'hint', className: "text-xs text-gray-500"
+              }, '(Hidden from public listings, accessible via direct URL only)')
             ])
           ]),
           // Submit
@@ -902,7 +920,8 @@
         location: { name: '', address: '' },
         attendance_cap: 50,
         status: 'active',
-        hugo_config: { tags: [], preheader_is_light: false }
+        hugo_config: { tags: [], preheader_is_light: false },
+        private: false
       });
 
       // Volunteers state
@@ -1183,7 +1202,8 @@
                   location_name: eventFormData.location.name,
                   location_address: eventFormData.location.address,
                   attendance_cap: eventFormData.attendance_cap,
-                  tags: eventFormData.hugo_config?.tags || []
+                  tags: eventFormData.hugo_config?.tags || [],
+                  private: eventFormData.private
                 }
               })
             });
@@ -1265,7 +1285,8 @@
           location: dataToEdit.location,
           attendance_cap: dataToEdit.attendance_cap,
           status: dataToEdit.status,
-          hugo_config: dataToEdit.hugo_config || { tags: [], preheader_is_light: false }
+          hugo_config: dataToEdit.hugo_config || { tags: [], preheader_is_light: false },
+          private: dataToEdit.private || false
         });
         setShowEventForm(true);
       };
@@ -1279,7 +1300,8 @@
           location: { name: '', address: '' },
           attendance_cap: 50,
           status: 'active',
-          hugo_config: { tags: [], preheader_is_light: false }
+          hugo_config: { tags: [], preheader_is_light: false },
+          private: false
         });
       };
 
@@ -1740,6 +1762,10 @@
                         'bg-gray-100 text-gray-800'
                       }`
                     }, event.status.toUpperCase()),
+                    event.private ? React.createElement('span', {
+                      key: 'private-badge',
+                      className: "inline-block px-2 py-1 text-xs rounded bg-purple-100 text-purple-800 ml-2"
+                    }, '🔒 PRIVATE') : null,
                     pendingDeletions.has(event.event_id) ? React.createElement('span', {
                       key: 'deletion-badge',
                       className: "inline-block px-2 py-1 text-xs rounded bg-orange-100 text-orange-800 ml-2"
@@ -2193,6 +2219,25 @@
                     onChange: (e) => setEventFormData({...eventFormData, attendance_cap: parseInt(e.target.value)}),
                     className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   })
+                ]),
+                React.createElement('div', { key: 'private-field', className: "flex items-center space-x-3 pt-2" }, [
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'checkbox',
+                    id: 'event-private-toggle',
+                    checked: eventFormData.private,
+                    onChange: (e) => setEventFormData({...eventFormData, private: e.target.checked}),
+                    className: "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  }),
+                  React.createElement('label', {
+                    key: 'label',
+                    htmlFor: 'event-private-toggle',
+                    className: "text-sm font-medium text-gray-700"
+                  }, 'Private Event'),
+                  React.createElement('span', {
+                    key: 'hint',
+                    className: "text-xs text-gray-500"
+                  }, '(Hidden from public listings, accessible via direct URL only)')
                 ]),
                 React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-4" }, [
                   React.createElement('button', {

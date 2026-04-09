@@ -177,6 +177,10 @@ def handle_save_draft(body, session):
         }
     }
     
+    # Only include private flag if explicitly set to true
+    if event_data.get('private', False):
+        db_event_data['private'] = True
+    
     item = {
         'edit_id': edit_id,
         'event_id': event_id,
