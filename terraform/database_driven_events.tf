@@ -1340,6 +1340,29 @@ resource "aws_api_gateway_integration_response" "events_options" {
   }
 }
 
+# Gateway responses for CORS on 4XX/5XX errors (e.g., authorizer denials)
+resource "aws_api_gateway_gateway_response" "events_cors_4xx" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  response_type = "DEFAULT_4XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
+  }
+}
+
+resource "aws_api_gateway_gateway_response" "events_cors_5xx" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  response_type = "DEFAULT_5XX"
+
+  response_parameters = {
+    "gatewayresponse.header.Access-Control-Allow-Origin"  = "'*'"
+    "gatewayresponse.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "gatewayresponse.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
+  }
+}
+
 # Deploy the API
 resource "aws_api_gateway_deployment" "events_api" {
   depends_on = [
@@ -1374,7 +1397,10 @@ resource "aws_api_gateway_deployment" "events_api" {
     aws_api_gateway_integration.volunteers_metrics_options,
     # Attendance management endpoint
     aws_api_gateway_integration.events_attendance_post,
-    aws_api_gateway_integration.events_attendance_options
+    aws_api_gateway_integration.events_attendance_options,
+    # Gateway responses for CORS on error responses
+    aws_api_gateway_gateway_response.events_cors_4xx,
+    aws_api_gateway_gateway_response.events_cors_5xx
   ]
 
   rest_api_id = aws_api_gateway_rest_api.events_api.id
@@ -1390,7 +1416,9 @@ resource "aws_api_gateway_deployment" "events_api" {
       aws_api_gateway_method.volunteers_metrics_by_email_get.id,
       aws_api_gateway_authorizer.events_authorizer.id,
       aws_api_gateway_method.events_rsvps_options.id,
-      "force-redeploy-14-add-attendance-endpoint"
+      "force-redeploy-14-add-attendance-endpoint",
+      aws_api_gateway_gateway_response.events_cors_4xx.id,
+      aws_api_gateway_gateway_response.events_cors_5xx.id
     ]))
   }
 
