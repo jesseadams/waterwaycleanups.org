@@ -94,8 +94,48 @@ exports.handler = async (event) => {
     const firstName = requestBody.first_name;
     const lastName = requestBody.last_name;
     const attendanceCap = requestBody.attendance_cap || 15;
+    const eventsTableName = process.env.EVENTS_TABLE_NAME || 'events';
 
     console.log(`Processing RSVP for event ${eventId} by ${email}`);
+
+    // Validate that the event exists in the events table
+    try {
+      const eventResult = await dynamoDB.get({
+        TableName: eventsTableName,
+        Key: { event_id: eventId },
+        ProjectionExpression: 'event_id,#s',
+        ExpressionAttributeNames: { '#s': 'status' }
+      }).promise();
+
+      if (!eventResult.Item) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            message: 'Event not found. The event may have been renamed or removed. Please refresh the page and try again.'
+          })
+        };
+      }
+
+      if (eventResult.Item.status === 'cancelled') {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            success: false,
+            message: 'This event has been cancelled'
+          })
+        };
+      }
+    } catch (error) {
+      console.error('Error validating event:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ success: false, message: 'Failed to validate event' })
+      };
+    }
 
     // Check if user already has an RSVP for this event
     const existingRsvpParams = {

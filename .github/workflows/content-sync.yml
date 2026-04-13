@@ -96,7 +96,7 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/
+          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
 
       - name: Invalidate CloudFront Cache
         run: |

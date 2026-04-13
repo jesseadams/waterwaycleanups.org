@@ -233,7 +233,7 @@ jobs:
       - name: Deploy to S3
         if: env.IS_PR != 'true'
         run: |
-          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/
+          aws s3 sync public/ s3://${{ steps.tf-outputs.outputs.bucket_name }}/ --delete
 
       - name: Invalidate CloudFront Cache
         if: env.IS_PR != 'true'

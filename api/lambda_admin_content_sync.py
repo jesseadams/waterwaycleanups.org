@@ -153,9 +153,24 @@ def handle_save_draft(body, session):
     if not event_data.get('title') or not event_data.get('start_time') or not event_data.get('end_time'):
         return respond(400, {'success': False, 'message': 'Missing required event fields'})
     
-    event_id = body.get('event_id') or generate_event_id(event_data['title'], event_data['start_time'])
+    # For existing events, body contains the original event_id.
+    # Always regenerate the event_id from the (possibly new) title so the slug stays in sync.
+    original_event_id = body.get('event_id')  # None for brand-new events
+    new_event_id = generate_event_id(event_data['title'], event_data['start_time'])
+    
+    # If editing an existing event whose title hasn't changed, keep the original id
+    # to avoid unnecessary renames from minor slug differences.
+    if original_event_id and original_event_id == new_event_id:
+        event_id = original_event_id
+    elif original_event_id:
+        # Title or date changed — use the new slug
+        event_id = new_event_id
+    else:
+        # Brand-new event
+        event_id = new_event_id
+    
     edit_id = body.get('edit_id') or f"edit_{int(datetime.now().timestamp())}_{os.urandom(3).hex()}"
-    is_new = not body.get('event_id')
+    is_new = not original_event_id
     
     # Prepare event data for DynamoDB events table format
     db_event_data = {
@@ -184,6 +199,7 @@ def handle_save_draft(body, session):
     item = {
         'edit_id': edit_id,
         'event_id': event_id,
+        'original_event_id': original_event_id if (original_event_id and original_event_id != event_id) else None,
         'event_data': db_event_data,
         'status': 'draft',
         'edit_type': 'update',  # 'update' or 'delete'
@@ -292,6 +308,49 @@ def handle_queue_delete(body, session):
         print(f"Error queuing delete: {e}")
         return respond(500, {'success': False, 'message': str(e)})
 
+def migrate_rsvps(rsvps_table, old_event_id, new_event_id):
+    """Migrate all RSVPs from old_event_id to new_event_id.
+    
+    DynamoDB doesn't support updating partition keys, so we copy each RSVP
+    to the new event_id and delete the old one.
+    
+    Returns the number of RSVPs migrated.
+    """
+    migrated = 0
+    try:
+        # Query all RSVPs for the old event
+        response = rsvps_table.query(
+            KeyConditionExpression='event_id = :eid',
+            ExpressionAttributeValues={':eid': old_event_id}
+        )
+        rsvps = response.get('Items', [])
+        
+        # Handle pagination
+        while 'LastEvaluatedKey' in response:
+            response = rsvps_table.query(
+                KeyConditionExpression='event_id = :eid',
+                ExpressionAttributeValues={':eid': old_event_id},
+                ExclusiveStartKey=response['LastEvaluatedKey']
+            )
+            rsvps.extend(response.get('Items', []))
+        
+        for rsvp in rsvps:
+            # Create new RSVP with updated event_id
+            new_rsvp = {**rsvp, 'event_id': new_event_id}
+            rsvps_table.put_item(Item=new_rsvp)
+            # Delete old RSVP (key is event_id + attendee_id)
+            rsvps_table.delete_item(Key={
+                'event_id': old_event_id,
+                'attendee_id': rsvp['attendee_id']
+            })
+            migrated += 1
+        
+        print(f"Migrated {migrated} RSVPs from {old_event_id} to {new_event_id}")
+    except Exception as e:
+        print(f"Error migrating RSVPs from {old_event_id} to {new_event_id}: {e}")
+    
+    return migrated
+
 def handle_publish(body, session):
     """Publish all pending edits to the events table and trigger rebuild"""
     try:
@@ -307,9 +366,14 @@ def handle_publish(body, session):
         if not edits:
             return respond(200, {'success': True, 'message': 'No edits to publish', 'published_count': 0})
         
+        # Initialize RSVPs table for migration
+        rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME', 'rsvps')
+        rsvps_table = dynamodb.Table(rsvps_table_name)
+        
         # Publish each edit to events table
         published_count = 0
         deleted_count = 0
+        migrated_rsvps_count = 0
         
         for edit in edits:
             edit_type = edit.get('edit_type', 'update')
@@ -320,6 +384,17 @@ def handle_publish(body, session):
                 events_table.delete_item(Key={'event_id': event_id})
                 deleted_count += 1
             else:
+                # Check if event_id changed (rename)
+                original_event_id = edit.get('original_event_id')
+                if original_event_id and original_event_id != event_id:
+                    # Migrate RSVPs from old event_id to new event_id
+                    migrated_rsvps_count += migrate_rsvps(
+                        rsvps_table, original_event_id, event_id
+                    )
+                    # Delete old event record
+                    events_table.delete_item(Key={'event_id': original_event_id})
+                    print(f"Migrated event {original_event_id} -> {event_id}")
+                
                 # Update or create event in events table
                 event_data = edit['event_data']
                 events_table.put_item(Item=event_data)
@@ -344,12 +419,15 @@ def handle_publish(body, session):
         message_parts = [f'Published {published_count} change(s)']
         if deleted_count > 0:
             message_parts.append(f'{deleted_count} deletion(s)')
+        if migrated_rsvps_count > 0:
+            message_parts.append(f'{migrated_rsvps_count} RSVP(s) migrated')
         
         return respond(200, {
             'success': True,
             'message': ', '.join(message_parts),
             'published_count': published_count,
             'deleted_count': deleted_count,
+            'migrated_rsvps_count': migrated_rsvps_count,
             'workflow': workflow_result
         })
     except Exception as e:
