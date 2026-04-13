@@ -111,6 +111,9 @@ class HugoGenerator {
       frontmatter.private = true;
     }
 
+    // Store the database event_id so RSVP shortcode can use it directly
+    frontmatter.event_id = event.event_id;
+
     return frontmatter;
   }
 

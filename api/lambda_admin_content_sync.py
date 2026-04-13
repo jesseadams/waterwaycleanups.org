@@ -337,7 +337,9 @@ def handle_publish(body, session):
             published_count += 1
         
         # Trigger GitHub Actions workflow to rebuild site
-        workflow_result = trigger_workflow('staging')
+        # Determine environment from DynamoDB table suffix
+        env_name = events_table_name.replace('events-', '') if events_table_name.startswith('events-') else 'staging'
+        workflow_result = trigger_workflow(env_name)
         
         message_parts = [f'Published {published_count} change(s)']
         if deleted_count > 0:

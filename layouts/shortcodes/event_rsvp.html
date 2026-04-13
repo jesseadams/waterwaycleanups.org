@@ -1,7 +1,7 @@
 {{ $attendance_cap := .Get "attendance_cap" | default "15" }}
 
-{{- /* Use the page's URL path to generate a consistent event ID */ -}}
-{{- $event_id := .Page.RelPermalink | strings.TrimPrefix "/events/" | strings.TrimSuffix "/" -}}
+{{- /* Use event_id from front matter if available (set by hugo-generator from DB), otherwise derive from URL */ -}}
+{{- $event_id := .Page.Params.event_id | default (.Page.RelPermalink | strings.TrimPrefix "/events/" | strings.TrimSuffix "/") -}}
 
 {{- /* Add event start time metadata if available */ -}}
 {{ if .Page.Params.start_time }}
