@@ -533,6 +533,7 @@ resource "aws_lambda_function" "events_list_rsvps" {
       RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
       WAIVERS_TABLE_NAME    = aws_dynamodb_table.volunteer_waivers.name
+      MINORS_TABLE_NAME     = aws_dynamodb_table.minors.name
     }
   }
 

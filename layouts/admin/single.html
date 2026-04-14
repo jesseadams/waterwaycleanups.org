@@ -959,6 +959,7 @@
       const [walkInData, setWalkInData] = useState({ first_name: '', last_name: '', email: '' });
       const [showMinorForm, setShowMinorForm] = useState(false);
       const [minorData, setMinorData] = useState({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
+      const [accountMinors, setAccountMinors] = useState({});
 
       // Analytics state
       const [analytics, setAnalytics] = useState({
@@ -1390,6 +1391,7 @@
           const rsvpList = response.rsvps || response.Items || response.data || [];
           console.log('Parsed RSVP count:', rsvpList.length);
           setEventRSVPs(rsvpList);
+          setAccountMinors(response.account_minors || {});
         } catch (err) {
           console.error('Error loading RSVPs:', err);
           setError(err.message || 'Failed to load RSVPs');
@@ -1408,6 +1410,7 @@
       const handleCloseEventRSVPs = () => {
         setSelectedEventForRSVPs(null);
         setEventRSVPs([]);
+        setAccountMinors({});
         setShowWalkInForm(false);
         setWalkInData({ first_name: '', last_name: '', email: '' });
         setShowMinorForm(false);
@@ -2165,11 +2168,52 @@
                       guardians.forEach((g, idx) => {
                         rows.push(renderRow(g, `g-${idx}`, false));
                         const ge = (g.email || '').toLowerCase();
+                        // Show event-RSVP'd minors first
                         if (minorsByGuardian[ge]) {
                           minorsByGuardian[ge].forEach((m, mIdx) => {
                             rows.push(renderRow(m, `m-${ge}-${mIdx}`, true));
                           });
                         }
+                        // Show account-registered minors (not yet RSVP'd)
+                        const acctMinors = accountMinors[g.email] || accountMinors[ge] || [];
+                        acctMinors.forEach((am, amIdx) => {
+                          rows.push(React.createElement('tr', {
+                            key: `am-${ge}-${amIdx}`,
+                            className: 'border-b bg-indigo-50/20'
+                          }, [
+                            React.createElement('td', { key: 'name', className: "py-2 px-3 pl-8" }, [
+                              React.createElement('span', { key: 'indent', className: "text-gray-300 mr-1" }, '↳'),
+                              `${am.first_name || ''} ${am.last_name || ''}`.trim(),
+                              am.date_of_birth ? React.createElement('span', {
+                                key: 'dob',
+                                className: "ml-1 inline-block px-1.5 py-0.5 text-xs bg-indigo-100 text-indigo-700 rounded"
+                              }, `DOB: ${am.date_of_birth}`) : null
+                            ]),
+                            React.createElement('td', { key: 'email', className: "py-2 px-3 text-gray-400 italic text-xs" }, g.email),
+                            React.createElement('td', { key: 'type', className: "py-2 px-3" },
+                              React.createElement('span', {
+                                className: "inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-500"
+                              }, 'account minor')
+                            ),
+                            React.createElement('td', { key: 'status', className: "py-2 px-3" },
+                              React.createElement('span', {
+                                className: "inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-500"
+                              }, 'NOT RSVP\'D')
+                            ),
+                            React.createElement('td', { key: 'date', className: "py-2 px-3 text-gray-400" }, '—'),
+                            React.createElement('td', { key: 'actions', className: "py-2 px-3 text-right" },
+                              React.createElement('button', {
+                                onClick: () => {
+                                  setMinorData({ first_name: am.first_name || '', last_name: am.last_name || '', guardian_email: g.email, date_of_birth: am.date_of_birth || '' });
+                                  setShowMinorForm(true);
+                                  setShowWalkInForm(false);
+                                },
+                                className: "bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600",
+                                title: "Add this minor to the event"
+                              }, '+ Add to event')
+                            )
+                          ]));
+                        });
                       });
                       orphanMinors.forEach((m, idx) => {
                         rows.push(renderRow(m, `orphan-${idx}`, true));
