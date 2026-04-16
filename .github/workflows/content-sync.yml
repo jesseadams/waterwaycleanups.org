@@ -114,6 +114,12 @@ jobs:
           github-token: ${{ secrets.APPROVAL_TOKEN }}
           pull-request-number: ${{ steps.photo-pr.outputs.pr_number }}
 
+      - name: Enable auto-merge
+        if: steps.photo-pr.outputs.pr_number
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge ${{ steps.photo-pr.outputs.pr_number }} --auto --squash
+
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
