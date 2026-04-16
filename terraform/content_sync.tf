@@ -168,7 +168,7 @@ resource "aws_lambda_function" "admin_content_sync" {
   handler          = "lambda_admin_content_sync.handler"
   source_code_hash = data.archive_file.admin_content_sync_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 60
+  timeout          = 120
 
   environment {
     variables = {
