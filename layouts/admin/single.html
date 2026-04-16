@@ -1106,6 +1106,7 @@
       const [events, setEvents] = useState([]);
       const [pendingDeletions, setPendingDeletions] = useState(new Set());
       const [pendingEdits, setPendingEdits] = useState(new Map()); // Map of event_id -> edit object
+      const [contentEditCount, setContentEditCount] = useState(0);
       const [eventFilters, setEventFilters] = useState({
         status: '',
         start_date: '',
@@ -1258,11 +1259,15 @@
                 .map(edit => [edit.event_id, edit])
             );
             setPendingEdits(editsMap);
+            
+            // Track total content edit count for the tab badge
+            setContentEditCount(data.edits.length);
           }
         } catch (error) {
           console.error('Error loading pending deletions:', error);
           setPendingDeletions(new Set());
           setPendingEdits(new Map());
+          setContentEditCount(0);
         }
       };
 
@@ -1950,7 +1955,13 @@
               ? 'border-blue-500 text-blue-600'
               : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
           }`
-        }, `${tab.icon} ${tab.label}`)))),
+        }, [
+          `${tab.icon} ${tab.label}`,
+          tab.id === 'content' && contentEditCount > 0 ? React.createElement('span', {
+            key: 'badge',
+            className: "ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold leading-none text-white bg-red-500 rounded-full"
+          }, contentEditCount) : null
+        ])))),
         React.createElement('div', {
           key: 'content',
           className: "p-6"
