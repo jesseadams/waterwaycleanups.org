@@ -176,23 +176,24 @@
       return React.createElement('div', { className: "space-y-2" }, [
         React.createElement('div', { key: 'header', className: "flex items-center justify-between" }, [
           React.createElement('label', { key: 'label', className: "block text-sm font-medium text-gray-700" }, label || 'Event Photo'),
-          React.createElement('label', {
+          React.createElement('button', {
             key: 'upload-btn',
-            className: `inline-flex items-center gap-1 px-3 py-1 text-xs rounded-md cursor-pointer ${
+            type: 'button',
+            disabled: uploading,
+            onClick: () => fileInputRef.current && fileInputRef.current.click(),
+            className: `inline-flex items-center gap-1 px-3 py-1 text-xs rounded-md ${
               uploading ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'
             }`
-          }, [
-            uploading ? 'Uploading...' : '+ Upload Photo',
-            React.createElement('input', {
-              key: 'file-input',
-              ref: fileInputRef,
-              type: 'file',
-              accept: 'image/jpeg,image/png,image/webp',
-              disabled: uploading,
-              onChange: handleUpload,
-              className: "hidden"
-            })
-          ])
+          }, uploading ? 'Uploading...' : '+ Upload Photo'),
+          React.createElement('input', {
+            key: 'file-input',
+            ref: fileInputRef,
+            type: 'file',
+            accept: 'image/jpeg,image/png,image/webp',
+            disabled: uploading,
+            onChange: handleUpload,
+            style: { display: 'none' }
+          })
         ]),
         uploadError ? React.createElement('div', {
           key: 'upload-error',

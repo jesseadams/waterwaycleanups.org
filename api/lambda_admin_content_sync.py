@@ -434,6 +434,89 @@ def handle_publish(body, session):
         print(f"Error publishing edits: {e}")
         return respond(500, {'success': False, 'message': str(e)})
 
+def handle_upload_image(body, session):
+    """Upload an image to the GitHub repo via Contents API"""
+    filename = body.get('filename', '')
+    file_data = body.get('file_data', '')
+
+    if not filename or not file_data:
+        return respond(400, {'success': False, 'message': 'filename and file_data (base64) required'})
+
+    github_token = get_github_token()
+    if not github_token:
+        return respond(500, {'success': False, 'message': 'GitHub token not configured'})
+
+    # Sanitize filename
+    import re
+    sanitized = re.sub(r'[^a-z0-9._-]', '', filename.lower().replace(' ', '-'))
+
+    allowed_exts = ('.jpg', '.jpeg', '.png', '.webp')
+    ext_pos = sanitized.rfind('.')
+    ext = sanitized[ext_pos:] if ext_pos >= 0 else ''
+    if ext not in allowed_exts:
+        return respond(400, {'success': False, 'message': f'Invalid file type. Allowed: {", ".join(allowed_exts)}'})
+
+    # ~5MB limit (base64 is ~33% larger)
+    if len(file_data) > 7 * 1024 * 1024:
+        return respond(400, {'success': False, 'message': 'File too large. Maximum 5MB.'})
+
+    repo_path = f'static/uploads/waterway-cleanups/{sanitized}'
+    public_path = f'/uploads/waterway-cleanups/{sanitized}'
+
+    try:
+        # Check if file already exists (need SHA to update)
+        existing_sha = None
+        try:
+            check_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}?ref={github_branch}'
+            check_req = urllib.request.Request(check_url, headers={
+                'Authorization': f'token {github_token}',
+                'Accept': 'application/vnd.github.v3+json',
+                'User-Agent': 'waterwaycleanups-admin'
+            })
+            with urllib.request.urlopen(check_req) as resp:
+                existing = json.loads(resp.read().decode('utf-8'))
+                existing_sha = existing.get('sha')
+        except urllib.error.HTTPError:
+            pass  # File doesn't exist yet
+
+        commit_data = {
+            'message': f'Upload event photo: {sanitized}',
+            'content': file_data,
+            'branch': github_branch,
+            'committer': {
+                'name': 'Waterway Cleanups Admin',
+                'email': session['email']
+            }
+        }
+        if existing_sha:
+            commit_data['sha'] = existing_sha
+
+        put_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}'
+        put_data = json.dumps(commit_data).encode('utf-8')
+        put_req = urllib.request.Request(put_url, data=put_data, headers={
+            'Authorization': f'token {github_token}',
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'waterwaycleanups-admin',
+            'Content-Type': 'application/json'
+        }, method='PUT')
+
+        with urllib.request.urlopen(put_req) as resp:
+            pass  # Success
+
+        return respond(200, {
+            'success': True,
+            'path': public_path,
+            'filename': sanitized,
+            'message': 'Image uploaded successfully. It will appear in the photo library after the next site build.'
+        })
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        print(f"GitHub upload error: HTTP {e.code}: {error_body}")
+        return respond(500, {'success': False, 'message': f'Upload failed: HTTP {e.code}'})
+    except Exception as e:
+        print(f"Error uploading image: {e}")
+        return respond(500, {'success': False, 'message': f'Upload failed: {str(e)}'})
+
 def handler(event, context):
     """Lambda handler"""
     # Handle OPTIONS for CORS
@@ -483,6 +566,8 @@ def handler(event, context):
             return handle_queue_delete(body, session)
         elif action == 'publish':
             return handle_publish(body, session)
+        elif action == 'upload_image':
+            return handle_upload_image(body, session)
         else:
             return respond(400, {'success': False, 'message': f'Unknown action: {action}'})
     except Exception as e:
