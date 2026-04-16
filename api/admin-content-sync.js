@@ -156,6 +156,8 @@ exports.handler = async (event) => {
         return await handleLoadEvent(body, session);
       case 'publish':
         return await handlePublish(body, session);
+      case 'upload_image':
+        return await handleUploadImage(body, session);
       default:
         return respond(400, { success: false, message: `Unknown action: ${action}` });
     }
@@ -351,4 +353,72 @@ async function handlePublish(body, session) {
     errors: errors.length > 0 ? errors : undefined,
     message: `Published ${publishedEvents.length} event(s)${workflowResult?.triggered ? ', site rebuild triggered' : ''}`
   });
+}
+
+
+// Upload an image to the GitHub repo
+async function handleUploadImage(body, session) {
+  if (!body.filename || !body.file_data) {
+    return respond(400, { success: false, message: 'filename and file_data (base64) required' });
+  }
+
+  if (!githubToken) {
+    return respond(500, { success: false, message: 'GitHub token not configured' });
+  }
+
+  // Sanitize filename: lowercase, replace spaces with hyphens, keep only safe chars
+  const sanitized = body.filename
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9._-]/g, '');
+
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.webp'];
+  const ext = sanitized.substring(sanitized.lastIndexOf('.'));
+  if (!allowedExts.includes(ext)) {
+    return respond(400, { success: false, message: `Invalid file type. Allowed: ${allowedExts.join(', ')}` });
+  }
+
+  // Limit to ~5MB (base64 is ~33% larger than binary)
+  if (body.file_data.length > 7 * 1024 * 1024) {
+    return respond(400, { success: false, message: 'File too large. Maximum 5MB.' });
+  }
+
+  const repoPath = `static/uploads/waterway-cleanups/${sanitized}`;
+  const publicPath = `/uploads/waterway-cleanups/${sanitized}`;
+
+  try {
+    // Check if file already exists (need the SHA to update)
+    let existingSha = null;
+    try {
+      const existing = await githubRequest('GET', `/repos/${githubRepo}/contents/${repoPath}?ref=${githubBranch}`);
+      existingSha = existing.sha;
+    } catch (e) {
+      // File doesn't exist yet, that's fine
+    }
+
+    const commitData = {
+      message: `Upload event photo: ${sanitized}`,
+      content: body.file_data,
+      branch: githubBranch,
+      committer: {
+        name: 'Waterway Cleanups Admin',
+        email: session.email
+      }
+    };
+    if (existingSha) {
+      commitData.sha = existingSha;
+    }
+
+    await githubRequest('PUT', `/repos/${githubRepo}/contents/${repoPath}`, commitData);
+
+    return respond(200, {
+      success: true,
+      path: publicPath,
+      filename: sanitized,
+      message: `Image uploaded successfully. It will appear in the photo library after the next site build.`
+    });
+  } catch (err) {
+    console.error('Error uploading image:', err);
+    return respond(500, { success: false, message: `Upload failed: ${err.message}` });
+  }
 }

@@ -98,11 +98,106 @@
     // All dependencies loaded successfully, render the component
     const { useState, useEffect } = React;
 
-    // Reusable Image Picker - thumbnail grid with selection
+    // Reusable Image Picker - thumbnail grid with selection + upload
     const ImagePicker = ({ value, onChange, label }) => {
-      const photos = window.EVENT_PHOTOS || [];
+      const [photos, setPhotos] = useState(window.EVENT_PHOTOS || []);
+      const [uploading, setUploading] = useState(false);
+      const [uploadError, setUploadError] = useState('');
+      const fileInputRef = React.useRef(null);
+
+      const handleUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+          setUploadError('Only JPG, PNG, and WebP files are allowed.');
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          setUploadError('File must be under 5MB.');
+          return;
+        }
+
+        setUploading(true);
+        setUploadError('');
+
+        try {
+          // Read file as base64
+          const base64 = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          // Also create a data URL for immediate preview
+          const previewUrl = URL.createObjectURL(file);
+
+          // Upload to GitHub via admin-content-sync API
+          const contentSyncUrl = (window.API_CONFIG && window.API_CONFIG.BASE_URL)
+            ? window.API_CONFIG.BASE_URL + '/admin-content-sync'
+            : '/api/admin-content-sync';
+          const token = localStorage.getItem('auth_session_token');
+
+          const res = await fetch(contentSyncUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              session_token: token,
+              action: 'upload_image',
+              filename: file.name,
+              file_data: base64
+            })
+          });
+          const data = await res.json();
+
+          if (!data.success) throw new Error(data.message || 'Upload failed');
+
+          // Add to local photo list and select it immediately
+          const newPhoto = { path: data.path, label: data.filename.replace(/[-_]/g, ' ').replace(/\.[^.]+$/, ''), preview: previewUrl };
+          setPhotos(prev => [...prev, newPhoto]);
+          onChange(data.path);
+
+          // Store preview URL so the thumbnail works before the next build
+          window._uploadedPreviews = window._uploadedPreviews || {};
+          window._uploadedPreviews[data.path] = previewUrl;
+        } catch (err) {
+          setUploadError(err.message);
+        } finally {
+          setUploading(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+
+      // Resolve image src — use local preview for just-uploaded images
+      const imgSrc = (path) => (window._uploadedPreviews && window._uploadedPreviews[path]) || path;
+
       return React.createElement('div', { className: "space-y-2" }, [
-        React.createElement('label', { key: 'label', className: "block text-sm font-medium text-gray-700 mb-1" }, label || 'Event Photo'),
+        React.createElement('div', { key: 'header', className: "flex items-center justify-between" }, [
+          React.createElement('label', { key: 'label', className: "block text-sm font-medium text-gray-700" }, label || 'Event Photo'),
+          React.createElement('label', {
+            key: 'upload-btn',
+            className: `inline-flex items-center gap-1 px-3 py-1 text-xs rounded-md cursor-pointer ${
+              uploading ? 'bg-gray-300 text-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`
+          }, [
+            uploading ? 'Uploading...' : '+ Upload Photo',
+            React.createElement('input', {
+              key: 'file-input',
+              ref: fileInputRef,
+              type: 'file',
+              accept: 'image/jpeg,image/png,image/webp',
+              disabled: uploading,
+              onChange: handleUpload,
+              className: "hidden"
+            })
+          ])
+        ]),
+        uploadError ? React.createElement('div', {
+          key: 'upload-error',
+          className: "text-xs text-red-600 bg-red-50 px-2 py-1 rounded"
+        }, uploadError) : null,
         React.createElement('div', {
           key: 'grid',
           className: "grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-48 overflow-y-auto border rounded-md p-2 bg-gray-50"
@@ -118,7 +213,7 @@
           }, [
             React.createElement('img', {
               key: 'img',
-              src: photo.path,
+              src: imgSrc(photo.path),
               alt: photo.label,
               loading: 'lazy',
               className: "w-full h-16 object-cover"
@@ -132,7 +227,7 @@
         value && value !== '/uploads/waterway-cleanups/default.jpg' ?
           React.createElement('div', { key: 'selected', className: "flex items-center gap-2 text-sm text-gray-600" }, [
             React.createElement('img', {
-              key: 'thumb', src: value, alt: 'Selected',
+              key: 'thumb', src: imgSrc(value), alt: 'Selected',
               className: "h-8 w-12 object-cover rounded border"
             }),
             React.createElement('span', { key: 'name' },
