@@ -355,23 +355,33 @@ def sync_s3_image_to_github(image_url):
     """If image_url is an S3 event-photos URL, download it and commit to GitHub.
     Returns the local Hugo path, or the original URL if not an S3 upload."""
     bucket_name = os.environ.get('EVENT_PHOTOS_BUCKET', '')
-    if not bucket_name or not image_url or bucket_name not in image_url:
+    print(f"[IMAGE_SYNC] Starting sync check for image_url={image_url}, bucket_name={bucket_name}")
+    
+    if not bucket_name or not image_url:
+        print(f"[IMAGE_SYNC] Skipping: bucket_name empty={not bucket_name}, image_url empty={not image_url}")
+        return image_url
+    
+    if bucket_name not in image_url:
+        print(f"[IMAGE_SYNC] Skipping: bucket_name '{bucket_name}' not found in image_url '{image_url}'")
         return image_url
 
     # Extract the filename from the S3 URL
-    # e.g. https://bucket.s3.amazonaws.com/event-photos/my-photo.jpg -> my-photo.jpg
     try:
         parts = image_url.split('/event-photos/')
         if len(parts) != 2:
+            print(f"[IMAGE_SYNC] Skipping: could not split on '/event-photos/', parts={parts}")
             return image_url
         filename = parts[1]
-    except Exception:
+        print(f"[IMAGE_SYNC] Extracted filename: {filename}")
+    except Exception as e:
+        print(f"[IMAGE_SYNC] Error extracting filename: {e}")
         return image_url
 
     github_token = get_github_token()
     if not github_token:
-        print("No GitHub token, skipping image sync to repo")
+        print("[IMAGE_SYNC] No GitHub token available, skipping")
         return image_url
+    print(f"[IMAGE_SYNC] GitHub token obtained (length={len(github_token)})")
 
     try:
         import base64
@@ -379,9 +389,11 @@ def sync_s3_image_to_github(image_url):
         # Download from S3
         s3_client = boto3.client('s3')
         s3_key = f'event-photos/{filename}'
+        print(f"[IMAGE_SYNC] Downloading from S3: bucket={bucket_name}, key={s3_key}")
         response = s3_client.get_object(Bucket=bucket_name, Key=s3_key)
         file_bytes = response['Body'].read()
         file_b64 = base64.b64encode(file_bytes).decode('utf-8')
+        print(f"[IMAGE_SYNC] Downloaded {len(file_bytes)} bytes from S3, base64 length={len(file_b64)}")
 
         repo_path = f'static/uploads/waterway-cleanups/{filename}'
         local_path = f'/uploads/waterway-cleanups/{filename}'
@@ -390,6 +402,7 @@ def sync_s3_image_to_github(image_url):
         existing_sha = None
         try:
             check_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}?ref={github_branch}'
+            print(f"[IMAGE_SYNC] Checking GitHub for existing file: {check_url}")
             check_req = urllib.request.Request(check_url, headers={
                 'Authorization': f'token {github_token}',
                 'Accept': 'application/vnd.github.v3+json',
@@ -398,8 +411,9 @@ def sync_s3_image_to_github(image_url):
             with urllib.request.urlopen(check_req) as resp:
                 existing = json.loads(resp.read().decode('utf-8'))
                 existing_sha = existing.get('sha')
-        except urllib.error.HTTPError:
-            pass
+                print(f"[IMAGE_SYNC] File exists in GitHub, sha={existing_sha}")
+        except urllib.error.HTTPError as e:
+            print(f"[IMAGE_SYNC] File not found in GitHub (HTTP {e.code}), will create new")
 
         commit_data = {
             'message': f'Add event photo: {filename}',
@@ -415,6 +429,7 @@ def sync_s3_image_to_github(image_url):
 
         put_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}'
         put_data = json.dumps(commit_data).encode('utf-8')
+        print(f"[IMAGE_SYNC] Committing to GitHub: {put_url} (payload size={len(put_data)})")
         put_req = urllib.request.Request(put_url, data=put_data, headers={
             'Authorization': f'token {github_token}',
             'Accept': 'application/vnd.github.v3+json',
@@ -423,12 +438,19 @@ def sync_s3_image_to_github(image_url):
         }, method='PUT')
 
         with urllib.request.urlopen(put_req) as resp:
-            pass
+            resp_body = resp.read().decode('utf-8')
+            print(f"[IMAGE_SYNC] GitHub commit success, status={resp.status}")
 
-        print(f"Synced image to GitHub: {repo_path}")
+        print(f"[IMAGE_SYNC] Synced image to GitHub: {repo_path} -> {local_path}")
         return local_path
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8')
+        print(f"[IMAGE_SYNC] GitHub API error: HTTP {e.code}, body={error_body[:500]}")
+        return image_url
     except Exception as e:
-        print(f"Failed to sync image {image_url} to GitHub: {e}")
+        print(f"[IMAGE_SYNC] Failed to sync image {image_url} to GitHub: {e}")
+        import traceback
+        traceback.print_exc()
         return image_url
 
 def handle_publish(body, session):
@@ -479,10 +501,16 @@ def handle_publish(body, session):
                 event_data = edit['event_data']
                 hugo_config = event_data.get('hugo_config', {})
                 image_url = hugo_config.get('image', '')
-                if image_url and 's3.amazonaws.com' in image_url:
+                print(f"[PUBLISH] Event {event_id}: hugo_config={json.dumps(hugo_config, cls=DecimalEncoder)}")
+                print(f"[PUBLISH] Event {event_id}: image_url='{image_url}', is_s3={'s3.amazonaws.com' in str(image_url)}")
+                if image_url and 's3.amazonaws.com' in str(image_url):
+                    print(f"[PUBLISH] Event {event_id}: Triggering S3->GitHub sync for {image_url}")
                     local_path = sync_s3_image_to_github(image_url)
+                    print(f"[PUBLISH] Event {event_id}: sync result: '{image_url}' -> '{local_path}'")
                     hugo_config['image'] = local_path
                     event_data['hugo_config'] = hugo_config
+                else:
+                    print(f"[PUBLISH] Event {event_id}: No S3 image sync needed")
                 
                 # Update or create event in events table
                 events_table.put_item(Item=event_data)
@@ -610,6 +638,8 @@ def handle_list_uploaded_images(body, session):
 
 def handler(event, context):
     """Lambda handler"""
+    print(f"[HANDLER] Invoked: method={event.get('httpMethod')}, path={event.get('path')}")
+    
     # Handle OPTIONS for CORS
     if event.get('httpMethod') == 'OPTIONS':
         return respond(200, {'message': 'CORS preflight successful'})
@@ -621,7 +651,11 @@ def handler(event, context):
     try:
         body = json.loads(event.get('body', '{}'))
     except json.JSONDecodeError:
+        print(f"[HANDLER] Invalid JSON body: {event.get('body', '')[:200]}")
         return respond(400, {'success': False, 'message': 'Invalid JSON body'})
+    
+    action = body.get('action')
+    print(f"[HANDLER] Action: {action}")
     
     # Extract session token from Authorization header OR body
     headers = event.get('headers', {})
@@ -630,20 +664,24 @@ def handler(event, context):
     session_token = None
     if auth_header:
         session_token = auth_header.replace('Bearer ', '').replace('bearer ', '')
+        print(f"[HANDLER] Token from header (length={len(session_token)})")
     elif body.get('session_token'):
         session_token = body.get('session_token')
+        print(f"[HANDLER] Token from body (length={len(session_token)})")
     
     if not session_token:
+        print("[HANDLER] No session token found")
         return respond(401, {'success': False, 'message': 'Session token required'})
     
     # Validate admin session
     session = validate_admin_session(session_token)
     if not session:
+        print(f"[HANDLER] Admin validation failed for token")
         return respond(403, {'success': False, 'message': 'Admin access required'})
     
-    # Route to action handler
-    action = body.get('action')
+    print(f"[HANDLER] Authenticated as {session.get('email')}, routing to action={action}")
     
+    # Route to action handler
     try:
         if action == 'save_draft':
             return handle_save_draft(body, session)
@@ -662,7 +700,10 @@ def handler(event, context):
         elif action == 'list_uploaded_images':
             return handle_list_uploaded_images(body, session)
         else:
+            print(f"[HANDLER] Unknown action: {action}")
             return respond(400, {'success': False, 'message': f'Unknown action: {action}'})
     except Exception as e:
-        print(f"Error handling {action}: {e}")
+        print(f"[HANDLER] Unhandled exception in action={action}: {e}")
+        import traceback
+        traceback.print_exc()
         return respond(500, {'success': False, 'message': 'Internal server error', 'error': str(e)})
