@@ -111,6 +111,7 @@ jobs:
         if: steps.photo-pr.outputs.pr_number
         uses: hmarr/auto-approve-action@v4
         with:
+          github-token: ${{ secrets.APPROVAL_TOKEN }}
           pull-request-number: ${{ steps.photo-pr.outputs.pr_number }}
 
       - name: Setup Hugo
