@@ -107,17 +107,25 @@ jobs:
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           fi
 
+      - name: Generate GitHub App token
+        if: steps.photo-pr.outputs.pr_number
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.   }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Auto Approve PR
         if: steps.photo-pr.outputs.pr_number
         uses: hmarr/auto-approve-action@v4
         with:
-          github-token: ${{ secrets.APPROVAL_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
           pull-request-number: ${{ steps.photo-pr.outputs.pr_number }}
 
       - name: Enable auto-merge
         if: steps.photo-pr.outputs.pr_number
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: gh pr merge ${{ steps.photo-pr.outputs.pr_number }} --auto --squash
 
       - name: Setup Hugo
