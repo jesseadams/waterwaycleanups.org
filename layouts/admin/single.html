@@ -248,12 +248,12 @@
               src: imgSrc(photo.path),
               alt: photo.label,
               loading: 'lazy',
-              className: "w-full h-16 object-cover"
+              className: `w-full h-16 object-cover transition-opacity ${value === photo.path ? 'opacity-50' : ''}`
             }),
             value === photo.path ? React.createElement('div', {
               key: 'check',
-              className: "absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center"
-            }, React.createElement('span', { className: "text-white text-lg drop-shadow" }, '✓')) : null
+              className: "absolute inset-0 flex items-center justify-center"
+            }, React.createElement('span', { className: "text-blue-600 text-xl font-bold drop-shadow-sm" }, '✓')) : null
           ])
         )),
         value && value !== '/uploads/waterway-cleanups/default.jpg' ?
