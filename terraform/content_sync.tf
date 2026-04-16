@@ -106,6 +106,30 @@ resource "aws_iam_policy" "content_sync_lambda_policy" {
       },
       {
         Action = [
+          "s3:PutObject",
+          "s3:GetObject"
+        ],
+        Resource = [
+          "${aws_s3_bucket.newsletter_photos_bucket.arn}/event-photos/*"
+        ],
+        Effect = "Allow"
+      },
+      {
+        Action = [
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.newsletter_photos_bucket.arn
+        ],
+        Condition = {
+          StringLike = {
+            "s3:prefix" = ["event-photos/*"]
+          }
+        },
+        Effect = "Allow"
+      },
+      {
+        Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
@@ -155,6 +179,7 @@ resource "aws_lambda_function" "admin_content_sync" {
       GITHUB_TOKEN_PARAMETER   = "/waterwaycleanups/shared/github_token"
       GITHUB_REPO              = var.github_repo
       GITHUB_BRANCH            = var.github_branch
+      EVENT_PHOTOS_BUCKET      = aws_s3_bucket.newsletter_photos_bucket.id
     }
   }
 

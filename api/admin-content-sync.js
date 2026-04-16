@@ -356,17 +356,12 @@ async function handlePublish(body, session) {
 }
 
 
-// Upload an image to the GitHub repo
+// Upload an image - generate presigned S3 URL for direct browser upload
 async function handleUploadImage(body, session) {
-  if (!body.filename || !body.file_data) {
-    return respond(400, { success: false, message: 'filename and file_data (base64) required' });
+  if (!body.filename) {
+    return respond(400, { success: false, message: 'filename required' });
   }
 
-  if (!githubToken) {
-    return respond(500, { success: false, message: 'GitHub token not configured' });
-  }
-
-  // Sanitize filename: lowercase, replace spaces with hyphens, keep only safe chars
   const sanitized = body.filename
     .toLowerCase()
     .replace(/\s+/g, '-')
@@ -378,47 +373,37 @@ async function handleUploadImage(body, session) {
     return respond(400, { success: false, message: `Invalid file type. Allowed: ${allowedExts.join(', ')}` });
   }
 
-  // Limit to ~5MB (base64 is ~33% larger than binary)
-  if (body.file_data.length > 7 * 1024 * 1024) {
-    return respond(400, { success: false, message: 'File too large. Maximum 5MB.' });
+  const bucketName = process.env.EVENT_PHOTOS_BUCKET;
+  if (!bucketName) {
+    return respond(500, { success: false, message: 'Photo upload bucket not configured' });
   }
 
-  const repoPath = `static/uploads/waterway-cleanups/${sanitized}`;
+  const s3Key = `event-photos/${sanitized}`;
   const publicPath = `/uploads/waterway-cleanups/${sanitized}`;
+  const contentTypeMap = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' };
 
   try {
-    // Check if file already exists (need the SHA to update)
-    let existingSha = null;
-    try {
-      const existing = await githubRequest('GET', `/repos/${githubRepo}/contents/${repoPath}?ref=${githubBranch}`);
-      existingSha = existing.sha;
-    } catch (e) {
-      // File doesn't exist yet, that's fine
-    }
+    const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+    const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
+    const s3 = new S3Client({ region: process.env.AWS_REGION || 'us-east-1' });
 
-    const commitData = {
-      message: `Upload event photo: ${sanitized}`,
-      content: body.file_data,
-      branch: githubBranch,
-      committer: {
-        name: 'Waterway Cleanups Admin',
-        email: session.email
-      }
-    };
-    if (existingSha) {
-      commitData.sha = existingSha;
-    }
-
-    await githubRequest('PUT', `/repos/${githubRepo}/contents/${repoPath}`, commitData);
+    const presignedUrl = await getSignedUrl(s3, new PutObjectCommand({
+      Bucket: bucketName,
+      Key: s3Key,
+      ContentType: contentTypeMap[ext] || 'image/jpeg'
+    }), { expiresIn: 300 });
 
     return respond(200, {
       success: true,
+      upload_url: presignedUrl,
+      public_url: `https://${bucketName}.s3.amazonaws.com/${s3Key}`,
       path: publicPath,
       filename: sanitized,
-      message: `Image uploaded successfully. It will appear in the photo library after the next site build.`
+      content_type: contentTypeMap[ext] || 'image/jpeg',
+      message: 'Upload URL generated. Upload directly to S3.'
     });
   } catch (err) {
-    console.error('Error uploading image:', err);
-    return respond(500, { success: false, message: `Upload failed: ${err.message}` });
+    console.error('Error generating presigned URL:', err);
+    return respond(500, { success: false, message: `Failed to generate upload URL: ${err.message}` });
   }
 }

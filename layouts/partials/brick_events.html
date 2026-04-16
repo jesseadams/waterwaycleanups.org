@@ -31,10 +31,13 @@
         <ul class="contentitems grid posts" data-pagesize="{{ if page.Site.Data.settings.show_all_events }}99{{ else }}{{ page.Site.Data.settings.page_size }}{{ end }}">
             {{ range $index,$event := $sorted }}
                 <li class="item{{ range .Params.tags }} tag_{{ . }}{{ end }}">
+                        {{- $eventimage := "" -}}
                         {{- if (resources.GetMatch .Params.image) -}}
-                            {{- $eventimage := ((resources.GetMatch .Params.image).Fill `1200x600 jpg Smart q50`).RelPermalink -}}
-                            {{- if $eventimage -}}<a href="{{ .RelPermalink }}"><div class="img"><img data-src="{{ $eventimage }}" alt="{{ .Title }}" style="cursor: pointer;" onclick="document.location.href='{{ .RelPermalink }}';" /></div></a>{{- end -}}
+                            {{- $eventimage = ((resources.GetMatch .Params.image).Fill `1200x600 jpg Smart q50`).RelPermalink -}}
+                        {{- else if .Params.image -}}
+                            {{- $eventimage = .Params.image -}}
                         {{- end -}}
+                        {{- if $eventimage -}}<a href="{{ .RelPermalink }}"><div class="img"><img data-src="{{ $eventimage }}" alt="{{ .Title }}" style="cursor: pointer;" onclick="document.location.href='{{ .RelPermalink }}';" /></div></a>{{- end -}}
                         <h3>{{ .Title | safeHTML }}</h3>
                         <div class="meta">
                             {{ $rawContent := .RawContent }}

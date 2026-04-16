@@ -435,16 +435,11 @@ def handle_publish(body, session):
         return respond(500, {'success': False, 'message': str(e)})
 
 def handle_upload_image(body, session):
-    """Upload an image to the GitHub repo via Contents API"""
+    """Generate a presigned S3 URL for direct browser upload"""
     filename = body.get('filename', '')
-    file_data = body.get('file_data', '')
 
-    if not filename or not file_data:
-        return respond(400, {'success': False, 'message': 'filename and file_data (base64) required'})
-
-    github_token = get_github_token()
-    if not github_token:
-        return respond(500, {'success': False, 'message': 'GitHub token not configured'})
+    if not filename:
+        return respond(400, {'success': False, 'message': 'filename required'})
 
     # Sanitize filename
     import re
@@ -456,66 +451,74 @@ def handle_upload_image(body, session):
     if ext not in allowed_exts:
         return respond(400, {'success': False, 'message': f'Invalid file type. Allowed: {", ".join(allowed_exts)}'})
 
-    # ~5MB limit (base64 is ~33% larger)
-    if len(file_data) > 7 * 1024 * 1024:
-        return respond(400, {'success': False, 'message': 'File too large. Maximum 5MB.'})
+    bucket_name = os.environ.get('EVENT_PHOTOS_BUCKET', '')
+    if not bucket_name:
+        return respond(500, {'success': False, 'message': 'Photo upload bucket not configured'})
 
-    repo_path = f'static/uploads/waterway-cleanups/{sanitized}'
+    s3_key = f'event-photos/{sanitized}'
     public_path = f'/uploads/waterway-cleanups/{sanitized}'
 
+    content_type_map = {
+        '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.png': 'image/png', '.webp': 'image/webp'
+    }
+
     try:
-        # Check if file already exists (need SHA to update)
-        existing_sha = None
-        try:
-            check_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}?ref={github_branch}'
-            check_req = urllib.request.Request(check_url, headers={
-                'Authorization': f'token {github_token}',
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'waterwaycleanups-admin'
-            })
-            with urllib.request.urlopen(check_req) as resp:
-                existing = json.loads(resp.read().decode('utf-8'))
-                existing_sha = existing.get('sha')
-        except urllib.error.HTTPError:
-            pass  # File doesn't exist yet
+        s3_client = boto3.client('s3')
+        presigned_url = s3_client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket': bucket_name,
+                'Key': s3_key,
+                'ContentType': content_type_map.get(ext, 'image/jpeg')
+            },
+            ExpiresIn=300  # 5 minutes
+        )
 
-        commit_data = {
-            'message': f'Upload event photo: {sanitized}',
-            'content': file_data,
-            'branch': github_branch,
-            'committer': {
-                'name': 'Waterway Cleanups Admin',
-                'email': session['email']
-            }
-        }
-        if existing_sha:
-            commit_data['sha'] = existing_sha
-
-        put_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}'
-        put_data = json.dumps(commit_data).encode('utf-8')
-        put_req = urllib.request.Request(put_url, data=put_data, headers={
-            'Authorization': f'token {github_token}',
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'waterwaycleanups-admin',
-            'Content-Type': 'application/json'
-        }, method='PUT')
-
-        with urllib.request.urlopen(put_req) as resp:
-            pass  # Success
+        # The S3 public URL for the uploaded image
+        s3_public_url = f'https://{bucket_name}.s3.amazonaws.com/{s3_key}'
 
         return respond(200, {
             'success': True,
+            'upload_url': presigned_url,
+            'public_url': s3_public_url,
             'path': public_path,
             'filename': sanitized,
-            'message': 'Image uploaded successfully. It will appear in the photo library after the next site build.'
+            'content_type': content_type_map.get(ext, 'image/jpeg'),
+            'message': 'Upload URL generated. Upload directly to S3.'
         })
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
-        print(f"GitHub upload error: HTTP {e.code}: {error_body}")
-        return respond(500, {'success': False, 'message': f'Upload failed: HTTP {e.code}'})
     except Exception as e:
-        print(f"Error uploading image: {e}")
-        return respond(500, {'success': False, 'message': f'Upload failed: {str(e)}'})
+        print(f"Error generating presigned URL: {e}")
+        return respond(500, {'success': False, 'message': f'Failed to generate upload URL: {str(e)}'})
+
+def handle_list_uploaded_images(body, session):
+    """List uploaded event photos from S3"""
+    bucket_name = os.environ.get('EVENT_PHOTOS_BUCKET', '')
+    if not bucket_name:
+        return respond(200, {'success': True, 'images': []})
+
+    try:
+        s3_client = boto3.client('s3')
+        response = s3_client.list_objects_v2(Bucket=bucket_name, Prefix='event-photos/')
+        images = []
+        for obj in response.get('Contents', []):
+            key = obj['Key']
+            if key == 'event-photos/':
+                continue
+            filename = key.split('/')[-1]
+            ext = filename[filename.rfind('.'):].lower() if '.' in filename else ''
+            if ext in ('.jpg', '.jpeg', '.png', '.webp'):
+                import re
+                label = re.sub(r'[-_]', ' ', re.sub(r'\.[^.]+$', '', filename))
+                images.append({
+                    'path': f'https://{bucket_name}.s3.amazonaws.com/{key}',
+                    'label': label.title(),
+                    'filename': filename
+                })
+        return respond(200, {'success': True, 'images': images})
+    except Exception as e:
+        print(f"Error listing uploaded images: {e}")
+        return respond(200, {'success': True, 'images': []})
 
 def handler(event, context):
     """Lambda handler"""
@@ -568,6 +571,8 @@ def handler(event, context):
             return handle_publish(body, session)
         elif action == 'upload_image':
             return handle_upload_image(body, session)
+        elif action == 'list_uploaded_images':
+            return handle_list_uploaded_images(body, session)
         else:
             return respond(400, {'success': False, 'message': f'Unknown action: {action}'})
     except Exception as e:
