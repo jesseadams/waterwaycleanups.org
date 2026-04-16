@@ -126,7 +126,7 @@ jobs:
         if: steps.photo-pr.outputs.pr_number
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: gh pr merge ${{ steps.photo-pr.outputs.pr_number }} --squash --admin
+        run: gh pr merge ${{ steps.photo-pr.outputs.pr_number }} --squash --admin --delete-branch
 
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3

@@ -121,8 +121,12 @@
             const data = await res.json();
             if (data.success && data.images && data.images.length > 0) {
               setPhotos(prev => {
-                const existingPaths = new Set(prev.map(p => p.path));
-                const newOnes = data.images.filter(img => !existingPaths.has(img.path));
+                // Deduplicate by filename — a local path and S3 URL for the same file should not both appear
+                const existingFilenames = new Set(prev.map(p => p.path.split('/').pop()));
+                const newOnes = data.images.filter(img => {
+                  const filename = img.path.split('/').pop();
+                  return !existingFilenames.has(filename);
+                });
                 return newOnes.length > 0 ? [...prev, ...newOnes] : prev;
               });
             }
