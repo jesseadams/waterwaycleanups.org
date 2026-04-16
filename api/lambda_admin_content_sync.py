@@ -351,108 +351,6 @@ def migrate_rsvps(rsvps_table, old_event_id, new_event_id):
     
     return migrated
 
-def sync_s3_image_to_github(image_url):
-    """If image_url is an S3 event-photos URL, download it and commit to GitHub.
-    Returns the local Hugo path, or the original URL if not an S3 upload."""
-    bucket_name = os.environ.get('EVENT_PHOTOS_BUCKET', '')
-    print(f"[IMAGE_SYNC] Starting sync check for image_url={image_url}, bucket_name={bucket_name}")
-    
-    if not bucket_name or not image_url:
-        print(f"[IMAGE_SYNC] Skipping: bucket_name empty={not bucket_name}, image_url empty={not image_url}")
-        return image_url
-    
-    if bucket_name not in image_url:
-        print(f"[IMAGE_SYNC] Skipping: bucket_name '{bucket_name}' not found in image_url '{image_url}'")
-        return image_url
-
-    # Extract the filename from the S3 URL
-    try:
-        parts = image_url.split('/event-photos/')
-        if len(parts) != 2:
-            print(f"[IMAGE_SYNC] Skipping: could not split on '/event-photos/', parts={parts}")
-            return image_url
-        filename = parts[1]
-        print(f"[IMAGE_SYNC] Extracted filename: {filename}")
-    except Exception as e:
-        print(f"[IMAGE_SYNC] Error extracting filename: {e}")
-        return image_url
-
-    github_token = get_github_token()
-    if not github_token:
-        print("[IMAGE_SYNC] No GitHub token available, skipping")
-        return image_url
-    print(f"[IMAGE_SYNC] GitHub token obtained (length={len(github_token)})")
-
-    try:
-        import base64
-
-        # Download from S3
-        s3_client = boto3.client('s3')
-        s3_key = f'event-photos/{filename}'
-        print(f"[IMAGE_SYNC] Downloading from S3: bucket={bucket_name}, key={s3_key}")
-        response = s3_client.get_object(Bucket=bucket_name, Key=s3_key)
-        file_bytes = response['Body'].read()
-        file_b64 = base64.b64encode(file_bytes).decode('utf-8')
-        print(f"[IMAGE_SYNC] Downloaded {len(file_bytes)} bytes from S3, base64 length={len(file_b64)}")
-
-        repo_path = f'static/uploads/waterway-cleanups/{filename}'
-        local_path = f'/uploads/waterway-cleanups/{filename}'
-
-        # Check if file already exists in GitHub (need SHA to update)
-        existing_sha = None
-        try:
-            check_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}?ref={github_branch}'
-            print(f"[IMAGE_SYNC] Checking GitHub for existing file: {check_url}")
-            check_req = urllib.request.Request(check_url, headers={
-                'Authorization': f'token {github_token}',
-                'Accept': 'application/vnd.github.v3+json',
-                'User-Agent': 'waterwaycleanups-admin'
-            })
-            with urllib.request.urlopen(check_req) as resp:
-                existing = json.loads(resp.read().decode('utf-8'))
-                existing_sha = existing.get('sha')
-                print(f"[IMAGE_SYNC] File exists in GitHub, sha={existing_sha}")
-        except urllib.error.HTTPError as e:
-            print(f"[IMAGE_SYNC] File not found in GitHub (HTTP {e.code}), will create new")
-
-        commit_data = {
-            'message': f'Add event photo: {filename}',
-            'content': file_b64,
-            'branch': github_branch,
-            'committer': {
-                'name': 'Waterway Cleanups Admin',
-                'email': 'admin@waterwaycleanups.org'
-            }
-        }
-        if existing_sha:
-            commit_data['sha'] = existing_sha
-
-        put_url = f'https://api.github.com/repos/{github_repo}/contents/{repo_path}'
-        put_data = json.dumps(commit_data).encode('utf-8')
-        print(f"[IMAGE_SYNC] Committing to GitHub: {put_url} (payload size={len(put_data)})")
-        put_req = urllib.request.Request(put_url, data=put_data, headers={
-            'Authorization': f'token {github_token}',
-            'Accept': 'application/vnd.github.v3+json',
-            'User-Agent': 'waterwaycleanups-admin',
-            'Content-Type': 'application/json'
-        }, method='PUT')
-
-        with urllib.request.urlopen(put_req) as resp:
-            resp_body = resp.read().decode('utf-8')
-            print(f"[IMAGE_SYNC] GitHub commit success, status={resp.status}")
-
-        print(f"[IMAGE_SYNC] Synced image to GitHub: {repo_path} -> {local_path}")
-        return local_path
-    except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8')
-        print(f"[IMAGE_SYNC] GitHub API error: HTTP {e.code}, body={error_body[:500]}")
-        return image_url
-    except Exception as e:
-        print(f"[IMAGE_SYNC] Failed to sync image {image_url} to GitHub: {e}")
-        import traceback
-        traceback.print_exc()
-        return image_url
-
 def handle_publish(body, session):
     """Publish all pending edits to the events table and trigger rebuild"""
     try:
@@ -497,22 +395,8 @@ def handle_publish(body, session):
                     events_table.delete_item(Key={'event_id': original_event_id})
                     print(f"Migrated event {original_event_id} -> {event_id}")
                 
-                # If the image is an S3 upload, commit it to GitHub and rewrite to local path
-                event_data = edit['event_data']
-                hugo_config = event_data.get('hugo_config', {})
-                image_url = hugo_config.get('image', '')
-                print(f"[PUBLISH] Event {event_id}: hugo_config={json.dumps(hugo_config, cls=DecimalEncoder)}")
-                print(f"[PUBLISH] Event {event_id}: image_url='{image_url}', is_s3={'s3.amazonaws.com' in str(image_url)}")
-                if image_url and 's3.amazonaws.com' in str(image_url):
-                    print(f"[PUBLISH] Event {event_id}: Triggering S3->GitHub sync for {image_url}")
-                    local_path = sync_s3_image_to_github(image_url)
-                    print(f"[PUBLISH] Event {event_id}: sync result: '{image_url}' -> '{local_path}'")
-                    hugo_config['image'] = local_path
-                    event_data['hugo_config'] = hugo_config
-                else:
-                    print(f"[PUBLISH] Event {event_id}: No S3 image sync needed")
-                
                 # Update or create event in events table
+                event_data = edit['event_data']
                 events_table.put_item(Item=event_data)
             
             # Mark edit as published

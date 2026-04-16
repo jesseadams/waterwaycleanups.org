@@ -80,6 +80,11 @@ jobs:
         env:
           AWS_REGION: us-east-1
 
+      - name: Sync event photos from S3
+        run: node scripts/sync-event-photos.js --environment=${{ env.DEPLOY_ENV }}
+        env:
+          AWS_REGION: us-east-1
+
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
