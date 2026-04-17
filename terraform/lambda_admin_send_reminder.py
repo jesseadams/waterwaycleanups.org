@@ -137,7 +137,7 @@ def handle_generate(headers, event_data, event_title, event_date, location_str):
             f"1. If they can no longer attend, ask them to log in at https://waterwaycleanups.org/volunteer/ and cancel their RSVP.\n"
             f"2. If they have any questions or need special accommodations, ask them to reply to this email.\n\n"
             f"Just write the message body — no subject line, no greeting like 'Dear volunteer', "
-            f"no sign-off. Keep it concise."
+            f"no sign-off, no headers, no markdown formatting. Plain text only. Keep it concise."
         )
 
         response = bedrock.invoke_model(
