@@ -99,14 +99,17 @@ def handle_generate(headers, event_data, event_title, event_date, location_str):
         description = event_data.get('description', '')
 
         prompt = (
-            f"Write a short, friendly reminder message (3-4 sentences max) for volunteers who RSVP'd for "
+            f"Write a short, friendly reminder message (3-5 sentences max) for volunteers who RSVP'd for "
             f"a waterway cleanup event. The tone should be warm and casual.\n\n"
             f"Event: {event_title}\n"
             f"Date: {event_date}\n"
             f"Location: {location_str}\n"
             f"{f'Description: {description[:200]}' if description else ''}\n\n"
+            f"The message MUST include these two points naturally woven in:\n"
+            f"1. If they can no longer attend, ask them to log in at https://waterwaycleanups.org/volunteer/ and cancel their RSVP.\n"
+            f"2. If they have any questions or need special accommodations, ask them to reply to this email.\n\n"
             f"Just write the message body — no subject line, no greeting like 'Dear volunteer', "
-            f"no sign-off. Keep it under 4 sentences."
+            f"no sign-off. Keep it concise."
         )
 
         response = bedrock.invoke_model(
