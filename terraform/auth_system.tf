@@ -152,6 +152,13 @@ resource "aws_iam_policy" "auth_lambda_policy" {
         ],
         Resource = "*",
         Effect   = "Allow"
+      },
+      {
+        Action = [
+          "bedrock:InvokeModel"
+        ],
+        Resource = "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+        Effect   = "Allow"
       }
     ]
   })

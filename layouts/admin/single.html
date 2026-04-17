@@ -1149,6 +1149,13 @@
       const [minorData, setMinorData] = useState({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
       const [accountMinors, setAccountMinors] = useState({});
 
+      // Message/reminder state
+      const [showMessageForm, setShowMessageForm] = useState(false);
+      const [messageData, setMessageData] = useState({ subject: 'Reminder that you volunteered!', message: '' });
+      const [messageSending, setMessageSending] = useState(false);
+      const [messageResult, setMessageResult] = useState(null);
+      const [messageGenerating, setMessageGenerating] = useState(false);
+
       // Analytics state
       const [analytics, setAnalytics] = useState({
         totalEvents: 0,
@@ -1611,6 +1618,9 @@
         setWalkInData({ first_name: '', last_name: '', email: '' });
         setShowMinorForm(false);
         setMinorData({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
+        setShowMessageForm(false);
+        setMessageData({ subject: 'Reminder that you volunteered!', message: '' });
+        setMessageResult(null);
       };
 
       const handleToggleNoShow = async (rsvp) => {
@@ -1742,6 +1752,51 @@
           setError(err.message || 'Failed to delete RSVP');
         } finally {
           setAttendanceUpdating(null);
+        }
+      };
+
+      const handleSendMessage = async (e) => {
+        e.preventDefault();
+        if (!messageData.subject.trim() || !messageData.message.trim() || !selectedEventForRSVPs) return;
+
+        const activeCount = eventRSVPs.filter(r => r.status !== 'cancelled' && !r.no_show).length;
+        if (!confirm(`Send this message to ${activeCount} attendee${activeCount !== 1 ? 's' : ''}?`)) return;
+
+        try {
+          setMessageSending(true);
+          setError('');
+          setMessageResult(null);
+          const result = await window.eventsAPI.sendEventReminder(
+            selectedEventForRSVPs.event_id,
+            messageData.subject.trim(),
+            messageData.message.trim()
+          );
+          setMessageResult(result);
+          setSuccess(result.message || 'Message sent');
+          setMessageData({ subject: 'Reminder that you volunteered!', message: '' });
+          // Keep success visible — don't auto-hide the form
+        } catch (err) {
+          console.error('Error sending message:', err);
+          setError(err.message || 'Failed to send message');
+        } finally {
+          setMessageSending(false);
+        }
+      };
+
+      const handleGenerateMessage = async () => {
+        if (!selectedEventForRSVPs) return;
+        try {
+          setMessageGenerating(true);
+          setError('');
+          const result = await window.eventsAPI.generateEventMessage(selectedEventForRSVPs.event_id);
+          if (result.generated_message) {
+            setMessageData(prev => ({ ...prev, message: result.generated_message }));
+          }
+        } catch (err) {
+          console.error('Error generating message:', err);
+          setError(err.message || 'Failed to generate message');
+        } finally {
+          setMessageGenerating(false);
         }
       };
 
@@ -2115,6 +2170,13 @@
                       className: "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
                     }, attendanceUpdating === 'bulk' ? '...' : '✓ Confirm All'),
                     React.createElement('button', {
+                      key: 'send-message',
+                      onClick: () => { setShowMessageForm(!showMessageForm); setShowWalkInForm(false); setShowMinorForm(false); setMessageResult(null); },
+                      className: showMessageForm
+                        ? "bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"
+                        : "bg-amber-600 text-white px-3 py-1 rounded text-xs hover:bg-amber-700"
+                    }, showMessageForm ? 'Cancel' : '✉ Message'),
+                    React.createElement('button', {
                       key: 'close',
                       onClick: handleCloseEventRSVPs,
                       className: "text-gray-400 hover:text-gray-600 text-sm"
@@ -2226,6 +2288,74 @@
                       className: "bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 disabled:opacity-50"
                     }, attendanceUpdating === 'minor' ? 'Adding...' : 'Add')
                   ])
+                ]) : null,
+                // Message form
+                showMessageForm ? React.createElement('form', {
+                  key: 'message-form',
+                  onSubmit: handleSendMessage,
+                  className: "mb-4 p-3 bg-amber-50 rounded-lg border border-amber-200"
+                }, [
+                  React.createElement('div', {
+                    key: 'msg-title',
+                    className: "text-sm font-medium text-amber-800 mb-2"
+                  }, `Send Message to ${eventRSVPs.filter(r => r.status !== 'cancelled' && !r.no_show).length} Attendee(s)`),
+                  messageResult ? React.createElement('div', {
+                    key: 'msg-result',
+                    className: "mb-3 p-3 bg-green-100 text-green-800 rounded-lg border border-green-300 flex items-center gap-2"
+                  }, [
+                    React.createElement('span', { key: 'icon', className: "text-lg" }, '✅'),
+                    React.createElement('div', { key: 'text' }, [
+                      React.createElement('div', { key: 'msg', className: "font-medium" }, messageResult.message),
+                      messageResult.sent ? React.createElement('div', {
+                        key: 'details', className: "text-xs text-green-600 mt-0.5"
+                      }, `${messageResult.sent} email${messageResult.sent !== 1 ? 's' : ''} delivered${messageResult.failed > 0 ? `, ${messageResult.failed} failed` : ''}`) : null
+                    ])
+                  ]) : null,
+                  React.createElement('div', {
+                    key: 'msg-subject',
+                    className: "mb-2"
+                  }, React.createElement('input', {
+                    type: 'text',
+                    placeholder: 'Subject',
+                    required: true,
+                    value: messageData.subject,
+                    onChange: (e) => setMessageData({ ...messageData, subject: e.target.value }),
+                    className: "w-full px-3 py-2 border border-amber-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                  })),
+                  React.createElement('div', {
+                    key: 'msg-body',
+                    className: "mb-2 relative"
+                  }, [
+                    React.createElement('textarea', {
+                      key: 'textarea',
+                      placeholder: 'Your message to attendees...',
+                      required: true,
+                      rows: 4,
+                      value: messageData.message,
+                      onChange: (e) => setMessageData({ ...messageData, message: e.target.value }),
+                      className: "w-full px-3 py-2 border border-amber-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500 focus:outline-none resize-y"
+                    }),
+                    !messageData.message.trim() ? React.createElement('button', {
+                      key: 'generate-btn',
+                      type: 'button',
+                      disabled: messageGenerating,
+                      onClick: handleGenerateMessage,
+                      className: "absolute bottom-2 right-2 bg-purple-500 text-white px-2.5 py-1 rounded text-xs hover:bg-purple-600 disabled:opacity-50 flex items-center gap-1"
+                    }, messageGenerating ? [
+                      React.createElement('span', { key: 'spin', className: "inline-block animate-spin" }, '⟳'),
+                      ' Generating...'
+                    ] : '✨ Auto-draft') : null
+                  ]),
+                  React.createElement('div', {
+                    key: 'msg-hint',
+                    className: "text-xs text-amber-600 mb-2"
+                  }, 'Replies will go to your admin email. Cancelled/no-show RSVPs are excluded.'),
+                  React.createElement('button', {
+                    key: 'msg-send',
+                    type: 'submit',
+                    disabled: messageSending || !messageData.subject.trim() || !messageData.message.trim(),
+                    className: "bg-amber-600 text-white px-4 py-1.5 rounded text-sm hover:bg-amber-700 disabled:opacity-50"
+                  }, messageSending ? 'Sending...' : '✉ Send Message')
                 ]) : null,
                 // RSVP table
                 rsvpsLoading ? React.createElement('div', {

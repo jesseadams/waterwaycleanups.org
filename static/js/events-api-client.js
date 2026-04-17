@@ -249,6 +249,51 @@ class EventsAPIClient {
         });
     }
 
+    /**
+     * Generate a draft reminder message for an event using Bedrock AI (admin only)
+     */
+    async generateEventMessage(eventId) {
+        const token = localStorage.getItem('auth_session_token');
+        const url = this.getApiUrl('admin-send-reminder');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_token: token,
+                event_id: eventId,
+                action: 'generate'
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new APIError(data.message || 'Failed to generate message', response.status);
+        }
+        return data;
+    }
+
+    /**
+     * Send a message/reminder to all RSVPed attendees for an event (admin only)
+     */
+    async sendEventReminder(eventId, subject, message) {
+        const token = localStorage.getItem('auth_session_token');
+        const url = this.getApiUrl('admin-send-reminder');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_token: token,
+                event_id: eventId,
+                subject,
+                message
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new APIError(data.message || 'Failed to send reminder', response.status);
+        }
+        return data;
+    }
+
     async deleteRSVP(eventId, attendeeId) {
         return this.makeRequest(`/events/${encodeURIComponent(eventId)}/attendance`, {
             method: 'POST',
