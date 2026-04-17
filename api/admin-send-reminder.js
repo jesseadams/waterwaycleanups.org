@@ -160,7 +160,7 @@ exports.handler = async (event) => {
         await ses.sendEmail({
           Source: fromEmail,
           Destination: { BccAddresses: batch },
-          ReplyToAddresses: [session.email],
+          ReplyToAddresses: [fromEmail],
           Message: {
             Subject: { Data: `[${eventTitle}] ${subject}` },
             Body: {
