@@ -250,6 +250,28 @@ class EventsAPIClient {
     }
 
     /**
+     * Get message history for an event (admin only)
+     */
+    async getEventMessages(eventId) {
+        const token = localStorage.getItem('auth_session_token');
+        const url = this.getApiUrl('admin-send-reminder');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                session_token: token,
+                event_id: eventId,
+                action: 'list'
+            })
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new APIError(data.message || 'Failed to load messages', response.status);
+        }
+        return data;
+    }
+
+    /**
      * Generate a draft reminder message for an event using Bedrock AI (admin only)
      */
     async generateEventMessage(eventId) {

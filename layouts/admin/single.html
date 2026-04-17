@@ -1155,6 +1155,8 @@
       const [messageSending, setMessageSending] = useState(false);
       const [messageResult, setMessageResult] = useState(null);
       const [messageGenerating, setMessageGenerating] = useState(false);
+      const [messageHistory, setMessageHistory] = useState([]);
+      const [messageHistoryLoading, setMessageHistoryLoading] = useState(false);
 
       // Analytics state
       const [analytics, setAnalytics] = useState({
@@ -1621,6 +1623,7 @@
         setShowMessageForm(false);
         setMessageData({ subject: 'Reminder that you volunteered!', message: '' });
         setMessageResult(null);
+        setMessageHistory([]);
       };
 
       const handleToggleNoShow = async (rsvp) => {
@@ -1774,7 +1777,12 @@
           setMessageResult(result);
           setSuccess(result.message || 'Message sent');
           setMessageData({ subject: 'Reminder that you volunteered!', message: '' });
-          // Keep success visible — don't auto-hide the form
+          // Reload message history
+          if (selectedEventForRSVPs) {
+            window.eventsAPI.getEventMessages(selectedEventForRSVPs.event_id)
+              .then(data => setMessageHistory(data.messages || []))
+              .catch(() => {});
+          }
         } catch (err) {
           console.error('Error sending message:', err);
           setError(err.message || 'Failed to send message');
@@ -2171,7 +2179,20 @@
                     }, attendanceUpdating === 'bulk' ? '...' : '✓ Confirm All'),
                     React.createElement('button', {
                       key: 'send-message',
-                      onClick: () => { setShowMessageForm(!showMessageForm); setShowWalkInForm(false); setShowMinorForm(false); setMessageResult(null); },
+                      onClick: () => {
+                        const opening = !showMessageForm;
+                        setShowMessageForm(opening);
+                        setShowWalkInForm(false);
+                        setShowMinorForm(false);
+                        setMessageResult(null);
+                        if (opening && selectedEventForRSVPs) {
+                          setMessageHistoryLoading(true);
+                          window.eventsAPI.getEventMessages(selectedEventForRSVPs.event_id)
+                            .then(data => setMessageHistory(data.messages || []))
+                            .catch(err => console.error('Failed to load message history:', err))
+                            .finally(() => setMessageHistoryLoading(false));
+                        }
+                      },
                       className: showMessageForm
                         ? "bg-gray-500 text-white px-3 py-1 rounded text-xs hover:bg-gray-600"
                         : "bg-amber-600 text-white px-3 py-1 rounded text-xs hover:bg-amber-700"
@@ -2355,7 +2376,55 @@
                     type: 'submit',
                     disabled: messageSending || !messageData.subject.trim() || !messageData.message.trim(),
                     className: "bg-amber-600 text-white px-4 py-1.5 rounded text-sm hover:bg-amber-700 disabled:opacity-50"
-                  }, messageSending ? 'Sending...' : '✉ Send Message')
+                  }, messageSending ? 'Sending...' : '✉ Send Message'),
+                  // Message history
+                  React.createElement('div', {
+                    key: 'msg-history',
+                    className: "mt-3 pt-3 border-t border-amber-200"
+                  }, [
+                    React.createElement('div', {
+                      key: 'history-title',
+                      className: "text-xs font-medium text-amber-700 mb-2"
+                    }, 'Sent Messages'),
+                    messageHistoryLoading ? React.createElement('div', {
+                      key: 'history-loading',
+                      className: "text-xs text-gray-400"
+                    }, 'Loading...') :
+                    messageHistory.length === 0 ? React.createElement('div', {
+                      key: 'history-empty',
+                      className: "text-xs text-gray-400 italic"
+                    }, 'No messages sent yet for this event.') :
+                    React.createElement('div', {
+                      key: 'history-list',
+                      className: "space-y-2 max-h-40 overflow-y-auto"
+                    }, messageHistory.map((msg, idx) => React.createElement('div', {
+                      key: idx,
+                      className: "bg-white rounded border border-gray-200 p-2 text-xs"
+                    }, [
+                      React.createElement('div', {
+                        key: 'meta',
+                        className: "flex justify-between text-gray-400 mb-1"
+                      }, [
+                        React.createElement('span', { key: 'by' }, msg.sent_by || 'admin'),
+                        React.createElement('span', { key: 'date' },
+                          msg.sent_at ? new Date(msg.sent_at + 'Z').toLocaleString() : ''
+                        )
+                      ]),
+                      React.createElement('div', {
+                        key: 'subject',
+                        className: "font-medium text-gray-700"
+                      }, msg.subject),
+                      React.createElement('div', {
+                        key: 'body',
+                        className: "text-gray-500 mt-0.5 line-clamp-2",
+                        style: { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }
+                      }, msg.message),
+                      React.createElement('div', {
+                        key: 'stats',
+                        className: "text-gray-400 mt-1"
+                      }, `${msg.recipients || 0} recipient${(msg.recipients || 0) !== 1 ? 's' : ''}${msg.failed ? `, ${msg.failed} failed` : ''}`)
+                    ])))
+                  ])
                 ]) : null,
                 // RSVP table
                 rsvpsLoading ? React.createElement('div', {

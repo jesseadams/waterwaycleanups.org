@@ -12,10 +12,12 @@ ses_client = boto3.client('ses')
 session_table_name = os.environ.get('SESSION_TABLE_NAME')
 rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME')
 events_table_name = os.environ.get('EVENTS_TABLE_NAME')
+message_log_table_name = os.environ.get('MESSAGE_LOG_TABLE_NAME')
 
 session_table = dynamodb.Table(session_table_name)
 rsvps_table = dynamodb.Table(rsvps_table_name)
 events_table = dynamodb.Table(events_table_name)
+message_log_table = dynamodb.Table(message_log_table_name)
 
 ADMIN_EMAILS = [
     'admin@waterwaycleanups.org',
@@ -90,6 +92,32 @@ def build_email_html(event_title, event_date, location_str, message_body):
     </body>
     </html>
     """
+
+
+def handle_list(headers, event_id):
+    """Return message history for an event."""
+    try:
+        from boto3.dynamodb.conditions import Key as DDBKey
+        result = message_log_table.query(
+            KeyConditionExpression=DDBKey('event_id').eq(event_id),
+            ScanIndexForward=False,  # newest first
+            Limit=20
+        )
+        messages = result.get('Items', [])
+        # Convert any Decimal types
+        for msg in messages:
+            for k, v in msg.items():
+                if hasattr(v, '__float__'):
+                    msg[k] = int(v) if v % 1 == 0 else float(v)
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({'success': True, 'messages': messages})
+        }
+    except Exception as e:
+        print(f"Error listing messages: {e}")
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'success': False, 'message': f'Failed to load message history: {str(e)}'})}
 
 
 def handle_generate(headers, event_data, event_title, event_date, location_str):
@@ -188,6 +216,10 @@ def handler(event, context):
         if action == 'generate':
             return handle_generate(headers, event_data, event_title, event_date, location_str)
 
+        # Handle list action — return message history
+        if action == 'list':
+            return handle_list(headers, event_id)
+
         # Send action — validate remaining fields
         subject = body.get('subject', '').strip()
         message = body.get('message', '').strip()
@@ -246,6 +278,22 @@ def handler(event, context):
                 failed += len(batch)
 
         print(f"Reminder sent by {admin_email} for event {event_id}: {sent} sent, {failed} failed")
+
+        # Log the sent message
+        try:
+            import uuid
+            message_log_table.put_item(Item={
+                'event_id': event_id,
+                'sent_at': datetime.utcnow().isoformat(),
+                'message_id': str(uuid.uuid4()),
+                'subject': subject,
+                'message': message,
+                'sent_by': admin_email,
+                'recipients': sent,
+                'failed': failed
+            })
+        except Exception as log_err:
+            print(f"Failed to log message (non-fatal): {log_err}")
 
         result_msg = f"Message sent to {sent} attendee{'s' if sent != 1 else ''}"
         if failed > 0:

@@ -132,7 +132,10 @@ resource "aws_iam_policy" "auth_lambda_policy" {
           # New normalized table indexes
           "${aws_dynamodb_table.events.arn}/index/*",
           "${aws_dynamodb_table.volunteers.arn}/index/*",
-          "${aws_dynamodb_table.event_rsvps.arn}/index/*"
+          "${aws_dynamodb_table.event_rsvps.arn}/index/*",
+          # Message log table
+          aws_dynamodb_table.event_message_log.arn,
+          "${aws_dynamodb_table.event_message_log.arn}/index/*"
         ],
         Effect = "Allow"
       },

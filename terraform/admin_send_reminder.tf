@@ -8,6 +8,30 @@ data "archive_file" "admin_send_reminder_zip" {
   output_path = "${path.module}/lambda_admin_send_reminder.zip"
 }
 
+# DynamoDB table for message log
+resource "aws_dynamodb_table" "event_message_log" {
+  name         = "event_message_log${local.dynamodb_suffix}"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "event_id"
+  range_key    = "sent_at"
+
+  attribute {
+    name = "event_id"
+    type = "S"
+  }
+
+  attribute {
+    name = "sent_at"
+    type = "S"
+  }
+
+  tags = {
+    Name        = "event-message-log${local.resource_suffix}"
+    Environment = var.environment
+    Project     = "waterwaycleanups"
+  }
+}
+
 # Lambda function
 resource "aws_lambda_function" "admin_send_reminder" {
   filename         = data.archive_file.admin_send_reminder_zip.output_path
@@ -21,9 +45,10 @@ resource "aws_lambda_function" "admin_send_reminder" {
 
   environment {
     variables = {
-      SESSION_TABLE_NAME = aws_dynamodb_table.auth_sessions.name
-      RSVPS_TABLE_NAME   = aws_dynamodb_table.event_rsvps.name
-      EVENTS_TABLE_NAME  = aws_dynamodb_table.events.name
+      SESSION_TABLE_NAME     = aws_dynamodb_table.auth_sessions.name
+      RSVPS_TABLE_NAME       = aws_dynamodb_table.event_rsvps.name
+      EVENTS_TABLE_NAME      = aws_dynamodb_table.events.name
+      MESSAGE_LOG_TABLE_NAME = aws_dynamodb_table.event_message_log.name
     }
   }
 
