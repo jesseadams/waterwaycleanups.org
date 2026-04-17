@@ -155,9 +155,18 @@ resource "aws_iam_policy" "auth_lambda_policy" {
       },
       {
         Action = [
-          "bedrock:InvokeModel"
+          "bedrock:InvokeModel",
+          "bedrock:GetFoundationModel"
         ],
-        Resource = "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
+        Resource = "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
+        Effect   = "Allow"
+      },
+      {
+        Action = [
+          "aws-marketplace:ViewSubscriptions",
+          "aws-marketplace:Subscribe"
+        ],
+        Resource = "*",
         Effect   = "Allow"
       }
     ]
