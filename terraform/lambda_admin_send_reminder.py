@@ -230,7 +230,7 @@ def handler(event, context):
             try:
                 ses_client.send_email(
                     Source=SENDER_EMAIL,
-                    Destination={'BccAddresses': batch},
+                    Destination={'BccAddresses': batch, 'CcAddresses': [SENDER_EMAIL]},
                     ReplyToAddresses=[SENDER_EMAIL],
                     Message={
                         'Subject': {'Data': full_subject, 'Charset': 'UTF-8'},
