@@ -113,7 +113,7 @@ def handle_generate(headers, event_data, event_title, event_date, location_str):
         )
 
         response = bedrock.invoke_model(
-            modelId='anthropic.claude-haiku-4-5-20251001-v1:0',
+            modelId='us.anthropic.claude-haiku-4-5-20251001-v1:0',
             contentType='application/json',
             accept='application/json',
             body=json.dumps({

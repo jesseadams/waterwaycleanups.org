@@ -158,7 +158,10 @@ resource "aws_iam_policy" "auth_lambda_policy" {
           "bedrock:InvokeModel",
           "bedrock:GetFoundationModel"
         ],
-        Resource = "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
+          "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+        ],
         Effect   = "Allow"
       },
       {
