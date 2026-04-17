@@ -133,16 +133,10 @@ def handle_generate(headers, event_data, event_title, event_date, location_str):
         }
     except Exception as e:
         print(f"Bedrock generate error: {e}")
-        # Fallback to a simple template if Bedrock fails
-        fallback = (
-            f"Just a friendly reminder about our upcoming cleanup at {location_str or 'the scheduled location'} "
-            f"on {event_date}. We're looking forward to seeing you there! "
-            f"Please let us know if you have any questions or if your plans have changed."
-        )
         return {
-            'statusCode': 200,
+            'statusCode': 500,
             'headers': headers,
-            'body': json.dumps({'success': True, 'generated_message': fallback, 'fallback': True})
+            'body': json.dumps({'success': False, 'message': f'Failed to generate message: {str(e)}'})
         }
 
 
