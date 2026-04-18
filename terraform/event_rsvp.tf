@@ -960,7 +960,12 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
     aws_api_gateway_method_response.admin_send_reminder_post_response,
     aws_api_gateway_integration_response.admin_send_reminder_post_integration_response,
     aws_api_gateway_method_response.admin_send_reminder_options_response,
-    aws_api_gateway_integration_response.admin_send_reminder_options_integration_response
+    aws_api_gateway_integration_response.admin_send_reminder_options_integration_response,
+    # Leaderboard endpoint
+    aws_api_gateway_integration.leaderboard_integration,
+    aws_api_gateway_integration.leaderboard_options_integration,
+    aws_api_gateway_method_response.leaderboard_options_response,
+    aws_api_gateway_integration_response.leaderboard_options_integration_response
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id

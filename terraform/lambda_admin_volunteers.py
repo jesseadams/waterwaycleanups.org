@@ -202,6 +202,10 @@ def compute_engagement(rsvps, events_lookup):
             else:
                 current_streak = 0
 
+    # A streak of 1 doesn't count — need 2+ consecutive events
+    if streak < 2:
+        streak = 0
+
     # Compute engagement score (0-100)
     total_rsvps = attended + cancelled + no_shows
     if total_rsvps == 0:

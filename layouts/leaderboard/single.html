@@ -1,0 +1,86 @@
+{{ define "content" }}
+<link rel="stylesheet" href="{{ "css/tailwind-output.css" | relURL }}" />
+
+{{ partial "api-config.html" . }}
+
+<section class="py-12">
+  <div class="container mx-auto px-4 max-w-3xl">
+    <div class="text-center mb-10">
+      <h1 class="text-4xl font-bold mb-3">🏆 Volunteer Leaderboard</h1>
+      <p class="text-gray-600 text-lg">Our most dedicated volunteers, ranked by participation points.</p>
+      <p class="text-gray-400 text-sm mt-2">Points: +10 per event attended · +5 per streak · +3 per upcoming RSVP</p>
+    </div>
+
+    <div id="leaderboard-root">
+      <div class="text-center py-12 text-gray-400">Loading leaderboard...</div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function() {
+  var root = document.getElementById('leaderboard-root');
+  var apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
+  var url = apiBase + '/leaderboard';
+
+  fetch(url)
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (!data.success || !data.leaderboard || data.leaderboard.length === 0) {
+        root.innerHTML = '<div class="text-center py-12 text-gray-500">No leaderboard data yet. Attend an event to get on the board!</div>';
+        return;
+      }
+
+      var medals = ['🥇', '🥈', '🥉'];
+      var html = '<div class="space-y-3">';
+
+      data.leaderboard.forEach(function(entry, i) {
+        var rank = i + 1;
+        var medal = i < 3 ? medals[i] : '<span class="text-gray-400 font-mono">' + rank + '</span>';
+        var isTop3 = i < 3;
+        var bgClass = i === 0 ? 'bg-yellow-50 border-yellow-300' :
+                      i === 1 ? 'bg-gray-50 border-gray-300' :
+                      i === 2 ? 'bg-orange-50 border-orange-200' :
+                      'bg-white border-gray-200';
+
+        html += '<div class="flex items-center gap-4 p-4 rounded-lg border ' + bgClass + (isTop3 ? ' shadow-sm' : '') + '">';
+        html += '  <div class="text-2xl w-10 text-center flex-shrink-0">' + medal + '</div>';
+        html += '  <div class="flex-1 min-w-0">';
+        html += '    <div class="font-semibold text-gray-900' + (isTop3 ? ' text-lg' : '') + '">' + entry.name + '</div>';
+        html += '    <div class="flex flex-wrap gap-2 mt-1">';
+        html += '      <span class="text-xs text-blue-600">✓ ' + entry.events_attended + ' attended</span>';
+        if (entry.streak > 0) {
+          html += '    <span class="text-xs text-orange-600">🔥 ' + entry.streak + ' streak</span>';
+        }
+        if (entry.future_rsvps > 0) {
+          html += '    <span class="text-xs text-purple-600">📅 ' + entry.future_rsvps + ' upcoming</span>';
+        }
+        html += '    </div>';
+        html += '  </div>';
+        html += '  <div class="text-right flex-shrink-0">';
+        html += '    <div class="text-xl font-bold text-indigo-600">' + entry.points + '</div>';
+        html += '    <div class="text-xs text-gray-400">points</div>';
+        html += '  </div>';
+        html += '</div>';
+      });
+
+      html += '</div>';
+
+      if (data.updated_at) {
+        var d = new Date(data.updated_at);
+        html += '<p class="text-center text-xs text-gray-400 mt-6">Last updated: ' + d.toLocaleString() + '</p>';
+      }
+
+      html += '<div class="text-center mt-8">';
+      html += '  <a href="/volunteer/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium">Sign Up to Volunteer</a>';
+      html += '</div>';
+
+      root.innerHTML = html;
+    })
+    .catch(function(err) {
+      console.error('Leaderboard error:', err);
+      root.innerHTML = '<div class="text-center py-12 text-red-500">Failed to load leaderboard. Please try again later.</div>';
+    });
+})();
+</script>
+{{ end }}
