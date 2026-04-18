@@ -144,23 +144,54 @@ def handler(event, context):
                 'points': points,
                 'events_attended': attended,
                 'streak': streak,
-                'future_rsvps': future_rsvps
+                'future_rsvps': future_rsvps,
+                '_email': email  # internal, stripped before response
             })
 
         # Sort by points descending
         leaderboard.sort(key=lambda x: -x['points'])
 
-        # Top 50
-        leaderboard = leaderboard[:50]
+        # Check if a specific user's rank was requested
+        query_params = event.get('queryStringParameters') or {}
+        lookup_email = (query_params.get('email') or '').lower().strip()
+        my_rank = None
+        if lookup_email:
+            for i, entry in enumerate(leaderboard):
+                if entry['_email'] == lookup_email:
+                    my_rank = {
+                        'rank': i + 1,
+                        'name': entry['name'],
+                        'points': entry['points'],
+                        'events_attended': entry['events_attended'],
+                        'streak': entry['streak'],
+                        'future_rsvps': entry['future_rsvps'],
+                        'total': len(leaderboard)
+                    }
+                    break
+
+        # Top 50 for public list, strip internal fields
+        public_leaderboard = []
+        for entry in leaderboard[:50]:
+            public_leaderboard.append({
+                'name': entry['name'],
+                'points': entry['points'],
+                'events_attended': entry['events_attended'],
+                'streak': entry['streak'],
+                'future_rsvps': entry['future_rsvps']
+            })
+
+        result = {
+            'success': True,
+            'leaderboard': public_leaderboard,
+            'updated_at': now.isoformat()
+        }
+        if my_rank:
+            result['my_rank'] = my_rank
 
         return {
             'statusCode': 200,
             'headers': headers,
-            'body': json.dumps({
-                'success': True,
-                'leaderboard': leaderboard,
-                'updated_at': now.isoformat()
-            }, default=decimal_default)
+            'body': json.dumps(result, default=decimal_default)
         }
 
     except Exception as e:
