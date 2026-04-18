@@ -71,8 +71,13 @@
         html += '<p class="text-center text-xs text-gray-400 mt-6">Last updated: ' + d.toLocaleString() + '</p>';
       }
 
+      var hasSession = false;
+      try { hasSession = !!localStorage.getItem('auth_session_token'); } catch(e) {}
+      var ctaHref = hasSession ? '/#cleanups' : '/volunteer/';
+      var ctaText = hasSession ? 'Find Volunteer Opportunities' : 'Sign Up to Volunteer';
+
       html += '<div class="text-center mt-8">';
-      html += '  <a href="/volunteer/" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium">Sign Up to Volunteer</a>';
+      html += '  <a href="' + ctaHref + '" class="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-medium">' + ctaText + '</a>';
       html += '</div>';
 
       root.innerHTML = html;

@@ -71,6 +71,7 @@ def handler(event, context):
             volunteers[vol.get('email', '').lower()] = vol
 
         # Compute leaderboard
+        excluded_emails = {'jesse@techno-geeks.org', 'jesse@waterwaycleanups.org'}
         leaderboard = []
         for email, rsvps in rsvps_by_email.items():
             attended = 0
@@ -131,13 +132,20 @@ def handler(event, context):
             vol = volunteers.get(email, {})
             first = vol.get('first_name', '')
             last = vol.get('last_name', '')
-            # Show first name + last initial for privacy
-            if first and last:
-                display_name = f"{first} {last[0]}."
-            elif first:
-                display_name = first
+            display_pref = vol.get('leaderboard_display', 'initial')
+
+            if display_pref == 'anonymous':
+                display_name = 'Volunteer User'
+            elif display_pref == 'full':
+                display_name = f"{first} {last}".strip() if first else email.split('@')[0]
             else:
-                display_name = email.split('@')[0]
+                # Default: first name + last initial
+                if first and last:
+                    display_name = f"{first} {last[0]}."
+                elif first:
+                    display_name = first
+                else:
+                    display_name = 'Volunteer User'
 
             leaderboard.append({
                 'name': display_name,
@@ -169,9 +177,12 @@ def handler(event, context):
                     }
                     break
 
-        # Top 50 for public list, strip internal fields
+        # Top 50 for public list, strip internal fields, exclude admin emails
+        excluded_emails = {'jesse@techno-geeks.org', 'jesse@waterwaycleanups.org'}
         public_leaderboard = []
-        for entry in leaderboard[:50]:
+        for entry in leaderboard:
+            if entry['_email'] in excluded_emails:
+                continue
             public_leaderboard.append({
                 'name': entry['name'],
                 'points': entry['points'],
@@ -179,6 +190,8 @@ def handler(event, context):
                 'streak': entry['streak'],
                 'future_rsvps': entry['future_rsvps']
             })
+            if len(public_leaderboard) >= 50:
+                break
 
         result = {
             'success': True,

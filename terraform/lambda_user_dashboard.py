@@ -171,7 +171,37 @@ def handler(event, context):
             }
         
         email = session['email']
-        
+
+        # Handle leaderboard display preference update
+        action = body.get('action')
+        if action == 'update_leaderboard_display':
+            display_pref = body.get('leaderboard_display', 'initial')
+            if display_pref not in ('full', 'initial', 'anonymous'):
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Invalid display option. Use: full, initial, or anonymous'})
+                }
+            try:
+                volunteers_table = dynamodb.Table(os.environ.get('VOLUNTEERS_TABLE_NAME', 'volunteers'))
+                volunteers_table.update_item(
+                    Key={'email': email},
+                    UpdateExpression='SET leaderboard_display = :val',
+                    ExpressionAttributeValues={':val': display_pref}
+                )
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({'success': True, 'leaderboard_display': display_pref})
+                }
+            except Exception as e:
+                print(f"Error updating leaderboard display: {e}")
+                return {
+                    'statusCode': 500,
+                    'headers': headers,
+                    'body': json.dumps({'error': 'Failed to update preference'})
+                }
+
         # Get waiver status
         waiver_data = {'hasWaiver': False}
         try:
@@ -452,11 +482,22 @@ def handler(event, context):
             # Return empty RSVPs on any unexpected error
             rsvps = []
         
+        # Get leaderboard display preference from volunteer record
+        leaderboard_display = 'initial'
+        try:
+            vol_table = dynamodb.Table(os.environ.get('VOLUNTEERS_TABLE_NAME', 'volunteers'))
+            vol_resp = vol_table.get_item(Key={'email': email})
+            if 'Item' in vol_resp:
+                leaderboard_display = vol_resp['Item'].get('leaderboard_display', 'initial')
+        except Exception as e:
+            print(f"Error fetching volunteer record: {e}")
+
         response_data = {
             'success': True,
             'waiver': waiver_data,
             'rsvps': rsvps,
-            'email': email
+            'email': email,
+            'leaderboard_display': leaderboard_display
         }
         
         return {

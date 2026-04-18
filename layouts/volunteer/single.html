@@ -356,6 +356,7 @@
     const [step, setStep] = useState('loading'); // 'loading', 'email', 'code', 'dashboard'
     const [dashboardData, setDashboardData] = useState(null);
     const [leaderboardRank, setLeaderboardRank] = useState(null);
+    const [leaderboardDisplay, setLeaderboardDisplay] = useState('initial');
 
     // Parse URL parameters for return URL and action
     const urlParams = new URLSearchParams(window.location.search);
@@ -446,6 +447,11 @@
         setIsLoading(true);
         const data = await window.authClient.getDashboard();
         setDashboardData(data);
+
+        // Set leaderboard display preference from dashboard data
+        if (data.leaderboard_display) {
+          setLeaderboardDisplay(data.leaderboard_display);
+        }
 
         // Fetch leaderboard rank (non-blocking)
         try {
@@ -913,6 +919,42 @@
                 href: '/leaderboard/',
                 className: "text-xs text-indigo-600 hover:text-indigo-800"
               }, 'Leaderboard →')
+            ]),
+            React.createElement('div', {
+              key: 'display-pref',
+              className: "flex items-center gap-2 mt-3 pt-3 border-t border-gray-200"
+            }, [
+              React.createElement('label', {
+                key: 'label',
+                className: "text-xs text-gray-500"
+              }, 'Show me as:'),
+              React.createElement('select', {
+                key: 'select',
+                value: leaderboardDisplay,
+                onChange: async (e) => {
+                  const val = e.target.value;
+                  setLeaderboardDisplay(val);
+                  try {
+                    const apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
+                    await fetch(apiBase + '/user-dashboard', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        session_token: localStorage.getItem('auth_session_token'),
+                        action: 'update_leaderboard_display',
+                        leaderboard_display: val
+                      })
+                    });
+                  } catch (err) {
+                    console.error('Failed to save display preference:', err);
+                  }
+                },
+                className: "text-xs border border-gray-300 rounded px-2 py-1 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+              }, [
+                React.createElement('option', { key: 'initial', value: 'initial' }, 'First Name + Last Initial'),
+                React.createElement('option', { key: 'full', value: 'full' }, 'Full Name'),
+                React.createElement('option', { key: 'anonymous', value: 'anonymous' }, 'Anonymous')
+              ])
             ])
           ]) : null
         ]),
