@@ -1111,7 +1111,8 @@
         status: '',
         start_date: '',
         end_date: '',
-        location: ''
+        location: '',
+        hideCompleted: true
       });
       const [showEventForm, setShowEventForm] = useState(false);
       const [editingEvent, setEditingEvent] = useState(null);
@@ -1842,6 +1843,7 @@
       };
 
       const filteredEvents = events.filter(event => {
+        if (eventFilters.hideCompleted && event.status === 'completed') return false;
         if (eventFilters.status && event.status !== eventFilters.status) return false;
         if (eventFilters.location && !event.location.name.toLowerCase().includes(eventFilters.location.toLowerCase())) return false;
         return true;
@@ -2054,6 +2056,28 @@
                 onClick: () => setShowEventForm(true),
                 className: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
               }, 'Create New Event')
+            ]),
+            React.createElement('div', {
+              key: 'event-filters',
+              className: "flex items-center gap-4 mb-4"
+            }, [
+              React.createElement('label', {
+                key: 'hide-completed',
+                className: "flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none"
+              }, [
+                React.createElement('input', {
+                  key: 'checkbox',
+                  type: 'checkbox',
+                  checked: eventFilters.hideCompleted,
+                  onChange: (e) => setEventFilters({ ...eventFilters, hideCompleted: e.target.checked }),
+                  className: "h-4 w-4 text-blue-600 border-gray-300 rounded"
+                }),
+                'Hide completed events'
+              ]),
+              React.createElement('span', {
+                key: 'count',
+                className: "text-xs text-gray-400"
+              }, `Showing ${filteredEvents.length} of ${events.length} events`)
             ]),
             React.createElement('div', {
               key: 'events-list',
@@ -2885,7 +2909,8 @@
       ]);
 
       return React.createElement('div', {
-        className: "min-h-screen bg-gray-100 py-8"
+        className: "min-h-screen bg-gray-100 py-8",
+        style: { paddingTop: '6rem' }
       }, React.createElement('div', {
         className: "container mx-auto px-4"
       }, [
