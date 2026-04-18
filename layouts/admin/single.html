@@ -1856,6 +1856,10 @@
               !volunteer.email.toLowerCase().includes(search)) return false;
         }
         return true;
+      }).sort((a, b) => {
+        const scoreA = a.engagement ? a.engagement.engagement_score : 0;
+        const scoreB = b.engagement ? b.engagement.engagement_score : 0;
+        return scoreB - scoreA;
       });
 
       // Render methods
@@ -2865,6 +2869,44 @@
                   }, `👨‍👩‍👧‍👦 ${volunteer.minors.length} Minor${volunteer.minors.length > 1 ? 's' : ''}`) : null
                 ])
               ]),
+              // Engagement metrics
+              volunteer.engagement ? React.createElement('div', {
+                key: 'engagement',
+                className: "flex flex-wrap gap-3 mt-3 pt-3 border-t border-gray-100"
+              }, [
+                React.createElement('div', {
+                  key: 'score',
+                  className: `inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                    volunteer.engagement.engagement_score >= 70 ? 'bg-green-100 text-green-800' :
+                    volunteer.engagement.engagement_score >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-gray-100 text-gray-600'
+                  }`
+                }, `Score: ${volunteer.engagement.engagement_score}`),
+                React.createElement('span', {
+                  key: 'points',
+                  className: "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-800"
+                }, `⭐ ${volunteer.engagement.points} pts`),
+                React.createElement('span', {
+                  key: 'attended',
+                  className: "inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-blue-50 text-blue-700"
+                }, `✓ ${volunteer.engagement.events_attended} attended`),
+                volunteer.engagement.streak > 0 ? React.createElement('span', {
+                  key: 'streak',
+                  className: "inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-orange-50 text-orange-700"
+                }, `🔥 ${volunteer.engagement.streak} streak`) : null,
+                volunteer.engagement.future_rsvps > 0 ? React.createElement('span', {
+                  key: 'future',
+                  className: "inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-purple-50 text-purple-700"
+                }, `📅 ${volunteer.engagement.future_rsvps} upcoming`) : null,
+                volunteer.engagement.cancellations > 0 ? React.createElement('span', {
+                  key: 'cancellations',
+                  className: "inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-red-50 text-red-700"
+                }, `✕ ${volunteer.engagement.cancellations} cancelled`) : null,
+                volunteer.engagement.no_shows > 0 ? React.createElement('span', {
+                  key: 'noshows',
+                  className: "inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-red-50 text-red-700"
+                }, `⚠ ${volunteer.engagement.no_shows} no-show`) : null
+              ]) : null,
               volunteer.minors && volunteer.minors.length > 0 ? React.createElement('div', {
                 key: 'minors-section',
                 className: "mt-3 pt-3 border-t border-gray-200"

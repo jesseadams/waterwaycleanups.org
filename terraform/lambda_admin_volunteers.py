@@ -3,7 +3,7 @@ import os
 import boto3
 from decimal import Decimal
 from boto3.dynamodb.conditions import Key
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 
 # Initialize DynamoDB
 dynamodb = boto3.resource('dynamodb')
@@ -11,10 +11,14 @@ volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME')
 minors_table_name = os.environ.get('MINORS_TABLE_NAME')
 session_table_name = os.environ.get('SESSION_TABLE_NAME')
 waivers_table_name = os.environ.get('WAIVERS_TABLE_NAME')
+rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME')
+events_table_name = os.environ.get('EVENTS_TABLE_NAME')
 
 volunteers_table = dynamodb.Table(volunteers_table_name)
 minors_table = dynamodb.Table(minors_table_name)
 waivers_table = dynamodb.Table(waivers_table_name)
+rsvps_table = dynamodb.Table(rsvps_table_name)
+events_table = dynamodb.Table(events_table_name)
 
 def decimal_default(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -93,6 +97,147 @@ def verify_admin_access(event):
         if 'Forbidden' in str(e) or 'Unauthorized' in str(e):
             raise
         raise Exception(f'Unauthorized: Session validation failed - {str(e)}')
+
+def load_all_events():
+    """Load all events and build a lookup dict."""
+    events = {}
+    response = events_table.scan()
+    for item in response.get('Items', []):
+        events[item['event_id']] = item
+    while 'LastEvaluatedKey' in response:
+        response = events_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        for item in response.get('Items', []):
+            events[item['event_id']] = item
+    return events
+
+
+def load_all_rsvps():
+    """Load all RSVPs and group by email."""
+    by_email = {}
+    response = rsvps_table.scan()
+    items = response.get('Items', [])
+    while 'LastEvaluatedKey' in response:
+        response = rsvps_table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        items.extend(response.get('Items', []))
+    for rsvp in items:
+        email = rsvp.get('email', '').lower()
+        if email:
+            by_email.setdefault(email, []).append(rsvp)
+    return by_email
+
+
+def compute_engagement(rsvps, events_lookup):
+    """Compute engagement metrics for a volunteer's RSVPs."""
+    now = datetime.now(timezone.utc)
+    attended = 0
+    cancelled = 0
+    no_shows = 0
+    future_rsvps = 0
+
+    # For streak calculation: collect attended public event dates
+    attended_public_dates = []
+
+    for rsvp in rsvps:
+        status = rsvp.get('status', 'active')
+        event_id = rsvp.get('event_id', '')
+        event = events_lookup.get(event_id, {})
+        is_private = event.get('private', False)
+
+        if status == 'attended':
+            attended += 1
+            if not is_private:
+                start_time = event.get('start_time')
+                if start_time:
+                    try:
+                        dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                        attended_public_dates.append(dt)
+                    except Exception:
+                        pass
+        elif status == 'cancelled':
+            cancelled += 1
+        elif status == 'no_show' or rsvp.get('no_show'):
+            no_shows += 1
+        elif status == 'active':
+            # Check if event is in the future
+            start_time = event.get('start_time')
+            if start_time:
+                try:
+                    dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
+                    if dt > now:
+                        future_rsvps += 1
+                except Exception:
+                    pass
+
+    # Calculate longest consecutive attendance streak of public events
+    # Sort by date, then find longest run of consecutive events
+    streak = 0
+    if attended_public_dates:
+        # Get all public event dates sorted
+        all_public_dates = []
+        for eid, ev in events_lookup.items():
+            if not ev.get('private', False) and ev.get('start_time'):
+                try:
+                    dt = datetime.fromisoformat(ev['start_time'].replace('Z', '+00:00'))
+                    # Only consider past events
+                    if dt <= now:
+                        all_public_dates.append((dt, eid))
+                except Exception:
+                    pass
+        all_public_dates.sort(key=lambda x: x[0])
+
+        attended_set = set()
+        for dt in attended_public_dates:
+            # Match to nearest event
+            for evt_dt, eid in all_public_dates:
+                if abs((evt_dt - dt).total_seconds()) < 86400:  # within a day
+                    attended_set.add(eid)
+                    break
+
+        # Walk through chronological public events and find longest streak
+        current_streak = 0
+        for _, eid in all_public_dates:
+            if eid in attended_set:
+                current_streak += 1
+                streak = max(streak, current_streak)
+            else:
+                current_streak = 0
+
+    # Compute engagement score (0-100)
+    total_rsvps = attended + cancelled + no_shows
+    if total_rsvps == 0:
+        score = 10 if future_rsvps > 0 else 0
+    else:
+        attendance_rate = attended / total_rsvps
+        reliability = 1.0 - (cancelled + no_shows) / total_rsvps
+        score = int(
+            (attendance_rate * 40) +          # 40% weight: attendance rate
+            (min(streak, 10) / 10 * 25) +     # 25% weight: streak (capped at 10)
+            (min(attended, 20) / 20 * 20) +   # 20% weight: total events (capped at 20)
+            (reliability * 10) +               # 10% weight: reliability
+            (min(future_rsvps, 3) / 3 * 5)    # 5% weight: future commitment
+        )
+        score = max(0, min(100, score))
+
+    # Compute uncapped points — accumulate forever
+    points = (
+        (attended * 10) +          # 10 pts per event attended
+        (streak * 5) +             # 5 pts per streak length
+        (future_rsvps * 3) -       # 3 pts per upcoming RSVP
+        (cancelled * 2) -          # -2 pts per cancellation
+        (no_shows * 5)             # -5 pts per no-show
+    )
+    points = max(0, points)
+
+    return {
+        'events_attended': attended,
+        'cancellations': cancelled,
+        'no_shows': no_shows,
+        'future_rsvps': future_rsvps,
+        'streak': streak,
+        'engagement_score': score,
+        'points': points
+    }
+
 
 def get_volunteers_with_minors():
     """Get all volunteers with their associated minors and waiver status"""
@@ -188,6 +333,18 @@ def handler(event, context):
         
         # Get volunteers with minors
         volunteers = get_volunteers_with_minors()
+
+        # Load events and RSVPs for engagement metrics
+        try:
+            events_lookup = load_all_events()
+            rsvps_by_email = load_all_rsvps()
+            for vol in volunteers:
+                email = vol.get('email', '').lower()
+                vol_rsvps = rsvps_by_email.get(email, [])
+                vol['engagement'] = compute_engagement(vol_rsvps, events_lookup)
+        except Exception as e:
+            print(f"Error computing engagement metrics: {e}")
+            # Non-fatal — volunteers still returned without metrics
         
         return {
             'statusCode': 200,

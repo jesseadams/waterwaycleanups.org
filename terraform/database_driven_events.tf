@@ -650,7 +650,7 @@ resource "aws_lambda_function" "admin_volunteers" {
   handler          = "lambda_admin_volunteers.handler"
   source_code_hash = data.archive_file.admin_volunteers_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 30
+  timeout          = 60
 
   environment {
     variables = {
@@ -658,6 +658,8 @@ resource "aws_lambda_function" "admin_volunteers" {
       MINORS_TABLE_NAME     = aws_dynamodb_table.minors.name
       SESSION_TABLE_NAME    = aws_dynamodb_table.auth_sessions.name
       WAIVERS_TABLE_NAME    = aws_dynamodb_table.volunteer_waivers.name
+      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
+      EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
     }
   }
 
