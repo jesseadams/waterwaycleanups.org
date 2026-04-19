@@ -291,10 +291,10 @@ def get_volunteers_with_minors():
             # Calculate current age for each minor if not present or outdated
             for minor in minors:
                 if 'date_of_birth' in minor:
-                    # Always recalculate age from date_of_birth for current age
                     current_age = calculate_age_from_dob(minor['date_of_birth'])
                     if current_age is not None:
                         minor['age'] = current_age
+                        minor['aged_out'] = current_age >= 18
             
             volunteer['minors'] = convert_decimals(minors)
         except Exception as e:

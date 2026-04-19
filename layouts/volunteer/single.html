@@ -56,6 +56,9 @@
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [graduatingMinorId, setGraduatingMinorId] = useState(null);
+    const [graduateEmail, setGraduateEmail] = useState('');
+    const [graduateLoading, setGraduateLoading] = useState(false);
     const [formData, setFormData] = useState({
       first_name: '',
       last_name: '',
@@ -161,6 +164,50 @@
         setError('Failed to delete minor: ' + err.message);
       } finally {
         setLoading(false);
+      }
+    };
+
+    const handleGraduate = async (minorId) => {
+      if (!graduateEmail.trim()) {
+        setError('Please enter an email address for the new account');
+        return;
+      }
+      const minor = minors.find(m => m.minor_id === minorId);
+      const name = minor ? `${minor.first_name} ${minor.last_name}`.trim() : 'this minor';
+      if (!confirm(`Graduate ${name} to a full volunteer account with ${graduateEmail}? Their past event history will be transferred.`)) {
+        return;
+      }
+
+      setGraduateLoading(true);
+      setError(null);
+
+      try {
+        const apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
+        const response = await fetch(`${apiBase}/minors-graduate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_token: sessionToken,
+            minor_id: minorId,
+            email: graduateEmail.trim()
+          })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setSuccess(result.message);
+          setGraduatingMinorId(null);
+          setGraduateEmail('');
+          loadMinors();
+          if (onUpdate) onUpdate();
+        } else {
+          setError(result.message);
+        }
+      } catch (err) {
+        setError('Failed to graduate minor: ' + err.message);
+      } finally {
+        setGraduateLoading(false);
       }
     };
 
@@ -308,8 +355,50 @@
       }, minors.map(minor => 
         React.createElement('div', {
           key: minor.minor_id,
-          className: "bg-gray-50 p-4 rounded-lg"
+          className: `bg-gray-50 p-4 rounded-lg ${minor.aged_out ? 'border border-amber-300' : ''}`
         }, [
+          minor.aged_out ? React.createElement('div', {
+            key: 'aged-out-notice',
+            className: "mb-3 p-2 bg-amber-50 border border-amber-200 rounded text-sm text-amber-800"
+          }, [
+            minor.graduated ? React.createElement('div', { key: 'graduated-msg' }, [
+              React.createElement('span', { key: 'icon' }, '✅ '),
+              `Graduated to ${minor.graduated_email || 'their own account'}`
+            ]) : React.createElement('div', { key: 'notice' }, [
+              React.createElement('div', { key: 'text' }, [
+                React.createElement('span', { key: 'icon', className: "font-medium" }, '⚠ '),
+                `${minor.first_name} is now ${minor.age} and needs their own volunteer account and waiver.`
+              ]),
+              graduatingMinorId === minor.minor_id ? React.createElement('div', {
+                key: 'grad-form',
+                className: "mt-2 flex gap-2"
+              }, [
+                React.createElement('input', {
+                  key: 'email-input',
+                  type: 'email',
+                  placeholder: `${minor.first_name}'s email address`,
+                  value: graduateEmail,
+                  onChange: (e) => setGraduateEmail(e.target.value),
+                  className: "flex-1 px-2 py-1 border border-amber-300 rounded text-sm focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                }),
+                React.createElement('button', {
+                  key: 'confirm',
+                  onClick: () => handleGraduate(minor.minor_id),
+                  disabled: graduateLoading || !graduateEmail.trim(),
+                  className: "px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                }, graduateLoading ? '...' : 'Confirm'),
+                React.createElement('button', {
+                  key: 'cancel',
+                  onClick: () => { setGraduatingMinorId(null); setGraduateEmail(''); },
+                  className: "px-2 py-1 text-gray-500 hover:text-gray-700 text-xs"
+                }, 'Cancel')
+              ]) : React.createElement('button', {
+                key: 'grad-btn',
+                onClick: () => setGraduatingMinorId(minor.minor_id),
+                className: "mt-1 px-3 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700"
+              }, '🎓 Create Their Account')
+            ])
+          ]) : null,
           React.createElement('div', {
             key: 'content',
             className: "flex justify-between items-start"

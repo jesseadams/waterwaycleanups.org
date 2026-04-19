@@ -2920,12 +2920,18 @@
                   className: "space-y-2"
                 }, volunteer.minors.map((minor, idx) => React.createElement('div', {
                   key: idx,
-                  className: "bg-gray-50 p-2 rounded text-sm"
+                  className: `bg-gray-50 p-2 rounded text-sm ${minor.aged_out ? 'border border-amber-300' : ''}`
                 }, [
                   React.createElement('div', {
                     key: 'minor-name',
                     className: "font-medium"
-                  }, minor.full_name),
+                  }, [
+                    minor.full_name,
+                    minor.aged_out ? React.createElement('span', {
+                      key: 'badge',
+                      className: "ml-2 inline-block px-1.5 py-0.5 text-xs rounded bg-amber-100 text-amber-800"
+                    }, '18+ Aged Out') : null
+                  ]),
                   React.createElement('div', {
                     key: 'minor-details',
                     className: "text-gray-600 text-xs"

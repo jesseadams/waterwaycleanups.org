@@ -107,6 +107,9 @@ def handler(event, context):
                 'last_name': minor['last_name'],
                 'date_of_birth': minor['date_of_birth'],
                 'age': current_age,
+                'aged_out': current_age >= 18,
+                'graduated': minor.get('graduated', False),
+                'graduated_email': minor.get('graduated_email'),
                 'email': minor.get('email'),
                 'created_at': minor['created_at'],
                 'updated_at': minor['updated_at']
