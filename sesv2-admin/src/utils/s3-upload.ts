@@ -52,12 +52,12 @@ export const uploadImageToS3 = async (file: File, customFileName?: string): Prom
     const uint8Array = new Uint8Array(arrayBuffer);
 
     // Upload the file to S3 using Uint8Array
+    // Note: No ACL needed - bucket policy already grants public read access
     const command = new PutObjectCommand({
       Bucket: S3_BUCKET,
       Key: key,
       Body: uint8Array,
       ContentType: file.type,
-      ACL: 'public-read', // Make the file publicly accessible
     });
 
     await s3Client.send(command);

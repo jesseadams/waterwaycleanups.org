@@ -74,8 +74,7 @@ resource "aws_iam_policy" "s3_access_policy" {
         Action = [
           "s3:PutObject",
           "s3:GetObject",
-          "s3:ListBucket",
-          "s3:PutObjectAcl"
+          "s3:ListBucket"
         ]
         Resource = [
           "arn:aws:s3:::waterway-cleanups-newsletter-photos",
