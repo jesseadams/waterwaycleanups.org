@@ -521,7 +521,42 @@ def handler(event, context):
         except Exception as e:
             print(f"Error sending SNS notification: {e}")
             # Continue even if notification fails
-        
+
+        # Add to SES v2 contact list (non-blocking)
+        try:
+            sesv2 = boto3.client('sesv2', region_name=aws_region)
+            contact_list_name = os.environ.get('CONTACT_LIST_NAME', 'WaterwayCleanups')
+            # Get volunteer name for contact attributes
+            vol_first, vol_last = '', ''
+            for att in new_attendees:
+                if att.get('type') == 'volunteer':
+                    vol_first = att.get('first_name', '')
+                    vol_last = att.get('last_name', '')
+                    break
+            if not vol_first:
+                vr = volunteers_table.get_item(Key={'email': guardian_email})
+                if 'Item' in vr:
+                    vol_first = vr['Item'].get('first_name', '')
+                    vol_last = vr['Item'].get('last_name', '')
+
+            sesv2.create_contact(
+                ContactListName=contact_list_name,
+                EmailAddress=guardian_email,
+                TopicPreferences=[{
+                    'TopicName': 'volunteer',
+                    'SubscriptionStatus': 'OPT_IN'
+                }],
+                AttributesData=json.dumps({'firstName': vol_first, 'lastName': vol_last})
+            )
+            print(f"Contact {guardian_email} added to SES list")
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'AlreadyExistsException':
+                pass  # Already in the list, that's fine
+            else:
+                print(f"Error adding contact to SES list: {e}")
+        except Exception as e:
+            print(f"Error adding contact to SES list: {e}")
+
         # Build response (Requirement 8.2 - backward compatible)
         response_data = {
             'success': True,

@@ -117,6 +117,14 @@ resource "aws_iam_policy" "event_rsvp_lambda_policy" {
           aws_sns_topic.event_rsvp_topic.arn
         ],
         Effect = "Allow"
+      },
+      {
+        Action = [
+          "ses:CreateContact",
+          "ses:GetContact"
+        ],
+        Resource = "*",
+        Effect = "Allow"
       }
     ]
   })
