@@ -126,12 +126,23 @@ def handler(event, context):
                 (no_shows * 5)
             )
 
-            if points == 0 and attended == 0:
+            if attended == 0:
                 continue
 
             vol = volunteers.get(email, {})
             first = vol.get('first_name', '')
             last = vol.get('last_name', '')
+
+            # Fall back to name from RSVP data if volunteer record has no name
+            if not first:
+                for rsvp in rsvps:
+                    rsvp_first = rsvp.get('first_name', '')
+                    rsvp_last = rsvp.get('last_name', '')
+                    if rsvp_first:
+                        first = rsvp_first
+                        last = rsvp_last or last
+                        break
+
             display_pref = vol.get('leaderboard_display', 'initial')
 
             if display_pref == 'anonymous':
@@ -145,7 +156,7 @@ def handler(event, context):
                 elif first:
                     display_name = first
                 else:
-                    display_name = 'Volunteer User'
+                    display_name = email.split('@')[0]
 
             leaderboard.append({
                 'name': display_name,

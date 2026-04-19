@@ -202,7 +202,7 @@ class AuthClient {
    * @param {number} attendanceCap - Optional attendance cap override
    * @returns {Promise<Object>} RSVP submission response
    */
-  async submitEventRsvp(eventId, firstName, lastName, attendanceCap) {
+  async submitEventRsvp(eventId, attendanceCap) {
     if (!this.sessionToken) {
       throw new Error('Not authenticated');
     }
@@ -210,9 +210,7 @@ class AuthClient {
     try {
       const payload = {
         session_token: this.sessionToken,
-        event_id: eventId,
-        first_name: firstName,
-        last_name: lastName
+        event_id: eventId
       };
 
       if (attendanceCap !== undefined) {

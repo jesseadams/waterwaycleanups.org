@@ -1160,21 +1160,8 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
       throw new Error('Unable to get user email. Please refresh and try again.');
     }
 
-    // For direct RSVP, get the user's name from their waiver
-    let firstName = 'Volunteer';
-    let lastName = 'User';
-    try {
-      const dashboard = await window.authClient.getDashboard();
-      if (dashboard && dashboard.waiver) {
-        if (dashboard.waiver.firstName) firstName = dashboard.waiver.firstName;
-        if (dashboard.waiver.lastName) lastName = dashboard.waiver.lastName;
-      }
-    } catch (nameError) {
-      console.error('Error fetching volunteer name:', nameError);
-    }
-
-    // Submit the RSVP using direct API call
-    const result = await submitEventRsvpDirect(eventId, firstName, lastName, userEmail, attendanceCap);
+    // Submit the RSVP using direct API call (name is looked up server-side from volunteer record)
+    const result = await submitEventRsvpDirect(eventId, attendanceCap);
     
     if (result.success) {
       // Fire Google Analytics event for registration submission
@@ -1233,7 +1220,7 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
  * @param {number} attendanceCap - Attendance cap
  * @returns {Promise<Object>} RSVP submission result
  */
-async function submitEventRsvpDirect(eventId, firstName, lastName, email, attendanceCap) {
+async function submitEventRsvpDirect(eventId, attendanceCap) {
   // Get session token from localStorage
   const sessionToken = localStorage.getItem('auth_session_token');
   
@@ -1251,10 +1238,7 @@ async function submitEventRsvpDirect(eventId, firstName, lastName, email, attend
 
   const payload = {
     session_token: sessionToken,
-    event_id: eventId,
-    first_name: firstName,
-    last_name: lastName,
-    email: email
+    event_id: eventId
   };
 
   if (attendanceCap !== undefined) {
@@ -1453,15 +1437,14 @@ async function checkEventRsvp(eventId, email) {
  * @param {number} [attendanceCap] - Optional override for the event attendance cap (defaults to 15)
  * @returns {Promise<Object>} - Response containing the submission status
  */
-async function submitEventRsvp(eventId, firstName, lastName, email, attendanceCap) {
+async function submitEventRsvp(eventId, attendanceCap) {
   try {
     const url = window.API_CONFIG.EVENT_RSVP_SUBMIT;
     
+    const sessionToken = localStorage.getItem('auth_session_token');
     const payload = {
-      event_id: eventId,
-      first_name: firstName,
-      last_name: lastName,
-      email: email
+      session_token: sessionToken,
+      event_id: eventId
     };
     
     // Only add attendance_cap if it's explicitly provided

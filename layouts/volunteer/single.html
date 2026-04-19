@@ -413,23 +413,8 @@
           throw new Error('Email not available. Please try signing up for the event again.');
         }
         
-        // Get volunteer's real name from their waiver data
-        let firstName = 'Volunteer';
-        let lastName = 'User';
-        try {
-          const dashboard = await window.authClient.getDashboard();
-          if (dashboard && dashboard.waiver) {
-            if (dashboard.waiver.firstName) firstName = dashboard.waiver.firstName;
-            if (dashboard.waiver.lastName) lastName = dashboard.waiver.lastName;
-          }
-        } catch (nameError) {
-          console.error('Error fetching volunteer name for RSVP:', nameError);
-        }
-        
-        console.log('Calling submitEventRsvp with:', { eventId, firstName, lastName });
-        
-        // Submit RSVP using auth client
-        const result = await window.authClient.submitEventRsvp(eventId, firstName, lastName);
+        // Submit RSVP using auth client (name is looked up server-side from volunteer record)
+        const result = await window.authClient.submitEventRsvp(eventId);
         
         console.log('RSVP result:', result);
         
