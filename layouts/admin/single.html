@@ -2538,7 +2538,9 @@
                               className: `inline-block px-2 py-0.5 text-xs rounded ${
                                 rsvp.attendee_type === 'minor' ? 'bg-indigo-100 text-indigo-800' : 'bg-gray-100 text-gray-800'
                               }`
-                            }, rsvp.attendee_type === 'minor' ? 'minor' : (rsvp.attendee_type || 'volunteer'))
+                            }, rsvp.attendee_type === 'minor'
+                              ? `minor${rsvp.age ? ' ('+rsvp.age+')' : ''}`
+                              : (rsvp.attendee_type || 'volunteer'))
                           ),
                           React.createElement('td', { key: 'status', className: "py-2 px-3" },
                             React.createElement('span', {

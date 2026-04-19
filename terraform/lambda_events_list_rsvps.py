@@ -1,9 +1,20 @@
 import json
 import os
 from decimal import Decimal
+from datetime import date, datetime
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+
+
+def calculate_age(date_of_birth_str):
+    """Calculate current age from date of birth string (YYYY-MM-DD)"""
+    try:
+        dob = datetime.strptime(date_of_birth_str, '%Y-%m-%d').date()
+        today = date.today()
+        return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    except Exception:
+        return None
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -122,6 +133,7 @@ def handler(event, context):
                             'attendee_type': rsvp.get('attendee_type', 'volunteer'),
                             'guardian_email': rsvp.get('guardian_email'),
                             'date_of_birth': rsvp.get('date_of_birth'),
+                            'age': calculate_age(rsvp['date_of_birth']) if rsvp.get('date_of_birth') else rsvp.get('age'),
                             'created_at': rsvp.get('created_at'),
                             'updated_at': rsvp.get('updated_at'),
                             'cancelled_at': rsvp.get('cancelled_at'),
@@ -163,6 +175,7 @@ def handler(event, context):
                             'attendee_type': rsvp.get('attendee_type', 'volunteer'),
                             'guardian_email': rsvp.get('guardian_email'),
                             'date_of_birth': rsvp.get('date_of_birth'),
+                            'age': calculate_age(rsvp['date_of_birth']) if rsvp.get('date_of_birth') else rsvp.get('age'),
                             'created_at': rsvp.get('created_at'),
                             'updated_at': rsvp.get('updated_at'),
                             'cancelled_at': rsvp.get('cancelled_at'),
