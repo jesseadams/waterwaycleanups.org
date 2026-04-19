@@ -108,7 +108,7 @@ def validate_session(session_token):
         if not email:
             return False, None, 'Session does not contain email'
         
-        return True, email, None
+        return True, email.lower(), None
         
     except ClientError as e:
         print(f"Error validating session: {e}")
