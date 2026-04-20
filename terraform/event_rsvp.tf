@@ -978,7 +978,17 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
     aws_api_gateway_integration.minors_graduate_integration,
     aws_api_gateway_integration.minors_graduate_options_integration,
     aws_api_gateway_method_response.minors_graduate_options_response,
-    aws_api_gateway_integration_response.minors_graduate_options_integration_response
+    aws_api_gateway_integration_response.minors_graduate_options_integration_response,
+    # Impact templates endpoint
+    aws_api_gateway_integration.impact_templates_get_integration,
+    aws_api_gateway_integration.impact_templates_post_integration,
+    aws_api_gateway_integration.impact_templates_options_integration,
+    aws_api_gateway_method_response.impact_templates_get_response,
+    aws_api_gateway_method_response.impact_templates_post_response,
+    aws_api_gateway_method_response.impact_templates_options_response,
+    aws_api_gateway_integration_response.impact_templates_get_integration_response,
+    aws_api_gateway_integration_response.impact_templates_post_integration_response,
+    aws_api_gateway_integration_response.impact_templates_options_integration_response
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
@@ -1064,6 +1074,16 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
       aws_api_gateway_integration.admin_content_sync_options_integration,
       aws_api_gateway_method_response.admin_content_sync_options_response,
       aws_api_gateway_integration_response.admin_content_sync_options_integration_response,
+      # Impact templates endpoint
+      aws_api_gateway_integration.impact_templates_get_integration,
+      aws_api_gateway_integration.impact_templates_post_integration,
+      aws_api_gateway_integration.impact_templates_options_integration,
+      aws_api_gateway_method_response.impact_templates_get_response,
+      aws_api_gateway_method_response.impact_templates_post_response,
+      aws_api_gateway_method_response.impact_templates_options_response,
+      aws_api_gateway_integration_response.impact_templates_get_integration_response,
+      aws_api_gateway_integration_response.impact_templates_post_integration_response,
+      aws_api_gateway_integration_response.impact_templates_options_integration_response,
       # Force redeployment timestamp
       timestamp()
     ]))

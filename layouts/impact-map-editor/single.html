@@ -1,0 +1,548 @@
+{{ define "content" }}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="" />
+<!-- Leaflet Draw CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+
+<style>
+  .impact-editor-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  .impact-editor-canvas {
+    height: 500px;
+    width: 100%;
+    border-radius: 0 0 0.5rem 0.5rem;
+    z-index: 1;
+  }
+  .impact-toolbar {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: #f3f4f6;
+    border-radius: 0.5rem 0.5rem 0 0;
+    border: 1px solid #e5e7eb;
+    border-bottom: none;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .impact-toolbar button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid #d1d5db;
+    transition: all 0.15s;
+  }
+  .impact-toolbar button:hover {
+    opacity: 0.9;
+  }
+  .impact-toolbar button.active {
+    border-color: transparent;
+  }
+  .impact-toolbar .toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: #d1d5db;
+    margin: 0 0.25rem;
+  }
+  .editor-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .editor-form .full-width {
+    grid-column: 1 / -1;
+  }
+  .editor-form label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.25rem;
+  }
+  .editor-form input,
+  .editor-form textarea {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+  }
+  .editor-form input:focus,
+  .editor-form textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+  }
+  .editor-metrics {
+    display: flex;
+    gap: 2rem;
+    padding: 0.75rem 1rem;
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+  }
+  .editor-metrics .metric-value {
+    font-weight: 700;
+    color: #166534;
+  }
+  .editor-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  .editor-actions button {
+    padding: 0.625rem 1.25rem;
+    border-radius: 0.375rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .btn-primary {
+    background: #166534;
+    color: white;
+  }
+  .btn-primary:hover { background: #15803d; }
+  .btn-secondary {
+    background: #2563eb;
+    color: white;
+  }
+  .btn-secondary:hover { background: #1d4ed8; }
+  .btn-outline {
+    background: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+  }
+  .btn-outline:hover { background: #f3f4f6; }
+  .editor-output {
+    margin-top: 1rem;
+  }
+  .editor-output pre {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  .editor-load-section {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.5rem;
+  }
+  .editor-load-section select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+  }
+  .editor-instructions {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #fefce8;
+    border: 1px solid #fde68a;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    color: #713f12;
+  }
+  .editor-instructions ul {
+    margin: 0.5rem 0 0 1.25rem;
+    padding: 0;
+  }
+  .editor-instructions li {
+    margin-bottom: 0.25rem;
+  }
+</style>
+
+<div class="impact-editor-container" id="impact-editor-root">
+  <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">🗺️ Impact Map Editor</h1>
+
+  <div class="editor-instructions">
+    <strong>How to use:</strong>
+    <ul>
+      <li><span style="color: #2563eb;">&#9679; Add Parking</span> — Click the map to place blue parking markers</li>
+      <li><span style="color: #ea580c;">━ Draw Path</span> — Click points to draw orange cleanup path lines (double-click to finish)</li>
+      <li><span style="color: #ea580c;">▣ Draw Zone</span> — Click points to draw orange focus area polygons (click first point to close)</li>
+      <li><span style="color: #dc2626;">✕ Delete</span> — Click any feature on the map to remove it</li>
+    </ul>
+  </div>
+
+  <!-- Load existing template -->
+  <div class="editor-load-section">
+    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Load Existing Template</label>
+    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+      <select id="template-selector">
+        <option value="">— New Template —</option>
+        {{ with index .Site.Data "impact-templates" }}
+        {{ range $name, $data := . }}
+        <option value="{{ $name }}">{{ $data.name }} (v{{ $data.version }})</option>
+        {{ end }}
+        {{ end }}
+      </select>
+      <button class="btn-secondary" onclick="loadSelectedTemplate()" style="padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; cursor: pointer; border: none; color: white; background: #2563eb;">Load</button>
+      <button class="btn-outline" onclick="resetEditor()" style="padding: 0.5rem 1rem; border-radius: 0.375rem; font-size: 0.875rem; cursor: pointer; border: 1px solid #d1d5db; background: white;">New</button>
+    </div>
+  </div>
+
+  <!-- Template metadata form -->
+  <div class="editor-form">
+    <div>
+      <label for="template-id">Template ID (slug)</label>
+      <input type="text" name="template-id" id="template-id" placeholder="e.g. brooke-road-thorny-point" />
+    </div>
+    <div>
+      <label for="template-name">Template Name</label>
+      <input type="text" name="template-name" id="template-name" placeholder="e.g. Brooke Road & Thorny Point Road" />
+    </div>
+    <div class="full-width">
+      <label for="template-description">Description</label>
+      <textarea name="template-description" id="template-description" rows="2" placeholder="Brief description of the impact area..."></textarea>
+    </div>
+    <div>
+      <label>
+        <input type="checkbox" name="template-reusable" id="template-reusable" checked style="margin-right: 0.5rem;" />
+        Reusable (can be used for multiple events)
+      </label>
+    </div>
+  </div>
+
+  <!-- Drawing toolbar -->
+  <div class="impact-toolbar">
+    <button data-tool="parking" class="bg-gray-200" title="Click map to add parking markers">
+      <span style="color: #2563eb;">&#9679;</span> Add Parking
+    </button>
+    <button data-tool="path" class="bg-gray-200" title="Draw cleanup path lines">
+      <span style="color: #ea580c;">━</span> Draw Path
+    </button>
+    <button data-tool="zone" class="bg-gray-200" title="Draw focus area polygons">
+      <span style="color: #ea580c;">▣</span> Draw Zone
+    </button>
+    <div class="toolbar-separator"></div>
+    <button data-tool="delete" class="bg-gray-200" title="Click features to delete them">
+      <span style="color: #dc2626;">✕</span> Delete
+    </button>
+  </div>
+
+  <!-- Map canvas -->
+  <div class="impact-editor-canvas" id="editor-map" style="border: 1px solid #e5e7eb;"></div>
+
+  <!-- Metrics -->
+  <div class="editor-metrics">
+    <div>
+      Estimated Impact: <span class="metric-value"><span class="editor-miles-value">0</span> miles</span>
+    </div>
+    <div>
+      Features: <span class="metric-value"><span class="editor-feature-count">0</span></span>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="editor-actions">
+    <button class="btn-primary" id="btn-save-db" onclick="saveToDatabase()">💾 Save to Database</button>
+    <button class="btn-secondary" onclick="exportAndShow()">Export JSON</button>
+    <button class="btn-outline" onclick="copyToClipboard()">Copy to Clipboard</button>
+    <button class="btn-outline" onclick="downloadTemplate()">Download File</button>
+    <button class="btn-outline" onclick="generateShortcode()">Generate Shortcode</button>
+    <button style="background: #dc2626; color: white; padding: 0.625rem 1.25rem; border-radius: 0.375rem; font-weight: 600; font-size: 0.875rem; cursor: pointer; border: none;" onclick="deleteFromDatabase()">🗑 Delete</button>
+  </div>
+
+  <!-- Output area -->
+  <div class="editor-output" id="editor-output" style="display: none;">
+    <pre id="editor-json"></pre>
+  </div>
+
+  <div id="shortcode-output" style="display: none; margin-top: 1rem;">
+    <label style="font-weight: 600; display: block; margin-bottom: 0.5rem;">Hugo Shortcode (paste into event markdown):</label>
+    <pre style="background: #f3f4f6; padding: 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; border: 1px solid #e5e7eb;"><code id="shortcode-text"></code></pre>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+<!-- Leaflet Draw JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+
+<!-- Impact map core (for distance calculations) -->
+<script src="/js/impact-map.js"></script>
+<!-- Impact map editor -->
+<script src="/js/impact-map-editor.js"></script>
+
+<!-- Template data for loading (local fallback from Hugo data files) -->
+<script>
+  var LOCAL_TEMPLATES = {
+    {{ with index .Site.Data "impact-templates" }}
+    {{ range $name, $data := . }}
+    "{{ $name }}": {{ $data | jsonify | safeJS }},
+    {{ end }}
+    {{ end }}
+  };
+</script>
+
+{{ partial "api-config.html" . }}
+<script src="/js/auth-client.js"></script>
+
+<script>
+  var editorContainer = document.getElementById('impact-editor-root');
+  var lastExportedJson = null;
+  var AVAILABLE_TEMPLATES = {};
+
+  // API helper
+  function getApiBase() {
+    return (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
+  }
+
+  function getAuthToken() {
+    return localStorage.getItem('auth_session_token') || '';
+  }
+
+  // Load templates from DynamoDB API, fall back to local Hugo data
+  async function loadTemplatesFromAPI() {
+    try {
+      var res = await fetch(getApiBase() + '/impact-templates');
+      var data = await res.json();
+      if (data.success && data.templates) {
+        AVAILABLE_TEMPLATES = {};
+        data.templates.forEach(function(t) {
+          AVAILABLE_TEMPLATES[t.template_id] = t;
+        });
+        populateTemplateSelector();
+        return;
+      }
+    } catch (err) {
+      console.warn('API unavailable, using local templates:', err.message);
+    }
+    // Fallback to local Hugo data
+    AVAILABLE_TEMPLATES = LOCAL_TEMPLATES;
+    populateTemplateSelector();
+  }
+
+  function populateTemplateSelector() {
+    var selector = document.getElementById('template-selector');
+    // Clear existing options except the first
+    while (selector.options.length > 1) selector.remove(1);
+    Object.keys(AVAILABLE_TEMPLATES).forEach(function(key) {
+      var t = AVAILABLE_TEMPLATES[key];
+      var opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = (t.name || key) + ' (v' + (t.version || 1) + ')';
+      selector.appendChild(opt);
+    });
+  }
+
+  // Initialize editor
+  window.ImpactMapEditor.init(editorContainer, null);
+  loadTemplatesFromAPI();
+
+  function loadSelectedTemplate() {
+    var selector = document.getElementById('template-selector');
+    var templateName = selector.value;
+    if (!templateName) {
+      resetEditor();
+      return;
+    }
+    var data = AVAILABLE_TEMPLATES[templateName];
+    if (data) {
+      // Normalize: API returns template_id, local data may not have it
+      if (data.template_id && !data.id) data.id = data.template_id;
+      if (data.id && !data.template_id) data.template_id = data.id;
+
+      var parent = document.getElementById('editor-map').parentNode;
+      var newCanvas = document.createElement('div');
+      newCanvas.className = 'impact-editor-canvas';
+      newCanvas.id = 'editor-map';
+      newCanvas.style.border = '1px solid #e5e7eb';
+      parent.replaceChild(newCanvas, document.getElementById('editor-map'));
+
+      window.ImpactMapEditor.init(editorContainer, data);
+    }
+  }
+
+  function resetEditor() {
+    var parent = document.getElementById('editor-map').parentNode;
+    var newCanvas = document.createElement('div');
+    newCanvas.className = 'impact-editor-canvas';
+    newCanvas.id = 'editor-map';
+    newCanvas.style.border = '1px solid #e5e7eb';
+    parent.replaceChild(newCanvas, document.getElementById('editor-map'));
+
+    document.getElementById('template-id').value = '';
+    document.getElementById('template-name').value = '';
+    document.getElementById('template-description').value = '';
+    document.getElementById('template-reusable').checked = true;
+    document.getElementById('template-selector').value = '';
+
+    window.ImpactMapEditor.init(editorContainer, null);
+  }
+
+  function exportAndShow() {
+    lastExportedJson = window.ImpactMapEditor.exportTemplate(editorContainer);
+    var jsonStr = JSON.stringify(lastExportedJson, null, 2);
+    document.getElementById('editor-json').textContent = jsonStr;
+    document.getElementById('editor-output').style.display = 'block';
+  }
+
+  // Save to DynamoDB
+  async function saveToDatabase() {
+    var template = window.ImpactMapEditor.exportTemplate(editorContainer);
+    if (!template.id) {
+      alert('Please enter a Template ID before saving.');
+      return;
+    }
+    if (!template.name) {
+      alert('Please enter a Template Name before saving.');
+      return;
+    }
+
+    var token = getAuthToken();
+    if (!token) {
+      alert('You must be logged in as an admin to save templates. Please log in at /admin first.');
+      return;
+    }
+
+    var saveBtn = document.getElementById('btn-save-db');
+    var origText = saveBtn.textContent;
+    saveBtn.textContent = 'Saving...';
+    saveBtn.disabled = true;
+
+    try {
+      var res = await fetch(getApiBase() + '/impact-templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'save',
+          template: template
+        })
+      });
+      var data = await res.json();
+      if (data.success) {
+        saveBtn.textContent = 'Saved ✓';
+        saveBtn.style.background = '#166534';
+        // Refresh template list
+        await loadTemplatesFromAPI();
+        // Show the exported JSON too
+        exportAndShow();
+        setTimeout(function() {
+          saveBtn.textContent = origText;
+          saveBtn.style.background = '';
+          saveBtn.disabled = false;
+        }, 2000);
+      } else {
+        throw new Error(data.message || 'Save failed');
+      }
+    } catch (err) {
+      alert('Failed to save: ' + err.message);
+      saveBtn.textContent = origText;
+      saveBtn.disabled = false;
+    }
+  }
+
+  // Delete from DynamoDB
+  async function deleteFromDatabase() {
+    var templateId = document.getElementById('template-id').value;
+    if (!templateId) {
+      alert('No template selected to delete.');
+      return;
+    }
+    if (!confirm('Delete template "' + templateId + '"? This cannot be undone.')) {
+      return;
+    }
+
+    var token = getAuthToken();
+    if (!token) {
+      alert('You must be logged in as an admin to delete templates.');
+      return;
+    }
+
+    try {
+      var res = await fetch(getApiBase() + '/impact-templates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          action: 'delete',
+          template_id: templateId
+        })
+      });
+      var data = await res.json();
+      if (data.success) {
+        alert('Template deleted.');
+        resetEditor();
+        await loadTemplatesFromAPI();
+      } else {
+        throw new Error(data.message || 'Delete failed');
+      }
+    } catch (err) {
+      alert('Failed to delete: ' + err.message);
+    }
+  }
+
+  function copyToClipboard() {
+    exportAndShow();
+    var jsonStr = JSON.stringify(lastExportedJson, null, 2);
+    navigator.clipboard.writeText(jsonStr).then(function () {
+      alert('Template JSON copied to clipboard!');
+    }).catch(function () {
+      var textarea = document.createElement('textarea');
+      textarea.value = jsonStr;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      alert('Template JSON copied to clipboard!');
+    });
+  }
+
+  function downloadTemplate() {
+    exportAndShow();
+    var jsonStr = JSON.stringify(lastExportedJson, null, 2);
+    var id = lastExportedJson.id || 'impact-template';
+    var blob = new Blob([jsonStr], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = id + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function generateShortcode() {
+    exportAndShow();
+    var id = lastExportedJson.id || document.getElementById('template-id').value || 'template-name';
+    var version = lastExportedJson.version || 1;
+    var open = String.fromCharCode(123,123) + '<';
+    var close = '>' + String.fromCharCode(125,125);
+    var shortcode = open + ' impact_map template="' + id + '" version="' + version + '" ' + close;
+    document.getElementById('shortcode-text').textContent = shortcode;
+    document.getElementById('shortcode-output').style.display = 'block';
+  }
+</script>
+{{ end }}

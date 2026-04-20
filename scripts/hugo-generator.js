@@ -114,6 +114,14 @@ class HugoGenerator {
     // Store the database event_id so RSVP shortcode can use it directly
     frontmatter.event_id = event.event_id;
 
+    // Add impact template reference if set
+    if (event.impact_template) {
+      frontmatter.impact_template = event.impact_template;
+      if (event.impact_template_version) {
+        frontmatter.impact_template_version = parseInt(event.impact_template_version) || event.impact_template_version;
+      }
+    }
+
     return frontmatter;
   }
 
@@ -198,6 +206,12 @@ class HugoGenerator {
     content += `Bring water, wear sturdy shoes, and dress for the weather. All ages welcome—kids under 18 must be accompanied by an adult.\n`;
     content += `{{< /tabs >}}\n\n`;
     
+    // Add impact map shortcode if template is set
+    if (event.impact_template) {
+      const version = event.impact_template_version || '';
+      content += `{{< impact_map template="${event.impact_template}"${version ? ` version="${version}"` : ''} >}}\n\n`;
+    }
+
     // Add RSVP shortcode with attendance cap
     const attendanceCap = event.attendance_cap || 20;
     content += `{{< event_rsvp attendance_cap="${attendanceCap}" >}}\n`;

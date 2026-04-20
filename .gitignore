@@ -79,3 +79,5 @@ test-results*.json/*
 
 
 terraform.tfvars
+scripts/backfill-ses-contact-attributes.py
+.playwright-mcp/*

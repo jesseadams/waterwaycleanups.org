@@ -1,0 +1,45 @@
+{
+  "id": "brooke-road-thorny-point",
+  "name": "Brooke Road & Thorny Point Road",
+  "description": "Cleanup area along Brooke Road and Thorny Point Road including Aquia Landing and Patawomeck Memorial Park",
+  "version": 1,
+  "created_at": "2026-01-15T10:00:00Z",
+  "updated_at": "2026-01-15T10:00:00Z",
+  "center": [38.3558, -77.4247],
+  "zoom": 14,
+  "reusable": true,
+  "estimated_miles": 2.4,
+  "features": {
+    "parking": [
+      {
+        "id": "parking-1",
+        "label": "Crows Nest Canoe Launch Parking",
+        "coordinates": [38.3420, -77.3920]
+      }
+    ],
+    "paths": [
+      {
+        "id": "path-1",
+        "label": "Brooke Road Cleanup Route",
+        "coordinates": [
+          [38.3420, -77.3920],
+          [38.3450, -77.3950],
+          [38.3480, -77.3980],
+          [38.3510, -77.4010]
+        ]
+      }
+    ],
+    "zones": [
+      {
+        "id": "zone-1",
+        "label": "Patawomeck Memorial Park Area",
+        "coordinates": [
+          [38.3500, -77.4000],
+          [38.3520, -77.3980],
+          [38.3530, -77.4020],
+          [38.3510, -77.4030]
+        ]
+      }
+    ]
+  }
+}

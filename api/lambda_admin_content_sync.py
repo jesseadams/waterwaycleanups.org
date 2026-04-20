@@ -196,6 +196,12 @@ def handle_save_draft(body, session):
     if event_data.get('private', False):
         db_event_data['private'] = True
     
+    # Include impact template reference if set
+    if event_data.get('impact_template'):
+        db_event_data['impact_template'] = event_data['impact_template']
+        if event_data.get('impact_template_version'):
+            db_event_data['impact_template_version'] = event_data['impact_template_version']
+    
     item = {
         'edit_id': edit_id,
         'event_id': event_id,

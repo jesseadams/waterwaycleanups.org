@@ -1,0 +1,196 @@
+{{- $template_id := .Get "template" -}}
+{{- $version := .Get "version" | default "" -}}
+{{- $show_metrics := .Get "show_metrics" | default "true" -}}
+
+{{- /* Access impact template data - Hugo preserves hyphens in data keys */ -}}
+{{- $templateData := (dict) -}}
+{{- with index .Site.Data "impact-templates" -}}
+  {{- with index . $template_id -}}
+    {{- $templateData = . -}}
+  {{- end -}}
+{{- end -}}
+
+<!-- Leaflet CSS & JS (loaded once) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+
+<style>
+  .impact-map-widget {
+    margin: 1.5rem 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+  }
+  .impact-map-canvas {
+    height: 400px;
+    width: 100%;
+    z-index: 1;
+  }
+  .impact-map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .impact-map-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  .impact-map-metrics {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    color: #4b5563;
+  }
+  .impact-map-metrics .metric {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .impact-map-metrics .metric-value {
+    font-weight: 700;
+    color: #1f2937;
+  }
+  .impact-map-legend {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+  .impact-map-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  .impact-map-legend .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .impact-map-legend .legend-line {
+    width: 16px;
+    height: 3px;
+    display: inline-block;
+    border-radius: 2px;
+  }
+  .impact-popup-miles {
+    color: #ea580c;
+    font-weight: 600;
+  }
+</style>
+
+{{ if $templateData.name }}
+<div class="impact-map-widget" data-inline="true">
+  <div class="impact-map-header">
+    <h4>🗺️ Impact Map{{ if $templateData.name }}: {{ $templateData.name }}{{ end }}</h4>
+    <div class="impact-map-legend">
+      <span class="legend-item">
+        <span class="legend-dot" style="background: #2563eb;"></span> Parking
+      </span>
+      <span class="legend-item">
+        <span class="legend-line" style="background: #ea580c;"></span> Cleanup Path
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot" style="background: #ea580c; opacity: 0.3; width: 14px; height: 14px; border: 2px solid #ea580c;"></span> Focus Area
+      </span>
+    </div>
+  </div>
+
+  <div class="impact-map-canvas" id="impact-map-{{ $template_id }}"></div>
+
+  {{ if eq $show_metrics "true" }}
+  <div class="impact-map-metrics">
+    <div class="metric">
+      <span>Estimated Impact:</span>
+      <span class="metric-value"><span class="impact-miles-value">{{ $templateData.estimated_miles | default "0" }}</span> miles</span>
+    </div>
+    <div class="metric">
+      <span>Template:</span>
+      <span class="metric-value impact-template-version">v{{ $templateData.version | default "1" }}</span>
+    </div>
+    {{ if $version }}
+    <div class="metric">
+      <span>Event Version:</span>
+      <span class="metric-value">v{{ $version }}</span>
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+
+<!-- Render map inline from Hugo data -->
+<script>
+(function() {
+  var templateData = {{ $templateData | jsonify | safeJS }};
+  
+  function renderWhenReady() {
+    if (typeof L === 'undefined' || typeof window.ImpactMap === 'undefined') {
+      setTimeout(renderWhenReady, 100);
+      return;
+    }
+    var container = document.getElementById('impact-map-{{ $template_id }}').closest('.impact-map-widget');
+    if (container) {
+      window.ImpactMap.render(container, templateData);
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderWhenReady);
+  } else {
+    renderWhenReady();
+  }
+})();
+</script>
+{{ else }}
+{{- /* Template not in local Hugo data - load from DynamoDB API at runtime */ -}}
+<div class="impact-map-widget" data-template-id="{{ $template_id }}">
+  <div class="impact-map-header">
+    <h4>🗺️ Impact Map</h4>
+    <div class="impact-map-legend">
+      <span class="legend-item">
+        <span class="legend-dot" style="background: #2563eb;"></span> Parking
+      </span>
+      <span class="legend-item">
+        <span class="legend-line" style="background: #ea580c;"></span> Cleanup Path
+      </span>
+      <span class="legend-item">
+        <span class="legend-dot" style="background: #ea580c; opacity: 0.3; width: 14px; height: 14px; border: 2px solid #ea580c;"></span> Focus Area
+      </span>
+    </div>
+  </div>
+  <div class="impact-map-canvas" id="impact-map-{{ $template_id }}"></div>
+  {{ if eq $show_metrics "true" }}
+  <div class="impact-map-metrics">
+    <div class="metric">
+      <span>Estimated Impact:</span>
+      <span class="metric-value"><span class="impact-miles-value">—</span> miles</span>
+    </div>
+    <div class="metric">
+      <span>Template:</span>
+      <span class="metric-value impact-template-version">—</span>
+    </div>
+    {{ if $version }}
+    <div class="metric">
+      <span>Event Version:</span>
+      <span class="metric-value">v{{ $version }}</span>
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+{{ end }}
+
+<script src="/js/impact-map.js"></script>
