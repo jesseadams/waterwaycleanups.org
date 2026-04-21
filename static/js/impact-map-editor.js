@@ -12,7 +12,8 @@
   var COLORS = {
     parking: '#2563eb',
     path: '#ea580c',
-    zone: '#ea580c'
+    zone: '#ea580c',
+    meetingSpot: '#eab308'
   };
 
   var editor = {
@@ -134,6 +135,23 @@
         editor.drawnItems.addLayer(polygon);
       });
     }
+
+    if (features.meetingSpots) {
+      features.meetingSpots.forEach(function (spot) {
+        var icon = L.divIcon({
+          html: '<svg viewBox="0 0 24 24" width="28" height="28"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#eab308" stroke="#a16207" stroke-width="1.5"/></svg>',
+          className: 'meeting-spot-icon',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        var marker = L.marker(spot.coordinates, { icon: icon });
+        marker.featureType = 'meetingSpot';
+        marker.featureId = spot.id;
+        marker.featureLabel = spot.label;
+        marker.bindPopup('<strong>Meeting Spot:</strong> ' + spot.label);
+        editor.drawnItems.addLayer(marker);
+      });
+    }
   }
 
   function bindToolbarEvents(container) {
@@ -141,12 +159,21 @@
     var btnPath = container.querySelector('[data-tool="path"]');
     var btnZone = container.querySelector('[data-tool="zone"]');
     var btnDelete = container.querySelector('[data-tool="delete"]');
+    var btnMeeting = container.querySelector('[data-tool="meeting"]');
 
     if (btnParking) {
       btnParking.addEventListener('click', function () {
         cancelCurrentDraw();
         setActiveButton(container, 'parking');
         startParkingDraw(container);
+      });
+    }
+
+    if (btnMeeting) {
+      btnMeeting.addEventListener('click', function () {
+        cancelCurrentDraw();
+        setActiveButton(container, 'meeting');
+        startMeetingSpotDraw(container);
       });
     }
 
@@ -199,6 +226,11 @@
       editor.map.off('click', editor.parkingClickHandler);
       editor.parkingClickHandler = null;
     }
+    // Remove meeting spot click listener
+    if (editor.meetingClickHandler) {
+      editor.map.off('click', editor.meetingClickHandler);
+      editor.meetingClickHandler = null;
+    }
     // Remove any pending draw:created listener
     if (editor.drawCreatedHandler) {
       editor.map.off(L.Draw.Event.CREATED, editor.drawCreatedHandler);
@@ -238,6 +270,30 @@
       updateMetrics(container);
     };
     editor.map.on('click', editor.parkingClickHandler);
+  }
+
+  function startMeetingSpotDraw(container) {
+    editor.meetingClickHandler = function (e) {
+      if (editor.mode !== 'meeting') return;
+
+      var label = prompt('Meeting spot label:', 'Meeting Point');
+      if (!label) return;
+
+      var icon = L.divIcon({
+        html: '<svg viewBox="0 0 24 24" width="28" height="28"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#eab308" stroke="#a16207" stroke-width="1.5"/></svg>',
+        className: 'meeting-spot-icon',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+      var marker = L.marker(e.latlng, { icon: icon });
+      marker.featureType = 'meetingSpot';
+      marker.featureId = generateId('meeting');
+      marker.featureLabel = label;
+      marker.bindPopup('<strong>Meeting Spot:</strong> ' + label);
+      editor.drawnItems.addLayer(marker);
+      updateMetrics(container);
+    };
+    editor.map.on('click', editor.meetingClickHandler);
   }
 
   function startPathDraw(container) {
@@ -346,7 +402,8 @@
     if (countEl) {
       var count = (features.parking ? features.parking.length : 0) +
                   (features.paths ? features.paths.length : 0) +
-                  (features.zones ? features.zones.length : 0);
+                  (features.zones ? features.zones.length : 0) +
+                  (features.meetingSpots ? features.meetingSpots.length : 0);
       countEl.textContent = count;
     }
   }
@@ -355,7 +412,7 @@
    * Extract features from drawn layers into template format.
    */
   function extractFeatures() {
-    var features = { parking: [], paths: [], zones: [] };
+    var features = { parking: [], paths: [], zones: [], meetingSpots: [] };
 
     editor.drawnItems.eachLayer(function (layer) {
       if (layer.featureType === 'parking') {
@@ -363,6 +420,16 @@
         features.parking.push({
           id: layer.featureId,
           label: layer.featureLabel || 'Parking',
+          coordinates: [
+            Math.round(latlng.lat * 1000000) / 1000000,
+            Math.round(latlng.lng * 1000000) / 1000000
+          ]
+        });
+      } else if (layer.featureType === 'meetingSpot') {
+        var latlng = layer.getLatLng();
+        features.meetingSpots.push({
+          id: layer.featureId,
+          label: layer.featureLabel || 'Meeting Point',
           coordinates: [
             Math.round(latlng.lat * 1000000) / 1000000,
             Math.round(latlng.lng * 1000000) / 1000000

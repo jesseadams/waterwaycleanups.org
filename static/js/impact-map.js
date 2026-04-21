@@ -13,7 +13,8 @@
     parking: '#2563eb',    // blue-600
     path: '#ea580c',       // orange-600
     zone: '#ea580c',       // orange-600
-    zoneFill: '#ea580c'
+    zoneFill: '#ea580c',
+    meetingSpot: '#eab308'  // yellow-500
   };
 
   /**
@@ -165,6 +166,30 @@
         );
 
         zone.coordinates.forEach(function (c) { bounds.push(c); });
+      });
+    }
+
+    // Render meeting spots as yellow star markers
+    if (features.meetingSpots) {
+      var starIcon = L.divIcon({
+        html: '<svg viewBox="0 0 24 24" width="28" height="28" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#eab308" stroke="#a16207" stroke-width="1.5"/></svg>',
+        className: 'meeting-spot-icon',
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+        popupAnchor: [0, -14]
+      });
+
+      features.meetingSpots.forEach(function (spot) {
+        var marker = L.marker(spot.coordinates, { icon: starIcon }).addTo(map);
+
+        marker.bindPopup(
+          '<div class="impact-popup">' +
+          '<span style="color:' + COLORS.meetingSpot + '; font-size: 1.2em;">★</span> ' +
+          '<strong>Meeting Spot</strong><br>' + spot.label +
+          '</div>'
+        );
+
+        bounds.push(spot.coordinates);
       });
     }
 
