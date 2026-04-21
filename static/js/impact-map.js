@@ -99,53 +99,7 @@
     var features = templateData.features;
     var bounds = [];
 
-    // Render parking areas as blue circle markers
-    if (features.parking) {
-      features.parking.forEach(function (spot) {
-        var marker = L.circleMarker(spot.coordinates, {
-          radius: 10,
-          fillColor: COLORS.parking,
-          color: '#1e40af',
-          weight: 2,
-          opacity: 1,
-          fillOpacity: 0.8
-        }).addTo(map);
-
-        marker.bindPopup(
-          '<div class="impact-popup">' +
-          '<span class="impact-popup-icon" style="color:' + COLORS.parking + '">&#9679;</span> ' +
-          '<strong>Parking</strong><br>' + spot.label +
-          '</div>'
-        );
-
-        bounds.push(spot.coordinates);
-      });
-    }
-
-    // Render cleanup paths as orange polylines
-    if (features.paths) {
-      features.paths.forEach(function (path) {
-        var polyline = L.polyline(path.coordinates, {
-          color: COLORS.path,
-          weight: 4,
-          opacity: 0.85,
-          dashArray: null
-        }).addTo(map);
-
-        var miles = calculatePathMiles(path.coordinates);
-        polyline.bindPopup(
-          '<div class="impact-popup">' +
-          '<strong>Cleanup Path</strong><br>' +
-          path.label + '<br>' +
-          '<span class="impact-popup-miles">' + miles.toFixed(2) + ' miles</span>' +
-          '</div>'
-        );
-
-        path.coordinates.forEach(function (c) { bounds.push(c); });
-      });
-    }
-
-    // Render focus zones as orange polygons
+    // Render zones first (bottom layer)
     if (features.zones) {
       features.zones.forEach(function (zone) {
         var polygon = L.polygon(zone.coordinates, {
@@ -169,7 +123,53 @@
       });
     }
 
-    // Render meeting spots as yellow star markers
+    // Render paths (above zones)
+    if (features.paths) {
+      features.paths.forEach(function (path) {
+        var polyline = L.polyline(path.coordinates, {
+          color: COLORS.path,
+          weight: 4,
+          opacity: 0.85,
+          dashArray: null
+        }).addTo(map);
+
+        var miles = calculatePathMiles(path.coordinates);
+        polyline.bindPopup(
+          '<div class="impact-popup">' +
+          '<strong>Cleanup Path</strong><br>' +
+          path.label + '<br>' +
+          '<span class="impact-popup-miles">' + miles.toFixed(2) + ' miles</span>' +
+          '</div>'
+        );
+
+        path.coordinates.forEach(function (c) { bounds.push(c); });
+      });
+    }
+
+    // Render parking areas as blue circle markers (above paths/zones)
+    if (features.parking) {
+      features.parking.forEach(function (spot) {
+        var marker = L.circleMarker(spot.coordinates, {
+          radius: 10,
+          fillColor: COLORS.parking,
+          color: '#1e40af',
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8
+        }).addTo(map);
+
+        marker.bindPopup(
+          '<div class="impact-popup">' +
+          '<span class="impact-popup-icon" style="color:' + COLORS.parking + '">&#9679;</span> ' +
+          '<strong>Parking</strong><br>' + spot.label +
+          '</div>'
+        );
+
+        bounds.push(spot.coordinates);
+      });
+    }
+
+    // Render meeting spots as yellow star markers (top layer)
     if (features.meetingSpots) {
       var starIcon = L.divIcon({
         html: '<svg viewBox="0 0 24 24" width="28" height="28" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" fill="#eab308" stroke="#a16207" stroke-width="1.5"/></svg>',
