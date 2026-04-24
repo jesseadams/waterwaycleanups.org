@@ -1,0 +1,638 @@
+/* Event Check-In Kiosk CSS
+   Optimized for Raspberry Pi Touch Display 2 (7", 1280x720)
+   Touch-friendly with large tap targets */
+
+/* Hide site header/footer in kiosk mode */
+body.kiosk-mode header,
+body.kiosk-mode footer,
+body.kiosk-mode .preheader,
+body.kiosk-mode .innerbody > *:not(#checkin-root) {
+  display: none !important;
+}
+
+body.kiosk-mode {
+  overflow: hidden;
+  background: #1a2e1a;
+}
+
+body.kiosk-mode .innerbody {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#checkin-root {
+  font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  min-height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a2e1a 0%, #2d4a2d 100%);
+  color: #fff;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ===== Screens ===== */
+.checkin-screen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  animation: fadeIn 0.3s ease;
+}
+
+.checkin-screen.active {
+  display: flex;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ===== Admin Login Screen ===== */
+.checkin-logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 16px;
+}
+
+.checkin-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #bbdb97;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.checkin-subtitle {
+  font-size: 1.1rem;
+  color: #a0c080;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+/* ===== Form Elements ===== */
+.checkin-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px 20px;
+  font-size: 1.25rem;
+  border: 2px solid #4a6a4a;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  -webkit-appearance: none;
+}
+
+.checkin-input::placeholder {
+  color: rgba(255,255,255,0.4);
+}
+
+.checkin-input:focus {
+  border-color: #bbdb97;
+  background: rgba(255,255,255,0.15);
+}
+
+.checkin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 32px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.1s, background 0.2s;
+  min-height: 56px;
+  min-width: 160px;
+  touch-action: manipulation;
+}
+
+.checkin-btn:active {
+  transform: scale(0.97);
+}
+
+.checkin-btn-primary {
+  background: #bbdb97;
+  color: #1a2e1a;
+}
+
+.checkin-btn-primary:hover {
+  background: #a8cc80;
+}
+
+.checkin-btn-primary:disabled {
+  background: #5a7a5a;
+  color: #8a9a8a;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.checkin-btn-secondary {
+  background: rgba(255,255,255,0.15);
+  color: #bbdb97;
+  border: 2px solid #4a6a4a;
+}
+
+.checkin-btn-secondary:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.checkin-btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
+
+.checkin-btn-danger:hover {
+  background: #b91c1c;
+}
+
+.checkin-btn-small {
+  padding: 10px 20px;
+  font-size: 1rem;
+  min-height: 44px;
+  min-width: 100px;
+}
+
+/* ===== Event Selection Screen ===== */
+.event-select-list {
+  width: 100%;
+  max-width: 600px;
+  max-height: 60vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.event-select-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+  margin-bottom: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, transform 0.1s;
+  text-align: left;
+  color: #fff;
+  font-family: inherit;
+}
+
+.event-select-card:active {
+  transform: scale(0.98);
+}
+
+.event-select-card:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: #bbdb97;
+}
+
+.event-select-card .event-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.event-select-card .event-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.event-select-card .event-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-select-card .event-date {
+  font-size: 0.95rem;
+  color: #a0c080;
+}
+
+.event-select-card .event-count {
+  font-size: 0.9rem;
+  color: #bbdb97;
+  background: rgba(187,219,151,0.15);
+  padding: 4px 12px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* ===== Check-In Main Screen ===== */
+.checkin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 16px 24px;
+  background: rgba(0,0,0,0.2);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.checkin-header-event {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #bbdb97;
+}
+
+.checkin-header-stats {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.checkin-stat {
+  text-align: center;
+}
+
+.checkin-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #bbdb97;
+  line-height: 1;
+}
+
+.checkin-stat-label {
+  font-size: 0.7rem;
+  color: #a0c080;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.checkin-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding-top: 80px;
+}
+
+/* Search area */
+.checkin-search-area {
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.checkin-search-prompt {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #bbdb97;
+  margin-bottom: 16px;
+}
+
+.checkin-search-input {
+  width: 100%;
+  padding: 18px 24px;
+  font-size: 1.4rem;
+  border: 3px solid #4a6a4a;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: center;
+  -webkit-appearance: none;
+}
+
+.checkin-search-input::placeholder {
+  color: rgba(255,255,255,0.35);
+  font-size: 1.2rem;
+}
+
+.checkin-search-input:focus {
+  border-color: #bbdb97;
+}
+
+/* Attendee list */
+.checkin-attendee-list {
+  width: 100%;
+  max-width: 600px;
+  max-height: calc(100vh - 260px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 20px;
+}
+
+.checkin-attendee-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 18px 20px;
+  margin-bottom: 8px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  border: 2px solid transparent;
+}
+
+.checkin-attendee-card:active {
+  transform: scale(0.98);
+}
+
+.checkin-attendee-card.status-pending {
+  background: rgba(255,255,255,0.08);
+}
+
+.checkin-attendee-card.status-pending:hover {
+  background: rgba(187,219,151,0.15);
+  border-color: #bbdb97;
+}
+
+.checkin-attendee-card.status-checked-in {
+  background: rgba(34,197,94,0.15);
+  border-color: rgba(34,197,94,0.3);
+  cursor: default;
+}
+
+.checkin-attendee-card.status-no-show {
+  background: rgba(220,38,38,0.1);
+  border-color: rgba(220,38,38,0.2);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.attendee-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.status-pending .attendee-avatar {
+  background: rgba(187,219,151,0.2);
+  color: #bbdb97;
+}
+
+.status-checked-in .attendee-avatar {
+  background: rgba(34,197,94,0.3);
+  color: #22c55e;
+}
+
+.attendee-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.attendee-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attendee-email {
+  font-size: 0.85rem;
+  color: #a0c080;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.attendee-status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badge-pending {
+  background: rgba(187,219,151,0.15);
+  color: #bbdb97;
+}
+
+.badge-checked-in {
+  background: rgba(34,197,94,0.2);
+  color: #22c55e;
+}
+
+.badge-no-show {
+  background: rgba(220,38,38,0.15);
+  color: #f87171;
+}
+
+/* Walk-in button */
+.checkin-walkin-area {
+  width: 100%;
+  max-width: 600px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* ===== Confirmation Overlay ===== */
+.checkin-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.7);
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.checkin-overlay.active {
+  display: flex;
+}
+
+.checkin-confirm-card {
+  background: #2d4a2d;
+  border: 3px solid #bbdb97;
+  border-radius: 24px;
+  padding: 40px;
+  text-align: center;
+  max-width: 450px;
+  width: 90%;
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.confirm-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+}
+
+.confirm-name {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #bbdb97;
+  margin-bottom: 8px;
+}
+
+.confirm-message {
+  font-size: 1.1rem;
+  color: #a0c080;
+  margin-bottom: 24px;
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* ===== Success Screen ===== */
+.checkin-success-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: linear-gradient(135deg, #1a3a1a 0%, #2d5a2d 100%);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+}
+
+.checkin-success-screen.active {
+  display: flex;
+}
+
+.success-checkmark {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(34,197,94,0.2);
+  border: 4px solid #22c55e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  margin-bottom: 24px;
+  animation: popIn 0.4s ease;
+}
+
+.success-name {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #bbdb97;
+  margin-bottom: 8px;
+}
+
+.success-message {
+  font-size: 1.3rem;
+  color: #22c55e;
+  margin-bottom: 8px;
+}
+
+.success-auto-dismiss {
+  font-size: 0.9rem;
+  color: #6a8a6a;
+  margin-top: 16px;
+}
+
+/* ===== Walk-In Form ===== */
+.walkin-form {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+/* ===== Error/Info Messages ===== */
+.checkin-message {
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 1rem;
+  margin-bottom: 16px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.checkin-message-error {
+  background: rgba(220,38,38,0.15);
+  border: 1px solid rgba(220,38,38,0.3);
+  color: #fca5a5;
+}
+
+.checkin-message-info {
+  background: rgba(59,130,246,0.15);
+  border: 1px solid rgba(59,130,246,0.3);
+  color: #93c5fd;
+}
+
+/* ===== Empty State ===== */
+.checkin-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6a8a6a;
+}
+
+.checkin-empty-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+/* ===== Loading Spinner ===== */
+.checkin-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(187,219,151,0.2);
+  border-top-color: #bbdb97;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Scrollbar styling ===== */
+.checkin-attendee-list::-webkit-scrollbar,
+.event-select-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.checkin-attendee-list::-webkit-scrollbar-track,
+.event-select-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.checkin-attendee-list::-webkit-scrollbar-thumb,
+.event-select-list::-webkit-scrollbar-thumb {
+  background: rgba(187,219,151,0.3);
+  border-radius: 3px;
+}
+
+/* ===== Responsive for small screens ===== */
+@media (max-height: 500px) {
+  .checkin-title { font-size: 1.5rem; }
+  .checkin-subtitle { font-size: 0.95rem; margin-bottom: 16px; }
+  .checkin-search-prompt { font-size: 1.3rem; }
+  .checkin-btn { padding: 12px 24px; font-size: 1rem; min-height: 48px; }
+}

@@ -1,0 +1,150 @@
+{{ define "content" }}
+<!-- Event Check-In Kiosk -->
+<link rel="stylesheet" href="{{ "css/event-checkin.css" | relURL }}" />
+
+<div id="checkin-root">
+
+  <!-- Global message -->
+  <div id="checkin-message" class="checkin-message" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:300;"></div>
+
+  <!-- ===== Screen 1: Admin Login ===== -->
+  <div id="screen-login" class="checkin-screen active">
+    <div style="text-align:center;">
+      <div style="font-size:4rem;margin-bottom:8px;">🌊</div>
+      <h1 class="checkin-title">Event Check-In</h1>
+      <p class="checkin-subtitle">Admin login to start check-in mode</p>
+    </div>
+
+    <input id="login-email" type="email" class="checkin-input" placeholder="Admin email address"
+      autocomplete="email" autocapitalize="off" style="margin-bottom:12px;" />
+
+    <button id="login-send-code" class="checkin-btn checkin-btn-primary" style="margin-bottom:20px;">
+      Send Code
+    </button>
+
+    <div id="login-code-group" style="display:none;flex-direction:column;align-items:center;gap:12px;">
+      <input id="login-code" type="text" class="checkin-input" placeholder="Enter 6-digit code"
+        inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" />
+      <button id="login-verify" class="checkin-btn checkin-btn-primary">
+        Verify &amp; Continue
+      </button>
+    </div>
+
+    <button id="kiosk-toggle" class="checkin-btn checkin-btn-secondary checkin-btn-small" style="margin-top:32px;">
+      Toggle Kiosk Mode
+    </button>
+  </div>
+
+  <!-- ===== Screen 2: Event Selection ===== -->
+  <div id="screen-event-select" class="checkin-screen">
+    <div style="text-align:center;margin-bottom:24px;">
+      <h2 class="checkin-title">Select Event</h2>
+      <p class="checkin-subtitle">Choose the event for check-in</p>
+    </div>
+    <div id="event-list" class="event-select-list"></div>
+  </div>
+
+  <!-- ===== Screen 3: Check-In ===== -->
+  <div id="screen-checkin" class="checkin-screen" style="justify-content:flex-start;padding-top:0;">
+    <!-- Header bar -->
+    <div class="checkin-header">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button id="checkin-back-btn" class="checkin-btn checkin-btn-secondary checkin-btn-small" style="padding:8px 14px;min-width:auto;">
+          ← Back
+        </button>
+        <span id="checkin-event-name" class="checkin-header-event"></span>
+      </div>
+      <div class="checkin-header-stats">
+        <div class="checkin-stat">
+          <div id="stat-checked-in" class="checkin-stat-value">0</div>
+          <div class="checkin-stat-label">Checked In</div>
+        </div>
+        <div class="checkin-stat">
+          <div id="stat-total" class="checkin-stat-value">0</div>
+          <div class="checkin-stat-label">Total</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div class="checkin-body">
+      <div class="checkin-search-area">
+        <div class="checkin-search-prompt">Find Your Name</div>
+        <input id="checkin-search" type="text" class="checkin-search-input"
+          placeholder="Search by name or email..." autocomplete="off" autocapitalize="off" />
+      </div>
+
+      <div id="attendee-list" class="checkin-attendee-list"></div>
+
+      <div class="checkin-walkin-area">
+        <button id="walkin-btn" class="checkin-btn checkin-btn-secondary">
+          + Walk-In (No RSVP)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Confirm Overlay ===== -->
+  <div id="confirm-overlay" class="checkin-overlay">
+    <div class="checkin-confirm-card">
+      <div class="confirm-icon">👋</div>
+      <div class="confirm-name" id="confirm-name"></div>
+      <div class="confirm-message">Confirm check-in for this attendee?</div>
+      <div class="confirm-actions">
+        <button id="confirm-no" class="checkin-btn checkin-btn-secondary">Cancel</button>
+        <button id="confirm-yes" class="checkin-btn checkin-btn-primary">Check In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Walk-In Overlay ===== -->
+  <div id="walkin-overlay" class="checkin-overlay">
+    <div class="checkin-confirm-card">
+      <div class="confirm-icon">🚶</div>
+      <div class="confirm-name">Walk-In Attendee</div>
+      <div class="confirm-message">Add a new attendee who didn't RSVP</div>
+      <div class="walkin-form">
+        <input id="walkin-first" type="text" class="checkin-input" placeholder="First Name" autocapitalize="words" />
+        <input id="walkin-last" type="text" class="checkin-input" placeholder="Last Name" autocapitalize="words" />
+        <input id="walkin-email" type="email" class="checkin-input" placeholder="Email (optional)" autocapitalize="off" />
+      </div>
+      <div class="confirm-actions" style="margin-top:16px;">
+        <button id="walkin-cancel" class="checkin-btn checkin-btn-secondary">Cancel</button>
+        <button id="walkin-submit" class="checkin-btn checkin-btn-primary">Add &amp; Check In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Success Screen ===== -->
+  <div id="success-screen" class="checkin-success-screen">
+    <div class="success-checkmark">✓</div>
+    <div class="success-name" id="success-name"></div>
+    <div class="success-message">You're checked in!</div>
+    <div class="success-auto-dismiss">This screen will close automatically...</div>
+  </div>
+
+</div>
+
+<!-- Load dependencies -->
+<script src="{{ "js/auth-client.js" | relURL }}"></script>
+<script src="{{ "js/events-api-client.js" | relURL }}"></script>
+
+<!-- API Configuration -->
+{{ partial "api-config.html" . }}
+
+<!-- Initialize APIs -->
+<script>
+  window.authClient = new AuthClient();
+  if (typeof window.initializeEventsAPI === 'function' && window.API_CONFIG) {
+    window.eventsAPI = window.initializeEventsAPI(window.API_CONFIG.EVENTS_API_URL, null);
+    // AuthClient stores token as 'auth_session_token', sync it to EventsAPIClient
+    var token = localStorage.getItem('auth_session_token');
+    if (token && window.eventsAPI) {
+      window.eventsAPI.setSessionToken(token);
+    }
+  }
+</script>
+
+<!-- Load check-in kiosk script -->
+<script src="{{ "js/event-checkin.js" | relURL }}"></script>
+{{ end }}
