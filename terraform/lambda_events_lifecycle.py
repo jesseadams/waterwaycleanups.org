@@ -81,11 +81,18 @@ def handler(event, context):
 
 def update_completed_events(headers):
     """
-    Automatically update status of events that have passed their end time
+    Automatically update status of events that have passed their end time.
+    
+    An event is only marked as completed when BOTH conditions are met:
+    1. It is the day after the event's end time (not just past the end time)
+    2. All RSVPs have reached a final status (attended, no_show, or cancelled — not active)
     """
     try:
-        current_time = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
+        current_time = now.isoformat()
+        today_date = now.date()
         updated_events = []
+        skipped_events = []
         
         # Query active events
         response = events_table.query(
@@ -97,22 +104,67 @@ def update_completed_events(headers):
         
         for event in active_events:
             end_time = event.get('end_time')
-            if end_time and end_time < current_time:
-                # Update event status to completed
-                try:
-                    events_table.update_item(
-                        Key={'event_id': event['event_id']},
-                        UpdateExpression='SET #status = :status, updated_at = :updated_at',
-                        ExpressionAttributeNames={'#status': 'status'},
-                        ExpressionAttributeValues={
-                            ':status': 'completed',
-                            ':updated_at': current_time
-                        }
-                    )
-                    updated_events.append(event['event_id'])
-                    print(f"Updated event {event['event_id']} to completed status")
-                except ClientError as e:
-                    print(f"Error updating event {event['event_id']}: {e.response['Error']['Message']}")
+            if not end_time or end_time >= current_time:
+                continue
+            
+            # Check that it's the day after the event
+            try:
+                event_end_date = datetime.fromisoformat(end_time.replace('Z', '+00:00')).date()
+            except (ValueError, AttributeError):
+                print(f"Skipping event {event['event_id']}: invalid end_time format '{end_time}'")
+                continue
+            
+            if today_date <= event_end_date:
+                skipped_events.append({
+                    'event_id': event['event_id'],
+                    'reason': 'not yet the day after the event'
+                })
+                continue
+            
+            # Check that all RSVPs are in a final status
+            try:
+                rsvp_response = rsvps_table.query(
+                    KeyConditionExpression=Key('event_id').eq(event['event_id'])
+                )
+                rsvps = rsvp_response.get('Items', [])
+            except ClientError as e:
+                print(f"Error querying RSVPs for event {event['event_id']}: {e.response['Error']['Message']}")
+                skipped_events.append({
+                    'event_id': event['event_id'],
+                    'reason': 'failed to query RSVPs'
+                })
+                continue
+            
+            final_statuses = {'attended', 'no_show', 'cancelled'}
+            pending_rsvps = [
+                r for r in rsvps
+                if r.get('status', 'active') not in final_statuses
+            ]
+            
+            if pending_rsvps:
+                pending_count = len(pending_rsvps)
+                skipped_events.append({
+                    'event_id': event['event_id'],
+                    'reason': f'{pending_count} RSVP(s) still in non-final status'
+                })
+                print(f"Skipping event {event['event_id']}: {pending_count} RSVP(s) not in final status")
+                continue
+            
+            # All conditions met — mark as completed
+            try:
+                events_table.update_item(
+                    Key={'event_id': event['event_id']},
+                    UpdateExpression='SET #status = :status, updated_at = :updated_at',
+                    ExpressionAttributeNames={'#status': 'status'},
+                    ExpressionAttributeValues={
+                        ':status': 'completed',
+                        ':updated_at': current_time
+                    }
+                )
+                updated_events.append(event['event_id'])
+                print(f"Updated event {event['event_id']} to completed status")
+            except ClientError as e:
+                print(f"Error updating event {event['event_id']}: {e.response['Error']['Message']}")
         
         return {
             'statusCode': 200,
@@ -120,6 +172,7 @@ def update_completed_events(headers):
             'body': json.dumps({
                 'message': f'Updated {len(updated_events)} events to completed status',
                 'updated_events': updated_events,
+                'skipped_events': skipped_events,
                 'success': True
             })
         }

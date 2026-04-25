@@ -8,7 +8,11 @@ The Event Lifecycle Management system provides automated and manual tools for ma
 
 ### 1. Automatic Status Updates
 
-**Purpose**: Automatically update event status from 'active' to 'completed' when events have passed their end time.
+**Purpose**: Automatically update event status from 'active' to 'completed' when both of the following conditions are met:
+1. It is the day after the event's end time (not immediately after the event ends)
+2. All RSVPs have reached a final status (`attended`, `no_show`, or `cancelled` — no RSVPs still in `active` status)
+
+Events that have ended but still have RSVPs in `active` status will be skipped and retried on subsequent runs. This gives admins time to process attendance (check-ins, no-shows) before the event is finalized.
 
 **Trigger**: 
 - Scheduled execution every hour via CloudWatch Events
@@ -26,6 +30,10 @@ The Event Lifecycle Management system provides automated and manual tools for ma
 {
   "message": "Updated 3 events to completed status",
   "updated_events": ["event-1", "event-2", "event-3"],
+  "skipped_events": [
+    {"event_id": "event-4", "reason": "not yet the day after the event"},
+    {"event_id": "event-5", "reason": "2 RSVP(s) still in non-final status"}
+  ],
   "success": true
 }
 ```

@@ -58,9 +58,11 @@ def handler(event, context):
                     pass
         public_events_chrono.sort(key=lambda x: x[0])
 
-        # Load all RSVPs grouped by email
+        # Load all RSVPs grouped by email (exclude minors)
         rsvps_by_email = {}
         for rsvp in scan_all(rsvps_table):
+            if rsvp.get('attendee_type') == 'minor':
+                continue
             email = rsvp.get('email', '').lower()
             if email:
                 rsvps_by_email.setdefault(email, []).append(rsvp)
