@@ -611,9 +611,12 @@ const AdminDashboard = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
                   <div>📅 {formatDate(event.start_time)}</div>
                   <div>📍 {event.location.name}</div>
-                  <div>👥 Cap: {event.attendance_cap}</div>
+                  <div>👥 {event.attended_count > 0
+                    ? `${event.attended_count}/${event.rsvp_count || 0} Attended`
+                    : `${event.rsvp_count || 0} RSVPs`
+                  } (Cap: {event.attendance_cap})</div>
                 </div>
-                <div className="mt-2">
+                <div className="mt-2 flex items-center gap-2">
                   <span className={`inline-block px-2 py-1 text-xs rounded ${
                     event.status === 'active' ? 'bg-green-100 text-green-800' :
                     event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
@@ -622,6 +625,15 @@ const AdminDashboard = () => {
                   }`}>
                     {event.status.toUpperCase()}
                   </span>
+                  <a
+                    href={`/events/${event.event_id}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    View Event Page ↗
+                  </a>
                 </div>
               </div>
               

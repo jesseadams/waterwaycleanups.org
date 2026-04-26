@@ -42,19 +42,24 @@ def get_rsvp_count(event_id):
     try:
         response = rsvps_table.query(
             KeyConditionExpression=Key('event_id').eq(event_id),
-            Select='COUNT',
+            Select='ALL_ATTRIBUTES',
             FilterExpression=Attr('status').ne('cancelled')
         )
-        return response.get('Count', 0)
+        items = response.get('Items', [])
+        total = len(items)
+        attended = sum(1 for r in items if r.get('status') == 'attended')
+        return total, attended
     except ClientError as e:
         print(f"Error counting RSVPs for {event_id}: {e}")
-        return 0
+        return 0, 0
 
 
 def enrich_events_with_rsvp_counts(events):
-    """Add rsvp_count to each event dict."""
+    """Add rsvp_count and attended_count to each event dict."""
     for event in events:
-        event['rsvp_count'] = get_rsvp_count(event['event_id'])
+        total, attended = get_rsvp_count(event['event_id'])
+        event['rsvp_count'] = total
+        event['attended_count'] = attended
     return events
 
 def handler(event, context):
@@ -91,7 +96,9 @@ def handler(event, context):
                 response = events_table.get_item(Key={'event_id': event_id})
                 if 'Item' in response:
                     item = response['Item']
-                    item['rsvp_count'] = get_rsvp_count(event_id)
+                    total, attended = get_rsvp_count(event_id)
+                    item['rsvp_count'] = total
+                    item['attended_count'] = attended
                     return {
                         'statusCode': 200,
                         'headers': headers,
