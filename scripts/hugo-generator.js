@@ -259,11 +259,27 @@ class HugoGenerator {
   }
 
   /**
+   * Generate URL-friendly slug from title
+   */
+  slugify(title) {
+    let slug = title.toLowerCase();
+    slug = slug.replace(/[''']/g, '');
+    slug = slug.replace(/[^a-z0-9]+/g, '-');
+    slug = slug.replace(/^-+|-+$/g, '');
+    return slug;
+  }
+
+  /**
    * Generate complete Hugo markdown file
    */
   async generateMarkdownFile(event) {
     const frontmatter = this.generateFrontmatter(event);
-    const filePath = path.join(this.contentDir, `${event.event_id}.md`);
+    // Use slugified title as filename so the URL matches the title, not the event_id
+    const slug = this.slugify(event.title);
+    const filePath = path.join(this.contentDir, `${slug}.md`);
+    
+    // Store the slug for writing back to DynamoDB
+    event._hugo_slug = slug;
     
     // Check for existing custom content
     const existingContent = await this.checkExistingContent(filePath);
@@ -407,7 +423,7 @@ class HugoGenerator {
           await this.writeMarkdownFile(filePath, markdown);
           
           // Write hugo_slug back to DynamoDB so the admin UI can link to the page
-          const slug = event.event_id;
+          const slug = event._hugo_slug;
           if (!this.dryRun) {
             try {
               await this.dynamodb.update({
@@ -421,7 +437,7 @@ class HugoGenerator {
             }
           }
           
-          activeEventIds.push(event.event_id);
+          activeEventIds.push(event._hugo_slug);
           generatedCount++;
           
           if (preserved) {
