@@ -107,12 +107,8 @@ def slugify(title):
     return slug
 
 def generate_event_id(title, start_time):
-    """Generate event_id from title and date, using month name to match Hugo slug format"""
-    slug = slugify(title)
-    date = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-    month_name = date.strftime('%B').lower()  # e.g. 'april', 'june'
-    year = date.year
-    return f"{slug}-{month_name}-{year}"
+    """Generate event_id from title only (no date suffix)"""
+    return slugify(title)
 
 def trigger_workflow(environment='staging'):
     """Trigger GitHub Actions content-sync workflow"""

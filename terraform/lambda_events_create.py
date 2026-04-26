@@ -75,13 +75,13 @@ def handler(event, context):
         # Generate event_id from title if not provided
         event_id = body.get('event_id')
         if not event_id:
-            # Create slug from title and start_time
+            # Create slug from title
             title_slug = body['title'].lower().replace(' ', '-').replace('&', 'and')
             # Remove special characters except hyphens
             title_slug = ''.join(c for c in title_slug if c.isalnum() or c == '-')
-            # Extract date from start_time for uniqueness
-            date_part = start_dt.strftime('%B-%Y').lower()
-            event_id = f"{title_slug}-{date_part}"
+            # Remove leading/trailing hyphens and collapse doubles
+            import re
+            event_id = re.sub(r'-+', '-', title_slug).strip('-')
         
         # Validate attendance_cap if provided
         attendance_cap = body.get('attendance_cap', 50)
