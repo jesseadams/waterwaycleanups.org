@@ -2194,7 +2194,7 @@
                   }, [
                     React.createElement('div', { key: 'date' }, `📅 ${formatDate(event.start_time)}`),
                     React.createElement('div', { key: 'location' }, `📍 ${event.location.name}`),
-                    React.createElement('div', { key: 'cap' }, `👥 Cap: ${event.attendance_cap}`)
+                    React.createElement('div', { key: 'cap' }, `👥 ${event.attended_count > 0 ? event.attended_count + '/' : ''}${event.rsvp_count || 0} ${event.attended_count > 0 ? 'Attended' : 'RSVPs'} (Cap: ${event.attendance_cap})`)
                   ]),
                   React.createElement('div', {
                     key: 'status',
@@ -2220,7 +2220,15 @@
                     pendingEdits.has(event.event_id) ? React.createElement('span', {
                       key: 'edit-badge',
                       className: "inline-block px-2 py-1 text-xs rounded bg-blue-100 text-blue-800 ml-2"
-                    }, '✏️ HAS PENDING EDITS') : null
+                    }, '✏️ HAS PENDING EDITS') : null,
+                    React.createElement('a', {
+                      key: 'event-link',
+                      href: `/events/${event.hugo_slug || event.event_id}/`,
+                      target: '_blank',
+                      rel: 'noopener noreferrer',
+                      className: "inline-block px-2 py-1 text-xs text-blue-600 hover:text-blue-800 hover:underline ml-2",
+                      onClick: (e) => e.stopPropagation()
+                    }, 'View Page ↗')
                   ])
                 ]),
                 React.createElement('div', {

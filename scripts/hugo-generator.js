@@ -406,6 +406,21 @@ class HugoGenerator {
           const { filePath, markdown, preserved } = await this.generateMarkdownFile(event);
           await this.writeMarkdownFile(filePath, markdown);
           
+          // Write hugo_slug back to DynamoDB so the admin UI can link to the page
+          const slug = event.event_id;
+          if (!this.dryRun) {
+            try {
+              await this.dynamodb.update({
+                TableName: this.eventsTableName,
+                Key: { event_id: event.event_id },
+                UpdateExpression: 'SET hugo_slug = :slug',
+                ExpressionAttributeValues: { ':slug': slug }
+              }).promise();
+            } catch (slugErr) {
+              this.log(`Warning: could not write hugo_slug for ${event.event_id}: ${slugErr.message}`);
+            }
+          }
+          
           activeEventIds.push(event.event_id);
           generatedCount++;
           

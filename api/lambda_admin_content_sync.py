@@ -107,12 +107,12 @@ def slugify(title):
     return slug
 
 def generate_event_id(title, start_time):
-    """Generate event_id from title and date"""
+    """Generate event_id from title and date, using month name to match Hugo slug format"""
     slug = slugify(title)
     date = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-    month = f"{date.month:02d}"
+    month_name = date.strftime('%B').lower()  # e.g. 'april', 'june'
     year = date.year
-    return f"{slug}-{month}-{year}"
+    return f"{slug}-{month_name}-{year}"
 
 def trigger_workflow(environment='staging'):
     """Trigger GitHub Actions content-sync workflow"""
@@ -195,6 +195,9 @@ def handle_save_draft(body, session):
     # Only include private flag if explicitly set to true
     if event_data.get('private', False):
         db_event_data['private'] = True
+    
+    # Store the hugo_slug so the admin UI can link to the event page
+    db_event_data['hugo_slug'] = event_id
     
     # Include impact template reference if set
     if event_data.get('impact_template'):
