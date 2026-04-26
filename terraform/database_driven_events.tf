@@ -456,6 +456,7 @@ resource "aws_lambda_function" "events_get" {
   environment {
     variables = {
       EVENTS_TABLE_NAME = aws_dynamodb_table.events.name
+      RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
     }
   }
 

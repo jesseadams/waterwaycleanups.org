@@ -78,7 +78,10 @@
 
       <div class="checkin-walkin-area">
         <button id="walkin-btn" class="checkin-btn checkin-btn-secondary">
-          + Walk-In (No RSVP)
+          + Walk-In Adult
+        </button>
+        <button id="walkin-minor-btn" class="checkin-btn checkin-btn-secondary">
+          + Walk-In Minor
         </button>
       </div>
     </div>
@@ -101,8 +104,8 @@
   <div id="walkin-overlay" class="checkin-overlay">
     <div class="checkin-confirm-card">
       <div class="confirm-icon">🚶</div>
-      <div class="confirm-name">Walk-In Attendee</div>
-      <div class="confirm-message">Add a new attendee who didn't RSVP</div>
+      <div class="confirm-name">Walk-In Adult</div>
+      <div class="confirm-message">Add an adult attendee who didn't RSVP</div>
       <div class="walkin-form">
         <input id="walkin-first" type="text" class="checkin-input" placeholder="First Name" autocapitalize="words" />
         <input id="walkin-last" type="text" class="checkin-input" placeholder="Last Name" autocapitalize="words" />
@@ -111,6 +114,25 @@
       <div class="confirm-actions" style="margin-top:16px;">
         <button id="walkin-cancel" class="checkin-btn checkin-btn-secondary">Cancel</button>
         <button id="walkin-submit" class="checkin-btn checkin-btn-primary">Add &amp; Check In</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Minor Walk-In Overlay ===== -->
+  <div id="walkin-minor-overlay" class="checkin-overlay">
+    <div class="checkin-confirm-card">
+      <div class="confirm-icon">👶</div>
+      <div class="confirm-name">Walk-In Minor</div>
+      <div class="confirm-message">Add a minor under a guardian's email</div>
+      <div class="walkin-form">
+        <input id="walkin-minor-first" type="text" class="checkin-input" placeholder="Minor's First Name" autocapitalize="words" />
+        <input id="walkin-minor-last" type="text" class="checkin-input" placeholder="Minor's Last Name" autocapitalize="words" />
+        <input id="walkin-minor-dob" type="date" class="checkin-input" placeholder="Date of Birth" />
+        <input id="walkin-minor-guardian" type="email" class="checkin-input" placeholder="Guardian's Email" autocapitalize="off" />
+      </div>
+      <div class="confirm-actions" style="margin-top:16px;">
+        <button id="walkin-minor-cancel" class="checkin-btn checkin-btn-secondary">Cancel</button>
+        <button id="walkin-minor-submit" class="checkin-btn checkin-btn-primary">Add Minor</button>
       </div>
     </div>
   </div>

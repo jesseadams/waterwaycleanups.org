@@ -188,6 +188,9 @@
     // Walk-in button
     $('#walkin-btn').addEventListener('click', showWalkInForm);
 
+    // Minor walk-in button
+    $('#walkin-minor-btn').addEventListener('click', showMinorWalkInForm);
+
     // Back button
     $('#checkin-back-btn').addEventListener('click', () => {
       clearInterval(refreshInterval);
@@ -212,8 +215,10 @@
         firstName: a.first_name || '',
         lastName: a.last_name || '',
         email: a.email || '',
+        guardianEmail: a.guardian_email || a.email || '',
         status: a.attendance_status || a.status || 'active',
-        type: a.attendee_type || 'volunteer'
+        type: a.attendee_type || 'volunteer',
+        age: a.age || null
       }));
 
       // Sort: pending first, then checked-in, then no-show
@@ -226,6 +231,16 @@
       console.error('Failed to load attendees:', err);
       showMessage('Failed to load attendees', 'error');
     }
+  }
+
+  /**
+   * Get minors linked to a guardian email for this event.
+   */
+  function getMinorsForGuardian(guardianEmail) {
+    return attendees.filter(a =>
+      a.type === 'minor' &&
+      a.guardianEmail.toLowerCase() === guardianEmail.toLowerCase()
+    );
   }
 
   function updateStats() {
@@ -253,8 +268,22 @@
       return;
     }
 
+    // Collect minor IDs that belong to a guardian in the list so we can
+    // render them nested instead of as standalone cards.
+    const nestedMinorIds = new Set();
+    if (!searchQuery) {
+      filtered.forEach(a => {
+        if (a.type !== 'minor') {
+          getMinorsForGuardian(a.email).forEach(m => nestedMinorIds.add(m.id));
+        }
+      });
+    }
+
     list.innerHTML = '';
     filtered.forEach(a => {
+      // Skip minors that will be shown nested under their guardian
+      if (nestedMinorIds.has(a.id)) return;
+
       const card = document.createElement('div');
       const statusClass = a.status === 'attended' ? 'status-checked-in'
         : a.status === 'no_show' ? 'status-no-show'
@@ -269,10 +298,12 @@
         : a.status === 'no_show' ? 'No Show'
         : 'Tap to Check In';
 
+      const typeLabel = a.type === 'minor' ? ` <span class="attendee-type-badge">Minor${a.age ? ', ' + a.age : ''}</span>` : '';
+
       card.innerHTML = `
         <div class="attendee-avatar">${initials}</div>
         <div class="attendee-info">
-          <div class="attendee-name">${escapeHtml(a.firstName)} ${escapeHtml(a.lastName)}</div>
+          <div class="attendee-name">${escapeHtml(a.firstName)} ${escapeHtml(a.lastName)}${typeLabel}</div>
           <div class="attendee-email">${escapeHtml(a.email)}</div>
         </div>
         <div class="attendee-status-badge ${badgeClass}">${badgeText}</div>
@@ -283,13 +314,66 @@
       }
 
       list.appendChild(card);
+
+      // Render nested minors under this guardian (only when not searching)
+      if (a.type !== 'minor' && !searchQuery) {
+        const minors = getMinorsForGuardian(a.email).filter(m => m.status !== 'cancelled');
+        minors.forEach(m => {
+          const mCard = document.createElement('div');
+          const mStatusClass = m.status === 'attended' ? 'status-checked-in'
+            : m.status === 'no_show' ? 'status-no-show'
+            : 'status-pending';
+          mCard.className = `checkin-attendee-card checkin-minor-card ${mStatusClass}`;
+
+          const mInitials = ((m.firstName[0] || '') + (m.lastName[0] || '')).toUpperCase() || '?';
+          const mBadgeClass = m.status === 'attended' ? 'badge-checked-in'
+            : m.status === 'no_show' ? 'badge-no-show'
+            : 'badge-pending';
+          const mBadgeText = m.status === 'attended' ? '✓ Checked In'
+            : m.status === 'no_show' ? 'No Show'
+            : 'Included';
+
+          mCard.innerHTML = `
+            <div class="minor-indent">↳</div>
+            <div class="attendee-avatar minor-avatar">${mInitials}</div>
+            <div class="attendee-info">
+              <div class="attendee-name">${escapeHtml(m.firstName)} ${escapeHtml(m.lastName)} <span class="attendee-type-badge">Minor${m.age ? ', ' + m.age : ''}</span></div>
+            </div>
+            <div class="attendee-status-badge ${mBadgeClass}">${mBadgeText}</div>
+          `;
+          list.appendChild(mCard);
+        });
+
+        // Add minor button for this guardian
+        const addMinorBtn = document.createElement('button');
+        addMinorBtn.className = 'checkin-add-minor-btn';
+        addMinorBtn.innerHTML = '↳ + Add Minor';
+        addMinorBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showMinorWalkInForm(a.email);
+        });
+        list.appendChild(addMinorBtn);
+      }
     });
   }
 
   // ===== Confirm Check-In =====
   function confirmCheckIn(attendee) {
     const overlay = $('#confirm-overlay');
-    $('#confirm-name').textContent = `${attendee.firstName} ${attendee.lastName}`;
+
+    // Find active minors linked to this guardian
+    const activeMinors = attendee.type !== 'minor'
+      ? getMinorsForGuardian(attendee.email).filter(m => m.status === 'active')
+      : [];
+
+    // Build confirmation message
+    let nameHtml = `${escapeHtml(attendee.firstName)} ${escapeHtml(attendee.lastName)}`;
+    if (activeMinors.length > 0) {
+      const minorNames = activeMinors.map(m => escapeHtml(`${m.firstName} ${m.lastName}`));
+      nameHtml += `<div class="confirm-minors">+ ${minorNames.join(', ')}</div>`;
+    }
+    $('#confirm-name').innerHTML = nameHtml;
+
     show(overlay);
 
     const confirmBtn = $('#confirm-yes');
@@ -306,9 +390,23 @@
       newConfirm.disabled = true;
       newConfirm.textContent = 'Checking in...';
       try {
+        // Check in the guardian/volunteer
         await window.eventsAPI.confirmAttendance(selectedEvent.event_id, attendee.id);
+
+        // Check in all their active minors too
+        for (const minor of activeMinors) {
+          try {
+            await window.eventsAPI.confirmAttendance(selectedEvent.event_id, minor.id);
+          } catch (err) {
+            console.error(`Failed to check in minor ${minor.firstName}:`, err);
+          }
+        }
+
         hide(overlay);
-        showSuccess(attendee.firstName, attendee.lastName);
+        const successLabel = activeMinors.length > 0
+          ? `${attendee.firstName} + ${activeMinors.length} minor${activeMinors.length > 1 ? 's' : ''}`
+          : attendee.firstName;
+        showSuccess(successLabel, attendee.lastName);
         await loadAttendees();
       } catch (err) {
         showMessage(err.message || 'Check-in failed', 'error');
@@ -386,6 +484,83 @@
       } finally {
         newSubmit.disabled = false;
         newSubmit.textContent = 'Add & Check In';
+      }
+    });
+  }
+
+  // ===== Minor Walk-In Form =====
+  function showMinorWalkInForm(prefillGuardianEmail) {
+    const overlay = $('#walkin-minor-overlay');
+    show(overlay);
+    $('#walkin-minor-first').value = '';
+    $('#walkin-minor-last').value = '';
+    $('#walkin-minor-dob').value = '';
+    $('#walkin-minor-guardian').value = prefillGuardianEmail || '';
+    $('#walkin-minor-first').focus();
+
+    const submitBtn = $('#walkin-minor-submit');
+    const cancelBtn = $('#walkin-minor-cancel');
+
+    const newSubmit = submitBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    submitBtn.replaceWith(newSubmit);
+    cancelBtn.replaceWith(newCancel);
+
+    newCancel.addEventListener('click', () => hide(overlay));
+    newSubmit.addEventListener('click', async () => {
+      const firstName = $('#walkin-minor-first').value.trim();
+      const lastName = $('#walkin-minor-last').value.trim();
+      const dob = $('#walkin-minor-dob').value.trim();
+      const guardianEmail = $('#walkin-minor-guardian').value.trim().toLowerCase();
+
+      if (!firstName || !lastName) {
+        showMessage('First and last name are required', 'error');
+        return;
+      }
+      if (!dob) {
+        showMessage('Date of birth is required', 'error');
+        return;
+      }
+      // Validate age is under 18
+      const dobDate = new Date(dob + 'T00:00:00');
+      const today = new Date();
+      let age = today.getFullYear() - dobDate.getFullYear();
+      const monthDiff = today.getMonth() - dobDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dobDate.getDate())) {
+        age--;
+      }
+      if (age < 0 || age >= 18) {
+        showMessage('Minor must be under 18', 'error');
+        return;
+      }
+      if (!guardianEmail) {
+        showMessage("Guardian's email is required", 'error');
+        return;
+      }
+
+      newSubmit.disabled = true;
+      newSubmit.textContent = 'Adding...';
+      try {
+        const result = await window.eventsAPI.addMinor(selectedEvent.event_id, firstName, lastName, guardianEmail, dob);
+
+        // If the guardian is already checked in, auto-check in the minor too
+        const guardian = attendees.find(a => a.email.toLowerCase() === guardianEmail && a.type !== 'minor');
+        if (guardian && guardian.status === 'attended' && result.attendee_id) {
+          try {
+            await window.eventsAPI.confirmAttendance(selectedEvent.event_id, result.attendee_id);
+          } catch (err) {
+            console.error('Failed to auto-check-in minor:', err);
+          }
+        }
+
+        hide(overlay);
+        showSuccess(firstName, `${lastName} (minor)`);
+        await loadAttendees();
+      } catch (err) {
+        showMessage(err.message || 'Failed to add minor walk-in', 'error');
+      } finally {
+        newSubmit.disabled = false;
+        newSubmit.textContent = 'Add Minor';
       }
     });
   }

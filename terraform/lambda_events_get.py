@@ -9,7 +9,9 @@ from decimal import Decimal
 # Initialize DynamoDB client
 dynamodb = boto3.resource('dynamodb')
 events_table_name = os.environ.get('EVENTS_TABLE_NAME')
+rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME')
 events_table = dynamodb.Table(events_table_name)
+rsvps_table = dynamodb.Table(rsvps_table_name)
 
 def decimal_default(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -33,6 +35,27 @@ def convert_decimals(obj):
             return float(obj)
     else:
         return obj
+
+
+def get_rsvp_count(event_id):
+    """Get count of active (non-cancelled) RSVPs for an event."""
+    try:
+        response = rsvps_table.query(
+            KeyConditionExpression=Key('event_id').eq(event_id),
+            Select='COUNT',
+            FilterExpression=Attr('status').ne('cancelled')
+        )
+        return response.get('Count', 0)
+    except ClientError as e:
+        print(f"Error counting RSVPs for {event_id}: {e}")
+        return 0
+
+
+def enrich_events_with_rsvp_counts(events):
+    """Add rsvp_count to each event dict."""
+    for event in events:
+        event['rsvp_count'] = get_rsvp_count(event['event_id'])
+    return events
 
 def handler(event, context):
     """
@@ -67,11 +90,13 @@ def handler(event, context):
             try:
                 response = events_table.get_item(Key={'event_id': event_id})
                 if 'Item' in response:
+                    item = response['Item']
+                    item['rsvp_count'] = get_rsvp_count(event_id)
                     return {
                         'statusCode': 200,
                         'headers': headers,
                         'body': json.dumps({
-                            'event': convert_decimals(response['Item']),
+                            'event': convert_decimals(item),
                             'success': True
                         }, default=decimal_default)
                     }
@@ -155,6 +180,9 @@ def handler(event, context):
         
         # Sort events by start_time (chronological order)
         events.sort(key=lambda x: x.get('start_time', ''))
+        
+        # Enrich with RSVP counts
+        enrich_events_with_rsvp_counts(events)
         
         return {
             'statusCode': 200,
