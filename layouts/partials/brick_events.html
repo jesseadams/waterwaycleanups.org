@@ -51,12 +51,12 @@
                                 {{ $tabSections := split $tabsContent "##" }}
                                 {{ if gt (len $tabSections) 1 }}
                                     {{ $eventDetailsSection := index $tabSections 1 }}
-                                    {{ $eventDetails = $eventDetailsSection | replaceRE `(?s)Event Details(.*?)---` "$1" | plainify | strings.TrimSpace }}
+                                    {{ $eventDetails = trim ($eventDetailsSection | replaceRE `(?s)Event Details(.*?)---` "$1" | plainify) " \n\r\t" }}
                                 {{ end }}
                             {{ end }}
 
                             {{ if eq $eventDetails "" }}
-                                {{ $eventDetails = .Content | plainify | replaceRE `##[\s\w]+` "" | replaceRE `\s+` " " | strings.TrimSpace }}
+                                {{ $eventDetails = trim (.Content | plainify | replaceRE `##[\s\w]+` "" | replaceRE `\s+` " ") " \n\r\t" }}
                             {{ end }}
 
                             <p>{{ $eventDetails | truncate 140 }}...</p>

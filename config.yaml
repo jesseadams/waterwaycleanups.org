@@ -31,17 +31,5 @@ languages:
     weight: 1
     disabled: false
     permalinks:
-      page:
-        posts: /blog/:slug
-        services: /services/:slug
-        products: /webshop/:slug
-        events: /events/:slug
-        projects: /projects/:slug
-        merchandise: /merchandise/:slug
-      section:
-        posts: /blog/
-        services: /services/
-        products: /webshop/
-        events: /events/
-        projects: /projects/
-        merchandise: /merchandise/
+      events: /events/:slug
+      merchandise: /merchandise/:slug
