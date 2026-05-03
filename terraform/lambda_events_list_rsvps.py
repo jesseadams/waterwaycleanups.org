@@ -108,6 +108,21 @@ def handler(event, context):
                     if 'Item' in volunteer_response:
                         volunteer = volunteer_response['Item']
                         
+                        # Resolve names: prefer RSVP, fall back to volunteer record
+                        resolved_first = rsvp.get('first_name') or volunteer.get('first_name') or ''
+                        resolved_last = rsvp.get('last_name') or volunteer.get('last_name') or ''
+                        
+                        # Backfill empty RSVP names from volunteer record (one-time fix)
+                        if (resolved_first or resolved_last) and (not rsvp.get('first_name') or not rsvp.get('last_name')):
+                            try:
+                                rsvps_table.update_item(
+                                    Key={'event_id': rsvp['event_id'], 'attendee_id': rsvp.get('attendee_id', rsvp['email'])},
+                                    UpdateExpression='SET first_name = :fn, last_name = :ln',
+                                    ExpressionAttributeValues={':fn': resolved_first, ':ln': resolved_last}
+                                )
+                            except Exception as backfill_err:
+                                print(f"Warning: could not backfill name for {rsvp['email']}: {backfill_err}")
+                        
                         # Check waiver status
                         has_waiver = False
                         if rsvp['email']:
@@ -140,8 +155,8 @@ def handler(event, context):
                             'hours_before_event': rsvp.get('hours_before_event'),
                             'additional_comments': rsvp.get('additional_comments'),
                             # Volunteer data — prefer RSVP names, fall back to volunteer table
-                            'first_name': rsvp.get('first_name') or volunteer.get('first_name'),
-                            'last_name': rsvp.get('last_name') or volunteer.get('last_name'),
+                            'first_name': resolved_first,
+                            'last_name': resolved_last,
                             'volunteer_name': volunteer.get('full_name', f"{volunteer.get('first_name', '')} {volunteer.get('last_name', '')}").strip(),
                             'volunteer_first_name': volunteer.get('first_name'),
                             'volunteer_last_name': volunteer.get('last_name'),

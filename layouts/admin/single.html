@@ -2596,7 +2596,7 @@
                         const isWalkIn = rsvp.walk_in === true;
                         const hasWaiver = rsvp.has_waiver === true;
                         const isUpdating = noShowUpdating === attendeeId || attendanceUpdating === attendeeId;
-                        const displayName = `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || rsvp.volunteer_name || 'Unknown';
+                        const displayName = `${rsvp.first_name || rsvp.volunteer_first_name || ''} ${rsvp.last_name || rsvp.volunteer_last_name || ''}`.trim() || rsvp.volunteer_name || rsvp.email || rsvp.attendee_id || 'Unknown';
                         return React.createElement('tr', {
                           key: attendeeId || idx,
                           className: `border-b ${isMinorRow ? 'bg-indigo-50/40' : ''} ${isNoShow ? 'bg-red-50' : isAttended ? 'bg-green-50' : isCancelled ? 'bg-gray-50' : ''}`
