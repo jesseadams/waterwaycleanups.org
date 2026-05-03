@@ -16,6 +16,7 @@
   let searchQuery = '';
   let successTimeout = null;
   let refreshInterval = null;
+  let loadAttendeesFailCount = 0;
 
   // ===== DOM Helpers =====
   const $ = (sel, ctx) => (ctx || document).querySelector(sel);
@@ -225,11 +226,19 @@
       const order = { active: 0, attended: 1, no_show: 2, cancelled: 3 };
       attendees.sort((a, b) => (order[a.status] || 0) - (order[b.status] || 0));
 
+      loadAttendeesFailCount = 0;
       updateStats();
       renderAttendees();
     } catch (err) {
-      console.error('Failed to load attendees:', err);
-      showMessage('Failed to load attendees', 'error');
+      loadAttendeesFailCount++;
+      console.error(`Failed to load attendees (attempt ${loadAttendeesFailCount}):`, err);
+      // Only show error on first load (empty list) or after multiple consecutive failures
+      if (attendees.length === 0) {
+        showMessage('Failed to load attendees. Retrying...', 'error');
+      } else if (loadAttendeesFailCount >= 3) {
+        showMessage('Connection issues — data may be stale', 'error');
+        loadAttendeesFailCount = 0; // Reset so we don't spam
+      }
     }
   }
 

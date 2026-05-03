@@ -100,21 +100,40 @@ class EventsAPIClient {
             ...options
         };
 
-        try {
-            const response = await fetch(url, config);
-            const data = await response.json();
+        const maxRetries = options._retries ?? 2;
+        let lastError;
 
-            if (!response.ok) {
-                throw new APIError(data.error || 'Request failed', response.status, data.error_code);
-            }
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
 
-            return data;
-        } catch (error) {
-            if (error instanceof APIError) {
-                throw error;
+                if (!response.ok) {
+                    // Don't retry 4xx client errors (except 429 rate limit)
+                    if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+                        throw new APIError(data.error || 'Request failed', response.status, data.error_code);
+                    }
+                    throw new APIError(data.error || 'Request failed', response.status, data.error_code);
+                }
+
+                return data;
+            } catch (error) {
+                lastError = error instanceof APIError ? error
+                    : new APIError('Network error or invalid response', 0, 'NETWORK_ERROR');
+
+                // Don't retry client errors (except rate limit)
+                if (lastError.statusCode >= 400 && lastError.statusCode < 500 && lastError.statusCode !== 429) {
+                    throw lastError;
+                }
+
+                if (attempt < maxRetries) {
+                    const delay = Math.min(1000 * Math.pow(2, attempt), 5000);
+                    await new Promise(r => setTimeout(r, delay));
+                }
             }
-            throw new APIError('Network error or invalid response', 0, 'NETWORK_ERROR');
         }
+
+        throw lastError;
     }
 
     // ===== EVENT METHODS =====

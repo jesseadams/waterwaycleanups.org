@@ -2724,14 +2724,30 @@
                             React.createElement('td', { key: 'date', className: "py-2 px-3 text-gray-400" }, '—'),
                             React.createElement('td', { key: 'actions', className: "py-2 px-3 text-right" },
                               React.createElement('button', {
-                                onClick: () => {
-                                  setMinorData({ first_name: am.first_name || '', last_name: am.last_name || '', guardian_email: g.email, date_of_birth: am.date_of_birth || '' });
-                                  setShowMinorForm(true);
-                                  setShowWalkInForm(false);
+                                onClick: async () => {
+                                  try {
+                                    setAttendanceUpdating(`am-${amIdx}`);
+                                    setError('');
+                                    await window.eventsAPI.addMinor(
+                                      selectedEventForRSVPs.event_id,
+                                      (am.first_name || '').trim(),
+                                      (am.last_name || '').trim(),
+                                      g.email.trim(),
+                                      am.date_of_birth || ''
+                                    );
+                                    setSuccess(`${am.first_name} ${am.last_name} added to event`);
+                                    await refreshRSVPs();
+                                  } catch (err) {
+                                    console.error('Error adding minor to event:', err);
+                                    setError(err.message || 'Failed to add minor to event');
+                                  } finally {
+                                    setAttendanceUpdating(null);
+                                  }
                                 },
-                                className: "bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600",
+                                disabled: attendanceUpdating === `am-${amIdx}`,
+                                className: "bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600 disabled:opacity-50",
                                 title: "Add this minor to the event"
-                              }, '+ Add to event')
+                              }, attendanceUpdating === `am-${amIdx}` ? 'Adding...' : '+ Add to event')
                             )
                           ]));
                         });
