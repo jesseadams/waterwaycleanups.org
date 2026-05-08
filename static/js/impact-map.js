@@ -18,6 +18,19 @@
   };
 
   /**
+   * Format a label for display in popups.
+   * If the label is a URL, render it as a clickable "Link" hyperlink.
+   */
+  function formatLabel(label) {
+    if (!label) return '';
+    var trimmed = label.trim();
+    if (/^https?:\/\//i.test(trimmed)) {
+      return '<a href="' + trimmed + '" target="_blank" rel="noopener noreferrer" style="color:#2563eb;text-decoration:underline;">Link</a>';
+    }
+    return label;
+  }
+
+  /**
    * Calculate distance between two [lat, lng] points using Haversine formula.
    * Returns distance in miles.
    */
@@ -114,7 +127,7 @@
         polygon.bindPopup(
           '<div class="impact-popup">' +
           '<strong>Focus Area</strong><br>' +
-          zone.label + '<br>' +
+          formatLabel(zone.label) + '<br>' +
           '<span class="impact-popup-miles">~' + perim.toFixed(2) + ' mi perimeter</span>' +
           '</div>'
         );
@@ -137,7 +150,7 @@
         polyline.bindPopup(
           '<div class="impact-popup">' +
           '<strong>Cleanup Path</strong><br>' +
-          path.label + '<br>' +
+          formatLabel(path.label) + '<br>' +
           '<span class="impact-popup-miles">' + miles.toFixed(2) + ' miles</span>' +
           '</div>'
         );
@@ -161,7 +174,7 @@
         marker.bindPopup(
           '<div class="impact-popup">' +
           '<span class="impact-popup-icon" style="color:' + COLORS.parking + '">&#9679;</span> ' +
-          '<strong>Parking</strong><br>' + spot.label +
+          '<strong>Parking</strong><br>' + formatLabel(spot.label) +
           '</div>'
         );
 
@@ -185,7 +198,7 @@
         marker.bindPopup(
           '<div class="impact-popup">' +
           '<span style="color:' + COLORS.meetingSpot + '; font-size: 1.2em;">★</span> ' +
-          '<strong>Meeting Spot</strong><br>' + spot.label +
+          '<strong>Meeting Spot</strong><br>' + formatLabel(spot.label) +
           '</div>'
         );
 
