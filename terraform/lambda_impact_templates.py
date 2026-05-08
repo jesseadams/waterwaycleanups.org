@@ -98,10 +98,21 @@ def handle_list(params):
         return respond(500, {'success': False, 'message': 'Failed to list templates'})
 
 
-def handle_get(template_id):
+def handle_get(template_id, version=None):
     try:
-        result = impact_templates_table.get_item(Key={'template_id': template_id})
+        # If a specific version is requested, fetch the versioned snapshot
+        lookup_id = template_id
+        if version:
+            lookup_id = f"{template_id}:v{version}"
+
+        result = impact_templates_table.get_item(Key={'template_id': lookup_id})
         item = result.get('Item')
+
+        # If versioned lookup failed, fall back to latest
+        if not item and version:
+            result = impact_templates_table.get_item(Key={'template_id': template_id})
+            item = result.get('Item')
+
         if not item:
             return respond(404, {'success': False, 'message': 'Template not found'})
         return respond(200, {'success': True, 'template': item})
@@ -124,7 +135,7 @@ def handle_save(body, session):
     except Exception:
         pass
 
-    new_version = template.get('version', existing_version + 1)
+    new_version = existing_version + 1
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc).isoformat()
 
@@ -146,7 +157,14 @@ def handle_save(body, session):
     # Convert any floats in features to Decimal for DynamoDB
     item = json.loads(json.dumps(item, cls=DecimalEncoder), parse_float=Decimal)
 
+    # Save as the "latest" record (overwrites current)
     impact_templates_table.put_item(Item=item)
+
+    # Also save a versioned snapshot so older events can reference it
+    versioned_item = dict(item)
+    versioned_item['template_id'] = f"{template['id']}:v{new_version}"
+    impact_templates_table.put_item(Item=versioned_item)
+
     return respond(200, {
         'success': True,
         'template_id': template['id'],
@@ -174,8 +192,9 @@ def handler(event, context):
     if http_method == 'GET':
         params = event.get('queryStringParameters') or {}
         template_id = params.get('id')
+        version = params.get('version')
         if template_id:
-            return handle_get(template_id)
+            return handle_get(template_id, version)
         return handle_list(params)
 
     # POST requests require admin auth

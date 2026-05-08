@@ -159,7 +159,7 @@
 </script>
 {{ else }}
 {{- /* Template not in local Hugo data - load from DynamoDB API at runtime */ -}}
-<div class="impact-map-widget" data-template-id="{{ $template_id }}">
+<div class="impact-map-widget" data-template-id="{{ $template_id }}"{{ if $version }} data-template-version="{{ $version }}"{{ end }}>
   <div class="impact-map-header">
     <h4>🗺️ Impact Map</h4>
     <div class="impact-map-legend">

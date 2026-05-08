@@ -239,12 +239,17 @@
       if (widget.hasAttribute('data-inline')) return;
 
       var templateId = widget.getAttribute('data-template-id');
+      var templateVersion = widget.getAttribute('data-template-version');
       var templateSrc = widget.getAttribute('data-template');
 
       if (templateId) {
-        // Load from API by template ID
+        // Load from API by template ID (and optionally version)
         var apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
-        fetch(apiBase + '/impact-templates?id=' + encodeURIComponent(templateId))
+        var url = apiBase + '/impact-templates?id=' + encodeURIComponent(templateId);
+        if (templateVersion) {
+          url += '&version=' + encodeURIComponent(templateVersion);
+        }
+        fetch(url)
           .then(function (res) {
             if (!res.ok) throw new Error('Failed to load impact template');
             return res.json();
