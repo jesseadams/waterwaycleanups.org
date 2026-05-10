@@ -308,6 +308,33 @@
 <script src="/js/auth-client.js"></script>
 
 <script>
+  // Admin auth gate — redirect to /admin if not authenticated
+  (function() {
+    var token = localStorage.getItem('auth_session_token');
+    if (!token) {
+      window.location.replace('/admin/?return=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+    // Validate the session is still active and is an admin
+    var apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
+    fetch(apiBase + '/auth-validate-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_token: token })
+    }).then(function(res) { return res.json(); }).then(function(data) {
+      if (!data.valid) {
+        localStorage.removeItem('auth_session_token');
+        window.location.replace('/admin/?return=' + encodeURIComponent(window.location.pathname));
+      } else {
+        // Session valid — show the editor
+        document.getElementById('impact-editor-root').style.display = '';
+      }
+    }).catch(function() {
+      // Network error — show editor anyway (save will fail if truly unauthorized)
+      document.getElementById('impact-editor-root').style.display = '';
+    });
+  })();
+
   var editorContainer = document.getElementById('impact-editor-root');
   var lastExportedJson = null;
   var AVAILABLE_TEMPLATES = {};
