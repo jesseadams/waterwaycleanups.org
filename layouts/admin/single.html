@@ -1004,8 +1004,10 @@
                 const currentVersion = parseInt(formData.impact_template_version) || latestVersion;
                 // Build version options: current version + latest (if different)
                 const versionOptions = [];
-                for (let v = 1; v <= latestVersion; v++) {
+                var v = 1;
+                while (v < latestVersion + 1) {
                   versionOptions.push(v);
+                  v++;
                 }
                 return React.createElement('div', { key: 'version-select', className: "mt-1 flex items-center gap-2" }, [
                   React.createElement('label', { key: 'vl', className: "text-xs text-gray-600" }, 'Version:'),
