@@ -994,18 +994,32 @@
                 React.createElement('option', { key: 'none', value: '' }, '— None —'),
                 ...impactTemplates.map(t =>
                   React.createElement('option', { key: t.template_id, value: t.template_id },
-                    `${t.name} (v${t.version}) — ${t.estimated_miles || 0} mi`
+                    `${t.name} — ${t.estimated_miles || 0} mi`
                   )
                 )
               ]),
               formData.impact_template ? (() => {
                 const tmpl = impactTemplates.find(t => t.template_id === formData.impact_template);
-                const latestVersion = tmpl ? tmpl.version : null;
+                const latestVersion = tmpl ? parseInt(tmpl.version) : 1;
                 const currentVersion = parseInt(formData.impact_template_version) || latestVersion;
-                const isLatest = !latestVersion || currentVersion >= latestVersion;
-                return React.createElement('span', { key: 'version-info', className: "text-xs text-gray-500 mt-1 block" },
-                  `Using v${currentVersion}${isLatest ? ' (latest)' : ` — latest is v${latestVersion}`}`
-                );
+                // Build version options: current version + latest (if different)
+                const versionOptions = [];
+                for (let v = 1; v <= latestVersion; v++) {
+                  versionOptions.push(v);
+                }
+                return React.createElement('div', { key: 'version-select', className: "mt-1 flex items-center gap-2" }, [
+                  React.createElement('label', { key: 'vl', className: "text-xs text-gray-600" }, 'Version:'),
+                  React.createElement('select', {
+                    key: 'vs',
+                    value: String(currentVersion),
+                    onChange: (e) => setFormData(prev => ({ ...prev, impact_template_version: e.target.value })),
+                    className: "px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                  }, versionOptions.map(v =>
+                    React.createElement('option', { key: v, value: String(v) },
+                      `v${v}${v === latestVersion ? ' (latest)' : ''}`
+                    )
+                  ))
+                ]);
               })() : null
             ]),
             React.createElement('div', { key: 'private', className: "flex items-center space-x-3 pt-2" }, [
