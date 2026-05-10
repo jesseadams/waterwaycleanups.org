@@ -7,10 +7,16 @@ resource "aws_dynamodb_table" "impact_templates" {
   name         = "impact_templates${local.dynamodb_suffix}"
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "template_id"
+  range_key    = "version"
 
   attribute {
     name = "template_id"
     type = "S"
+  }
+
+  attribute {
+    name = "version"
+    type = "N"
   }
 
   point_in_time_recovery {
@@ -61,6 +67,7 @@ resource "aws_iam_policy" "impact_templates_lambda_policy" {
           "dynamodb:GetItem",
           "dynamodb:PutItem",
           "dynamodb:DeleteItem",
+          "dynamodb:Query",
           "dynamodb:Scan"
         ],
         Resource = [

@@ -86,12 +86,22 @@ def validate_admin_session(token):
 
 def handle_list(params):
     try:
-        scan_kwargs = {}
+        result = impact_templates_table.scan()
+        all_items = result.get('Items', [])
+        
+        # Group by template_id and pick the highest version for each
+        latest = {}
+        for item in all_items:
+            tid = item['template_id']
+            ver = item.get('version', 0)
+            if tid not in latest or ver > latest[tid].get('version', 0):
+                latest[tid] = item
+        
+        templates = sorted(latest.values(), key=lambda t: t.get('updated_at', ''), reverse=True)
+        
         if params and params.get('reusable') == 'true':
-            scan_kwargs['FilterExpression'] = boto3.dynamodb.conditions.Attr('reusable').eq(True)
-
-        result = impact_templates_table.scan(**scan_kwargs)
-        templates = sorted(result.get('Items', []), key=lambda t: t.get('updated_at', ''), reverse=True)
+            templates = [t for t in templates if t.get('reusable') == True]
+        
         return respond(200, {'success': True, 'templates': templates, 'count': len(templates)})
     except Exception as e:
         print(f'Error listing templates: {e}')
@@ -100,18 +110,19 @@ def handle_list(params):
 
 def handle_get(template_id, version=None):
     try:
-        # If a specific version is requested, fetch the versioned snapshot
-        lookup_id = template_id
         if version:
-            lookup_id = f"{template_id}:v{version}"
-
-        result = impact_templates_table.get_item(Key={'template_id': lookup_id})
-        item = result.get('Item')
-
-        # If versioned lookup failed, fall back to latest
-        if not item and version:
-            result = impact_templates_table.get_item(Key={'template_id': template_id})
+            # Fetch specific version
+            result = impact_templates_table.get_item(Key={'template_id': template_id, 'version': int(version)})
             item = result.get('Item')
+        else:
+            # Fetch latest version (query descending by version, limit 1)
+            result = impact_templates_table.query(
+                KeyConditionExpression=Key('template_id').eq(template_id),
+                ScanIndexForward=False,
+                Limit=1
+            )
+            items = result.get('Items', [])
+            item = items[0] if items else None
 
         if not item:
             return respond(404, {'success': False, 'message': 'Template not found'})
@@ -126,24 +137,33 @@ def handle_save(body, session):
     if not template or not template.get('id') or not template.get('name'):
         return respond(400, {'success': False, 'message': 'Template with id and name is required'})
 
-    # Check existing version for auto-increment
+    # Strip any legacy version suffix from the ID
+    import re
+    base_id = re.sub(r':v\d+$', '', template['id'])
+
+    # Get the current highest version for this template
     existing_version = 0
     try:
-        existing = impact_templates_table.get_item(Key={'template_id': template['id']})
-        if existing.get('Item'):
-            existing_version = existing['Item'].get('version', 0)
-    except Exception:
-        pass
+        result = impact_templates_table.query(
+            KeyConditionExpression=Key('template_id').eq(base_id),
+            ScanIndexForward=False,
+            Limit=1
+        )
+        items = result.get('Items', [])
+        if items:
+            existing_version = items[0].get('version', 0)
+    except Exception as e:
+        print(f"Error querying existing versions for {base_id}: {e}")
 
     new_version = existing_version + 1
     from datetime import datetime, timezone
     now = datetime.now(timezone.utc).isoformat()
 
     item = {
-        'template_id': template['id'],
+        'template_id': base_id,
+        'version': new_version,
         'name': template['name'],
         'description': template.get('description', ''),
-        'version': new_version,
         'created_at': template.get('created_at', now),
         'updated_at': now,
         'updated_by': session.get('email', ''),
@@ -157,17 +177,11 @@ def handle_save(body, session):
     # Convert any floats in features to Decimal for DynamoDB
     item = json.loads(json.dumps(item, cls=DecimalEncoder), parse_float=Decimal)
 
-    # Save as the "latest" record (overwrites current)
     impact_templates_table.put_item(Item=item)
-
-    # Also save a versioned snapshot so older events can reference it
-    versioned_item = dict(item)
-    versioned_item['template_id'] = f"{template['id']}:v{new_version}"
-    impact_templates_table.put_item(Item=versioned_item)
 
     return respond(200, {
         'success': True,
-        'template_id': template['id'],
+        'template_id': base_id,
         'version': new_version,
         'message': f"Template saved (v{new_version})"
     })
@@ -178,8 +192,25 @@ def handle_delete(body, session):
     if not template_id:
         return respond(400, {'success': False, 'message': 'template_id required'})
 
-    impact_templates_table.delete_item(Key={'template_id': template_id})
-    return respond(200, {'success': True, 'message': f'Template {template_id} deleted'})
+    # Strip any legacy version suffix
+    import re
+    base_id = re.sub(r':v\d+$', '', template_id)
+
+    # Delete all versions of this template
+    try:
+        result = impact_templates_table.query(
+            KeyConditionExpression=Key('template_id').eq(base_id)
+        )
+        items = result.get('Items', [])
+        for item in items:
+            impact_templates_table.delete_item(Key={
+                'template_id': base_id,
+                'version': item['version']
+            })
+        return respond(200, {'success': True, 'message': f'Template {base_id} deleted ({len(items)} version(s))'})
+    except Exception as e:
+        print(f'Error deleting template: {e}')
+        return respond(500, {'success': False, 'message': f'Failed to delete template: {str(e)}'})
 
 
 def handler(event, context):

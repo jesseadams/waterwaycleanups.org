@@ -998,9 +998,25 @@
                   )
                 )
               ]),
-              formData.impact_template ? React.createElement('p', {
-                key: 'hint', className: "text-xs text-gray-500 mt-1"
-              }, `Version: ${formData.impact_template_version || 'latest'}`) : null
+              formData.impact_template ? (() => {
+                const tmpl = impactTemplates.find(t => t.template_id === formData.impact_template);
+                const latestVersion = tmpl ? tmpl.version : null;
+                const currentVersion = parseInt(formData.impact_template_version) || latestVersion;
+                const hasNewer = latestVersion && currentVersion < latestVersion;
+                return React.createElement('div', { key: 'version-info', className: "mt-1 flex items-center gap-2" },
+                  [
+                    React.createElement('span', { key: 'ver', className: "text-xs text-gray-600" },
+                      `Pinned to v${currentVersion}${hasNewer ? ` (latest: v${latestVersion})` : ' (latest)'}`
+                    ),
+                    hasNewer ? React.createElement('button', {
+                      key: 'upgrade',
+                      type: 'button',
+                      onClick: () => setFormData(prev => ({ ...prev, impact_template_version: String(latestVersion) })),
+                      className: "text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded hover:bg-blue-200"
+                    }, `Upgrade to v${latestVersion}`) : null
+                  ]
+                );
+              })() : null
             ]),
             React.createElement('div', { key: 'private', className: "flex items-center space-x-3 pt-2" }, [
               React.createElement('input', {
