@@ -2914,13 +2914,29 @@
                     React.createElement('option', { key: 'none', value: '' }, '— None —'),
                     ...impactTemplates.map(t =>
                       React.createElement('option', { key: t.template_id, value: t.template_id },
-                        `${t.name} (v${t.version}) — ${t.estimated_miles || 0} mi`
+                        `${t.name} — ${t.estimated_miles || 0} mi`
                       )
                     )
                   ]),
-                  eventFormData.impact_template ? React.createElement('p', {
-                    key: 'hint', className: "text-xs text-gray-500 mt-1"
-                  }, `Version: ${eventFormData.impact_template_version || 'latest'}`) : null
+                  eventFormData.impact_template ? (() => {
+                    const tmpl = impactTemplates.find(t => t.template_id === eventFormData.impact_template);
+                    const latestVersion = tmpl ? parseInt(tmpl.version) : 1;
+                    const currentVersion = parseInt(eventFormData.impact_template_version) || latestVersion;
+                    const versionOptions = Array.from({length: latestVersion}, function(_, i) { return i + 1; });
+                    return React.createElement('div', { key: 'version-select', className: "mt-1 flex items-center gap-2" }, [
+                      React.createElement('label', { key: 'vl', className: "text-xs text-gray-600" }, 'Version:'),
+                      React.createElement('select', {
+                        key: 'vs',
+                        value: String(currentVersion),
+                        onChange: (e) => setEventFormData({...eventFormData, impact_template_version: e.target.value}),
+                        className: "px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                      }, versionOptions.map(v =>
+                        React.createElement('option', { key: v, value: String(v) },
+                          'v' + v + (v === latestVersion ? ' (latest)' : '')
+                        )
+                      ))
+                    ]);
+                  })() : null
                 ]),
                 React.createElement('div', { key: 'private-field', className: "flex items-center space-x-3 pt-2" }, [
                   React.createElement('input', {
