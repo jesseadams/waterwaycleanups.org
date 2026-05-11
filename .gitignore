@@ -1,3 +1,6 @@
+# Generated event markdown (created by hugo-generator from DynamoDB)
+content/en/events/*.md
+
 # Dependency directories
 node_modules/
 jspm_packages/

@@ -659,6 +659,9 @@
       });
 
       const [impactTemplates, setImpactTemplates] = useState([]);
+      const [expandedDiff, setExpandedDiff] = useState(null); // edit_id of expanded diff
+      const [diffData, setDiffData] = useState(null); // { live: {...}, draft: {...} }
+      const [diffLoading, setDiffLoading] = useState(false);
 
       const contentSyncUrl = (() => {
         if (window.API_CONFIG && window.API_CONFIG.BASE_URL) {
@@ -692,6 +695,28 @@
       };
 
       useEffect(() => { loadEdits(); }, []);
+
+      const handleShowDiff = async (edit) => {
+        if (expandedDiff === edit.edit_id) {
+          setExpandedDiff(null);
+          setDiffData(null);
+          return;
+        }
+        setExpandedDiff(edit.edit_id);
+        setDiffLoading(true);
+        try {
+          if (edit.is_new_event) {
+            setDiffData({ live: null, draft: edit.event_data });
+          } else {
+            const data = await apiCall('load_event', { event_id: edit.original_event_id || edit.event_id });
+            setDiffData({ live: data.event, draft: edit.event_data });
+          }
+        } catch (err) {
+          setDiffData({ live: null, draft: edit.event_data, error: err.message });
+        } finally {
+          setDiffLoading(false);
+        }
+      };
 
       // Load impact templates from API
       useEffect(() => {
@@ -1115,47 +1140,108 @@
               ])
             ),
             React.createElement('tbody', { key: 'tbody' },
-              pendingEdits.map(edit => React.createElement('tr', {
-                key: edit.edit_id,
-                className: "border-b hover:bg-gray-50"
-              }, [
-                React.createElement('td', { key: 'type', className: "py-2 px-4" },
-                  React.createElement('span', {
-                    className: `inline-block px-2 py-0.5 text-xs rounded ${
-                      edit.edit_type === 'delete' ? 'bg-red-100 text-red-800' :
-                      edit.edit_type === 'create' ? 'bg-green-100 text-green-800' : 
-                      'bg-yellow-100 text-yellow-800'
-                    }`
-                  }, edit.edit_type === 'delete' ? 'DELETE' : edit.edit_type === 'create' ? 'NEW' : 'EDIT')
-                ),
-                React.createElement('td', { key: 'title', className: "py-2 px-4 font-medium" }, 
-                  edit.event_data?.title || edit.title || 'Untitled'),
-                React.createElement('td', { key: 'file', className: "py-2 px-4 text-gray-600 text-xs font-mono" }, 
-                  edit.event_id || edit.file_path || 'N/A'),
-                React.createElement('td', { key: 'by', className: "py-2 px-4 text-gray-600" }, edit.created_by),
-                React.createElement('td', { key: 'date', className: "py-2 px-4 text-gray-600" },
-                  new Date(edit.updated_at).toLocaleString()),
-                React.createElement('td', { key: 'actions', className: "py-2 px-4 text-right" },
-                  React.createElement('div', { className: "flex justify-end space-x-2" }, [
-                    edit.edit_type !== 'delete' ? React.createElement('button', {
-                      key: 'edit',
-                      onClick: () => handleEditDraft(edit),
-                      className: "bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600"
-                    }, 'Edit') : null,
-                    React.createElement('button', {
-                      key: 'pub',
-                      onClick: () => handlePublishOne(edit.edit_id),
-                      disabled: publishing,
-                      className: "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
-                    }, 'Publish'),
-                    React.createElement('button', {
-                      key: 'del',
-                      onClick: () => handleDeleteEdit(edit.edit_id),
-                      className: "bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
-                    }, 'Discard')
-                  ])
-                )
-              ]))
+              pendingEdits.map(edit => [
+                React.createElement('tr', {
+                  key: edit.edit_id,
+                  className: "border-b hover:bg-gray-50"
+                }, [
+                  React.createElement('td', { key: 'type', className: "py-2 px-4" },
+                    React.createElement('span', {
+                      className: `inline-block px-2 py-0.5 text-xs rounded ${
+                        edit.edit_type === 'delete' ? 'bg-red-100 text-red-800' :
+                        edit.edit_type === 'create' ? 'bg-green-100 text-green-800' : 
+                        'bg-yellow-100 text-yellow-800'
+                      }`
+                    }, edit.edit_type === 'delete' ? 'DELETE' : edit.edit_type === 'create' ? 'NEW' : 'EDIT')
+                  ),
+                  React.createElement('td', { key: 'title', className: "py-2 px-4 font-medium" }, 
+                    edit.event_data?.title || edit.title || 'Untitled'),
+                  React.createElement('td', { key: 'file', className: "py-2 px-4 text-gray-600 text-xs font-mono" }, 
+                    edit.event_id || edit.file_path || 'N/A'),
+                  React.createElement('td', { key: 'by', className: "py-2 px-4 text-gray-600" }, edit.created_by),
+                  React.createElement('td', { key: 'date', className: "py-2 px-4 text-gray-600" },
+                    new Date(edit.updated_at).toLocaleString()),
+                  React.createElement('td', { key: 'actions', className: "py-2 px-4 text-right" },
+                    React.createElement('div', { className: "flex justify-end space-x-2" }, [
+                      React.createElement('button', {
+                        key: 'diff',
+                        onClick: () => handleShowDiff(edit),
+                        className: expandedDiff === edit.edit_id
+                          ? "bg-gray-700 text-white px-3 py-1 rounded text-xs"
+                          : "bg-gray-200 text-gray-700 px-3 py-1 rounded text-xs hover:bg-gray-300"
+                      }, expandedDiff === edit.edit_id ? 'Hide Diff' : 'Diff'),
+                      edit.edit_type !== 'delete' ? React.createElement('button', {
+                        key: 'edit',
+                        onClick: () => handleEditDraft(edit),
+                        className: "bg-yellow-500 text-white px-3 py-1 rounded text-xs hover:bg-yellow-600"
+                      }, 'Edit') : null,
+                      React.createElement('button', {
+                        key: 'pub',
+                        onClick: () => handlePublishOne(edit.edit_id),
+                        disabled: publishing,
+                        className: "bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 disabled:opacity-50"
+                      }, 'Publish'),
+                      React.createElement('button', {
+                        key: 'del',
+                        onClick: () => handleDeleteEdit(edit.edit_id),
+                        className: "bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600"
+                      }, 'Discard')
+                    ])
+                  )
+                ]),
+                expandedDiff === edit.edit_id ? React.createElement('tr', {
+                  key: edit.edit_id + '-diff',
+                  className: "bg-gray-50"
+                },
+                  React.createElement('td', { colSpan: 6, className: "px-4 py-3" },
+                    diffLoading ? React.createElement('div', { className: "text-gray-500 text-sm" }, 'Loading diff...') :
+                    diffData ? (() => {
+                      const live = diffData.live || {};
+                      const draft = diffData.draft || {};
+                      const fields = ['title', 'description', 'start_time', 'end_time', 'attendance_cap', 'status', 'impact_template', 'impact_template_version'];
+                      const locationFields = ['name', 'address'];
+                      const changes = [];
+
+                      fields.forEach(f => {
+                        const liveVal = String(live[f] || '');
+                        const draftVal = String(draft[f] || '');
+                        if (liveVal !== draftVal) {
+                          changes.push({ field: f, from: liveVal || '(empty)', to: draftVal || '(empty)' });
+                        }
+                      });
+                      locationFields.forEach(f => {
+                        const liveVal = String((live.location || {})[f] || '');
+                        const draftVal = String((draft.location || {})[f] || '');
+                        if (liveVal !== draftVal) {
+                          changes.push({ field: 'location.' + f, from: liveVal || '(empty)', to: draftVal || '(empty)' });
+                        }
+                      });
+                      const livePrivate = String(live.private || false);
+                      const draftPrivate = String(draft.private || false);
+                      if (livePrivate !== draftPrivate) {
+                        changes.push({ field: 'private', from: livePrivate, to: draftPrivate });
+                      }
+
+                      if (!diffData.live) {
+                        return React.createElement('div', { className: "text-sm text-green-700" },
+                          edit.edit_type === 'delete' ? '🗑 This event will be deleted.' : '✨ New event — no previous version to compare.'
+                        );
+                      }
+                      if (changes.length === 0) {
+                        return React.createElement('div', { className: "text-sm text-gray-500" }, 'No differences detected.');
+                      }
+                      return React.createElement('div', { className: "space-y-1" },
+                        changes.map(c => React.createElement('div', { key: c.field, className: "text-xs font-mono" }, [
+                          React.createElement('span', { key: 'f', className: "font-semibold text-gray-700" }, c.field + ': '),
+                          React.createElement('span', { key: 'from', className: "text-red-600 line-through" }, c.from),
+                          React.createElement('span', { key: 'arrow', className: "text-gray-400 mx-1" }, ' → '),
+                          React.createElement('span', { key: 'to', className: "text-green-700" }, c.to)
+                        ]))
+                      );
+                    })() : null
+                  )
+                ) : null
+              ]).flat().filter(Boolean)
             )
           ])
         ])
