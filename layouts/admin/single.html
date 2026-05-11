@@ -994,7 +994,7 @@
                 React.createElement('option', { key: 'none', value: '' }, '— None —'),
                 ...impactTemplates.map(t =>
                   React.createElement('option', { key: t.template_id, value: t.template_id },
-                    `${t.name} — ${t.estimated_miles || 0} mi`
+                    t.name
                   )
                 )
               ]),
@@ -2914,7 +2914,7 @@
                     React.createElement('option', { key: 'none', value: '' }, '— None —'),
                     ...impactTemplates.map(t =>
                       React.createElement('option', { key: t.template_id, value: t.template_id },
-                        `${t.name} — ${t.estimated_miles || 0} mi`
+                        t.name
                       )
                     )
                   ]),
