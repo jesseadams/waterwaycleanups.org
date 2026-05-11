@@ -180,7 +180,7 @@ def handle_save_draft(body, session):
             'address': event_data.get('location_address', '')
         },
         'attendance_cap': int(event_data.get('attendance_cap', 20)),
-        'status': 'active',
+        'status': event_data.get('status', 'active'),
         'hugo_config': {
             'image': event_data.get('image', '/uploads/waterway-cleanups/default.jpg'),
             'tags': event_data.get('tags', []),

@@ -1616,6 +1616,7 @@
                   location_name: eventFormData.location.name,
                   location_address: eventFormData.location.address,
                   attendance_cap: eventFormData.attendance_cap,
+                  status: editingEvent.status || 'active',
                   image: eventFormData.hugo_config?.image || '/uploads/waterway-cleanups/default.jpg',
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
