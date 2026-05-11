@@ -139,6 +139,7 @@ def update_completed_events(headers):
             pending_rsvps = [
                 r for r in rsvps
                 if r.get('status', 'active') not in final_statuses
+                and r.get('no_show') != True
             ]
             
             if pending_rsvps:
