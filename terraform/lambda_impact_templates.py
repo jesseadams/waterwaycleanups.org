@@ -143,6 +143,7 @@ def handle_save(body, session):
 
     # Get the current highest version for this template
     existing_version = 0
+    existing_item = None
     try:
         result = impact_templates_table.query(
             KeyConditionExpression=Key('template_id').eq(base_id),
@@ -151,9 +152,17 @@ def handle_save(body, session):
         )
         items = result.get('Items', [])
         if items:
-            existing_version = items[0].get('version', 0)
+            existing_item = items[0]
+            existing_version = existing_item.get('version', 0)
     except Exception as e:
         print(f"Error querying existing versions for {base_id}: {e}")
+
+    # Block edits to locked one-time templates
+    if existing_item and existing_item.get('locked'):
+        return respond(403, {
+            'success': False,
+            'message': 'This one-time template is locked because it is assigned to an event and cannot be edited.'
+        })
 
     new_version = existing_version + 1
     from datetime import datetime, timezone

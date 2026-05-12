@@ -403,6 +403,35 @@ def handle_publish(body, session):
                 # Update or create event in events table
                 event_data = edit['event_data']
                 events_table.put_item(Item=event_data)
+                
+                # Lock one-time impact templates when assigned to an event
+                impact_template_id = event_data.get('impact_template')
+                if impact_template_id:
+                    try:
+                        impact_table_name = os.environ.get('IMPACT_TEMPLATES_TABLE_NAME', 'impact_templates')
+                        impact_table = dynamodb.Table(impact_table_name)
+                        # Get the latest version to check if it's reusable
+                        from boto3.dynamodb.conditions import Key as DDBKey
+                        tmpl_resp = impact_table.query(
+                            KeyConditionExpression=DDBKey('template_id').eq(impact_template_id),
+                            ScanIndexForward=False,
+                            Limit=1
+                        )
+                        tmpl_items = tmpl_resp.get('Items', [])
+                        if tmpl_items and tmpl_items[0].get('reusable') == False:
+                            # Lock all versions of this one-time template
+                            all_versions = impact_table.query(
+                                KeyConditionExpression=DDBKey('template_id').eq(impact_template_id)
+                            ).get('Items', [])
+                            for tv in all_versions:
+                                impact_table.update_item(
+                                    Key={'template_id': impact_template_id, 'version': tv['version']},
+                                    UpdateExpression='SET locked = :l',
+                                    ExpressionAttributeValues={':l': True}
+                                )
+                            print(f"Locked one-time template: {impact_template_id}")
+                    except Exception as e:
+                        print(f"Warning: could not lock impact template {impact_template_id}: {e}")
             
             # Mark edit as published
             content_edits_table.update_item(

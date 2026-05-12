@@ -1019,7 +1019,7 @@
                 React.createElement('option', { key: 'none', value: '' }, '— None —'),
                 ...impactTemplates.map(t =>
                   React.createElement('option', { key: t.template_id, value: t.template_id },
-                    t.name
+                    t.name + (t.reusable === false ? ' (one-time)' : '')
                   )
                 )
               ]),
@@ -2984,27 +2984,46 @@
                 ]),
                 React.createElement('div', { key: 'impact-template-field' }, [
                   React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Impact Map Template'),
-                  React.createElement('select', {
-                    key: 'select',
-                    value: eventFormData.impact_template || '',
-                    onChange: (e) => {
-                      const templateId = e.target.value;
-                      const tmpl = impactTemplates.find(t => t.template_id === templateId);
-                      setEventFormData({
-                        ...eventFormData,
-                        impact_template: templateId,
-                        impact_template_version: tmpl ? String(tmpl.version) : ''
-                      });
-                    },
-                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  }, [
-                    React.createElement('option', { key: 'none', value: '' }, '— None —'),
-                    ...impactTemplates.map(t =>
-                      React.createElement('option', { key: t.template_id, value: t.template_id },
-                        t.name
+                  (() => {
+                    const assignedTmpl = editingEvent && editingEvent.impact_template
+                      ? impactTemplates.find(t => t.template_id === editingEvent.impact_template)
+                      : null;
+                    const isLockedOneTime = assignedTmpl && (assignedTmpl.locked || assignedTmpl.reusable === false);
+                    return React.createElement('select', {
+                      key: 'select',
+                      value: eventFormData.impact_template || '',
+                      disabled: isLockedOneTime,
+                      onChange: (e) => {
+                        const templateId = e.target.value;
+                        const tmpl = impactTemplates.find(t => t.template_id === templateId);
+                        setEventFormData({
+                          ...eventFormData,
+                          impact_template: templateId,
+                          impact_template_version: tmpl ? String(tmpl.version) : ''
+                        });
+                      },
+                      className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" + (isLockedOneTime ? " bg-gray-100 cursor-not-allowed" : "")
+                    }, [
+                      React.createElement('option', { key: 'none', value: '' }, '— None —'),
+                      ...impactTemplates.map(t =>
+                        React.createElement('option', { key: t.template_id, value: t.template_id },
+                          t.name + (t.reusable === false ? ' (one-time)' : '')
+                        )
                       )
-                    )
-                  ]),
+                    ]);
+                  })(),
+                  (() => {
+                    const assignedTmpl = editingEvent && editingEvent.impact_template
+                      ? impactTemplates.find(t => t.template_id === editingEvent.impact_template)
+                      : null;
+                    const isLockedOneTime = assignedTmpl && (assignedTmpl.locked || assignedTmpl.reusable === false);
+                    if (isLockedOneTime) {
+                      return React.createElement('p', { key: 'locked-hint', className: "text-xs text-amber-600 mt-1" },
+                        '🔒 This one-time template is locked and cannot be changed.'
+                      );
+                    }
+                    return null;
+                  })(),
                   eventFormData.impact_template ? (() => {
                     const tmpl = impactTemplates.find(t => t.template_id === eventFormData.impact_template);
                     const latestVersion = tmpl ? parseInt(tmpl.version) : 1;

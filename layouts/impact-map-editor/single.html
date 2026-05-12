@@ -399,6 +399,18 @@
       if (data.template_id && !data.id) data.id = data.template_id;
       if (data.id && !data.template_id) data.template_id = data.id;
 
+      // Check if template is locked
+      var saveBtn = document.getElementById('btn-save-db');
+      if (data.locked) {
+        saveBtn.disabled = true;
+        saveBtn.textContent = '🔒 Locked (assigned to event)';
+        saveBtn.style.background = '#9ca3af';
+      } else {
+        saveBtn.disabled = false;
+        saveBtn.textContent = '💾 Save to Database';
+        saveBtn.style.background = '';
+      }
+
       var parent = document.getElementById('editor-map').parentNode;
       var newCanvas = document.createElement('div');
       newCanvas.className = 'impact-editor-canvas';
