@@ -119,63 +119,15 @@ Every cleanup we've completed, mapped.
 .impact-event-card .event-miles { font-size: 0.8rem; color: #ea580c; font-weight: 600; }
 </style>
 
+<div id="impact-data-holder" style="display:none;" data-impact='{{ $impact | jsonify }}'></div>
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
   crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>
-
-<script>
-  window.IMPACT_DATA = JSON.parse({{ $impact | jsonify | jsonify }});
-</script>
-<script>
-(function() {
-  var IMPACT_DATA = window.IMPACT_DATA;
-  if (!IMPACT_DATA || !IMPACT_DATA.templates) return;
-
-  var COLORS = { path: '#dc2626', zone: '#dc2626', zoneFill: '#dc2626' };
-  var map = L.map('impact-public-map', { scrollWheelZoom: false }).setView([38.43, -77.40], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors', maxZoom: 19
-  }).addTo(map);
-
-  var bounds = [];
-
-  function escapeHtml(str) {
-    var div = document.createElement('div');
-    div.textContent = str || '';
-    return div.innerHTML;
-  }
-
-  IMPACT_DATA.events.forEach(function(ev) {
-    var cacheKey = ev.impact_template + ':' + (ev.impact_template_version || 1);
-    var tmpl = IMPACT_DATA.templates[cacheKey];
-    if (!tmpl || !tmpl.features) return;
-
-    var features = tmpl.features;
-    if (features.zones) {
-      features.zones.forEach(function(zone) {
-        L.polygon(zone.coordinates, {
-          color: COLORS.zone, weight: 3, opacity: 0.9,
-          fillColor: COLORS.zoneFill, fillOpacity: 0.2
-        }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (zone.label || 'Focus Area'));
-        zone.coordinates.forEach(function(c) { bounds.push(c); });
-      });
-    }
-    if (features.paths) {
-      features.paths.forEach(function(path) {
-        L.polyline(path.coordinates, {
-          color: COLORS.path, weight: 5, opacity: 0.9
-        }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (path.label || 'Cleanup Path'));
-        path.coordinates.forEach(function(c) { bounds.push(c); });
-      });
-    }
-  });
-
-  if (bounds.length > 1) { map.fitBounds(bounds, { padding: [40, 40] }); }
-})();
-</script>
+<script src="/js/impact-page.js"></script>
 {{< /brick_wide >}}
 
 {{< brick_cta >}}{{< /brick_cta >}}
