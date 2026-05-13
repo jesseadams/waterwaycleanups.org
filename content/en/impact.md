@@ -9,19 +9,21 @@ Every cleanup we've completed, mapped.
 {{< /brick_title >}}
 
 {{< brick_wide >}}
+{{ $impact := .Site.Data.impact }}
+
 <div class="impact-page" id="impact-map-root">
 
   <div class="impact-stats">
     <div class="stat">
-      <div class="stat-value" id="stat-cleanups">—</div>
+      <div class="stat-value">{{ with $impact }}{{ .stats.cleanups }}{{ else }}—{{ end }}</div>
       <div class="stat-label">Cleanups</div>
     </div>
     <div class="stat">
-      <div class="stat-value" id="stat-miles">—</div>
+      <div class="stat-value">{{ with $impact }}{{ .stats.miles }}{{ else }}—{{ end }}</div>
       <div class="stat-label">Miles Covered</div>
     </div>
     <div class="stat">
-      <div class="stat-value" id="stat-volunteers">—</div>
+      <div class="stat-value">{{ with $impact }}{{ .stats.volunteers }}{{ else }}—{{ end }}</div>
       <div class="stat-label">Volunteer Check-ins</div>
     </div>
   </div>
@@ -33,8 +35,22 @@ Every cleanup we've completed, mapped.
     <span class="legend-item"><span class="legend-dot" style="background:#ea580c;opacity:0.3;width:14px;height:14px;border:2px solid #ea580c;"></span> Focus Area</span>
   </div>
 
-  <div class="impact-event-list" id="impact-event-list"></div>
+  {{ with $impact }}
+  <div class="impact-event-list">
+    {{ range .events }}
+    <div class="impact-event-card">
+      <h3>{{ .title }}</h3>
+      <div class="event-date">{{ dateFormat "Jan 2, 2006" .start_time }}</div>
+      {{ $tmplKey := printf "%s:%v" .impact_template .impact_template_version }}
+      {{ with index $impact.templates $tmplKey }}
+      <div class="event-miles">{{ .estimated_miles }} miles</div>
+      {{ end }}
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
 
+  <!-- Impact Reports -->
   <div style="margin-top: 3rem;">
     <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">📄 Impact Reports</h2>
     <div class="impact-event-list">
@@ -109,24 +125,19 @@ Every cleanup we've completed, mapped.
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>
-{{< /brick_wide >}}
 
-
-{{< brick_wide >}}
 <script>
 (function() {
-  var COLORS = { path: '#ea580c', zone: '#ea580c', zoneFill: '#ea580c' };
-  var mapEl = document.getElementById('impact-public-map');
-  if (!mapEl) return;
+  var IMPACT_DATA = {{ $impact | jsonify | safeJS }};
+  if (!IMPACT_DATA || !IMPACT_DATA.templates) return;
 
+  var COLORS = { path: '#ea580c', zone: '#ea580c', zoneFill: '#ea580c' };
   var map = L.map('impact-public-map', { scrollWheelZoom: false }).setView([38.43, -77.40], 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 19
   }).addTo(map);
 
   var bounds = [];
-  var apiBase = (window.API_CONFIG && window.API_CONFIG.EVENTS_API_URL) || '';
-  var templateApiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
 
   function escapeHtml(str) {
     var div = document.createElement('div');
@@ -134,14 +145,18 @@ Every cleanup we've completed, mapped.
     return div.innerHTML;
   }
 
-  function renderTemplate(tmpl, event) {
-    var features = tmpl.features || {};
+  IMPACT_DATA.events.forEach(function(ev) {
+    var cacheKey = ev.impact_template + ':' + (ev.impact_template_version || 1);
+    var tmpl = IMPACT_DATA.templates[cacheKey];
+    if (!tmpl || !tmpl.features) return;
+
+    var features = tmpl.features;
     if (features.zones) {
       features.zones.forEach(function(zone) {
         L.polygon(zone.coordinates, {
           color: COLORS.zone, weight: 2, opacity: 0.6,
           fillColor: COLORS.zoneFill, fillOpacity: 0.1
-        }).addTo(map).bindPopup('<strong>' + escapeHtml(event.title) + '</strong><br>' + (zone.label || 'Focus Area'));
+        }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (zone.label || 'Focus Area'));
         zone.coordinates.forEach(function(c) { bounds.push(c); });
       });
     }
@@ -149,70 +164,13 @@ Every cleanup we've completed, mapped.
       features.paths.forEach(function(path) {
         L.polyline(path.coordinates, {
           color: COLORS.path, weight: 3, opacity: 0.7
-        }).addTo(map).bindPopup('<strong>' + escapeHtml(event.title) + '</strong><br>' + (path.label || 'Cleanup Path'));
+        }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (path.label || 'Cleanup Path'));
         path.coordinates.forEach(function(c) { bounds.push(c); });
       });
     }
-  }
-
-  async function loadImpactData() {
-    var eventsRes = await fetch(apiBase + '/events?status=completed');
-    var eventsData = await eventsRes.json();
-    var events = (eventsData.events || []).filter(function(e) { return e.impact_template; });
-
-    var templateCache = {};
-    var totalMiles = 0;
-    var totalVolunteers = 0;
-
-    for (var i = 0; i < events.length; i++) {
-      var ev = events[i];
-      var cacheKey = ev.impact_template + ':' + (ev.impact_template_version || 'latest');
-      if (!templateCache[cacheKey]) {
-        var url = templateApiBase + '/impact-templates?id=' + encodeURIComponent(ev.impact_template);
-        if (ev.impact_template_version) {
-          url += '&version=' + encodeURIComponent(ev.impact_template_version);
-        }
-        try {
-          var tRes = await fetch(url);
-          var tData = await tRes.json();
-          if (tData.success && tData.template) {
-            templateCache[cacheKey] = tData.template;
-          }
-        } catch (err) { console.warn('Failed to load template for', ev.event_id, err); }
-      }
-      var tmpl = templateCache[cacheKey];
-      if (tmpl) {
-        renderTemplate(tmpl, ev);
-        totalMiles += parseFloat(tmpl.estimated_miles || 0);
-      }
-      totalVolunteers += (ev.attended_count || 0);
-    }
-
-    document.getElementById('stat-cleanups').textContent = events.length;
-    document.getElementById('stat-miles').textContent = totalMiles.toFixed(1);
-    document.getElementById('stat-volunteers').textContent = totalVolunteers;
-
-    var listEl = document.getElementById('impact-event-list');
-    events.forEach(function(ev) {
-      var date = ev.start_time ? new Date(ev.start_time).toLocaleDateString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric'
-      }) : '';
-      var tmpl = templateCache[ev.impact_template + ':' + (ev.impact_template_version || 'latest')];
-      var miles = tmpl ? parseFloat(tmpl.estimated_miles || 0).toFixed(1) : '—';
-      var card = document.createElement('div');
-      card.className = 'impact-event-card';
-      card.innerHTML = '<h3>' + escapeHtml(ev.title) + '</h3>'
-        + '<div class="event-date">' + date + '</div>'
-        + '<div class="event-miles">' + miles + ' miles</div>';
-      listEl.appendChild(card);
-    });
-
-    if (bounds.length > 1) { map.fitBounds(bounds, { padding: [40, 40] }); }
-  }
-
-  loadImpactData().catch(function(err) {
-    console.error('Failed to load impact data:', err);
   });
+
+  if (bounds.length > 1) { map.fitBounds(bounds, { padding: [40, 40] }); }
 })();
 </script>
 {{< /brick_wide >}}
