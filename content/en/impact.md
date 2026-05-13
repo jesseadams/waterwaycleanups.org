@@ -31,8 +31,8 @@ Every cleanup we've completed, mapped.
   <div id="impact-public-map" style="height:500px;width:100%;border-radius:0.5rem;border:1px solid #e5e7eb;z-index:1;"></div>
 
   <div class="impact-legend">
-    <span class="legend-item"><span class="legend-line" style="background:#ea580c;"></span> Cleanup Path</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#ea580c;opacity:0.3;width:14px;height:14px;border:2px solid #ea580c;"></span> Focus Area</span>
+    <span class="legend-item"><span class="legend-line" style="background:#dc2626;"></span> Cleanup Path</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#dc2626;opacity:0.3;width:14px;height:14px;border:2px solid #dc2626;"></span> Focus Area</span>
   </div>
 
   {{ with $impact }}
@@ -127,11 +127,14 @@ Every cleanup we've completed, mapped.
   crossorigin=""></script>
 
 <script>
+  window.IMPACT_DATA = JSON.parse({{ $impact | jsonify | jsonify }});
+</script>
+<script>
 (function() {
-  var IMPACT_DATA = {{ $impact | jsonify | safeJS }};
+  var IMPACT_DATA = window.IMPACT_DATA;
   if (!IMPACT_DATA || !IMPACT_DATA.templates) return;
 
-  var COLORS = { path: '#ea580c', zone: '#ea580c', zoneFill: '#ea580c' };
+  var COLORS = { path: '#dc2626', zone: '#dc2626', zoneFill: '#dc2626' };
   var map = L.map('impact-public-map', { scrollWheelZoom: false }).setView([38.43, -77.40], 12);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors', maxZoom: 19
@@ -154,8 +157,8 @@ Every cleanup we've completed, mapped.
     if (features.zones) {
       features.zones.forEach(function(zone) {
         L.polygon(zone.coordinates, {
-          color: COLORS.zone, weight: 2, opacity: 0.6,
-          fillColor: COLORS.zoneFill, fillOpacity: 0.1
+          color: COLORS.zone, weight: 3, opacity: 0.9,
+          fillColor: COLORS.zoneFill, fillOpacity: 0.2
         }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (zone.label || 'Focus Area'));
         zone.coordinates.forEach(function(c) { bounds.push(c); });
       });
@@ -163,7 +166,7 @@ Every cleanup we've completed, mapped.
     if (features.paths) {
       features.paths.forEach(function(path) {
         L.polyline(path.coordinates, {
-          color: COLORS.path, weight: 3, opacity: 0.7
+          color: COLORS.path, weight: 5, opacity: 0.9
         }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (path.label || 'Cleanup Path'));
         path.coordinates.forEach(function(c) { bounds.push(c); });
       });
