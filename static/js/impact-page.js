@@ -6,16 +6,7 @@
 (function() {
   'use strict';
 
-  var holder = document.getElementById('impact-data-holder');
-  if (!holder) return;
-
-  var IMPACT_DATA;
-  try {
-    IMPACT_DATA = JSON.parse(holder.getAttribute('data-impact'));
-  } catch (e) {
-    console.error('Failed to parse impact data:', e);
-    return;
-  }
+  var IMPACT_DATA = window.IMPACT_DATA;
   if (!IMPACT_DATA || !IMPACT_DATA.templates) return;
 
   var COLORS = { path: '#dc2626', zone: '#dc2626', zoneFill: '#dc2626' };

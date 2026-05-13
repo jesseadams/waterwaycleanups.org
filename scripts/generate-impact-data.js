@@ -124,6 +124,14 @@ async function main() {
   const outputPath = path.join(__dirname, '..', 'data', 'impact.json');
   fs.writeFileSync(outputPath, JSON.stringify(impactData, null, 2));
   console.log(`\n✅ Written to ${outputPath}`);
+
+  // Also write as a JS file for the static impact page
+  const jsOutputPath = path.join(__dirname, '..', 'static', 'data', 'impact-data.js');
+  const jsDir = path.dirname(jsOutputPath);
+  if (!fs.existsSync(jsDir)) fs.mkdirSync(jsDir, { recursive: true });
+  fs.writeFileSync(jsOutputPath, 'window.IMPACT_DATA = ' + JSON.stringify(impactData) + ';');
+  console.log(`   Written to ${jsOutputPath}`);
+
   console.log(`   ${impactData.stats.cleanups} cleanups, ${impactData.stats.miles} miles, ${impactData.stats.volunteers} volunteers`);
 }
 

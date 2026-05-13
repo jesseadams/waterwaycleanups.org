@@ -1,0 +1,15 @@
+{{- $impact := .Site.Data.impact -}}
+<div class="impact-stats">
+  <div class="stat">
+    <div class="stat-value">{{ with $impact }}{{ .stats.cleanups }}{{ else }}—{{ end }}</div>
+    <div class="stat-label">Cleanups</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ with $impact }}{{ .stats.miles }}{{ else }}—{{ end }}</div>
+    <div class="stat-label">Miles Covered</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ with $impact }}{{ .stats.volunteers }}{{ else }}—{{ end }}</div>
+    <div class="stat-label">Volunteer Check-ins</div>
+  </div>
+</div>

@@ -9,62 +9,32 @@ Every cleanup we've completed, mapped.
 {{< /brick_title >}}
 
 {{< brick_wide >}}
-{{ $impact := .Site.Data.impact }}
 
-<div class="impact-page" id="impact-map-root">
+{{< impact_stats >}}
 
-  <div class="impact-stats">
-    <div class="stat">
-      <div class="stat-value">{{ with $impact }}{{ .stats.cleanups }}{{ else }}—{{ end }}</div>
-      <div class="stat-label">Cleanups</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">{{ with $impact }}{{ .stats.miles }}{{ else }}—{{ end }}</div>
-      <div class="stat-label">Miles Covered</div>
-    </div>
-    <div class="stat">
-      <div class="stat-value">{{ with $impact }}{{ .stats.volunteers }}{{ else }}—{{ end }}</div>
-      <div class="stat-label">Volunteer Check-ins</div>
-    </div>
-  </div>
+<div id="impact-public-map" style="height:500px;width:100%;border-radius:0.5rem;border:1px solid #e5e7eb;z-index:1;"></div>
 
-  <div id="impact-public-map" style="height:500px;width:100%;border-radius:0.5rem;border:1px solid #e5e7eb;z-index:1;"></div>
+<div class="impact-legend">
+  <span class="legend-item"><span class="legend-line" style="background:#dc2626;"></span> Cleanup Path</span>
+  <span class="legend-item"><span class="legend-dot" style="background:#dc2626;opacity:0.3;width:14px;height:14px;border:2px solid #dc2626;"></span> Focus Area</span>
+</div>
 
-  <div class="impact-legend">
-    <span class="legend-item"><span class="legend-line" style="background:#dc2626;"></span> Cleanup Path</span>
-    <span class="legend-item"><span class="legend-dot" style="background:#dc2626;opacity:0.3;width:14px;height:14px;border:2px solid #dc2626;"></span> Focus Area</span>
-  </div>
+{{< impact_event_list >}}
 
-  {{ with $impact }}
+<div style="margin-top: 3rem;">
+  <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">📄 Impact Reports</h2>
   <div class="impact-event-list">
-    {{ range .events }}
-    <div class="impact-event-card">
-      <h3>{{ .title }}</h3>
-      <div class="event-date">{{ dateFormat "Jan 2, 2006" .start_time }}</div>
-      {{ $tmplKey := printf "%s:%v" .impact_template .impact_template_version }}
-      {{ with index $impact.templates $tmplKey }}
-      <div class="event-miles">{{ .estimated_miles }} miles</div>
-      {{ end }}
-    </div>
-    {{ end }}
-  </div>
-  {{ end }}
-
-  <!-- Impact Reports -->
-  <div style="margin-top: 3rem;">
-    <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">📄 Impact Reports</h2>
-    <div class="impact-event-list">
-      <a href="/impact-report/" class="impact-event-card" style="text-decoration: none; color: inherit;">
-        <h3>2025 Annual Impact Report</h3>
-        <div class="event-date">Our inaugural year of community waterway cleanups</div>
-        <div class="event-miles">View Report →</div>
-      </a>
-    </div>
+    <a href="/impact-report/" class="impact-event-card" style="text-decoration: none; color: inherit;">
+      <h3>2025 Annual Impact Report</h3>
+      <div class="event-date">Our inaugural year of community waterway cleanups</div>
+      <div class="event-miles">View Report →</div>
+    </a>
   </div>
 </div>
 
+{{< impact_data >}}
+
 <style>
-.impact-page { max-width: 1400px; margin: 0 auto; }
 .impact-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -119,8 +89,6 @@ Every cleanup we've completed, mapped.
 .impact-event-card .event-miles { font-size: 0.8rem; color: #ea580c; font-weight: 600; }
 </style>
 
-<div id="impact-data-holder" style="display:none;" data-impact='{{ $impact | jsonify }}'></div>
-
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
   integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
   crossorigin="" />
@@ -128,6 +96,7 @@ Every cleanup we've completed, mapped.
   integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
   crossorigin=""></script>
 <script src="/js/impact-page.js"></script>
+
 {{< /brick_wide >}}
 
 {{< brick_cta >}}{{< /brick_cta >}}
