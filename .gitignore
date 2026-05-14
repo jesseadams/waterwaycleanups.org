@@ -1,6 +1,10 @@
 # Generated event markdown (created by hugo-generator from DynamoDB)
 content/en/events/*.md
 
+# Generated impact data (created by generate-impact-data.js at build time)
+static/data/impact-data.js
+data/impact.json
+
 # Dependency directories
 node_modules/
 jspm_packages/

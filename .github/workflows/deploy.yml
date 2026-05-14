@@ -216,6 +216,12 @@ jobs:
         env:
           AWS_REGION: us-east-1
 
+      - name: Generate impact map data
+        if: env.IS_PR != 'true'
+        run: node scripts/generate-impact-data.js --environment=${{ env.DEPLOY_ENV }}
+        env:
+          AWS_REGION: us-east-1
+
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:

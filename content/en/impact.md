@@ -19,7 +19,7 @@ Every cleanup we've completed, mapped.
   <span class="legend-item"><span class="legend-dot" style="background:#dc2626;opacity:0.3;width:14px;height:14px;border:2px solid #dc2626;"></span> Focus Area</span>
 </div>
 
-{{< impact_event_list >}}
+<div class="impact-event-list" id="impact-event-list"></div>
 
 <div style="margin-top: 3rem;">
   <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">📄 Impact Reports</h2>

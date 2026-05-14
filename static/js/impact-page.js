@@ -52,4 +52,23 @@
   });
 
   if (bounds.length > 1) { map.fitBounds(bounds, { padding: [40, 40] }); }
+
+  // Render event cards
+  var listEl = document.getElementById('impact-event-list');
+  if (listEl) {
+    IMPACT_DATA.events.forEach(function(ev) {
+      var cacheKey = ev.impact_template + ':' + (ev.impact_template_version || 1);
+      var tmpl = IMPACT_DATA.templates[cacheKey];
+      var miles = tmpl ? tmpl.estimated_miles.toFixed(1) : '—';
+      var date = ev.start_time ? new Date(ev.start_time).toLocaleDateString('en-US', {
+        year: 'numeric', month: 'short', day: 'numeric'
+      }) : '';
+      var card = document.createElement('div');
+      card.className = 'impact-event-card';
+      card.innerHTML = '<h3>' + escapeHtml(ev.title) + '</h3>'
+        + '<div class="event-date">' + date + '</div>'
+        + '<div class="event-miles">' + miles + ' miles</div>';
+      listEl.appendChild(card);
+    });
+  }
 })();
