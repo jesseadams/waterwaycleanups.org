@@ -1716,6 +1716,55 @@
         }
       };
 
+      const handleCancelEvent = async (event) => {
+        const reason = prompt('Cancellation reason (optional):') || '';
+        const notify = confirm('Send cancellation email to all RSVPs?');
+
+        try {
+          setIsLoading(true);
+          setError('');
+          await window.eventsAPI.cancelEvent(event.event_id, reason, notify);
+          setSuccess(`Event "${event.title}" cancelled.${notify ? ' Notifications sent.' : ''}`);
+          await loadEvents();
+        } catch (error) {
+          setError(error.message || 'Failed to cancel event');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleCompleteEvent = async (event) => {
+        const bagsStr = prompt('Bags of trash collected:');
+        if (bagsStr === null) return; // user cancelled
+        const bags = parseInt(bagsStr);
+        if (isNaN(bags) || bags < 0) { setError('Invalid number of bags'); return; }
+
+        const tiresStr = prompt('Number of tires (0 if none):') || '0';
+        const tires = parseInt(tiresStr) || 0;
+
+        const largeStr = prompt('Estimated weight of larger items in pounds (0 if none):') || '0';
+        const largeWeight = parseFloat(largeStr) || 0;
+
+        const totalLbs = (bags * 25) + largeWeight;
+        if (!confirm(`Complete event "${event.title}" with:\n• ${bags} bags of trash\n• ${tires} tires\n• ${largeWeight} lbs of large items\n• ${totalLbs} lbs total litter removed\n\nProceed?`)) return;
+
+        try {
+          setIsLoading(true);
+          setError('');
+          await window.eventsAPI.completeEvent(event.event_id, {
+            bags_of_trash: bags,
+            number_of_tires: tires,
+            large_items_weight_lbs: largeWeight
+          });
+          setSuccess(`Event "${event.title}" completed. ${totalLbs} lbs of litter removed.`);
+          await loadEvents();
+        } catch (error) {
+          setError(error.message || 'Failed to complete event');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
       const handleEventEdit = (event) => {
         setEditingEvent(event);
         
@@ -2351,6 +2400,16 @@
                     onClick: () => handleEventEdit(event),
                     className: "bg-yellow-500 text-white px-3 py-1 rounded text-sm hover:bg-yellow-600"
                   }, 'Edit'),
+                  event.status === 'active' ? React.createElement('button', {
+                    key: 'cancel',
+                    onClick: () => handleCancelEvent(event),
+                    className: "bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600"
+                  }, 'Cancel') : null,
+                  event.status === 'active' ? React.createElement('button', {
+                    key: 'complete',
+                    onClick: () => handleCompleteEvent(event),
+                    className: "bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                  }, 'Complete') : null,
                   React.createElement('button', {
                     key: 'delete',
                     onClick: () => handleEventDelete(event.event_id),

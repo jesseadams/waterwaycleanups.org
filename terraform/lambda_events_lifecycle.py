@@ -50,6 +50,8 @@ def handler(event, context):
         
         if action == 'update_completed_events':
             return update_completed_events(headers)
+        elif action == 'complete_event':
+            return complete_event(body, headers)
         elif action == 'archive_events':
             return archive_events(body, headers)
         elif action == 'cancel_event':
@@ -61,7 +63,7 @@ def handler(event, context):
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
-                    'error': 'Invalid action. Supported actions: update_completed_events, archive_events, cancel_event, categorize_events'
+                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, archive_events, cancel_event, categorize_events'
                 })
             }
             
@@ -81,18 +83,15 @@ def handler(event, context):
 
 def update_completed_events(headers):
     """
-    Automatically update status of events that have passed their end time.
-    
-    An event is only marked as completed when BOTH conditions are met:
-    1. It is the day after the event's end time (not just past the end time)
-    2. All RSVPs have reached a final status (attended, no_show, or cancelled — not active)
+    Identify past events that are ready for completion (admin must manually complete with metrics).
+    This no longer auto-completes events — it just reports which ones need attention.
     """
     try:
         now = datetime.now(timezone.utc)
         current_time = now.isoformat()
         today_date = now.date()
-        updated_events = []
-        skipped_events = []
+        ready_events = []
+        pending_events = []
         
         # Query active events
         response = events_table.query(
@@ -111,69 +110,47 @@ def update_completed_events(headers):
             try:
                 event_end_date = datetime.fromisoformat(end_time.replace('Z', '+00:00')).date()
             except (ValueError, AttributeError):
-                print(f"Skipping event {event['event_id']}: invalid end_time format '{end_time}'")
                 continue
             
             if today_date <= event_end_date:
-                skipped_events.append({
-                    'event_id': event['event_id'],
-                    'reason': 'not yet the day after the event'
-                })
                 continue
             
-            # Check that all RSVPs are in a final status
+            # Check RSVP status
             try:
                 rsvp_response = rsvps_table.query(
                     KeyConditionExpression=Key('event_id').eq(event['event_id'])
                 )
                 rsvps = rsvp_response.get('Items', [])
-            except ClientError as e:
-                print(f"Error querying RSVPs for event {event['event_id']}: {e.response['Error']['Message']}")
-                skipped_events.append({
-                    'event_id': event['event_id'],
-                    'reason': 'failed to query RSVPs'
-                })
+            except ClientError:
                 continue
             
-            final_statuses = {'attended', 'no_show', 'cancelled'}
+            final_statuses = {'attended', 'no_show', 'cancelled', 'admin_cancelled'}
             pending_rsvps = [
                 r for r in rsvps
                 if r.get('status', 'active') not in final_statuses
                 and r.get('no_show') != True
             ]
             
-            if pending_rsvps:
-                pending_count = len(pending_rsvps)
-                skipped_events.append({
-                    'event_id': event['event_id'],
-                    'reason': f'{pending_count} RSVP(s) still in non-final status'
-                })
-                print(f"Skipping event {event['event_id']}: {pending_count} RSVP(s) not in final status")
-                continue
+            event_summary = {
+                'event_id': event['event_id'],
+                'title': event.get('title', ''),
+                'end_time': end_time,
+                'total_rsvps': len(rsvps),
+                'pending_rsvps': len(pending_rsvps)
+            }
             
-            # All conditions met — mark as completed
-            try:
-                events_table.update_item(
-                    Key={'event_id': event['event_id']},
-                    UpdateExpression='SET #status = :status, updated_at = :updated_at',
-                    ExpressionAttributeNames={'#status': 'status'},
-                    ExpressionAttributeValues={
-                        ':status': 'completed',
-                        ':updated_at': current_time
-                    }
-                )
-                updated_events.append(event['event_id'])
-                print(f"Updated event {event['event_id']} to completed status")
-            except ClientError as e:
-                print(f"Error updating event {event['event_id']}: {e.response['Error']['Message']}")
+            if pending_rsvps:
+                pending_events.append(event_summary)
+            else:
+                ready_events.append(event_summary)
         
         return {
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
-                'message': f'Updated {len(updated_events)} events to completed status',
-                'updated_events': updated_events,
-                'skipped_events': skipped_events,
+                'message': f'{len(ready_events)} event(s) ready for completion, {len(pending_events)} still have pending RSVPs',
+                'ready_events': ready_events,
+                'pending_events': pending_events,
                 'success': True
             })
         }
@@ -184,6 +161,101 @@ def update_completed_events(headers):
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({'error': f'Failed to update completed events: {str(e)}'})
+        }
+
+def complete_event(body, headers):
+    """
+    Manually complete an event with cleanup metrics.
+    Required: event_id, bags_of_trash
+    Optional: number_of_tires, large_items_weight_lbs
+    Auto-calculated: total_litter_lbs = (bags_of_trash * 25) + large_items_weight_lbs
+    """
+    try:
+        event_id = body.get('event_id')
+        if not event_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'event_id is required'})
+            }
+
+        bags_of_trash = body.get('bags_of_trash')
+        if bags_of_trash is None:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'bags_of_trash is required'})
+            }
+
+        bags_of_trash = int(bags_of_trash)
+        number_of_tires = int(body.get('number_of_tires', 0))
+        large_items_weight_lbs = float(body.get('large_items_weight_lbs', 0))
+        total_litter_lbs = (bags_of_trash * 25) + large_items_weight_lbs
+
+        # Verify event exists and is active
+        try:
+            event_response = events_table.get_item(Key={'event_id': event_id})
+            if 'Item' not in event_response:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': f'Event {event_id} not found'})
+                }
+            event_data = event_response['Item']
+            if event_data.get('status') not in ('active', None):
+                return {
+                    'statusCode': 400,
+                    'headers': headers,
+                    'body': json.dumps({'error': f'Event is already {event_data.get("status")}. Only active events can be completed.'})
+                }
+        except ClientError as e:
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({'error': f'Failed to retrieve event: {e.response["Error"]["Message"]}'})
+            }
+
+        # Update event with metrics and set status to completed
+        now = datetime.now(timezone.utc).isoformat()
+        from decimal import Decimal
+        events_table.update_item(
+            Key={'event_id': event_id},
+            UpdateExpression='SET #status = :status, updated_at = :now, cleanup_metrics = :metrics',
+            ExpressionAttributeNames={'#status': 'status'},
+            ExpressionAttributeValues={
+                ':status': 'completed',
+                ':now': now,
+                ':metrics': {
+                    'bags_of_trash': bags_of_trash,
+                    'number_of_tires': number_of_tires,
+                    'large_items_weight_lbs': Decimal(str(large_items_weight_lbs)),
+                    'total_litter_lbs': Decimal(str(total_litter_lbs))
+                }
+            }
+        )
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'message': f'Event {event_id} completed with metrics',
+                'event_id': event_id,
+                'cleanup_metrics': {
+                    'bags_of_trash': bags_of_trash,
+                    'number_of_tires': number_of_tires,
+                    'large_items_weight_lbs': large_items_weight_lbs,
+                    'total_litter_lbs': total_litter_lbs
+                },
+                'success': True
+            })
+        }
+
+    except Exception as e:
+        print(f"Error completing event: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': f'Failed to complete event: {str(e)}'})
         }
 
 def archive_events(body, headers):
@@ -304,38 +376,38 @@ def cancel_event(body, headers):
                 'body': json.dumps({'error': 'Failed to cancel event'})
             }
         
-        # Update RSVPs to cancelled status
+        # Update RSVPs to admin_cancelled status
         notified_volunteers = []
-        if notify_volunteers:
-            try:
-                # Get all active RSVPs for this event
-                rsvp_response = rsvps_table.query(
-                    KeyConditionExpression=Key('event_id').eq(event_id),
-                    FilterExpression=Attr('status').eq('active')
+        try:
+            # Get all active RSVPs for this event
+            rsvp_response = rsvps_table.query(
+                KeyConditionExpression=Key('event_id').eq(event_id),
+                FilterExpression=Attr('status').eq('active')
+            )
+            
+            active_rsvps = rsvp_response.get('Items', [])
+            
+            for rsvp in active_rsvps:
+                # Update RSVP status to admin_cancelled (distinct from volunteer-initiated cancellation)
+                rsvps_table.update_item(
+                    Key={'event_id': event_id, 'attendee_id': rsvp['attendee_id']},
+                    UpdateExpression='SET #status = :status, updated_at = :updated_at, cancellation_reason = :reason',
+                    ExpressionAttributeNames={'#status': 'status'},
+                    ExpressionAttributeValues={
+                        ':status': 'admin_cancelled',
+                        ':updated_at': datetime.now(timezone.utc).isoformat(),
+                        ':reason': f'Event cancelled: {cancellation_reason}'
+                    }
                 )
                 
-                active_rsvps = rsvp_response.get('Items', [])
-                
-                for rsvp in active_rsvps:
-                    # Update RSVP status
-                    rsvps_table.update_item(
-                        Key={'event_id': event_id, 'email': rsvp['email']},
-                        UpdateExpression='SET #status = :status, updated_at = :updated_at, cancellation_reason = :reason',
-                        ExpressionAttributeNames={'#status': 'status'},
-                        ExpressionAttributeValues={
-                            ':status': 'cancelled',
-                            ':updated_at': datetime.now(timezone.utc).isoformat(),
-                            ':reason': f'Event cancelled: {cancellation_reason}'
-                        }
-                    )
-                    
-                    # Send notification via SNS
+                # Send notification via SNS if requested
+                if notify_volunteers:
                     try:
                         message = {
                             'type': 'event_cancellation',
                             'event_id': event_id,
                             'event_title': event_data.get('title', 'Event'),
-                            'volunteer_email': rsvp['email'],
+                            'volunteer_email': rsvp.get('email', ''),
                             'reason': cancellation_reason,
                             'event_start_time': event_data.get('start_time'),
                             'event_location': event_data.get('location', {}).get('name', 'TBD')
@@ -347,14 +419,14 @@ def cancel_event(body, headers):
                             Subject=f'Event Cancelled: {event_data.get("title", "Event")}'
                         )
                         
-                        notified_volunteers.append(rsvp['email'])
-                        print(f"Notified volunteer {rsvp['email']} about event cancellation")
+                        notified_volunteers.append(rsvp.get('email', ''))
+                        print(f"Notified volunteer {rsvp.get('email', '')} about event cancellation")
                         
                     except ClientError as e:
-                        print(f"Error sending notification to {rsvp['email']}: {e.response['Error']['Message']}")
-                        
-            except ClientError as e:
-                print(f"Error processing RSVPs: {e.response['Error']['Message']}")
+                        print(f"Error sending notification to {rsvp.get('email', '')}: {e.response['Error']['Message']}")
+                    
+        except ClientError as e:
+            print(f"Error processing RSVPs: {e.response['Error']['Message']}")
         
         return {
             'statusCode': 200,

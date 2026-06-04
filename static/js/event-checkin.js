@@ -223,7 +223,7 @@
       }));
 
       // Sort: pending first, then checked-in, then no-show
-      const order = { active: 0, attended: 1, no_show: 2, cancelled: 3 };
+      const order = { active: 0, attended: 1, no_show: 2, cancelled: 3, admin_cancelled: 3 };
       attendees.sort((a, b) => (order[a.status] || 0) - (order[b.status] || 0));
 
       loadAttendeesFailCount = 0;
@@ -253,7 +253,7 @@
   }
 
   function updateStats() {
-    const total = attendees.filter(a => a.status !== 'cancelled').length;
+    const total = attendees.filter(a => a.status !== 'cancelled' && a.status !== 'admin_cancelled').length;
     const checkedIn = attendees.filter(a => a.status === 'attended').length;
     $('#stat-checked-in').textContent = checkedIn;
     $('#stat-total').textContent = total;
@@ -261,7 +261,7 @@
 
   function renderAttendees() {
     const list = $('#attendee-list');
-    let filtered = attendees.filter(a => a.status !== 'cancelled');
+    let filtered = attendees.filter(a => a.status !== 'cancelled' && a.status !== 'admin_cancelled');
 
     if (searchQuery) {
       filtered = filtered.filter(a => {
@@ -326,7 +326,7 @@
 
       // Render nested minors under this guardian (only when not searching)
       if (a.type !== 'minor' && !searchQuery) {
-        const minors = getMinorsForGuardian(a.email).filter(m => m.status !== 'cancelled');
+        const minors = getMinorsForGuardian(a.email).filter(m => m.status !== 'cancelled' && m.status !== 'admin_cancelled');
         minors.forEach(m => {
           const mCard = document.createElement('div');
           const mStatusClass = m.status === 'attended' ? 'status-checked-in'

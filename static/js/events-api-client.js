@@ -269,6 +269,37 @@ class EventsAPIClient {
     }
 
     /**
+     * Cancel an event and optionally notify RSVPs (admin only)
+     */
+    async cancelEvent(eventId, reason = '', notifyVolunteers = true) {
+        return this.makeRequest('/events/lifecycle', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'cancel_event',
+                event_id: eventId,
+                reason: reason,
+                notify_volunteers: notifyVolunteers
+            })
+        });
+    }
+
+    /**
+     * Complete an event with cleanup metrics (admin only)
+     */
+    async completeEvent(eventId, metrics) {
+        return this.makeRequest('/events/lifecycle', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'complete_event',
+                event_id: eventId,
+                bags_of_trash: metrics.bags_of_trash,
+                number_of_tires: metrics.number_of_tires || 0,
+                large_items_weight_lbs: metrics.large_items_weight_lbs || 0
+            })
+        });
+    }
+
+    /**
      * Get message history for an event (admin only)
      */
     async getEventMessages(eventId) {

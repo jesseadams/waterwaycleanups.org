@@ -78,6 +78,7 @@ def handler(event, context):
         for email, rsvps in rsvps_by_email.items():
             attended = 0
             cancelled = 0
+            admin_cancelled = 0
             no_shows = 0
             future_rsvps = 0
             attended_public_eids = set()
@@ -94,6 +95,8 @@ def handler(event, context):
                         attended_public_eids.add(eid)
                 elif status == 'cancelled':
                     cancelled += 1
+                elif status == 'admin_cancelled':
+                    admin_cancelled += 1
                 elif status == 'no_show' or rsvp.get('no_show'):
                     no_shows += 1
                 elif status == 'active':
@@ -120,10 +123,12 @@ def handler(event, context):
                 streak = 0
 
             # Points (uncapped)
+            # admin_cancelled RSVPs retain their 3 points (not the volunteer's fault)
             points = max(0,
                 (attended * 10) +
                 (streak * 5) +
-                (future_rsvps * 3) -
+                (future_rsvps * 3) +
+                (admin_cancelled * 3) -
                 (cancelled * 2) -
                 (no_shows * 5)
             )

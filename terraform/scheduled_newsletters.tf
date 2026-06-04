@@ -72,6 +72,23 @@ data "archive_file" "process_scheduled_newsletters" {
   depends_on = [null_resource.process_scheduled_newsletters_package]
 }
 
+# SNS topic for alerting when a contact is missing its firstName attribute.
+# The newsletter Lambda still sends the email (using a "Volunteer" default) but
+# publishes here so the missing data can be backfilled.
+resource "aws_sns_topic" "newsletter_missing_attribute" {
+  name = "waterway-cleanups-newsletter-missing-attribute${local.resource_suffix}"
+}
+
+resource "aws_sns_topic_subscription" "newsletter_missing_attribute_email" {
+  topic_arn = aws_sns_topic.newsletter_missing_attribute.arn
+  protocol  = "email"
+  endpoint  = "jesse@waterwaycleanups.org"
+
+  lifecycle {
+    ignore_changes = [endpoint, protocol]
+  }
+}
+
 # Lambda function for processing scheduled newsletters
 resource "aws_lambda_function" "process_scheduled_newsletters" {
   filename      = "${path.module}/lambda_scheduled_newsletters.zip"
@@ -84,9 +101,10 @@ resource "aws_lambda_function" "process_scheduled_newsletters" {
 
   environment {
     variables = {
-      DYNAMODB_TABLE_NAME = aws_dynamodb_table.scheduled_newsletters.name
-      SOURCE_EMAIL        = "Waterway Cleanups <info@waterwaycleanups.org>"
-      REGION              = var.aws_region
+      DYNAMODB_TABLE_NAME         = aws_dynamodb_table.scheduled_newsletters.name
+      SOURCE_EMAIL                = "Waterway Cleanups <info@waterwaycleanups.org>"
+      REGION                      = var.aws_region
+      MISSING_ATTRIBUTE_TOPIC_ARN = aws_sns_topic.newsletter_missing_attribute.arn
     }
   }
 
@@ -165,6 +183,13 @@ resource "aws_iam_policy" "scheduled_newsletters_lambda" {
           "sesv2:TestRenderEmailTemplate"
         ]
         Resource = "*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "sns:Publish"
+        ]
+        Resource = aws_sns_topic.newsletter_missing_attribute.arn
       }
     ]
   })

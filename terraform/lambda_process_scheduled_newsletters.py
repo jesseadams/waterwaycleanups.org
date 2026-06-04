@@ -14,11 +14,18 @@ logger.setLevel(logging.INFO)
 # Initialize AWS clients
 dynamodb = boto3.resource('dynamodb')
 sesv2_client = boto3.client('sesv2')
+sns_client = boto3.client('sns')
 
 # Environment variables
 TABLE_NAME = os.environ['DYNAMODB_TABLE_NAME']
 SOURCE_EMAIL = os.environ.get('SOURCE_EMAIL', 'Waterway Cleanups <info@waterwaycleanups.org>')
 REGION = os.environ['REGION']
+# SNS topic used to alert when a contact is missing its firstName attribute
+MISSING_ATTRIBUTE_TOPIC_ARN = os.environ.get('MISSING_ATTRIBUTE_TOPIC_ARN', '')
+
+# Default first name used when a contact has no firstName attribute so that
+# templates referencing {{firstName}} still render and the email is delivered.
+DEFAULT_FIRST_NAME = 'Volunteer'
 
 # DynamoDB table
 table = dynamodb.Table(TABLE_NAME)
@@ -195,10 +202,17 @@ def process_newsletter(newsletter):
                 try:
                     # Get contact attributes
                     contact_attributes = get_contact_attributes(contact_list, recipient)
-                    
+
+                    # Ensure firstName is present so templates referencing
+                    # {{firstName}} render and the email is delivered. If it's
+                    # missing, default to "Volunteer" and raise an SNS alert.
+                    if not str(contact_attributes.get('firstName', '')).strip():
+                        contact_attributes['firstName'] = DEFAULT_FIRST_NAME
+                        notify_missing_first_name(recipient, contact_list, template_name)
+
                     # Merge template data with contact attributes
                     merged_data = {**template_data, **contact_attributes}
-                    
+
                     # Send individual email with merged data
                     sesv2_client.send_email(
                         FromEmailAddress=from_email,
@@ -277,6 +291,41 @@ def get_filtered_contacts(contact_list, topic=None):
     except Exception as e:
         logger.error(f"Error getting contacts: {str(e)}")
         return []
+
+def notify_missing_first_name(email_address, contact_list, template_name):
+    """
+    Publish an SNS alert that a contact was missing its firstName attribute.
+    The email is still sent using the DEFAULT_FIRST_NAME fallback; this just
+    flags the data-quality gap so it can be backfilled.
+    """
+    logger.warning(
+        f"Contact {email_address} missing firstName; defaulting to "
+        f"'{DEFAULT_FIRST_NAME}' for template {template_name}"
+    )
+
+    if not MISSING_ATTRIBUTE_TOPIC_ARN:
+        logger.warning("MISSING_ATTRIBUTE_TOPIC_ARN not set; skipping SNS notification")
+        return
+
+    try:
+        message = {
+            'event': 'missing_contact_attribute',
+            'attribute': 'firstName',
+            'email': email_address,
+            'contactList': contact_list,
+            'templateName': template_name,
+            'defaultApplied': DEFAULT_FIRST_NAME,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }
+        sns_client.publish(
+            TopicArn=MISSING_ATTRIBUTE_TOPIC_ARN,
+            Subject=f"SES contact missing firstName: {email_address}",
+            Message=json.dumps(message, indent=2)
+        )
+    except Exception as e:
+        # Never let a notification failure block the email send
+        logger.error(f"Failed to publish missing-firstName SNS notification for {email_address}: {e}")
+
 
 def get_contact_attributes(contact_list, email_address):
     """
