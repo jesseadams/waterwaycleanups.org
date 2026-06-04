@@ -1737,7 +1737,7 @@
         const bagsStr = prompt('Bags of trash collected:');
         if (bagsStr === null) return; // user cancelled
         const bags = parseInt(bagsStr);
-        if (isNaN(bags) || bags < 0) { setError('Invalid number of bags'); return; }
+        if (!(bags >= 0)) { setError('Invalid number of bags'); return; }
 
         const tiresStr = prompt('Number of tires (0 if none):') || '0';
         const tires = parseInt(tiresStr) || 0;
