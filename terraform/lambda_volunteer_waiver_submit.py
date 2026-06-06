@@ -12,10 +12,55 @@ table_name = os.environ.get('WAIVER_TABLE_NAME', 'volunteer_waivers')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
 table = dynamodb.Table(table_name)
 
+volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME', 'volunteers')
+volunteers_table = dynamodb.Table(volunteers_table_name)
+
 # Set up logging
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+
+def backfill_volunteer_profile(email, first_name, last_name):
+    """
+    Ensure the volunteers record has a name on file after a waiver submission.
+
+    Profile completeness is judged by whether first_name exists in the
+    volunteers table (see lambda_auth_verify_code.get_profile_status), but the
+    waiver form is a separate entry point that collects the same name. Without
+    this backfill a volunteer can sign a waiver yet still be treated as having
+    an incomplete profile.
+
+    Uses if_not_exists so an existing name is never clobbered. Never raises:
+    a failure here must not block the waiver submission.
+    """
+    first_name = (first_name or '').strip()
+    last_name = (last_name or '').strip()
+    if not email or not first_name:
+        return
+    now = datetime.utcnow().isoformat()
+    full_name = f"{first_name} {last_name}".strip()
+    try:
+        volunteers_table.update_item(
+            Key={'email': email.lower()},
+            UpdateExpression=(
+                'SET first_name = if_not_exists(first_name, :fn), '
+                'last_name = if_not_exists(last_name, :ln), '
+                'full_name = if_not_exists(full_name, :full), '
+                'profile_complete = :pc, '
+                'updated_at = :now, created_at = if_not_exists(created_at, :now)'
+            ),
+            ExpressionAttributeValues={
+                ':fn': first_name,
+                ':ln': last_name,
+                ':full': full_name,
+                ':pc': True,
+                ':now': now,
+            },
+        )
+        logger.info("Backfilled volunteer profile name from waiver submission")
+    except Exception as e:
+        logger.error(f"Failed to backfill volunteer profile: {e}")
 
 def handler(event, context):
     """
@@ -152,6 +197,13 @@ def handler(event, context):
         logger.info(f"Saving waiver record to DynamoDB table: {table_name}")
         table.put_item(Item=item)
         logger.info("Waiver record saved successfully")
+
+        # Backfill the volunteer profile name so signing a waiver also completes
+        # the profile (non-blocking; failures are logged but don't fail the request).
+        # Only for adult waivers: a minor waiver's name is the minor's, not the
+        # account holder's, so it must not populate the volunteers record.
+        if is_adult:
+            backfill_volunteer_profile(item['email'], body['first_name'], body['last_name'])
         
         # Send SNS notification
         if sns_topic_arn:

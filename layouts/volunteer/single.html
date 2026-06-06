@@ -542,6 +542,18 @@
           console.log('Could not load leaderboard rank:', lbErr);
         }
         
+        // If we don't yet have a name on file, prompt for it before anything
+        // else (including the waiver redirect below). The verify-code path
+        // handles this for fresh logins, but a returning user with a still-valid
+        // session lands here directly, so enforce it on this path too.
+        if (data && data.profile_complete === false) {
+          setFirstName(data.first_name || '');
+          setLastName(data.last_name || '');
+          setSuccess('');
+          setStep('profile');
+          return;
+        }
+
         // Check if user has no waiver at all (not just expired) and redirect to waiver page
         // Only redirect if they've never submitted a waiver (no expiration date exists)
         if (data && !data.waiver.expirationDate) {

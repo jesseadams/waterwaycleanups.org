@@ -73,7 +73,9 @@ resource "aws_iam_policy" "volunteer_waiver_lambda_policy" {
         ],
         Resource = [
           aws_dynamodb_table.volunteer_waivers.arn,
-          "${aws_dynamodb_table.volunteer_waivers.arn}/index/*"
+          "${aws_dynamodb_table.volunteer_waivers.arn}/index/*",
+          aws_dynamodb_table.volunteers.arn,
+          "${aws_dynamodb_table.volunteers.arn}/index/*"
         ],
         Effect = "Allow"
       },
@@ -149,8 +151,9 @@ resource "aws_lambda_function" "volunteer_waiver_submit" {
 
   environment {
     variables = {
-      WAIVER_TABLE_NAME = aws_dynamodb_table.volunteer_waivers.name
-      SNS_TOPIC_ARN     = aws_sns_topic.volunteer_waiver_topic.arn
+      WAIVER_TABLE_NAME     = aws_dynamodb_table.volunteer_waivers.name
+      SNS_TOPIC_ARN         = aws_sns_topic.volunteer_waiver_topic.arn
+      VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
     }
   }
 }

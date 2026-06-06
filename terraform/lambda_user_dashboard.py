@@ -482,13 +482,22 @@ def handler(event, context):
             # Return empty RSVPs on any unexpected error
             rsvps = []
         
-        # Get leaderboard display preference from volunteer record
+        # Get profile + leaderboard display preference from volunteer record
         leaderboard_display = 'initial'
+        first_name = ''
+        last_name = ''
+        profile_complete = False
         try:
             vol_table = dynamodb.Table(os.environ.get('VOLUNTEERS_TABLE_NAME', 'volunteers'))
             vol_resp = vol_table.get_item(Key={'email': email})
             if 'Item' in vol_resp:
-                leaderboard_display = vol_resp['Item'].get('leaderboard_display', 'initial')
+                vol_item = vol_resp['Item']
+                leaderboard_display = vol_item.get('leaderboard_display', 'initial')
+                first_name = (vol_item.get('first_name') or '').strip()
+                last_name = (vol_item.get('last_name') or '').strip()
+                # Profile is complete when a name is on file, matching
+                # get_profile_status in lambda_auth_verify_code.
+                profile_complete = bool(first_name)
         except Exception as e:
             print(f"Error fetching volunteer record: {e}")
 
@@ -497,7 +506,10 @@ def handler(event, context):
             'waiver': waiver_data,
             'rsvps': rsvps,
             'email': email,
-            'leaderboard_display': leaderboard_display
+            'leaderboard_display': leaderboard_display,
+            'profile_complete': profile_complete,
+            'first_name': first_name,
+            'last_name': last_name
         }
         
         return {
