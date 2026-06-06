@@ -58,7 +58,13 @@ def validate_session(session_token):
         if expires_at:
             normalized = expires_at.replace('Z', '+00:00')
             try:
-                if datetime.fromisoformat(normalized) <= datetime.now(timezone.utc):
+                expiry = datetime.fromisoformat(normalized)
+                # Sessions are written with naive UTC timestamps
+                # (datetime.utcnow().isoformat()), so treat a missing tzinfo as UTC
+                # to avoid a naive-vs-aware comparison TypeError.
+                if expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=timezone.utc)
+                if expiry <= datetime.now(timezone.utc):
                     return None
             except ValueError:
                 pass  # If we can't parse it, fall through and trust the token

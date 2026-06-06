@@ -1286,6 +1286,10 @@
         impact_template_version: ''
       });
 
+      // Complete-event form state
+      const [completingEvent, setCompletingEvent] = useState(null);
+      const [completeFormData, setCompleteFormData] = useState({ bags: '', tires: '0', largeWeight: '0' });
+
       // Volunteers state
       const [volunteers, setVolunteers] = useState([]);
       const [volunteerFilters, setVolunteerFilters] = useState({
@@ -1733,30 +1737,32 @@
         }
       };
 
-      const handleCompleteEvent = async (event) => {
-        const bagsStr = prompt('Bags of trash collected:');
-        if (bagsStr === null) return; // user cancelled
-        const bags = parseInt(bagsStr);
-        if (!(bags >= 0)) { setError('Invalid number of bags'); return; }
+      const handleCompleteEvent = (event) => {
+        setError('');
+        setCompletingEvent(event);
+        setCompleteFormData({ bags: '', tires: '0', largeWeight: '0' });
+      };
 
-        const tiresStr = prompt('Number of tires (0 if none):') || '0';
-        const tires = parseInt(tiresStr) || 0;
+      const handleCompleteSubmit = async (e) => {
+        e.preventDefault();
+        if (!completingEvent) return;
 
-        const largeStr = prompt('Estimated weight of larger items in pounds (0 if none):') || '0';
-        const largeWeight = parseFloat(largeStr) || 0;
-
+        const bags = parseInt(completeFormData.bags, 10);
+        if (!(bags >= 0)) { setError('Please enter a valid number of bags'); return; }
+        const tires = parseInt(completeFormData.tires, 10) || 0;
+        const largeWeight = parseFloat(completeFormData.largeWeight) || 0;
         const totalLbs = (bags * 25) + largeWeight;
-        if (!confirm(`Complete event "${event.title}" with:\n• ${bags} bags of trash\n• ${tires} tires\n• ${largeWeight} lbs of large items\n• ${totalLbs} lbs total litter removed\n\nProceed?`)) return;
 
         try {
           setIsLoading(true);
           setError('');
-          await window.eventsAPI.completeEvent(event.event_id, {
+          await window.eventsAPI.completeEvent(completingEvent.event_id, {
             bags_of_trash: bags,
             number_of_tires: tires,
             large_items_weight_lbs: largeWeight
           });
-          setSuccess(`Event "${event.title}" completed. ${totalLbs} lbs of litter removed.`);
+          setSuccess(`Event "${completingEvent.title}" completed. ${totalLbs} lbs of litter removed.`);
+          setCompletingEvent(null);
           await loadEvents();
         } catch (error) {
           setError(error.message || 'Failed to complete event');
@@ -3135,6 +3141,101 @@
                     disabled: isLoading,
                     className: "px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
                   }, isLoading ? 'Saving...' : (editingEvent ? 'Update Event' : 'Create Event'))
+                ])
+              ])
+            ])) : null,
+            // Complete Event Modal
+            completingEvent ? React.createElement('div', {
+              key: 'complete-event-modal',
+              className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            }, [
+              React.createElement('div', {
+                key: 'modal-header',
+                className: "flex justify-between items-center p-6 border-b"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "text-xl font-semibold"
+                }, 'Complete Event'),
+                React.createElement('button', {
+                  key: 'close',
+                  onClick: () => setCompletingEvent(null),
+                  className: "text-gray-400 hover:text-gray-600 text-2xl"
+                }, '×')
+              ]),
+              React.createElement('form', {
+                key: 'form',
+                onSubmit: handleCompleteSubmit,
+                className: "p-6 space-y-4"
+              }, [
+                React.createElement('p', {
+                  key: 'event-name',
+                  className: "text-sm text-gray-600"
+                }, [
+                  'Recording cleanup results for ',
+                  React.createElement('span', { key: 'name', className: "font-medium text-gray-900" }, `"${completingEvent.title}"`),
+                  '.'
+                ]),
+                React.createElement('div', { key: 'bags-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Bags of trash collected *'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    required: true,
+                    autoFocus: true,
+                    value: completeFormData.bags,
+                    onChange: (e) => setCompleteFormData({ ...completeFormData, bags: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'tires-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Number of tires'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    value: completeFormData.tires,
+                    onChange: (e) => setCompleteFormData({ ...completeFormData, tires: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'large-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Weight of larger items (lbs)'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    step: 'any',
+                    value: completeFormData.largeWeight,
+                    onChange: (e) => setCompleteFormData({ ...completeFormData, largeWeight: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', {
+                  key: 'total',
+                  className: "bg-gray-50 rounded-md p-3 text-sm text-gray-700"
+                }, [
+                  'Estimated total litter removed: ',
+                  React.createElement('span', { key: 'lbs', className: "font-semibold text-gray-900" },
+                    `${((parseInt(completeFormData.bags, 10) || 0) * 25) + (parseFloat(completeFormData.largeWeight) || 0)} lbs`),
+                  React.createElement('span', { key: 'note', className: "block text-xs text-gray-500 mt-1" }, '(25 lbs per bag + larger items)')
+                ]),
+                React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-2" }, [
+                  React.createElement('button', {
+                    key: 'cancel',
+                    type: 'button',
+                    onClick: () => setCompletingEvent(null),
+                    className: "px-4 py-2 border rounded-md hover:bg-gray-50"
+                  }, 'Cancel'),
+                  React.createElement('button', {
+                    key: 'submit',
+                    type: 'submit',
+                    disabled: isLoading,
+                    className: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
+                  }, isLoading ? 'Completing...' : 'Complete Event')
                 ])
               ])
             ])) : null
