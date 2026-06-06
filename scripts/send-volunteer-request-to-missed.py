@@ -43,21 +43,43 @@ def main():
     parser.add_argument('--limit', type=int, default=None, help='Only send to the first N recipients (for testing)')
     parser.add_argument('--template', default=TEMPLATE_NAME, help=f'Template name (default: {TEMPLATE_NAME})')
     parser.add_argument('--from-email', default=FROM_EMAIL, help='Source email address')
+    parser.add_argument('--from-json', default=None,
+                        help='Send to the cohort recorded in this saved snapshot JSON (from '
+                             'find-contacts-missing-firstname.py --json) instead of scanning SES live. '
+                             'Use this to re-send to people who have since been backfilled and would '
+                             'no longer appear in a live scan.')
+    parser.add_argument('--exclude-file', default=None,
+                        help='Optional file with one email per line to skip (e.g. recipients already sent).')
     args = parser.parse_args()
 
     sesv2 = boto3.client('sesv2', region_name=REGION)
 
-    print("Building name indexes from RSVP tables...")
-    resolver = NameResolver()
-    print(f"  event_rsvps: {len(resolver.event_rsvp_index)} emails, "
-          f"rsvps: {len(resolver.rsvp_index)} emails\n")
+    exclude = set()
+    if args.exclude_file:
+        with open(args.exclude_file) as f:
+            exclude = {line.strip().lower() for line in f if line.strip()}
+        print(f"Excluding {len(exclude)} email(s) from {args.exclude_file}\n")
 
-    print(f"Fetching contacts from '{CONTACT_LIST_NAME}'...")
-    missing, total = find_missing_firstname(sesv2, resolver)
-    print(f"Found {total} total contacts, {len(missing)} missing firstName.\n")
+    if args.from_json:
+        print(f"Loading cohort snapshot from {args.from_json}...")
+        with open(args.from_json) as f:
+            missing = json.load(f)
+        total = len(missing)
+        print(f"Snapshot contains {total} contacts.\n")
+    else:
+        print("Building name indexes from RSVP tables...")
+        resolver = NameResolver()
+        print(f"  event_rsvps: {len(resolver.event_rsvp_index)} emails, "
+              f"rsvps: {len(resolver.rsvp_index)} emails\n")
+
+        print(f"Fetching contacts from '{CONTACT_LIST_NAME}'...")
+        missing, total = find_missing_firstname(sesv2, resolver)
+        print(f"Found {total} total contacts, {len(missing)} missing firstName.\n")
 
     # Only email contacts who are opted in to the volunteer topic.
-    recipients = [m for m in missing if m['volunteer_topic_status'] == 'OPT_IN']
+    recipients = [m for m in missing
+                  if m['volunteer_topic_status'] == 'OPT_IN'
+                  and m['email'].strip().lower() not in exclude]
     skipped_optout = [m for m in missing if m['volunteer_topic_status'] != 'OPT_IN']
 
     if args.limit is not None:

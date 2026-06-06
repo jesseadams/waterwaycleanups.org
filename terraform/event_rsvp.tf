@@ -124,7 +124,7 @@ resource "aws_iam_policy" "event_rsvp_lambda_policy" {
           "ses:GetContact"
         ],
         Resource = "*",
-        Effect = "Allow"
+        Effect   = "Allow"
       }
     ]
   })
@@ -195,10 +195,10 @@ resource "aws_lambda_function" "event_rsvp_check" {
 
   environment {
     variables = {
-      EVENTS_TABLE_NAME       = aws_dynamodb_table.events.name
-      VOLUNTEERS_TABLE_NAME   = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME        = aws_dynamodb_table.event_rsvps.name
-      EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
+      EVENTS_TABLE_NAME      = aws_dynamodb_table.events.name
+      VOLUNTEERS_TABLE_NAME  = aws_dynamodb_table.volunteers.name
+      RSVPS_TABLE_NAME       = aws_dynamodb_table.event_rsvps.name
+      EVENT_RSVPS_TABLE_NAME = aws_dynamodb_table.event_rsvps.name
     }
   }
 }
@@ -217,13 +217,13 @@ resource "aws_lambda_function" "event_rsvp_submit" {
 
   environment {
     variables = {
-      EVENTS_TABLE_NAME       = aws_dynamodb_table.events.name
-      VOLUNTEERS_TABLE_NAME   = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME        = aws_dynamodb_table.event_rsvps.name
-      EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
-      MINORS_TABLE_NAME       = aws_dynamodb_table.minors.name
-      SESSIONS_TABLE_NAME     = aws_dynamodb_table.auth_sessions.name
-      SNS_TOPIC_ARN           = aws_sns_topic.event_rsvp_topic.arn
+      EVENTS_TABLE_NAME      = aws_dynamodb_table.events.name
+      VOLUNTEERS_TABLE_NAME  = aws_dynamodb_table.volunteers.name
+      RSVPS_TABLE_NAME       = aws_dynamodb_table.event_rsvps.name
+      EVENT_RSVPS_TABLE_NAME = aws_dynamodb_table.event_rsvps.name
+      MINORS_TABLE_NAME      = aws_dynamodb_table.minors.name
+      SESSIONS_TABLE_NAME    = aws_dynamodb_table.auth_sessions.name
+      SNS_TOPIC_ARN          = aws_sns_topic.event_rsvp_topic.arn
     }
   }
 }
@@ -262,12 +262,12 @@ resource "aws_lambda_function" "event_rsvp_cancel" {
 
   environment {
     variables = {
-      EVENTS_TABLE_NAME       = aws_dynamodb_table.events.name
-      VOLUNTEERS_TABLE_NAME   = aws_dynamodb_table.volunteers.name
-      RSVPS_TABLE_NAME        = aws_dynamodb_table.event_rsvps.name
-      EVENT_RSVPS_TABLE_NAME  = aws_dynamodb_table.event_rsvps.name
-      SESSIONS_TABLE_NAME     = aws_dynamodb_table.auth_sessions.name
-      MINORS_TABLE_NAME       = aws_dynamodb_table.minors.name
+      EVENTS_TABLE_NAME      = aws_dynamodb_table.events.name
+      VOLUNTEERS_TABLE_NAME  = aws_dynamodb_table.volunteers.name
+      RSVPS_TABLE_NAME       = aws_dynamodb_table.event_rsvps.name
+      EVENT_RSVPS_TABLE_NAME = aws_dynamodb_table.event_rsvps.name
+      SESSIONS_TABLE_NAME    = aws_dynamodb_table.auth_sessions.name
+      MINORS_TABLE_NAME      = aws_dynamodb_table.minors.name
     }
   }
 }
@@ -454,7 +454,7 @@ resource "aws_api_gateway_method_response" "check_rsvp_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -468,7 +468,7 @@ resource "aws_api_gateway_integration_response" "check_rsvp_post_integration_res
   status_code = aws_api_gateway_method_response.check_rsvp_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -502,7 +502,7 @@ resource "aws_api_gateway_method_response" "submit_rsvp_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -516,7 +516,7 @@ resource "aws_api_gateway_integration_response" "submit_rsvp_post_integration_re
   status_code = aws_api_gateway_method_response.submit_rsvp_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -644,7 +644,7 @@ resource "aws_api_gateway_method_response" "list_rsvps_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -658,7 +658,7 @@ resource "aws_api_gateway_integration_response" "list_rsvps_post_integration_res
   status_code = aws_api_gateway_method_response.list_rsvps_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -741,7 +741,7 @@ resource "aws_api_gateway_method_response" "cancel_rsvp_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -755,7 +755,7 @@ resource "aws_api_gateway_integration_response" "cancel_rsvp_post_integration_re
   status_code = aws_api_gateway_method_response.cancel_rsvp_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -933,6 +933,13 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
     aws_api_gateway_integration_response.auth_verify_code_options_integration_response,
     aws_api_gateway_integration_response.auth_validate_session_options_integration_response,
     aws_api_gateway_integration_response.user_dashboard_options_integration_response,
+    # Auth complete-profile endpoint
+    aws_api_gateway_integration.auth_complete_profile_integration,
+    aws_api_gateway_integration.auth_complete_profile_options_integration,
+    aws_api_gateway_method_response.auth_complete_profile_post_response,
+    aws_api_gateway_integration_response.auth_complete_profile_post_integration_response,
+    aws_api_gateway_method_response.auth_complete_profile_options_response,
+    aws_api_gateway_integration_response.auth_complete_profile_options_integration_response,
     # Minors endpoints
     aws_api_gateway_integration.minors_add_integration,
     aws_api_gateway_integration.minors_list_integration,
@@ -1051,6 +1058,13 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
       aws_api_gateway_integration_response.auth_verify_code_options_integration_response,
       aws_api_gateway_integration_response.auth_validate_session_options_integration_response,
       aws_api_gateway_integration_response.user_dashboard_options_integration_response,
+      # Auth complete-profile endpoint
+      aws_api_gateway_integration.auth_complete_profile_integration,
+      aws_api_gateway_integration.auth_complete_profile_options_integration,
+      aws_api_gateway_method_response.auth_complete_profile_post_response,
+      aws_api_gateway_integration_response.auth_complete_profile_post_integration_response,
+      aws_api_gateway_method_response.auth_complete_profile_options_response,
+      aws_api_gateway_integration_response.auth_complete_profile_options_integration_response,
       # Minors endpoints
       aws_api_gateway_integration.minors_add_integration,
       aws_api_gateway_integration.minors_list_integration,

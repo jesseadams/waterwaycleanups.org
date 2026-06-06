@@ -9,8 +9,33 @@ from botocore.exceptions import ClientError
 dynamodb = boto3.resource('dynamodb')
 auth_table_name = os.environ.get('AUTH_TABLE_NAME')
 sessions_table_name = os.environ.get('SESSIONS_TABLE_NAME')
+volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME')
 auth_table = dynamodb.Table(auth_table_name)
 sessions_table = dynamodb.Table(sessions_table_name)
+volunteers_table = dynamodb.Table(volunteers_table_name) if volunteers_table_name else None
+
+
+def get_profile_status(email):
+    """
+    Return (profile_complete, first_name, last_name) for the given email by
+    looking up the volunteers table. A profile is considered complete only when
+    a non-empty first_name is on record. This lets the frontend prompt new
+    users for their name before they continue (e.g. to RSVP).
+    """
+    if not volunteers_table:
+        return True, '', ''  # Fail open: don't block login if table not configured
+    try:
+        resp = volunteers_table.get_item(Key={'email': email})
+        item = resp.get('Item')
+        if not item:
+            return False, '', ''
+        first_name = (item.get('first_name') or '').strip()
+        last_name = (item.get('last_name') or '').strip()
+        return bool(first_name), first_name, last_name
+    except Exception as e:
+        print(f"Error checking volunteer profile for {email}: {e}")
+        # Fail open so a lookup error never blocks authentication
+        return True, '', ''
 
 def handler(event, context):
     """
@@ -105,7 +130,12 @@ def handler(event, context):
         auth_table.delete_item(
             Key={'email': email}
         )
-        
+
+        # Determine whether this user already has a name on file. If not, the
+        # frontend will prompt for it before continuing (e.g. before RSVP) so
+        # we never create a nameless SES contact / volunteer record.
+        profile_complete, first_name, last_name = get_profile_status(email)
+
         return {
             'statusCode': 200,
             'headers': headers,
@@ -115,7 +145,10 @@ def handler(event, context):
                 'session_token': session_token,
                 'expires_at': session_expiry.isoformat(),
                 'email': email,
-                'isAdmin': is_admin
+                'isAdmin': is_admin,
+                'profile_complete': profile_complete,
+                'first_name': first_name,
+                'last_name': last_name
             })
         }
         

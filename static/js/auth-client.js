@@ -13,6 +13,7 @@ class AuthClient {
     this.apiEndpoints = {
       sendCode: this.getApiUrl('auth-send-code'),
       verifyCode: this.getApiUrl('auth-verify-code'),
+      completeProfile: this.getApiUrl('auth-complete-profile'),
       validateSession: this.getApiUrl('auth-validate-session'),
       dashboard: this.getApiUrl('user-dashboard'),
       submitRsvp: this.getApiUrl('submit-event-rsvp'),
@@ -112,12 +113,62 @@ class AuthClient {
       localStorage.setItem('auth_session_token', this.sessionToken);
       localStorage.setItem('auth_user_email', this.userEmail);
       localStorage.setItem('auth_session_expiry', this.sessionExpiry);
-      
+
+      // Cache the name/profile status so callers can decide whether to prompt
+      // the user for their name before continuing (e.g. before an RSVP).
+      if (data.first_name) {
+        localStorage.setItem('auth_user_first_name', data.first_name);
+      }
+      if (data.last_name) {
+        localStorage.setItem('auth_user_last_name', data.last_name);
+      }
+
       return data;
     } catch (error) {
       console.error('Error verifying code:', error);
       throw error;
     }
+  }
+
+  /**
+   * Complete the volunteer profile by capturing first/last name.
+   * Called immediately after verifyCode when profile_complete is false, so a
+   * name is always on file (and the SES contact populated) before any RSVP.
+   * @param {string} firstName
+   * @param {string} lastName
+   * @returns {Promise<Object>} Response from server
+   */
+  async completeProfile(firstName, lastName) {
+    if (!this.sessionToken) {
+      throw new Error('Not authenticated');
+    }
+
+    const response = await fetch(this.apiEndpoints.completeProfile, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        session_token: this.sessionToken,
+        first_name: firstName,
+        last_name: lastName,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || 'Failed to save profile');
+    }
+
+    if (data.first_name) {
+      localStorage.setItem('auth_user_first_name', data.first_name);
+    }
+    if (data.last_name) {
+      localStorage.setItem('auth_user_last_name', data.last_name);
+    }
+
+    return data;
   }
 
   /**
@@ -365,6 +416,8 @@ class AuthClient {
     localStorage.removeItem('auth_session_token');
     localStorage.removeItem('auth_user_email');
     localStorage.removeItem('auth_session_expiry');
+    localStorage.removeItem('auth_user_first_name');
+    localStorage.removeItem('auth_user_last_name');
   }
 }
 

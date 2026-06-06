@@ -442,10 +442,12 @@
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
-    const [step, setStep] = useState('loading'); // 'loading', 'email', 'code', 'dashboard'
+    const [step, setStep] = useState('loading'); // 'loading', 'email', 'code', 'profile', 'dashboard'
     const [dashboardData, setDashboardData] = useState(null);
     const [leaderboardRank, setLeaderboardRank] = useState(null);
     const [leaderboardDisplay, setLeaderboardDisplay] = useState('initial');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
 
     // Parse URL parameters for return URL and action
     const urlParams = new URLSearchParams(window.location.search);
@@ -589,14 +591,56 @@
       try {
         setIsLoading(true);
         setError('');
-        await window.authClient.verifyCode(email, validationCode);
+        const result = await window.authClient.verifyCode(email, validationCode);
+
+        // If we don't yet have a name on file, capture it before continuing so
+        // the volunteer record and SES contact are always populated (and the
+        // pending RSVP, if any, isn't lost).
+        if (result && result.profile_complete === false) {
+          setFirstName(result.first_name || '');
+          setLastName(result.last_name || '');
+          setSuccess('');
+          setIsAuthenticated(true);
+          setStep('profile');
+          return;
+        }
+
         setSuccess('Successfully authenticated!');
         setIsAuthenticated(true);
         setStep('dashboard');
         await loadDashboard();
-        
+
         // Handle post-login actions (like auto-RSVP) - await this to ensure it completes
         await handlePostLoginAction();
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const handleCompleteProfile = async (e) => {
+      e.preventDefault();
+      if (!firstName.trim() || !lastName.trim()) {
+        setError('Please enter your first and last name');
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError('');
+        await window.authClient.completeProfile(firstName.trim(), lastName.trim());
+        setSuccess('Thanks! Your profile is all set.');
+
+        // If the user came here to do something (e.g. RSVP), honor that first
+        // so we don't lose the action to a dashboard/waiver redirect.
+        if (action) {
+          await handlePostLoginAction();
+          return;
+        }
+
+        setStep('dashboard');
+        await loadDashboard();
       } catch (error) {
         setError(error.message);
       } finally {
@@ -801,6 +845,72 @@
           onClick: () => setStep('email'),
           className: "w-full bg-gray-300 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-400"
         }, 'Back to Email')
+      ])
+    ]);
+
+    const renderProfileStep = () => React.createElement('div', {
+      className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
+    }, [
+      React.createElement('h2', {
+        key: 'title',
+        className: "text-2xl font-bold mb-2 text-center"
+      }, 'Tell us your name'),
+      React.createElement('p', {
+        key: 'subtitle',
+        className: "text-gray-600 mb-6 text-center"
+      }, 'We use this to personalize your registration and our emails to you.'),
+      React.createElement('form', {
+        key: 'form',
+        onSubmit: handleCompleteProfile
+      }, [
+        React.createElement('div', {
+          key: 'first-group',
+          className: "mb-4"
+        }, [
+          React.createElement('label', {
+            key: 'label',
+            htmlFor: "first-name",
+            className: "block text-sm font-medium text-gray-700 mb-2"
+          }, 'First Name'),
+          React.createElement('input', {
+            key: 'input',
+            type: "text",
+            id: "first-name",
+            value: firstName,
+            onChange: (e) => setFirstName(e.target.value),
+            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+            placeholder: "First name",
+            autoComplete: "given-name",
+            required: true
+          })
+        ]),
+        React.createElement('div', {
+          key: 'last-group',
+          className: "mb-4"
+        }, [
+          React.createElement('label', {
+            key: 'label',
+            htmlFor: "last-name",
+            className: "block text-sm font-medium text-gray-700 mb-2"
+          }, 'Last Name'),
+          React.createElement('input', {
+            key: 'input',
+            type: "text",
+            id: "last-name",
+            value: lastName,
+            onChange: (e) => setLastName(e.target.value),
+            className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500",
+            placeholder: "Last name",
+            autoComplete: "family-name",
+            required: true
+          })
+        ]),
+        React.createElement('button', {
+          key: 'submit',
+          type: "submit",
+          disabled: isLoading || !firstName.trim() || !lastName.trim(),
+          className: "w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        }, isLoading ? 'Saving...' : 'Continue')
       ])
     ]);
 
@@ -1146,6 +1256,7 @@
       step === 'loading' ? renderLoadingState() : null,
       step === 'email' ? renderEmailStep() : null,
       step === 'code' ? renderCodeStep() : null,
+      step === 'profile' ? renderProfileStep() : null,
       step === 'dashboard' ? renderDashboard() : null
     ]));
   };

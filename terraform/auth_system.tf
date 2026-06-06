@@ -158,6 +158,15 @@ resource "aws_iam_policy" "auth_lambda_policy" {
       },
       {
         Action = [
+          "sesv2:CreateContact",
+          "sesv2:UpdateContact",
+          "sesv2:GetContact"
+        ],
+        Resource = "*",
+        Effect   = "Allow"
+      },
+      {
+        Action = [
           "bedrock:InvokeModel",
           "bedrock:GetFoundationModel"
         ],
@@ -165,7 +174,7 @@ resource "aws_iam_policy" "auth_lambda_policy" {
           "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
           "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
         ],
-        Effect   = "Allow"
+        Effect = "Allow"
       },
       {
         Action = [
@@ -215,8 +224,9 @@ resource "aws_lambda_function" "auth_verify_code" {
 
   environment {
     variables = {
-      AUTH_TABLE_NAME     = aws_dynamodb_table.auth_codes.name
-      SESSIONS_TABLE_NAME = aws_dynamodb_table.auth_sessions.name
+      AUTH_TABLE_NAME       = aws_dynamodb_table.auth_codes.name
+      SESSIONS_TABLE_NAME   = aws_dynamodb_table.auth_sessions.name
+      VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
     }
   }
 }
@@ -341,7 +351,7 @@ resource "aws_api_gateway_method_response" "auth_send_code_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -354,7 +364,7 @@ resource "aws_api_gateway_integration_response" "auth_send_code_post_integration
   status_code = aws_api_gateway_method_response.auth_send_code_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -433,7 +443,7 @@ resource "aws_api_gateway_method_response" "auth_verify_code_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -446,7 +456,7 @@ resource "aws_api_gateway_integration_response" "auth_verify_code_post_integrati
   status_code = aws_api_gateway_method_response.auth_verify_code_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -525,7 +535,7 @@ resource "aws_api_gateway_method_response" "auth_validate_session_post_response"
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -538,7 +548,7 @@ resource "aws_api_gateway_integration_response" "auth_validate_session_post_inte
   status_code = aws_api_gateway_method_response.auth_validate_session_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
@@ -617,7 +627,7 @@ resource "aws_api_gateway_method_response" "user_dashboard_post_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Headers" = true
     "method.response.header.Access-Control-Allow-Methods" = true
   }
@@ -630,7 +640,7 @@ resource "aws_api_gateway_integration_response" "user_dashboard_post_integration
   status_code = aws_api_gateway_method_response.user_dashboard_post_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
     "method.response.header.Access-Control-Allow-Methods" = "'OPTIONS,POST'"
   }
