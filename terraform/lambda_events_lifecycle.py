@@ -163,6 +163,56 @@ def update_completed_events(headers):
             'body': json.dumps({'error': f'Failed to update completed events: {str(e)}'})
         }
 
+def mark_active_rsvps_attended(event_id):
+    """
+    Convert all RSVPs for an event that are still in 'active' status to
+    'attended'. Records in any other status (no_show, cancelled, already
+    attended, etc.) are left untouched.
+
+    Returns the number of RSVPs updated. Never raises: completing the event
+    must not fail just because attendance backfill hit a snag.
+    """
+    updated = 0
+    try:
+        query_kwargs = {
+            'KeyConditionExpression': Key('event_id').eq(event_id),
+            'FilterExpression': Attr('status').eq('active')
+        }
+        while True:
+            resp = rsvps_table.query(**query_kwargs)
+            for item in resp.get('Items', []):
+                attendee_id = item.get('attendee_id')
+                if attendee_id is None:
+                    continue
+                try:
+                    rsvps_table.update_item(
+                        Key={'event_id': event_id, 'attendee_id': attendee_id},
+                        UpdateExpression='SET #status = :attended, updated_at = :now',
+                        # Only flip it if it is still active, so we never clobber
+                        # a status that changed between the query and the update.
+                        ConditionExpression=Attr('status').eq('active'),
+                        ExpressionAttributeNames={'#status': 'status'},
+                        ExpressionAttributeValues={
+                            ':attended': 'attended',
+                            ':now': datetime.now(timezone.utc).isoformat()
+                        }
+                    )
+                    updated += 1
+                except ClientError as e:
+                    code = e.response.get('Error', {}).get('Code', '')
+                    if code == 'ConditionalCheckFailedException':
+                        # Status changed out from under us; leave it alone.
+                        continue
+                    print(f"Error marking RSVP {attendee_id} attended: {e}")
+            last_key = resp.get('LastEvaluatedKey')
+            if not last_key:
+                break
+            query_kwargs['ExclusiveStartKey'] = last_key
+    except Exception as e:
+        print(f"Error converting active RSVPs to attended for {event_id}: {e}")
+    return updated
+
+
 def complete_event(body, headers):
     """
     Manually complete an event with cleanup metrics.
@@ -234,12 +284,17 @@ def complete_event(body, headers):
             }
         )
 
+        # Convert any still-active RSVPs to 'attended'. Other statuses
+        # (no_show, cancelled, already attended) are left as-is.
+        attended_count = mark_active_rsvps_attended(event_id)
+
         return {
             'statusCode': 200,
             'headers': headers,
             'body': json.dumps({
                 'message': f'Event {event_id} completed with metrics',
                 'event_id': event_id,
+                'rsvps_marked_attended': attended_count,
                 'cleanup_metrics': {
                     'bags_of_trash': bags_of_trash,
                     'number_of_tires': number_of_tires,

@@ -169,8 +169,7 @@ async function handleCompletedEvent(widget, eventId) {
 
   // Not logged in, or attended flag is false → show nothing.
   if (!isAuthenticated || !data.user_attended) {
-    widget.classList.add('hidden');
-    widget.style.display = 'none';
+    widget.style.setProperty('display', 'none', 'important');
     return true;
   }
 
@@ -187,24 +186,29 @@ async function handleCompletedEvent(widget, eventId) {
 
 /**
  * Remove/hide the interactive registration controls from a widget.
+ *
+ * Note: we set inline display directly rather than relying on the `.hidden`
+ * utility class. Tailwind's `.hidden` lives in `@layer utilities`, and the
+ * site's unlayered button CSS overrides any layered rule regardless of
+ * specificity, so the class alone would not actually hide the button.
  * @param {HTMLElement} widget
  */
 function hideRegistrationControls(widget) {
   const toggleButton = widget.querySelector('.rsvp-toggle-button');
-  if (toggleButton) toggleButton.classList.add('hidden');
+  if (toggleButton) toggleButton.style.setProperty('display', 'none', 'important');
 
   const countLine = widget.querySelector('.rsvp-count');
   if (countLine && countLine.closest('p')) {
-    countLine.closest('p').classList.add('hidden');
+    countLine.closest('p').style.setProperty('display', 'none', 'important');
   }
 
   const selector = widget.querySelector('.multi-person-selector-container');
   if (selector) selector.remove();
 
   const successMsg = widget.querySelector('.rsvp-success');
-  if (successMsg) successMsg.classList.add('hidden');
+  if (successMsg) successMsg.style.setProperty('display', 'none', 'important');
   const errorMsg = widget.querySelector('.rsvp-error');
-  if (errorMsg) errorMsg.classList.add('hidden');
+  if (errorMsg) errorMsg.style.setProperty('display', 'none', 'important');
 }
 
 /**
