@@ -55,6 +55,9 @@ def format_rsvp_record(rsvp_item):
         'last_name': rsvp_item.get('last_name', ''),
         'created_at': rsvp_item.get('created_at', rsvp_item.get('submission_date', ''))
     }
+
+    # Include the RSVP status so the frontend can distinguish attended vs active
+    formatted_rsvp['status'] = rsvp_item.get('status', 'active')
     
     # Include age for minor attendees
     if attendee_type == 'minor' and 'age' in rsvp_item:
@@ -170,6 +173,7 @@ def handler(event, context):
                         'success': False
                     })
                 }
+            event_status = event_response['Item'].get('status', 'active')
         except ClientError as e:
             print(f"Error checking event: {e.response['Error']['Message']}")
             return {
@@ -201,23 +205,37 @@ def handler(event, context):
             # Query all RSVPs for this volunteer and their minors
             guardian_rsvps = query_guardian_rsvps(event_id, email)
             
-            # Filter only active RSVPs
-            active_guardian_rsvps = [
-                rsvp for rsvp in guardian_rsvps 
-                if rsvp.get('status', 'active') == 'active'
-            ]
+            if event_status == 'completed':
+                # For completed events, surface attendance: include attended (and
+                # any non-cancelled) records so the frontend can show what the
+                # volunteer (and their minors) attended. Read-only.
+                relevant_guardian_rsvps = [
+                    rsvp for rsvp in guardian_rsvps
+                    if rsvp.get('status', 'active') not in ('cancelled', 'admin_cancelled')
+                ]
+            else:
+                # For active events, preserve existing behavior: only active RSVPs
+                # drive the registration UI.
+                relevant_guardian_rsvps = [
+                    rsvp for rsvp in guardian_rsvps
+                    if rsvp.get('status', 'active') == 'active'
+                ]
             
             # Format each RSVP with complete attendee information
-            user_rsvps = [format_rsvp_record(rsvp) for rsvp in active_guardian_rsvps]
+            user_rsvps = [format_rsvp_record(rsvp) for rsvp in relevant_guardian_rsvps]
             
-            # User is registered if they have any active RSVPs
+            # Whether the user attended this event (any attendee marked attended)
+            user_attended = any(r.get('status') == 'attended' for r in user_rsvps)
+            
+            # User is registered if they have any relevant (non-cancelled) RSVPs
             user_registered = len(user_rsvps) > 0
             
-            print(f"User {email} has {len(user_rsvps)} active RSVPs for event {event_id}")
+            print(f"User {email} has {len(user_rsvps)} RSVPs for event {event_id} (attended={user_attended})")
                 
         # Return the response
         response_body = {
             'event_id': event_id,
+            'event_status': event_status,
             'rsvp_count': rsvp_count,
             'user_registered': user_registered,
             'success': True
@@ -226,6 +244,7 @@ def handler(event, context):
         # Include user_rsvps array if email was provided
         if 'email' in body:
             response_body['user_rsvps'] = user_rsvps
+            response_body['user_attended'] = user_attended
         
         return {
             'statusCode': 200,

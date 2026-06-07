@@ -131,6 +131,125 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
+ * Handle the display for a completed event.
+ *
+ * Rules:
+ *  - If the event is not completed, returns false so normal RSVP init runs.
+ *  - If completed:
+ *      - Hide the registration controls entirely (no Sign Up, no count).
+ *      - If no one is logged in, OR the logged-in volunteer did not attend,
+ *        hide the whole widget (show nothing).
+ *      - If the logged-in volunteer attended, show a read-only confirmation
+ *        that they attended, listing any minors who attended with them.
+ *        No ability to modify the RSVP.
+ *
+ * @param {HTMLElement} widget - The RSVP widget element
+ * @param {string} eventId - The event ID
+ * @returns {Promise<boolean>} true if handled as a completed event
+ */
+async function handleCompletedEvent(widget, eventId) {
+  const isAuthenticated = window.authClient && window.authClient.isAuthenticated();
+  const userEmail = isAuthenticated ? window.authClient.getUserEmail() : null;
+
+  // Fetch event status (and the user's RSVPs if logged in).
+  let data;
+  try {
+    data = await checkEventRsvp(eventId, userEmail || undefined);
+  } catch (error) {
+    // If we can't determine status, let normal init proceed.
+    return false;
+  }
+
+  if (!data || data.event_status !== 'completed') {
+    return false;
+  }
+
+  // It's a completed event. Hide the live registration controls regardless.
+  hideRegistrationControls(widget);
+
+  // Not logged in, or attended flag is false → show nothing.
+  if (!isAuthenticated || !data.user_attended) {
+    widget.classList.add('hidden');
+    widget.style.display = 'none';
+    return true;
+  }
+
+  // Logged-in volunteer attended → render read-only attendance summary.
+  const userRsvps = Array.isArray(data.user_rsvps) ? data.user_rsvps : [];
+  const attended = userRsvps.filter(r => r.status === 'attended');
+
+  const volunteer = attended.find(r => r.attendee_type === 'volunteer');
+  const minors = attended.filter(r => r.attendee_type === 'minor');
+
+  renderAttendedSummary(widget, volunteer, minors);
+  return true;
+}
+
+/**
+ * Remove/hide the interactive registration controls from a widget.
+ * @param {HTMLElement} widget
+ */
+function hideRegistrationControls(widget) {
+  const toggleButton = widget.querySelector('.rsvp-toggle-button');
+  if (toggleButton) toggleButton.classList.add('hidden');
+
+  const countLine = widget.querySelector('.rsvp-count');
+  if (countLine && countLine.closest('p')) {
+    countLine.closest('p').classList.add('hidden');
+  }
+
+  const selector = widget.querySelector('.multi-person-selector-container');
+  if (selector) selector.remove();
+
+  const successMsg = widget.querySelector('.rsvp-success');
+  if (successMsg) successMsg.classList.add('hidden');
+  const errorMsg = widget.querySelector('.rsvp-error');
+  if (errorMsg) errorMsg.classList.add('hidden');
+}
+
+/**
+ * Render a read-only "you attended" summary for a completed event.
+ * @param {HTMLElement} widget
+ * @param {Object|undefined} volunteer - The volunteer's attended RSVP record
+ * @param {Array} minors - Attended minor RSVP records
+ */
+function renderAttendedSummary(widget, volunteer, minors) {
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+
+  const header = widget.querySelector('h3');
+  if (header) header.textContent = 'Your Attendance';
+
+  let minorsHtml = '';
+  if (minors && minors.length > 0) {
+    const items = minors.map(m => {
+      const name = `${m.first_name || ''} ${m.last_name || ''}`.trim() || 'Minor';
+      return `<li>${escapeHtml(name)}</li>`;
+    }).join('');
+    minorsHtml = `
+      <div class="mt-3">
+        <p class="text-gray-700 font-medium mb-1">Minors who attended with you:</p>
+        <ul class="list-disc list-inside text-gray-700">${items}</ul>
+      </div>`;
+  }
+
+  const summary = document.createElement('div');
+  summary.className = 'rsvp-attended-summary mt-2 p-3 bg-green-50 border border-green-200 rounded text-green-800';
+  summary.innerHTML = `
+    <div class="flex items-center gap-2">
+      <span aria-hidden="true">✅</span>
+      <span class="font-semibold">You attended this event. Thank you for volunteering!</span>
+    </div>
+    ${minorsHtml}`;
+
+  // Place the summary inside the widget, after the (now hidden) header block.
+  widget.appendChild(summary);
+}
+
+/**
  * Initialize a single RSVP widget
  * @param {HTMLElement} widget - The RSVP widget element to initialize
  */
@@ -143,6 +262,20 @@ async function initializeRsvpWidget(widget) {
   const rsvpCapacity = widget.querySelector('.rsvp-capacity');
   const rsvpSuccessMessage = widget.querySelector('.rsvp-success');
   const rsvpErrorMessage = widget.querySelector('.rsvp-error');
+
+  // Completed events get a read-only treatment: the registration UI is hidden,
+  // and only volunteers who attended see a confirmation of their attendance
+  // (including any minors who attended with them). Handle this first and bail
+  // out before wiring up any registration behavior.
+  try {
+    const handledAsCompleted = await handleCompletedEvent(widget, eventId);
+    if (handledAsCompleted) {
+      return;
+    }
+  } catch (error) {
+    console.error('Error handling completed-event state:', error);
+    // Fall through to normal behavior on error rather than blocking the page.
+  }
 
   // Set initial capacity display
   if (rsvpCapacity) {
