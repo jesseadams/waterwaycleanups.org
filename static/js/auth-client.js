@@ -398,6 +398,22 @@ class AuthClient {
   }
 
   /**
+   * Get cached first name (from verifyCode/completeProfile), if any.
+   * @returns {string} First name or empty string
+   */
+  getUserFirstName() {
+    return localStorage.getItem('auth_user_first_name') || '';
+  }
+
+  /**
+   * Get cached last name (from verifyCode/completeProfile), if any.
+   * @returns {string} Last name or empty string
+   */
+  getUserLastName() {
+    return localStorage.getItem('auth_user_last_name') || '';
+  }
+
+  /**
    * Get session expiry date
    * @returns {Date|null} Session expiry date or null if not authenticated
    */

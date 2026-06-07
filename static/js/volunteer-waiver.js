@@ -249,6 +249,32 @@ document.addEventListener('DOMContentLoaded', function() {
           field.required = true;
         }
       });
+
+      // Prefill the name fields if we already know the signed-in user's name.
+      prefillNameFields(userEmail);
+    }
+  }
+
+  // Prefill first/last name from the authenticated user's cached profile, but
+  // only when the form's email matches the signed-in user so we never put one
+  // person's name on another's waiver. Doesn't overwrite anything the user typed.
+  function prefillNameFields(formEmail) {
+    if (!window.authClient || !window.authClient.isAuthenticated()) return;
+
+    const authedEmail = (window.authClient.getUserEmail() || '').toLowerCase();
+    if (!authedEmail || authedEmail !== (formEmail || '').toLowerCase()) return;
+
+    const firstName = window.authClient.getUserFirstName();
+    const lastName = window.authClient.getUserLastName();
+
+    const firstNameField = document.getElementById('first_name');
+    const lastNameField = document.getElementById('last_name');
+
+    if (firstNameField && firstName && !firstNameField.value) {
+      firstNameField.value = firstName;
+    }
+    if (lastNameField && lastName && !lastNameField.value) {
+      lastNameField.value = lastName;
     }
   }
 
