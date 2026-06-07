@@ -44,7 +44,12 @@ class HugoGenerator {
   }
 
   /**
-   * Retrieve all active events from DynamoDB
+   * Retrieve events to publish from DynamoDB.
+   *
+   * Includes 'active' events (upcoming/ongoing) and 'completed' events.
+   * Completed events are kept on the site because they carry cleanup_metrics
+   * (bags of trash, tires, litter removed) that we surface on the event page.
+   * 'cancelled' and 'archived' events are intentionally excluded.
    */
   async getEventsFromDatabase() {
     this.log('Retrieving events from DynamoDB...');
@@ -52,17 +57,18 @@ class HugoGenerator {
     try {
       const params = {
         TableName: this.eventsTableName,
-        FilterExpression: '#status = :status',
+        FilterExpression: '#status IN (:active, :completed)',
         ExpressionAttributeNames: {
           '#status': 'status'
         },
         ExpressionAttributeValues: {
-          ':status': 'active'
+          ':active': 'active',
+          ':completed': 'completed'
         }
       };
 
       const result = await this.dynamodb.scan(params).promise();
-      this.log(`Retrieved ${result.Items.length} active events`);
+      this.log(`Retrieved ${result.Items.length} active/completed events`);
       
       // Sort events by start_time for consistent processing
       return result.Items.sort((a, b) => 
