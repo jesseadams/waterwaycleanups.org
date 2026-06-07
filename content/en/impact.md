@@ -88,6 +88,8 @@ Every cleanup we've completed, mapped.
 .impact-event-card .event-date { font-size: 0.8rem; color: #6b7280; }
 .impact-event-card .event-metrics { font-size: 0.8rem; color: #166534; font-weight: 600; margin-top: 0.25rem; }
 .impact-event-card .event-miles { font-size: 0.8rem; color: #ea580c; font-weight: 600; }
+.impact-event-card .event-adhoc-badge { display: inline-block; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #6b7280; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 0.25rem; padding: 0.05rem 0.35rem; vertical-align: middle; }
+.impact-event-card-adhoc { cursor: default; }
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"

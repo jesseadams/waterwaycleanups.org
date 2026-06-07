@@ -72,16 +72,30 @@
         ? '<div class="event-metrics">' + escapeHtml(metricBits.join(' • ')) + '</div>'
         : '';
       var milesHtml = miles ? '<div class="event-miles">' + miles + '</div>' : '';
-      var slug = ev.hugo_slug || ev.event_id;
-      var card = document.createElement('a');
-      card.className = 'impact-event-card';
-      card.href = '/events/' + slug + '/';
-      card.style.textDecoration = 'none';
-      card.style.color = 'inherit';
-      card.innerHTML = '<h3>' + escapeHtml(ev.title) + '</h3>'
+
+      // Ad hoc events have no event page, so render a non-linking card with a
+      // small badge rather than a link to a 404.
+      var titleHtml = '<h3>' + escapeHtml(ev.title)
+        + (ev.ad_hoc ? ' <span class="event-adhoc-badge">Community Cleanup</span>' : '')
+        + '</h3>';
+      var innerHtml = titleHtml
         + '<div class="event-date">' + date + '</div>'
         + metricsHtml
         + milesHtml;
+
+      var card;
+      if (ev.ad_hoc) {
+        card = document.createElement('div');
+        card.className = 'impact-event-card impact-event-card-adhoc';
+      } else {
+        var slug = ev.hugo_slug || ev.event_id;
+        card = document.createElement('a');
+        card.className = 'impact-event-card';
+        card.href = '/events/' + slug + '/';
+        card.style.textDecoration = 'none';
+        card.style.color = 'inherit';
+      }
+      card.innerHTML = innerHtml;
       listEl.appendChild(card);
     });
   }

@@ -112,14 +112,22 @@ async function main() {
     const tires = Number(cm.number_of_tires) || 0;
     const litterLbs = Number(cm.total_litter_lbs) || 0;
 
+    // Volunteer count: prefer attended RSVPs, but ad hoc / historical events
+    // have no RSVP records, so fall back to a stored volunteer_count.
+    const isAdHoc = event.ad_hoc === true;
+    const volunteerCount = attendedCount > 0
+      ? attendedCount
+      : (Number(event.volunteer_count) || 0);
+
     impactData.events.push({
       event_id: event.event_id,
       title: event.title,
       start_time: event.start_time,
       hugo_slug: event.hugo_slug || event.event_id,
+      ad_hoc: isAdHoc,
       impact_template: templateId,
       impact_template_version: version,
-      attended_count: attendedCount,
+      attended_count: volunteerCount,
       cleanup_metrics: {
         bags_of_trash: bags,
         number_of_tires: tires,
@@ -129,7 +137,7 @@ async function main() {
 
     impactData.stats.cleanups++;
     impactData.stats.miles += miles;
-    impactData.stats.volunteers += attendedCount;
+    impactData.stats.volunteers += volunteerCount;
     impactData.stats.bags_of_trash += bags;
     impactData.stats.tires += tires;
     impactData.stats.litter_lbs += litterLbs;

@@ -50,6 +50,10 @@ class HugoGenerator {
    * Completed events are kept on the site because they carry cleanup_metrics
    * (bags of trash, tires, litter removed) that we surface on the event page.
    * 'cancelled' and 'archived' events are intentionally excluded.
+   *
+   * Ad hoc events (ad_hoc = true) are excluded from page generation: they are
+   * unofficial cleanups backfilled from historical data that should only appear
+   * in aggregate impact stats, not as full event pages.
    */
   async getEventsFromDatabase() {
     this.log('Retrieving events from DynamoDB...');
@@ -57,7 +61,7 @@ class HugoGenerator {
     try {
       const params = {
         TableName: this.eventsTableName,
-        FilterExpression: '#status IN (:active, :completed)',
+        FilterExpression: '#status IN (:active, :completed) AND attribute_not_exists(ad_hoc)',
         ExpressionAttributeNames: {
           '#status': 'status'
         },
