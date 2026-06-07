@@ -1299,6 +1299,51 @@ resource "aws_api_gateway_integration" "events_lifecycle_post" {
   uri                     = aws_lambda_function.events_lifecycle.invoke_arn
 }
 
+# OPTIONS /events/lifecycle - CORS preflight
+resource "aws_api_gateway_method" "events_lifecycle_options" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  resource_id   = aws_api_gateway_resource.events_lifecycle.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "events_lifecycle_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_lifecycle.id
+  http_method = aws_api_gateway_method.events_lifecycle_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "events_lifecycle_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_lifecycle.id
+  http_method = aws_api_gateway_method.events_lifecycle_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "events_lifecycle_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.events_lifecycle.id
+  http_method = aws_api_gateway_method.events_lifecycle_options.http_method
+  status_code = aws_api_gateway_method_response.events_lifecycle_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+}
+
 # Add CORS support for all methods
 resource "aws_api_gateway_method" "events_options" {
   rest_api_id   = aws_api_gateway_rest_api.events_api.id
@@ -1389,6 +1434,7 @@ resource "aws_api_gateway_deployment" "events_api" {
     aws_api_gateway_integration.volunteers_export_get,
     # Event lifecycle endpoints
     aws_api_gateway_integration.events_lifecycle_post,
+    aws_api_gateway_integration.events_lifecycle_options,
     # New export and analytics endpoints
     aws_api_gateway_integration.events_export_get,
     aws_api_gateway_integration.analytics_get,
@@ -1420,7 +1466,8 @@ resource "aws_api_gateway_deployment" "events_api" {
       aws_api_gateway_method.volunteers_metrics_by_email_get.id,
       aws_api_gateway_authorizer.events_authorizer.id,
       aws_api_gateway_method.events_rsvps_options.id,
-      "force-redeploy-14-add-attendance-endpoint",
+      aws_api_gateway_method.events_lifecycle_options.id,
+      "force-redeploy-15-add-lifecycle-cors",
       aws_api_gateway_gateway_response.events_cors_4xx.id,
       aws_api_gateway_gateway_response.events_cors_5xx.id
     ]))
