@@ -130,6 +130,20 @@
       <span class="metric-value">v{{ $version }}</span>
     </div>
     {{ end }}
+    {{ with .Page.Params.cleanup_metrics }}
+    <div class="metric">
+      <span>Bags of Trash:</span>
+      <span class="metric-value">{{ .bags_of_trash | default 0 }}</span>
+    </div>
+    <div class="metric">
+      <span>Tires:</span>
+      <span class="metric-value">{{ .number_of_tires | default 0 }}</span>
+    </div>
+    <div class="metric">
+      <span>Litter Removed:</span>
+      <span class="metric-value">{{ .total_litter_lbs | default 0 }} lbs</span>
+    </div>
+    {{ end }}
   </div>
   {{ end }}
 </div>
@@ -192,6 +206,20 @@
     <div class="metric">
       <span>Event Version:</span>
       <span class="metric-value">v{{ $version }}</span>
+    </div>
+    {{ end }}
+    {{ with .Page.Params.cleanup_metrics }}
+    <div class="metric">
+      <span>Bags of Trash:</span>
+      <span class="metric-value">{{ .bags_of_trash | default 0 }}</span>
+    </div>
+    <div class="metric">
+      <span>Tires:</span>
+      <span class="metric-value">{{ .number_of_tires | default 0 }}</span>
+    </div>
+    <div class="metric">
+      <span>Litter Removed:</span>
+      <span class="metric-value">{{ .total_litter_lbs | default 0 }} lbs</span>
     </div>
     {{ end }}
   </div>

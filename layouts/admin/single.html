@@ -2355,6 +2355,23 @@
                     React.createElement('div', { key: 'location' }, `📍 ${event.location.name}`),
                     React.createElement('div', { key: 'cap' }, `👥 ${event.attended_count > 0 ? event.attended_count + '/' : ''}${event.rsvp_count || 0} ${event.attended_count > 0 ? 'Attended' : 'RSVPs'} (Cap: ${event.attendance_cap})`)
                   ]),
+                  event.cleanup_metrics ? React.createElement('div', {
+                    key: 'cleanup-metrics',
+                    className: "mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700 bg-green-50 border border-green-100 rounded px-3 py-2"
+                  }, [
+                    React.createElement('span', { key: 'bags' }, [
+                      React.createElement('span', { key: 'v', className: "font-semibold" }, `${event.cleanup_metrics.bags_of_trash || 0}`),
+                      ' bags of trash'
+                    ]),
+                    React.createElement('span', { key: 'tires' }, [
+                      React.createElement('span', { key: 'v', className: "font-semibold" }, `${event.cleanup_metrics.number_of_tires || 0}`),
+                      ' tires'
+                    ]),
+                    React.createElement('span', { key: 'lbs' }, [
+                      React.createElement('span', { key: 'v', className: "font-semibold" }, `${event.cleanup_metrics.total_litter_lbs || 0}`),
+                      ' lbs litter removed'
+                    ])
+                  ]) : null,
                   React.createElement('div', {
                     key: 'status',
                     className: "mt-2"

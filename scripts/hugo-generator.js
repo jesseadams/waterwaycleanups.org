@@ -122,6 +122,18 @@ class HugoGenerator {
       }
     }
 
+    // Add cleanup metrics for completed events so the event page can show
+    // bags of trash, tires, and estimated litter weight removed.
+    if (event.cleanup_metrics) {
+      const cm = event.cleanup_metrics;
+      frontmatter.cleanup_metrics = {
+        bags_of_trash: Number(cm.bags_of_trash) || 0,
+        number_of_tires: Number(cm.number_of_tires) || 0,
+        large_items_weight_lbs: Number(cm.large_items_weight_lbs) || 0,
+        total_litter_lbs: Number(cm.total_litter_lbs) || 0
+      };
+    }
+
     return frontmatter;
   }
 

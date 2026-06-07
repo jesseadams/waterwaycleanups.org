@@ -1,7 +1,56 @@
 <section class="post">
+    <style>
+        .cleanup-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+        @media (max-width: 640px) {
+            .cleanup-metrics { grid-template-columns: 1fr; }
+        }
+        .cleanup-metric {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 0.75rem;
+            padding: 1.25rem 1rem;
+            text-align: center;
+        }
+        .cleanup-metric-value {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.1;
+            color: #166534;
+        }
+        .cleanup-metric-unit {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .cleanup-metric-label {
+            margin-top: 0.35rem;
+            font-size: 0.875rem;
+            color: #4b5563;
+        }
+    </style>
     <div class="container title">
         {{ partial "breadcrumbs.html" . }}
         <h1>{{ page.Title | safeHTML }}</h1>
+        {{ with page.Params.cleanup_metrics }}
+        <div class="cleanup-metrics">
+            <div class="cleanup-metric">
+                <div class="cleanup-metric-value">{{ .bags_of_trash | default 0 }}</div>
+                <div class="cleanup-metric-label">Bags of Trash Collected</div>
+            </div>
+            <div class="cleanup-metric">
+                <div class="cleanup-metric-value">{{ .number_of_tires | default 0 }}</div>
+                <div class="cleanup-metric-label">Number of Tires</div>
+            </div>
+            <div class="cleanup-metric">
+                <div class="cleanup-metric-value">{{ .total_litter_lbs | default 0 }}<span class="cleanup-metric-unit"> lbs</span></div>
+                <div class="cleanup-metric-label">Estimated Weight of Litter Removed</div>
+            </div>
+        </div>
+        {{ end }}
         {{ if or page.Params.date (index page.Params.tags 0) }}
         <div class="meta">
             {{ if page.Params.date }}<div>
