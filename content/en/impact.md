@@ -86,6 +86,7 @@ Every cleanup we've completed, mapped.
 .impact-event-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
 .impact-event-card h3 { font-size: 0.95rem; font-weight: 600; margin: 0 0 0.25rem; }
 .impact-event-card .event-date { font-size: 0.8rem; color: #6b7280; }
+.impact-event-card .event-metrics { font-size: 0.8rem; color: #166534; font-weight: 600; margin-top: 0.25rem; }
 .impact-event-card .event-miles { font-size: 0.8rem; color: #ea580c; font-weight: 600; }
 </style>
 

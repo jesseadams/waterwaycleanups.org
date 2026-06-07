@@ -65,7 +65,9 @@ async function main() {
   console.log(`  Events table: ${eventsTable}`);
   console.log(`  Templates table: ${templatesTable}`);
 
-  // Get completed events with impact templates
+  // Get completed events. The map only renders those with an impact template,
+  // but the event list and aggregate cleanup metrics include every completed
+  // event (a cleanup still counts even without a drawn map).
   const completedEvents = await queryByStatus(eventsTable, 'completed');
   const eventsWithTemplates = completedEvents.filter(e => e.impact_template);
 
@@ -74,18 +76,18 @@ async function main() {
   const impactData = {
     generated_at: new Date().toISOString(),
     environment: environment,
-    stats: { cleanups: 0, miles: 0, volunteers: 0 },
+    stats: { cleanups: 0, miles: 0, volunteers: 0, bags_of_trash: 0, tires: 0, litter_lbs: 0 },
     events: [],
     templates: {}
   };
 
-  for (const event of eventsWithTemplates) {
-    const templateId = event.impact_template;
+  for (const event of completedEvents) {
+    const templateId = event.impact_template || null;
     const version = event.impact_template_version || 1;
-    const cacheKey = `${templateId}:${version}`;
+    const cacheKey = templateId ? `${templateId}:${version}` : null;
 
-    // Fetch template if not cached
-    if (!impactData.templates[cacheKey]) {
+    // Fetch template if present and not cached (used for the map + miles)
+    if (cacheKey && !impactData.templates[cacheKey]) {
       const tmpl = await getTemplate(templateId, version);
       if (tmpl) {
         impactData.templates[cacheKey] = {
@@ -101,24 +103,40 @@ async function main() {
     // Get attended count
     const attendedCount = await getAttendedCount(event.event_id);
 
-    const tmpl = impactData.templates[cacheKey];
+    const tmpl = cacheKey ? impactData.templates[cacheKey] : null;
     const miles = tmpl ? tmpl.estimated_miles : 0;
+
+    // Normalize cleanup metrics (may be absent on older completed events)
+    const cm = event.cleanup_metrics || {};
+    const bags = Number(cm.bags_of_trash) || 0;
+    const tires = Number(cm.number_of_tires) || 0;
+    const litterLbs = Number(cm.total_litter_lbs) || 0;
 
     impactData.events.push({
       event_id: event.event_id,
       title: event.title,
       start_time: event.start_time,
+      hugo_slug: event.hugo_slug || event.event_id,
       impact_template: templateId,
       impact_template_version: version,
-      attended_count: attendedCount
+      attended_count: attendedCount,
+      cleanup_metrics: {
+        bags_of_trash: bags,
+        number_of_tires: tires,
+        total_litter_lbs: litterLbs
+      }
     });
 
     impactData.stats.cleanups++;
     impactData.stats.miles += miles;
     impactData.stats.volunteers += attendedCount;
+    impactData.stats.bags_of_trash += bags;
+    impactData.stats.tires += tires;
+    impactData.stats.litter_lbs += litterLbs;
   }
 
   impactData.stats.miles = Math.round(impactData.stats.miles * 10) / 10;
+  impactData.stats.litter_lbs = Math.round(impactData.stats.litter_lbs * 10) / 10;
 
   // Write to Hugo data directory
   const outputPath = path.join(__dirname, '..', 'data', 'impact.json');

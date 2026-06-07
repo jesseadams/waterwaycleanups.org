@@ -12,4 +12,16 @@
     <div class="stat-value">{{ with $impact }}{{ .stats.volunteers }}{{ else }}—{{ end }}</div>
     <div class="stat-label">Volunteer Check-ins</div>
   </div>
+  <div class="stat">
+    <div class="stat-value">{{ with $impact }}{{ .stats.bags_of_trash | default 0 }}{{ else }}-{{ end }}</div>
+    <div class="stat-label">Bags of Trash Collected</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ with $impact }}{{ .stats.tires | default 0 }}{{ else }}-{{ end }}</div>
+    <div class="stat-label">Number of Tires</div>
+  </div>
+  <div class="stat">
+    <div class="stat-value">{{ with $impact }}{{ .stats.litter_lbs | default 0 }}{{ else }}-{{ end }}<span style="font-size:1.25rem;font-weight:700;"> lbs</span></div>
+    <div class="stat-label">Estimated Weight of Litter Removed</div>
+  </div>
 </div>
