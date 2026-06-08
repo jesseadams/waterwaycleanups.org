@@ -134,7 +134,13 @@ def handler(event, context):
             submitted_version = 1
 
         def _is_checked(value):
-            return value in ('on', True, 'true', 'True', 'yes', 1)
+            # The waiver form renders checkboxes with value="<label text>", so a
+            # checked box submits the label string (not "on"). An unchecked box
+            # is omitted entirely by FormData. So "present and non-empty, and not
+            # an explicit false" means checked. Also accept common truthy tokens.
+            if value in (False, None, '', 'false', 'False', 'off', 'no', 0):
+                return False
+            return bool(value)
 
         if submitted_version >= 2 and not _is_checked(body.get('code_of_conduct_acknowledgement')):
             return {
@@ -212,7 +218,7 @@ def handler(event, context):
             # Version of the waiver terms that was signed. Defaults to 1 for
             # older clients that don't send it.
             'waiver_version': int(body.get('waiver_version', 1) or 1),
-            'waiver_acknowledged': True if body['waiver_acknowledgement'] == 'on' else body['waiver_acknowledgement'],
+            'waiver_acknowledged': _is_checked(body.get('waiver_acknowledgement')),
             'code_of_conduct_acknowledged': _is_checked(body.get('code_of_conduct_acknowledgement'))
         }
         
