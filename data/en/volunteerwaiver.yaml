@@ -3,7 +3,8 @@ form_id: volunteerwaiver
 placeholders: false
 # Waiver version. Bump this integer whenever the waiver terms change; volunteers
 # whose most recent signed version is lower will be required to re-sign.
-waiver_version: 1
+# v2 (2026-06-08): added required Code of Conduct & Anti-Harassment acknowledgement.
+waiver_version: 2
 fields:
 - name: title
   input_type: html
@@ -82,6 +83,13 @@ fields:
 - name: waiver_acknowledgement
   input_type: checkbox
   label: I agree to the terms outlined in this Volunteer Waiver and Release Form.
+  required: true
+- name: code_of_conduct_html
+  input_type: html
+  label: <div class="waiver-note">All volunteers must also agree to our <a href="/code-of-conduct/" target="_blank" rel="noopener">Code of Conduct &amp; Anti-Harassment Policy</a>, which maintains a strict, zero-tolerance standard for harassment, abuse, and exploitation:</div>
+- name: code_of_conduct_acknowledgement
+  input_type: checkbox
+  label: I have read and agree to abide by the Waterway Cleanups Code of Conduct & Anti-Harassment Policy.
   required: true
 - name: adult_fields
   input_type: html

@@ -177,7 +177,8 @@ def handler(event, context):
             # Version of the waiver terms that was signed. Defaults to 1 for
             # older clients that don't send it.
             'waiver_version': int(body.get('waiver_version', 1) or 1),
-            'waiver_acknowledged': True if body['waiver_acknowledgement'] == 'on' else body['waiver_acknowledgement']
+            'waiver_acknowledged': True if body['waiver_acknowledgement'] == 'on' else body['waiver_acknowledgement'],
+            'code_of_conduct_acknowledged': True if body.get('code_of_conduct_acknowledgement') in ('on', True, 'true') else bool(body.get('code_of_conduct_acknowledgement'))
         }
         
         # Add adult-specific fields

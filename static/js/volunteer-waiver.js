@@ -37,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (response.hasWaiver) {
           // Valid waiver — but if it's expiring soon, let them renew early.
           if (!offerEarlyRenewalIfExpiringSoon(response)) {
+            // Nothing to do here — hide the email-check form entirely.
+            hideEmailSection();
             showMessage(`You have already completed the current waiver. It is valid until ${response.expirationDate}.`, 'success');
           }
         } else {
@@ -81,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // A valid waiver requires hasWaiver === true.
             if (response.hasWaiver) {
               if (!offerEarlyRenewalIfExpiringSoon(response)) {
+                hideEmailSection();
                 showMessage(`You have already completed the current waiver. It is valid until ${response.expirationDate}.`, 'success');
               }
             } else {
@@ -301,6 +304,13 @@ document.addEventListener('DOMContentLoaded', function() {
   function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  }
+
+  // Hide the email-check form (used when a valid waiver is already on file, so
+  // we don't prompt the user to re-check an email they don't need to).
+  function hideEmailSection() {
+    const emailSection = document.querySelector('.email-section');
+    if (emailSection) emailSection.style.display = 'none';
   }
 
   // Days until the given expiration date (negative if past). Returns null if
