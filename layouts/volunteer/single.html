@@ -28,6 +28,10 @@
 <script>
   // Initialize the auth client
   window.authClient = new AuthClient();
+  // Current waiver version from data/en/volunteerwaiver.yaml so the dashboard
+  // can prompt for a re-sign when the latest version is newer than what the
+  // volunteer last signed.
+  window.WAIVER_VERSION = {{ (index .Site.Data .Site.Language.Lang).volunteerwaiver.waiver_version | default 1 }};
 </script>
 
 <!-- Load and render the volunteer dashboard component -->
@@ -740,6 +744,15 @@
       const daysRemaining = calculateDaysRemaining(expirationDate);
       return daysRemaining >= 0 && !(daysRemaining > 30);
     };
+
+    // True when the signed waiver version is behind the current published
+    // version (window.WAIVER_VERSION), meaning a re-sign of the latest terms
+    // is required even if the waiver hasn't expired.
+    const isWaiverOutdated = (waiver) => {
+      if (!waiver || !waiver.version) return false;
+      const current = window.WAIVER_VERSION || 1;
+      return waiver.version < current;
+    };
     const renderLoadingState = () => React.createElement('div', {
       className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
     }, [
@@ -1006,6 +1019,23 @@
                 href: '/volunteer-waiver',
                 className: "inline-block bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
               }, 'Renew Waiver')
+            ]) : isWaiverOutdated(dashboardData.waiver) ? React.createElement('div', {
+              key: 'outdated',
+              className: "text-yellow-600"
+            }, [
+              React.createElement('p', {
+                key: 'status',
+                className: "font-medium"
+              }, '⚠ Waiver Update Required'),
+              React.createElement('p', {
+                key: 'message',
+                className: "text-sm text-gray-600 mb-3"
+              }, 'Our volunteer waiver has been updated. Please review and sign the latest version to continue volunteering.'),
+              React.createElement('a', {
+                key: 'resign-link',
+                href: '/volunteer-waiver',
+                className: "inline-block bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 text-sm"
+              }, 'Review & Sign Latest Waiver')
             ]) : isWaiverExpiringSoon(dashboardData.waiver.expirationDate) ? React.createElement('div', {
               key: 'expiring',
               className: "text-yellow-600"

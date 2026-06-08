@@ -174,6 +174,9 @@ def handler(event, context):
             'phone_number': body['phone_number'],
             'date_of_birth': body['date_of_birth'],
             'is_adult': is_adult,
+            # Version of the waiver terms that was signed. Defaults to 1 for
+            # older clients that don't send it.
+            'waiver_version': int(body.get('waiver_version', 1) or 1),
             'waiver_acknowledged': True if body['waiver_acknowledgement'] == 'on' else body['waiver_acknowledgement']
         }
         

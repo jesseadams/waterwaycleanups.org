@@ -32,13 +32,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Check their waiver status automatically
     checkExistingWaiver(userEmail)
       .then(response => {
-        // Check if user has a valid, non-expired waiver
-        if (response.expirationDate && !response.isExpired) {
-          // User has a valid, non-expired waiver
-          showMessage(`You have already completed a waiver. It is valid until ${response.expirationDate}.`, 'success');
+        // A valid waiver requires hasWaiver === true (covers expired AND
+        // outdated-version cases, which both set hasWaiver false).
+        if (response.hasWaiver) {
+          // Valid waiver — but if it's expiring soon, let them renew early.
+          if (!offerEarlyRenewalIfExpiringSoon(response)) {
+            showMessage(`You have already completed the current waiver. It is valid until ${response.expirationDate}.`, 'success');
+          }
         } else {
-          // User either has no waiver or an expired waiver - show the form
-          if (response.isExpired && response.expirationDate) {
+          // No waiver, expired, or an outdated version - show the form.
+          if (response.outdatedVersion) {
+            showMessage('Our waiver has been updated. Please review and sign the latest version to continue volunteering.', 'warning');
+          } else if (response.isExpired && response.expirationDate) {
             showMessage(`Your waiver expired on ${response.expirationDate}. Please complete a new waiver to continue volunteering.`, 'warning');
           }
           showWaiverForm();
@@ -73,13 +78,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // Check if the user has already completed a waiver
         checkExistingWaiver(email)
           .then(response => {
-            // Check if user has a valid, non-expired waiver
-            if (response.expirationDate && !response.isExpired) {
-              // User has a valid, non-expired waiver
-              showMessage(`You have already completed a waiver. It is valid until ${response.expirationDate}.`, 'success');
+            // A valid waiver requires hasWaiver === true.
+            if (response.hasWaiver) {
+              if (!offerEarlyRenewalIfExpiringSoon(response)) {
+                showMessage(`You have already completed the current waiver. It is valid until ${response.expirationDate}.`, 'success');
+              }
             } else {
-              // User either has no waiver or an expired waiver - show the form
-              if (response.isExpired && response.expirationDate) {
+              if (response.outdatedVersion) {
+                showMessage('Our waiver has been updated. Please review and sign the latest version to continue volunteering.', 'warning');
+              } else if (response.isExpired && response.expirationDate) {
                 showMessage(`Your waiver expired on ${response.expirationDate}. Please complete a new waiver to continue volunteering.`, 'warning');
               }
               showWaiverForm();
@@ -187,6 +194,8 @@ document.addEventListener('DOMContentLoaded', function() {
       
       // Add submission date
       data.submission_date = new Date().toISOString();
+      // Stamp the version of the waiver terms being signed.
+      data.waiver_version = window.WAIVER_VERSION || 1;
       
       // Determine if adult or minor based on DOB
       const birthDate = new Date(data.date_of_birth);
@@ -294,6 +303,37 @@ document.addEventListener('DOMContentLoaded', function() {
     return emailRegex.test(email);
   }
 
+  // Days until the given expiration date (negative if past). Returns null if
+  // the date can't be parsed.
+  function daysUntil(expirationDate) {
+    if (!expirationDate) return null;
+    const exp = new Date(expirationDate);
+    if (isNaN(exp.getTime())) return null;
+    return Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+  }
+
+  // For a still-valid waiver, offer an early renewal when it's within 30 days
+  // of expiring. Returns true if a renewal prompt was shown.
+  function offerEarlyRenewalIfExpiringSoon(response) {
+    const days = daysUntil(response.expirationDate);
+    if (days === null || days < 0 || days > 30) return false;
+
+    let messageContainer = document.getElementById('waiver-form-message');
+    if (!messageContainer) {
+      messageContainer = document.createElement('div');
+      messageContainer.id = 'waiver-form-message';
+      form.parentNode.insertBefore(messageContainer, form);
+    }
+    messageContainer.className = 'message warning';
+    messageContainer.innerHTML =
+      `Your waiver is valid until ${response.expirationDate} (${days} day${days === 1 ? '' : 's'} left). ` +
+      `You can renew it now to avoid any interruption. ` +
+      `<button type="button" id="renew-now-btn" class="button" style="margin-left:8px;">Renew Now</button>`;
+    const btn = document.getElementById('renew-now-btn');
+    if (btn) btn.addEventListener('click', () => { messageContainer.textContent = ''; messageContainer.className = 'message'; showWaiverForm(); });
+    return true;
+  }
+
   function setFormFieldsRequired(container, required) {
     const inputs = container.querySelectorAll('input, select, textarea');
     inputs.forEach(input => {
@@ -374,7 +414,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email, current_version: window.WAIVER_VERSION || 1 })
       });
       
       console.log('API response status:', response.status);

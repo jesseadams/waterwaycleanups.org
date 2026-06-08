@@ -61,6 +61,14 @@ def handler(event, context):
             }
         
         email = body['email'].lower()  # Normalize email to lowercase
+
+        # The current waiver version the client is presenting (from the YAML
+        # via window.WAIVER_VERSION). A signed version below this requires a
+        # re-sign even if the waiver is otherwise unexpired.
+        try:
+            current_version = int(body.get('current_version', 1) or 1)
+        except (TypeError, ValueError):
+            current_version = 1
         
         # Query DynamoDB for this email
         logger.info(f"Querying DynamoDB for email (redacted)")
@@ -155,6 +163,12 @@ def handler(event, context):
             }
         
         if submission_date > one_year_ago:
+            # Determine the version the volunteer last signed.
+            try:
+                signed_version = int(latest_waiver.get('waiver_version', 1) or 1)
+            except (TypeError, ValueError):
+                signed_version = 1
+
             # Waiver is valid - use expiration_date from DB if available, otherwise calculate
             if 'expiration_date' in latest_waiver and latest_waiver['expiration_date']:
                 expiration_date = latest_waiver['expiration_date']
@@ -181,7 +195,25 @@ def handler(event, context):
             else:
                 # Calculate expiration from submission date
                 expiration_date = (submission_date + timedelta(days=365)).strftime('%Y-%m-%d')
-            
+
+            # Unexpired but signed an older version of the terms -> require re-sign.
+            if signed_version < current_version:
+                return {
+                    'statusCode': 200,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': True,
+                        'hasWaiver': False,
+                        'isExpired': False,
+                        'outdatedVersion': True,
+                        'signedVersion': signed_version,
+                        'currentVersion': current_version,
+                        'message': 'The waiver has been updated. Please review and sign the latest version.',
+                        'expirationDate': expiration_date,
+                        'previousWaiverDate': latest_waiver['submission_date']
+                    })
+                }
+
             return {
                 'statusCode': 200,
                 'headers': headers,
@@ -189,6 +221,8 @@ def handler(event, context):
                     'success': True,
                     'hasWaiver': True,
                     'isExpired': False,
+                    'signedVersion': signed_version,
+                    'currentVersion': current_version,
                     'message': f'User has a valid waiver until {expiration_date}',
                     'expirationDate': expiration_date,
                     'submissionDate': latest_waiver['submission_date']

@@ -1,6 +1,9 @@
 action: "#" # We'll handle the form submission with JavaScript
 form_id: volunteerwaiver
 placeholders: false
+# Waiver version. Bump this integer whenever the waiver terms change; volunteers
+# whose most recent signed version is lower will be required to re-sign.
+waiver_version: 1
 fields:
 - name: title
   input_type: html

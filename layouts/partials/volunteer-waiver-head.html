@@ -4,6 +4,9 @@
 <script>
   // Initialize the auth client
   window.authClient = new AuthClient();
+  // Current waiver version from data/en/volunteerwaiver.yaml. Used to stamp new
+  // submissions and to decide when a re-sign of the latest version is required.
+  window.WAIVER_VERSION = {{ (index .Site.Data .Site.Language.Lang).volunteerwaiver.waiver_version | default 1 }};
 </script>
 <script src="/js/volunteer-waiver.js"></script>
 {{ end }}
