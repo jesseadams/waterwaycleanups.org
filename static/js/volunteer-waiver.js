@@ -262,6 +262,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
 
+      // The general loop above intentionally skips checkboxes (the guardian/minor
+      // consent checkboxes must not be required for adults). But the top-level
+      // acknowledgement checkboxes always apply, so re-require them explicitly.
+      // disableHiddenFieldsValidation() stripped their `required` at init.
+      // Checkboxes are rendered with name only (no id), so select by name.
+      ['waiver_acknowledgement', 'code_of_conduct_acknowledgement'].forEach(name => {
+        const cb = waiverFormFields.querySelector(`input[name="${name}"]`);
+        if (cb) cb.required = true;
+      });
+
       // Prefill the name fields if we already know the signed-in user's name.
       prefillNameFields(userEmail);
     }

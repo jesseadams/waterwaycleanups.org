@@ -21,9 +21,10 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def backfill_volunteer_profile(email, first_name, last_name):
+def backfill_volunteer_profile(email, first_name, last_name, phone=None):
     """
-    Ensure the volunteers record has a name on file after a waiver submission.
+    Ensure the volunteers record has a name (and phone) on file after a waiver
+    submission.
 
     Profile completeness is judged by whether first_name exists in the
     volunteers table (see lambda_auth_verify_code.get_profile_status), but the
@@ -31,34 +32,47 @@ def backfill_volunteer_profile(email, first_name, last_name):
     this backfill a volunteer can sign a waiver yet still be treated as having
     an incomplete profile.
 
-    Uses if_not_exists so an existing name is never clobbered. Never raises:
+    The phone number collected on the waiver is stored on the volunteers record
+    as `phone` (the field every admin/dashboard view reads), so it's visible
+    outside the raw waiver record.
+
+    Uses if_not_exists so existing values are never clobbered. Never raises:
     a failure here must not block the waiver submission.
     """
     first_name = (first_name or '').strip()
     last_name = (last_name or '').strip()
+    phone = (phone or '').strip()
     if not email or not first_name:
         return
     now = datetime.utcnow().isoformat()
     full_name = f"{first_name} {last_name}".strip()
+
+    set_clauses = [
+        'first_name = if_not_exists(first_name, :fn)',
+        'last_name = if_not_exists(last_name, :ln)',
+        'full_name = if_not_exists(full_name, :full)',
+        'profile_complete = :pc',
+        'updated_at = :now',
+        'created_at = if_not_exists(created_at, :now)',
+    ]
+    values = {
+        ':fn': first_name,
+        ':ln': last_name,
+        ':full': full_name,
+        ':pc': True,
+        ':now': now,
+    }
+    if phone:
+        set_clauses.append('phone = if_not_exists(phone, :phone)')
+        values[':phone'] = phone
+
     try:
         volunteers_table.update_item(
             Key={'email': email.lower()},
-            UpdateExpression=(
-                'SET first_name = if_not_exists(first_name, :fn), '
-                'last_name = if_not_exists(last_name, :ln), '
-                'full_name = if_not_exists(full_name, :full), '
-                'profile_complete = :pc, '
-                'updated_at = :now, created_at = if_not_exists(created_at, :now)'
-            ),
-            ExpressionAttributeValues={
-                ':fn': first_name,
-                ':ln': last_name,
-                ':full': full_name,
-                ':pc': True,
-                ':now': now,
-            },
+            UpdateExpression='SET ' + ', '.join(set_clauses),
+            ExpressionAttributeValues=values,
         )
-        logger.info("Backfilled volunteer profile name from waiver submission")
+        logger.info("Backfilled volunteer profile from waiver submission")
     except Exception as e:
         logger.error(f"Failed to backfill volunteer profile: {e}")
 
@@ -108,6 +122,27 @@ def handler(event, context):
                 'body': json.dumps({
                     'success': False,
                     'message': f'Missing required fields: {", ".join(missing_fields)}'
+                })
+            }
+
+        # Code of Conduct acknowledgement is required for waiver version 2+
+        # (introduced June 2026). Enforced server-side so a submission can't
+        # bypass it. Older clients that don't send a version are not blocked.
+        try:
+            submitted_version = int(body.get('waiver_version', 1) or 1)
+        except (TypeError, ValueError):
+            submitted_version = 1
+
+        def _is_checked(value):
+            return value in ('on', True, 'true', 'True', 'yes', 1)
+
+        if submitted_version >= 2 and not _is_checked(body.get('code_of_conduct_acknowledgement')):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'You must agree to the Code of Conduct & Anti-Harassment Policy to submit this waiver.'
                 })
             }
         
@@ -178,7 +213,7 @@ def handler(event, context):
             # older clients that don't send it.
             'waiver_version': int(body.get('waiver_version', 1) or 1),
             'waiver_acknowledged': True if body['waiver_acknowledgement'] == 'on' else body['waiver_acknowledgement'],
-            'code_of_conduct_acknowledged': True if body.get('code_of_conduct_acknowledgement') in ('on', True, 'true') else bool(body.get('code_of_conduct_acknowledgement'))
+            'code_of_conduct_acknowledged': _is_checked(body.get('code_of_conduct_acknowledgement'))
         }
         
         # Add adult-specific fields
@@ -207,7 +242,7 @@ def handler(event, context):
         # Only for adult waivers: a minor waiver's name is the minor's, not the
         # account holder's, so it must not populate the volunteers record.
         if is_adult:
-            backfill_volunteer_profile(item['email'], body['first_name'], body['last_name'])
+            backfill_volunteer_profile(item['email'], body['first_name'], body['last_name'], body.get('phone_number'))
         
         # Send SNS notification
         if sns_topic_arn:
