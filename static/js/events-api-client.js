@@ -315,7 +315,7 @@ class EventsAPIClient {
                 event_hours: data.event_hours || 2,
                 bags_of_trash: data.bags_of_trash || 0,
                 number_of_tires: data.number_of_tires || 0,
-                total_litter_lbs: data.total_litter_lbs
+                large_items_weight_lbs: data.large_items_weight_lbs || 0
             })
         });
     }

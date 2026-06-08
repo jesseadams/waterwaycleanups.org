@@ -1292,7 +1292,7 @@
 
       // Ad hoc event form state
       const [showAdhocForm, setShowAdhocForm] = useState(false);
-      const [adhocFormData, setAdhocFormData] = useState({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', total_lbs: '' });
+      const [adhocFormData, setAdhocFormData] = useState({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', largeWeight: '0' });
 
       // Volunteers state
       const [volunteers, setVolunteers] = useState([]);
@@ -1370,6 +1370,11 @@
               setIsAuthenticated(true);
               setEmail(window.authClient.getUserEmail());
               setStep('dashboard');
+              // Sync the session token to the Events API client so authenticated
+              // calls (lifecycle, attendance, etc.) send the Authorization header.
+              if (window.eventsAPI) {
+                window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+              }
               loadDashboardData();
             })
             .catch(error => {
@@ -1553,6 +1558,11 @@
           setSuccess('Successfully authenticated!');
           setIsAuthenticated(true);
           setStep('dashboard');
+          // Sync the session token to the Events API client so authenticated
+          // calls (lifecycle, attendance, etc.) send the Authorization header.
+          if (window.eventsAPI) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
           loadDashboardData();
         } catch (error) {
           setError(error.message);
@@ -1730,6 +1740,9 @@
         try {
           setIsLoading(true);
           setError('');
+          if (window.eventsAPI && window.authClient) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
           await window.eventsAPI.cancelEvent(event.event_id, reason, notify);
           setSuccess(`Event "${event.title}" cancelled.${notify ? ' Notifications sent.' : ''}`);
           await loadEvents();
@@ -1759,6 +1772,9 @@
         try {
           setIsLoading(true);
           setError('');
+          if (window.eventsAPI && window.authClient) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
           await window.eventsAPI.completeEvent(completingEvent.event_id, {
             bags_of_trash: bags,
             number_of_tires: tires,
@@ -1781,17 +1797,24 @@
         if (!adhocFormData.date) { setError('Date is required'); return; }
         if (!(bags >= 0)) { setError('Please enter a valid number of bags'); return; }
 
+        const tires = parseInt(adhocFormData.tires, 10) || 0;
+        const largeWeight = parseFloat(adhocFormData.largeWeight) || 0;
+
         try {
           setIsLoading(true);
           setError('');
+          // Ensure the Events API client has the current session token.
+          if (window.eventsAPI && window.authClient) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
           const result = await window.eventsAPI.createAdhocEvent({
             title: adhocFormData.title.trim(),
             date: adhocFormData.date,
             location_name: adhocFormData.location_name.trim(),
             volunteer_count: parseInt(adhocFormData.volunteer_count, 10) || 0,
             bags_of_trash: bags,
-            number_of_tires: parseInt(adhocFormData.tires, 10) || 0,
-            total_litter_lbs: adhocFormData.total_lbs === '' ? undefined : (parseFloat(adhocFormData.total_lbs) || 0)
+            number_of_tires: tires,
+            large_items_weight_lbs: largeWeight
           });
           setSuccess(`Ad hoc event created. It will appear in impact stats on the next content sync.`);
           setShowAdhocForm(false);
@@ -2331,7 +2354,7 @@
               React.createElement('div', { key: 'header-actions', className: "flex gap-2" }, [
                 React.createElement('button', {
                   key: 'adhoc-btn',
-                  onClick: () => { setAdhocFormData({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', total_lbs: '' }); setError(''); setShowAdhocForm(true); },
+                  onClick: () => { setAdhocFormData({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', largeWeight: '0' }); setError(''); setShowAdhocForm(true); },
                   className: "bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
                 }, '+ Ad Hoc Event'),
                 React.createElement('button', {
@@ -3368,14 +3391,22 @@
                   })
                 ]),
                 React.createElement('div', { key: 'lbs-field' }, [
-                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Estimated Pounds of Litter'),
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Weight of larger items (lbs)'),
                   React.createElement('input', {
                     key: 'i', type: 'number', min: '0', step: 'any',
-                    placeholder: 'Leave blank to estimate from bags',
-                    value: adhocFormData.total_lbs,
-                    onChange: (e) => setAdhocFormData({ ...adhocFormData, total_lbs: e.target.value }),
+                    value: adhocFormData.largeWeight,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, largeWeight: e.target.value }),
                     className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
                   })
+                ]),
+                React.createElement('div', {
+                  key: 'total',
+                  className: "bg-gray-50 rounded-md p-3 text-sm text-gray-700"
+                }, [
+                  'Estimated total litter removed: ',
+                  React.createElement('span', { key: 'lbs', className: "font-semibold text-gray-900" },
+                    `${((parseInt(adhocFormData.bags, 10) || 0) * 25) + (parseFloat(adhocFormData.largeWeight) || 0)} lbs`),
+                  React.createElement('span', { key: 'note', className: "block text-xs text-gray-500 mt-1" }, '(25 lbs per bag + larger items)')
                 ]),
                 React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-2" }, [
                   React.createElement('button', {
