@@ -751,7 +751,7 @@
     const isWaiverOutdated = (waiver) => {
       if (!waiver || !waiver.version) return false;
       const current = window.WAIVER_VERSION || 1;
-      return waiver.version < current;
+      return current > waiver.version;
     };
     const renderLoadingState = () => React.createElement('div', {
       className: "max-w-md mx-auto bg-white p-6 rounded-lg shadow-md"
