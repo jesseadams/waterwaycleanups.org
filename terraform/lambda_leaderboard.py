@@ -137,6 +137,11 @@ def handler(event, context):
                 continue
 
             vol = volunteers.get(email, {})
+
+            # Hide suspended volunteers from the leaderboard entirely.
+            if vol.get('suspended') is True:
+                continue
+
             first = vol.get('first_name', '')
             last = vol.get('last_name', '')
 

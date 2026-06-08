@@ -243,7 +243,8 @@ resource "aws_lambda_function" "auth_validate_session" {
 
   environment {
     variables = {
-      SESSIONS_TABLE_NAME = aws_dynamodb_table.auth_sessions.name
+      SESSIONS_TABLE_NAME   = aws_dynamodb_table.auth_sessions.name
+      VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
     }
   }
 }

@@ -168,6 +168,14 @@ resource "aws_iam_policy" "events_lambda_policy" {
       },
       {
         Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ],
+        Resource = "*",
+        Effect   = "Allow"
+      },
+      {
+        Action = [
           "lambda:InvokeFunction"
         ],
         Resource = [
@@ -688,6 +696,8 @@ resource "aws_lambda_function" "events_lifecycle" {
       RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
       SNS_TOPIC_ARN         = aws_sns_topic.events_topic.arn
+      SENDER_EMAIL          = "info@waterwaycleanups.org"
+      SITE_URL              = "https://${local.domain_name}"
     }
   }
 

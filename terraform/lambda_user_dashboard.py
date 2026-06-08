@@ -172,6 +172,23 @@ def handler(event, context):
         
         email = session['email']
 
+        # Block suspended volunteers from loading the dashboard.
+        try:
+            vol_table = dynamodb.Table(os.environ.get('VOLUNTEERS_TABLE_NAME', 'volunteers'))
+            vol_check = vol_table.get_item(Key={'email': email.lower()}).get('Item', {})
+            if vol_check.get('suspended') is True:
+                return {
+                    'statusCode': 403,
+                    'headers': headers,
+                    'body': json.dumps({
+                        'success': False,
+                        'suspended': True,
+                        'error': 'Your volunteer access has been suspended.'
+                    })
+                }
+        except Exception as e:
+            print(f"Error checking suspension for {email}: {e}")
+
         # Handle leaderboard display preference update
         action = body.get('action')
         if action == 'update_leaderboard_display':

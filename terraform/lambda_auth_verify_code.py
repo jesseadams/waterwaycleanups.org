@@ -103,6 +103,24 @@ def handler(event, context):
                 'headers': headers,
                 'body': json.dumps({'error': 'Validation code has expired'})
             }
+
+        # Block suspended volunteers from logging in (Code of Conduct enforcement).
+        if volunteers_table is not None:
+            try:
+                vol = volunteers_table.get_item(Key={'email': email}).get('Item', {})
+                if vol.get('suspended') is True:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'error': 'Your volunteer access has been suspended. '
+                                     'Please review our Code of Conduct or contact info@waterwaycleanups.org.',
+                            'suspended': True
+                        })
+                    }
+            except Exception as e:
+                # Fail open on lookup error so a glitch never locks everyone out.
+                print(f"Error checking suspension for {email}: {e}")
         
         # Create session
         session_token = str(uuid.uuid4())

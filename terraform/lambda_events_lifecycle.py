@@ -9,12 +9,16 @@ from botocore.exceptions import ClientError
 # Initialize AWS clients
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
+aws_region = os.environ.get('AWS_REGION', 'us-east-1')
+ses = boto3.client('ses', region_name=aws_region)
 
 # Get environment variables
 events_table_name = os.environ.get('EVENTS_TABLE_NAME')
 rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME')
 volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
+sender_email = os.environ.get('SENDER_EMAIL', 'info@waterwaycleanups.org')
+site_url = os.environ.get('SITE_URL', 'https://waterwaycleanups.org').rstrip('/')
 
 # Initialize tables
 events_table = dynamodb.Table(events_table_name)
@@ -55,6 +59,10 @@ def handler(event, context):
             return complete_event(body, headers)
         elif action == 'create_adhoc_event':
             return create_adhoc_event(body, headers)
+        elif action == 'suspend_volunteer':
+            return suspend_volunteer(body, headers)
+        elif action == 'unsuspend_volunteer':
+            return unsuspend_volunteer(body, headers)
         elif action == 'archive_events':
             return archive_events(body, headers)
         elif action == 'cancel_event':
@@ -66,7 +74,7 @@ def handler(event, context):
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
-                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, create_adhoc_event, archive_events, cancel_event, categorize_events'
+                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, create_adhoc_event, suspend_volunteer, unsuspend_volunteer, archive_events, cancel_event, categorize_events'
                 })
             }
             
@@ -174,6 +182,202 @@ def _slugify(text):
     text = re.sub(r"[''']", '', text)
     text = re.sub(r'[^a-z0-9]+', '-', text)
     return re.sub(r'^-+|-+$', '', text)
+
+
+def _cancel_future_active_rsvps(email):
+    """
+    Cancel all of a volunteer's still-active RSVPs for events that haven't
+    happened yet. Sets status to 'admin_cancelled'. Returns the count cancelled.
+    Past events and already-finalized RSVPs (attended/no_show/cancelled) are
+    left untouched. Minors under this guardian are cancelled too.
+    """
+    now = datetime.now(timezone.utc)
+    cancelled = 0
+    email = (email or '').lower()
+    if not email:
+        return 0
+
+    # Collect this volunteer's RSVPs: their own (email) and minors they guard.
+    rsvps = []
+    try:
+        # Volunteer's own RSVPs via the email index if present, else scan-filter.
+        resp = rsvps_table.scan(
+            FilterExpression=Attr('email').eq(email) | Attr('guardian_email').eq(email)
+        )
+        rsvps = resp.get('Items', [])
+        while 'LastEvaluatedKey' in resp:
+            resp = rsvps_table.scan(
+                FilterExpression=Attr('email').eq(email) | Attr('guardian_email').eq(email),
+                ExclusiveStartKey=resp['LastEvaluatedKey']
+            )
+            rsvps.extend(resp.get('Items', []))
+    except ClientError as e:
+        print(f"Error scanning RSVPs for {email}: {e}")
+        return 0
+
+    for rsvp in rsvps:
+        if rsvp.get('status', 'active') != 'active':
+            continue
+        event_id = rsvp.get('event_id')
+        attendee_id = rsvp.get('attendee_id')
+        if not event_id or not attendee_id:
+            continue
+        # Only future events.
+        ev = events_table.get_item(Key={'event_id': event_id}).get('Item', {})
+        start = ev.get('start_time')
+        if start:
+            try:
+                if datetime.fromisoformat(start.replace('Z', '+00:00')) <= now:
+                    continue  # event already started/past
+            except (ValueError, AttributeError):
+                pass
+        try:
+            rsvps_table.update_item(
+                Key={'event_id': event_id, 'attendee_id': attendee_id},
+                UpdateExpression='SET #s = :c, updated_at = :now',
+                ConditionExpression=Attr('status').eq('active'),
+                ExpressionAttributeNames={'#s': 'status'},
+                ExpressionAttributeValues={
+                    ':c': 'admin_cancelled',
+                    ':now': now.isoformat(),
+                }
+            )
+            cancelled += 1
+        except ClientError as e:
+            if e.response.get('Error', {}).get('Code') != 'ConditionalCheckFailedException':
+                print(f"Error cancelling RSVP {event_id}/{attendee_id}: {e}")
+    return cancelled
+
+
+def _send_suspension_email(email, first_name, reason):
+    """Email the volunteer a notice with a link to the Code of Conduct. Never raises."""
+    if not email:
+        return False
+    greeting = f"Hi {first_name}," if first_name else "Hello,"
+    coc_url = f"{site_url}/code-of-conduct/"
+    reason_line = f"<p>{reason}</p>" if reason else ""
+    html = f"""<!DOCTYPE html>
+<html><head><meta charset="UTF-8"></head>
+<body style="font-family:Arial,sans-serif;margin:0;padding:0;background:#f3f4f6;">
+  <div style="max-width:600px;margin:0 auto;background:#fff;">
+    <div style="background:#991b1b;color:#fff;padding:20px;border-radius:8px 8px 0 0;">
+      <h2 style="margin:0;">Volunteer Status Update</h2>
+    </div>
+    <div style="padding:24px;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 8px 8px;line-height:1.6;">
+      <p>{greeting}</p>
+      <p>Following a review, your volunteer access with Waterway Cleanups has been
+      <strong>suspended</strong>, effective immediately. You will not be able to log in to the
+      volunteer dashboard or register for events during this time, and any upcoming
+      registrations have been cancelled.</p>
+      {reason_line}
+      <p>This action was taken under our
+      <a href="{coc_url}">Code of Conduct &amp; Anti-Harassment Policy</a>. Please review it here:
+      <br/><a href="{coc_url}">{coc_url}</a></p>
+      <p>If you have questions about this decision, you may reply to this email.</p>
+      <hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;" />
+      <p style="color:#9ca3af;font-size:12px;">Waterway Cleanups</p>
+    </div>
+  </div>
+</body></html>"""
+    text = (f"{greeting}\n\nFollowing a review, your volunteer access with Waterway Cleanups has "
+            "been suspended, effective immediately. You will not be able to log in or register "
+            "for events, and any upcoming registrations have been cancelled.\n\n"
+            + (reason + "\n\n" if reason else "")
+            + f"This action was taken under our Code of Conduct & Anti-Harassment Policy: {coc_url}\n\n"
+            "If you have questions, you may reply to this email.\n\nWaterway Cleanups")
+    try:
+        ses.send_email(
+            Source=sender_email,
+            Destination={'ToAddresses': [email]},
+            ReplyToAddresses=[sender_email],
+            Message={
+                'Subject': {'Data': 'Important: Your Waterway Cleanups volunteer status', 'Charset': 'UTF-8'},
+                'Body': {
+                    'Html': {'Data': html, 'Charset': 'UTF-8'},
+                    'Text': {'Data': text, 'Charset': 'UTF-8'},
+                }
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error sending suspension email to {email}: {e}")
+        return False
+
+
+def suspend_volunteer(body, headers):
+    """
+    Suspend a volunteer for a Code of Conduct violation. This:
+      1. Flags the volunteers record as suspended (blocks login + dashboard).
+      2. Hides them from the leaderboard (the flag is honored there).
+      3. Cancels their active RSVPs for future events.
+      4. Emails them a notice with a link to the Code of Conduct.
+    """
+    email = (body.get('email') or '').strip().lower()
+    reason = (body.get('reason') or '').strip()
+    if not email:
+        return {'statusCode': 400, 'headers': headers,
+                'body': json.dumps({'error': 'email is required'})}
+
+    now = datetime.now(timezone.utc).isoformat()
+
+    # 1. Flag the volunteer record (create if missing so the flag always sticks).
+    first_name = ''
+    try:
+        existing = volunteers_table.get_item(Key={'email': email}).get('Item', {})
+        first_name = existing.get('first_name', '')
+        volunteers_table.update_item(
+            Key={'email': email},
+            UpdateExpression=('SET suspended = :t, suspended_at = :now, '
+                              'suspension_reason = :r, updated_at = :now, '
+                              'created_at = if_not_exists(created_at, :now)'),
+            ExpressionAttributeValues={':t': True, ':now': now, ':r': reason},
+        )
+    except ClientError as e:
+        print(f"Error flagging volunteer {email}: {e}")
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': 'Failed to suspend volunteer'})}
+
+    # 3. Cancel active future RSVPs.
+    cancelled = _cancel_future_active_rsvps(email)
+
+    # 4. Email notice (non-blocking).
+    emailed = _send_suspension_email(email, first_name, reason)
+
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({
+            'success': True,
+            'message': f'Volunteer {email} suspended.',
+            'email': email,
+            'rsvps_cancelled': cancelled,
+            'email_sent': emailed,
+        })
+    }
+
+
+def unsuspend_volunteer(body, headers):
+    """Reinstate a suspended volunteer. Does not restore cancelled RSVPs."""
+    email = (body.get('email') or '').strip().lower()
+    if not email:
+        return {'statusCode': 400, 'headers': headers,
+                'body': json.dumps({'error': 'email is required'})}
+    now = datetime.now(timezone.utc).isoformat()
+    try:
+        volunteers_table.update_item(
+            Key={'email': email},
+            UpdateExpression='SET suspended = :f, updated_at = :now REMOVE suspended_at, suspension_reason',
+            ExpressionAttributeValues={':f': False, ':now': now},
+        )
+    except ClientError as e:
+        print(f"Error unsuspending volunteer {email}: {e}")
+        return {'statusCode': 500, 'headers': headers,
+                'body': json.dumps({'error': 'Failed to reinstate volunteer'})}
+    return {
+        'statusCode': 200,
+        'headers': headers,
+        'body': json.dumps({'success': True, 'message': f'Volunteer {email} reinstated.', 'email': email})
+    }
 
 
 def create_adhoc_event(body, headers):

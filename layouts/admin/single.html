@@ -1931,6 +1931,43 @@
         }
       };
 
+      const handleSuspendVolunteer = async (volunteer) => {
+        const reason = prompt(
+          `Suspend ${volunteer.full_name || volunteer.email} for a Code of Conduct violation?\n\n` +
+          `This will block their login, hide them from the leaderboard, cancel their upcoming RSVPs, ` +
+          `and email them a notice with a link to the Code of Conduct.\n\n` +
+          `Optional reason to include in the email (leave blank to omit):`
+        );
+        if (reason === null) return; // cancelled
+        try {
+          setError('');
+          if (window.eventsAPI && window.authClient) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
+          const res = await window.eventsAPI.suspendVolunteer(volunteer.email, reason.trim());
+          setSuccess(`${volunteer.email} suspended. ${res.rsvps_cancelled || 0} upcoming RSVP(s) cancelled.` +
+            (res.email_sent ? ' Notice emailed.' : ' (email not sent)'));
+          await loadVolunteers();
+        } catch (err) {
+          setError(err.message || 'Failed to suspend volunteer');
+        }
+      };
+
+      const handleUnsuspendVolunteer = async (volunteer) => {
+        if (!confirm(`Reinstate ${volunteer.full_name || volunteer.email}? They will be able to log in again. Cancelled RSVPs are not restored.`)) return;
+        try {
+          setError('');
+          if (window.eventsAPI && window.authClient) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
+          await window.eventsAPI.unsuspendVolunteer(volunteer.email);
+          setSuccess(`${volunteer.email} reinstated.`);
+          await loadVolunteers();
+        } catch (err) {
+          setError(err.message || 'Failed to reinstate volunteer');
+        }
+      };
+
       const handleViewEventRSVPs = async (event, silent = false) => {
         try {
           // Toggle: if clicking the same event, close the panel (only on explicit click)
@@ -3542,6 +3579,10 @@
                   key: 'badges',
                   className: "flex flex-col items-end space-y-1"
                 }, [
+                  volunteer.suspended ? React.createElement('span', {
+                    key: 'suspended',
+                    className: "inline-block px-2 py-1 text-xs rounded bg-red-200 text-red-900 font-semibold"
+                  }, '⛔ SUSPENDED') : null,
                   volunteer.has_waiver ? React.createElement('span', {
                     key: 'waiver',
                     className: "inline-block px-2 py-1 text-xs rounded bg-green-100 text-green-800"
@@ -3593,6 +3634,21 @@
                   className: "inline-flex items-center gap-1 px-2 py-1 rounded text-xs bg-red-50 text-red-700"
                 }, `⚠ ${volunteer.engagement.no_shows} no-show`) : null
               ]) : null,
+              // Admin actions (suspend / reinstate)
+              React.createElement('div', {
+                key: 'vol-actions',
+                className: "flex justify-end mt-3 pt-3 border-t border-gray-100"
+              }, [
+                volunteer.suspended ? React.createElement('button', {
+                  key: 'reinstate',
+                  onClick: () => handleUnsuspendVolunteer(volunteer),
+                  className: "px-3 py-1 rounded text-xs bg-gray-200 text-gray-800 hover:bg-gray-300"
+                }, 'Reinstate') : React.createElement('button', {
+                  key: 'suspend',
+                  onClick: () => handleSuspendVolunteer(volunteer),
+                  className: "px-3 py-1 rounded text-xs bg-red-600 text-white hover:bg-red-700"
+                }, 'Suspend (Code of Conduct)')
+              ]),
               volunteer.minors && volunteer.minors.length > 0 ? React.createElement('div', {
                 key: 'minors-section',
                 className: "mt-3 pt-3 border-t border-gray-200"

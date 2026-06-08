@@ -8,6 +8,8 @@ from botocore.exceptions import ClientError
 dynamodb = boto3.resource('dynamodb')
 sessions_table_name = os.environ.get('SESSIONS_TABLE_NAME')
 sessions_table = dynamodb.Table(sessions_table_name)
+volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME')
+volunteers_table = dynamodb.Table(volunteers_table_name) if volunteers_table_name else None
 
 def handler(event, context):
     """
@@ -80,7 +82,25 @@ def handler(event, context):
             'jesse@waterwaycleanups.org',
         ]
         is_admin = email.lower() in [admin_email.lower() for admin_email in admin_emails]
-        
+
+        # Block suspended volunteers (Code of Conduct enforcement). Admins are
+        # never auto-suspended via this path.
+        if volunteers_table is not None and not is_admin:
+            try:
+                vol = volunteers_table.get_item(Key={'email': email.lower()}).get('Item', {})
+                if vol.get('suspended') is True:
+                    return {
+                        'statusCode': 403,
+                        'headers': headers,
+                        'body': json.dumps({
+                            'valid': False,
+                            'suspended': True,
+                            'error': 'Your volunteer access has been suspended.'
+                        })
+                    }
+            except Exception as e:
+                print(f"Error checking suspension for {email}: {e}")
+
         return {
             'statusCode': 200,
             'headers': headers,

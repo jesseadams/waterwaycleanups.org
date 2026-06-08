@@ -286,8 +286,7 @@ class EventsAPIClient {
     /**
      * Complete an event with cleanup metrics (admin only)
      */
-    async completeEvent(eventId, metrics) {
-        return this.makeRequest('/events/lifecycle', {
+    async completeEvent(eventId, metrics) {        return this.makeRequest('/events/lifecycle', {
             method: 'POST',
             body: JSON.stringify({
                 action: 'complete_event',
@@ -316,6 +315,35 @@ class EventsAPIClient {
                 bags_of_trash: data.bags_of_trash || 0,
                 number_of_tires: data.number_of_tires || 0,
                 large_items_weight_lbs: data.large_items_weight_lbs || 0
+            })
+        });
+    }
+
+    /**
+     * Suspend a volunteer for a Code of Conduct violation (admin only).
+     * Blocks their login, hides them from the leaderboard, cancels their
+     * active future RSVPs, and emails them a notice.
+     */
+    async suspendVolunteer(email, reason = '') {
+        return this.makeRequest('/events/lifecycle', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'suspend_volunteer',
+                email: email,
+                reason: reason
+            })
+        });
+    }
+
+    /**
+     * Reinstate a suspended volunteer (admin only).
+     */
+    async unsuspendVolunteer(email) {
+        return this.makeRequest('/events/lifecycle', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'unsuspend_volunteer',
+                email: email
             })
         });
     }
