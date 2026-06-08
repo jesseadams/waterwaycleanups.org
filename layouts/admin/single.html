@@ -1290,6 +1290,10 @@
       const [completingEvent, setCompletingEvent] = useState(null);
       const [completeFormData, setCompleteFormData] = useState({ bags: '', tires: '0', largeWeight: '0' });
 
+      // Ad hoc event form state
+      const [showAdhocForm, setShowAdhocForm] = useState(false);
+      const [adhocFormData, setAdhocFormData] = useState({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', total_lbs: '' });
+
       // Volunteers state
       const [volunteers, setVolunteers] = useState([]);
       const [volunteerFilters, setVolunteerFilters] = useState({
@@ -1681,8 +1685,7 @@
         }
       };
 
-      const handleEventDelete = async (eventId) => {
-        if (!confirm('Queue this event for deletion? It will be removed from the live site when you publish changes in the Content Editor tab.')) {
+      const handleEventDelete = async (eventId) => {        if (!confirm('Queue this event for deletion? It will be removed from the live site when you publish changes in the Content Editor tab.')) {
           return;
         }
 
@@ -1766,6 +1769,35 @@
           await loadEvents();
         } catch (error) {
           setError(error.message || 'Failed to complete event');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      const handleAdhocSubmit = async (e) => {
+        e.preventDefault();
+        const bags = parseInt(adhocFormData.bags, 10);
+        if (!adhocFormData.title.trim()) { setError('Title is required'); return; }
+        if (!adhocFormData.date) { setError('Date is required'); return; }
+        if (!(bags >= 0)) { setError('Please enter a valid number of bags'); return; }
+
+        try {
+          setIsLoading(true);
+          setError('');
+          const result = await window.eventsAPI.createAdhocEvent({
+            title: adhocFormData.title.trim(),
+            date: adhocFormData.date,
+            location_name: adhocFormData.location_name.trim(),
+            volunteer_count: parseInt(adhocFormData.volunteer_count, 10) || 0,
+            bags_of_trash: bags,
+            number_of_tires: parseInt(adhocFormData.tires, 10) || 0,
+            total_litter_lbs: adhocFormData.total_lbs === '' ? undefined : (parseFloat(adhocFormData.total_lbs) || 0)
+          });
+          setSuccess(`Ad hoc event created. It will appear in impact stats on the next content sync.`);
+          setShowAdhocForm(false);
+          await loadEvents();
+        } catch (error) {
+          setError(error.message || 'Failed to create ad hoc event');
         } finally {
           setIsLoading(false);
         }
@@ -2296,11 +2328,18 @@
                 key: 'title',
                 className: "text-xl font-semibold"
               }, 'Event Management'),
-              React.createElement('button', {
-                key: 'create-btn',
-                onClick: () => setShowEventForm(true),
-                className: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-              }, 'Create New Event')
+              React.createElement('div', { key: 'header-actions', className: "flex gap-2" }, [
+                React.createElement('button', {
+                  key: 'adhoc-btn',
+                  onClick: () => { setAdhocFormData({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', total_lbs: '' }); setError(''); setShowAdhocForm(true); },
+                  className: "bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                }, '+ Ad Hoc Event'),
+                React.createElement('button', {
+                  key: 'create-btn',
+                  onClick: () => setShowEventForm(true),
+                  className: "bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                }, 'Create New Event')
+              ])
             ]),
             React.createElement('div', {
               key: 'event-filters',
@@ -3253,6 +3292,101 @@
                     disabled: isLoading,
                     className: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
                   }, isLoading ? 'Completing...' : 'Complete Event')
+                ])
+              ])
+            ])) : null,
+            // Ad Hoc Event Modal
+            showAdhocForm ? React.createElement('div', {
+              key: 'adhoc-modal',
+              className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            }, [
+              React.createElement('div', {
+                key: 'modal-header',
+                className: "flex justify-between items-center p-6 border-b"
+              }, [
+                React.createElement('h3', { key: 'title', className: "text-xl font-semibold" }, 'Add Ad Hoc Event'),
+                React.createElement('button', {
+                  key: 'close',
+                  onClick: () => setShowAdhocForm(false),
+                  className: "text-gray-400 hover:text-gray-600 text-2xl"
+                }, '×')
+              ]),
+              React.createElement('form', {
+                key: 'form',
+                onSubmit: handleAdhocSubmit,
+                className: "p-6 space-y-4"
+              }, [
+                React.createElement('p', {
+                  key: 'note',
+                  className: "text-sm text-gray-600"
+                }, 'Ad hoc events are unofficial cleanups. They appear in aggregate impact stats only — not as a public event page.'),
+                React.createElement('div', { key: 'title-field' }, [
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Title / Location *'),
+                  React.createElement('input', {
+                    key: 'i', type: 'text', required: true, autoFocus: true,
+                    value: adhocFormData.title,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, title: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'date-field' }, [
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Date *'),
+                  React.createElement('input', {
+                    key: 'i', type: 'date', required: true,
+                    value: adhocFormData.date,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, date: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'vol-field' }, [
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Number of Volunteers'),
+                  React.createElement('input', {
+                    key: 'i', type: 'number', min: '0',
+                    value: adhocFormData.volunteer_count,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, volunteer_count: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'bags-field' }, [
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Bags of Trash *'),
+                  React.createElement('input', {
+                    key: 'i', type: 'number', min: '0', required: true,
+                    value: adhocFormData.bags,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, bags: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'tires-field' }, [
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Number of Tires'),
+                  React.createElement('input', {
+                    key: 'i', type: 'number', min: '0',
+                    value: adhocFormData.tires,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, tires: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'lbs-field' }, [
+                  React.createElement('label', { key: 'l', className: "block text-sm font-medium mb-1" }, 'Estimated Pounds of Litter'),
+                  React.createElement('input', {
+                    key: 'i', type: 'number', min: '0', step: 'any',
+                    placeholder: 'Leave blank to estimate from bags',
+                    value: adhocFormData.total_lbs,
+                    onChange: (e) => setAdhocFormData({ ...adhocFormData, total_lbs: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-2" }, [
+                  React.createElement('button', {
+                    key: 'cancel', type: 'button',
+                    onClick: () => setShowAdhocForm(false),
+                    className: "px-4 py-2 border rounded-md hover:bg-gray-50"
+                  }, 'Cancel'),
+                  React.createElement('button', {
+                    key: 'submit', type: 'submit', disabled: isLoading,
+                    className: "px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-800 disabled:opacity-50"
+                  }, isLoading ? 'Creating...' : 'Create Ad Hoc Event')
                 ])
               ])
             ])) : null

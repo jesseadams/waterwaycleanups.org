@@ -300,6 +300,27 @@ class EventsAPIClient {
     }
 
     /**
+     * Create an ad hoc, private, completed event with cleanup metrics (admin only).
+     * Ad hoc events appear only in aggregate impact stats, not as event pages.
+     */
+    async createAdhocEvent(data) {
+        return this.makeRequest('/events/lifecycle', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'create_adhoc_event',
+                title: data.title,
+                date: data.date,
+                location_name: data.location_name || '',
+                volunteer_count: data.volunteer_count || 0,
+                event_hours: data.event_hours || 2,
+                bags_of_trash: data.bags_of_trash || 0,
+                number_of_tires: data.number_of_tires || 0,
+                total_litter_lbs: data.total_litter_lbs
+            })
+        });
+    }
+
+    /**
      * Get message history for an event (admin only)
      */
     async getEventMessages(eventId) {

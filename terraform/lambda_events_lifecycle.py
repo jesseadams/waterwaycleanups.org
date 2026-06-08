@@ -1,7 +1,8 @@
 import json
 import os
+import re
 import boto3
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
@@ -52,6 +53,8 @@ def handler(event, context):
             return update_completed_events(headers)
         elif action == 'complete_event':
             return complete_event(body, headers)
+        elif action == 'create_adhoc_event':
+            return create_adhoc_event(body, headers)
         elif action == 'archive_events':
             return archive_events(body, headers)
         elif action == 'cancel_event':
@@ -63,7 +66,7 @@ def handler(event, context):
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
-                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, archive_events, cancel_event, categorize_events'
+                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, create_adhoc_event, archive_events, cancel_event, categorize_events'
                 })
             }
             
@@ -162,6 +165,136 @@ def update_completed_events(headers):
             'headers': headers,
             'body': json.dumps({'error': f'Failed to update completed events: {str(e)}'})
         }
+
+LBS_PER_BAG = 25
+
+
+def _slugify(text):
+    text = (text or '').lower()
+    text = re.sub(r"[''']", '', text)
+    text = re.sub(r'[^a-z0-9]+', '-', text)
+    return re.sub(r'^-+|-+$', '', text)
+
+
+def create_adhoc_event(body, headers):
+    """
+    Create an ad hoc, private, completed event with cleanup metrics.
+
+    Ad hoc events are unofficial cleanups that should appear only in aggregate
+    impact stats (the /impact page), not as full event pages. They are marked
+    ad_hoc=true and private=true so the Hugo generator skips page generation.
+
+    Required: title, date (YYYY-MM-DD), bags_of_trash
+    Optional: location_name, number_of_tires, large_items_weight_lbs OR
+              total_litter_lbs, volunteer_count, event_hours
+    """
+    from decimal import Decimal
+    try:
+        title = (body.get('title') or '').strip()
+        date_str = (body.get('date') or '').strip()
+        if not title:
+            return {'statusCode': 400, 'headers': headers,
+                    'body': json.dumps({'error': 'title is required'})}
+        if not date_str:
+            return {'statusCode': 400, 'headers': headers,
+                    'body': json.dumps({'error': 'date is required (YYYY-MM-DD)'})}
+
+        bags_of_trash = body.get('bags_of_trash')
+        if bags_of_trash is None:
+            return {'statusCode': 400, 'headers': headers,
+                    'body': json.dumps({'error': 'bags_of_trash is required'})}
+
+        try:
+            event_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return {'statusCode': 400, 'headers': headers,
+                    'body': json.dumps({'error': 'date must be in YYYY-MM-DD format'})}
+
+        bags_of_trash = int(bags_of_trash)
+        number_of_tires = int(body.get('number_of_tires', 0))
+        volunteer_count = int(body.get('volunteer_count', 0))
+        event_hours = int(body.get('event_hours', 2) or 2)
+
+        # Accept total_litter_lbs directly (source of truth), else derive from
+        # bags + large items like the complete_event flow.
+        if body.get('total_litter_lbs') is not None:
+            total_litter_lbs = float(body.get('total_litter_lbs'))
+            large_items_weight_lbs = max(0.0, total_litter_lbs - (bags_of_trash * LBS_PER_BAG))
+        else:
+            large_items_weight_lbs = float(body.get('large_items_weight_lbs', 0))
+            total_litter_lbs = (bags_of_trash * LBS_PER_BAG) + large_items_weight_lbs
+
+        location_name = (body.get('location_name') or title).strip()
+
+        # 9am Eastern start; end based on event_hours so the date renders right.
+        start_dt = datetime(event_date.year, event_date.month, event_date.day, 9, 0, 0,
+                            tzinfo=timezone(timedelta(hours=-4)))
+        end_dt = start_dt + timedelta(hours=event_hours)
+        now = datetime.now(timezone.utc).isoformat()
+
+        event_id = f"adhoc-{event_date.isoformat()}-{_slugify(location_name or title)}"[:120]
+
+        item = {
+            'event_id': event_id,
+            'title': title,
+            'description': (body.get('description') or 'Community cleanup (unofficial event).').strip(),
+            'start_time': start_dt.isoformat(),
+            'end_time': end_dt.isoformat(),
+            'location': {'name': location_name, 'address': (body.get('location_address') or '').strip()},
+            'status': 'completed',
+            'ad_hoc': True,
+            'private': True,
+            'attendance_cap': 0,
+            'volunteer_count': volunteer_count,
+            'cleanup_metrics': {
+                'bags_of_trash': bags_of_trash,
+                'number_of_tires': number_of_tires,
+                'large_items_weight_lbs': Decimal(str(large_items_weight_lbs)),
+                'total_litter_lbs': Decimal(str(total_litter_lbs)),
+            },
+            'created_at': now,
+            'updated_at': now,
+        }
+
+        try:
+            events_table.put_item(
+                Item=item,
+                ConditionExpression='attribute_not_exists(event_id)'
+            )
+        except ClientError as e:
+            if e.response.get('Error', {}).get('Code') == 'ConditionalCheckFailedException':
+                return {'statusCode': 409, 'headers': headers,
+                        'body': json.dumps({
+                            'error': f'An ad hoc event already exists for this date and location ({event_id}).',
+                            'event_id': event_id
+                        })}
+            raise
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'message': f'Ad hoc event {event_id} created',
+                'event_id': event_id,
+                'volunteer_count': volunteer_count,
+                'cleanup_metrics': {
+                    'bags_of_trash': bags_of_trash,
+                    'number_of_tires': number_of_tires,
+                    'large_items_weight_lbs': large_items_weight_lbs,
+                    'total_litter_lbs': total_litter_lbs
+                },
+                'success': True
+            })
+        }
+
+    except Exception as e:
+        print(f"Error creating ad hoc event: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': f'Failed to create ad hoc event: {str(e)}'})
+        }
+
 
 def mark_active_rsvps_attended(event_id):
     """
