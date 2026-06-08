@@ -954,7 +954,7 @@
           React.createElement('p', {
             key: 'welcome',
             className: "text-gray-600"
-          }, `Welcome, ${email}`)
+          }, `Welcome, ${(dashboardData && dashboardData.first_name) || (window.authClient && window.authClient.getUserFirstName && window.authClient.getUserFirstName()) || email}`)
         ]),
         React.createElement('div', {
           key: 'header-actions',
