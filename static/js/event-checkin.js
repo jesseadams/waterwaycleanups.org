@@ -456,13 +456,15 @@
   }
 
   // ===== Walk-In Form =====
+  let walkInAutocomplete = null;
   function showWalkInForm() {
     const overlay = $('#walkin-overlay');
     show(overlay);
+    const searchEl = $('#walkin-search');
+    if (searchEl) searchEl.value = '';
     $('#walkin-first').value = '';
     $('#walkin-last').value = '';
     $('#walkin-email').value = '';
-    $('#walkin-first').focus();
 
     const submitBtn = $('#walkin-submit');
     const cancelBtn = $('#walkin-cancel');
@@ -471,6 +473,38 @@
     const newCancel = cancelBtn.cloneNode(true);
     submitBtn.replaceWith(newSubmit);
     cancelBtn.replaceWith(newCancel);
+
+    // Wire up the volunteer autocomplete on the search field. Selecting a
+    // volunteer fills the fields; selecting a minor adds the minor AND
+    // auto-adds the parent, then closes.
+    if (searchEl && window.VolunteerAutocomplete) {
+      if (walkInAutocomplete) walkInAutocomplete.destroy();
+      walkInAutocomplete = window.VolunteerAutocomplete.attach(searchEl, {
+        onSelect: async (entry, directory) => {
+          if (entry.type === 'minor') {
+            newSubmit.disabled = true;
+            try {
+              const res = await window.eventsAPI.walkInFromDirectory(selectedEvent.event_id, entry, directory);
+              hide(overlay);
+              showSuccess(entry.first_name, entry.last_name);
+              await loadAttendees();
+              const extra = res.guardianAdded ? ' (parent added too)' : '';
+              showMessage('Added ' + res.added.join(', ') + extra, 'info');
+            } catch (err) {
+              showMessage(err.message || 'Failed to add minor', 'error');
+            } finally {
+              newSubmit.disabled = false;
+            }
+          } else {
+            $('#walkin-first').value = entry.first_name || '';
+            $('#walkin-last').value = entry.last_name || '';
+            $('#walkin-email').value = entry.email || '';
+            searchEl.value = entry.full_name || entry.email || '';
+          }
+        }
+      });
+    }
+    if (searchEl) { searchEl.focus(); } else { $('#walkin-first').focus(); }
 
     newCancel.addEventListener('click', () => hide(overlay));
     newSubmit.addEventListener('click', async () => {

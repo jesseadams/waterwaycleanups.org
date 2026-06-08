@@ -10,9 +10,11 @@ from decimal import Decimal
 dynamodb = boto3.resource('dynamodb')
 volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME')
 rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME')
+minors_table_name = os.environ.get('MINORS_TABLE_NAME', 'minors')
 
 volunteers_table = dynamodb.Table(volunteers_table_name)
 rsvps_table = dynamodb.Table(rsvps_table_name)
+minors_table = dynamodb.Table(minors_table_name)
 
 def decimal_default(obj):
     """JSON serializer for objects not serializable by default json code"""
@@ -231,7 +233,34 @@ def handler(event, context):
                     'volunteers': convert_decimals(volunteers),
                     'count': len(volunteers)
                 }
-                
+
+                # Optionally include the minors directory so a single
+                # autocomplete can search both volunteers and minors.
+                if query_parameters.get('include_minors', 'false').lower() == 'true':
+                    minors = []
+                    try:
+                        m_kwargs = {}
+                        while True:
+                            m_resp = minors_table.scan(**m_kwargs)
+                            for m in m_resp.get('Items', []):
+                                first = (m.get('first_name') or '').strip()
+                                last = (m.get('last_name') or '').strip()
+                                minors.append({
+                                    'minor_id': m.get('minor_id'),
+                                    'first_name': first,
+                                    'last_name': last,
+                                    'full_name': (m.get('full_name') or f"{first} {last}").strip(),
+                                    'guardian_email': (m.get('guardian_email') or '').strip().lower(),
+                                    'date_of_birth': m.get('date_of_birth', ''),
+                                })
+                            token = m_resp.get('LastEvaluatedKey')
+                            if not token:
+                                break
+                            m_kwargs['ExclusiveStartKey'] = token
+                    except ClientError as e:
+                        print(f"Warning: could not load minors: {e}")
+                    result['minors'] = convert_decimals(minors)
+
                 # Include pagination info
                 if 'LastEvaluatedKey' in response:
                     result['last_key'] = response['LastEvaluatedKey']

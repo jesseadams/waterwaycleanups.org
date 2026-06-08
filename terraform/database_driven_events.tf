@@ -561,6 +561,7 @@ resource "aws_lambda_function" "volunteers_get" {
     variables = {
       VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
       RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
+      MINORS_TABLE_NAME     = aws_dynamodb_table.minors.name
     }
   }
 
@@ -1207,6 +1208,53 @@ resource "aws_api_gateway_integration" "volunteers_get" {
   uri                     = aws_lambda_function.volunteers_get.invoke_arn
 }
 
+# OPTIONS /volunteers - CORS preflight
+resource "aws_api_gateway_method" "volunteers_options" {
+  rest_api_id   = aws_api_gateway_rest_api.events_api.id
+  resource_id   = aws_api_gateway_resource.volunteers.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "volunteers_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.volunteers.id
+  http_method = aws_api_gateway_method.volunteers_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "volunteers_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.volunteers.id
+  http_method = aws_api_gateway_method.volunteers_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "volunteers_options" {
+  rest_api_id = aws_api_gateway_rest_api.events_api.id
+  resource_id = aws_api_gateway_resource.volunteers.id
+  http_method = aws_api_gateway_method.volunteers_options.http_method
+  status_code = aws_api_gateway_method_response.volunteers_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Requested-With'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,PUT,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.volunteers_options]
+}
+
 # GET /volunteers/{email} - Get specific volunteer
 resource "aws_api_gateway_method" "volunteers_by_email_get" {
   rest_api_id      = aws_api_gateway_rest_api.events_api.id
@@ -1445,6 +1493,7 @@ resource "aws_api_gateway_deployment" "events_api" {
     aws_api_gateway_integration.events_export_options,
     aws_api_gateway_integration.analytics_options,
     aws_api_gateway_integration.volunteers_metrics_options,
+    aws_api_gateway_integration.volunteers_options,
     # Attendance management endpoint
     aws_api_gateway_integration.events_attendance_post,
     aws_api_gateway_integration.events_attendance_options,
@@ -1467,7 +1516,8 @@ resource "aws_api_gateway_deployment" "events_api" {
       aws_api_gateway_authorizer.events_authorizer.id,
       aws_api_gateway_method.events_rsvps_options.id,
       aws_api_gateway_method.events_lifecycle_options.id,
-      "force-redeploy-15-add-lifecycle-cors",
+      aws_api_gateway_method.volunteers_options.id,
+      "force-redeploy-16-add-volunteers-cors",
       aws_api_gateway_gateway_response.events_cors_4xx.id,
       aws_api_gateway_gateway_response.events_cors_5xx.id
     ]))

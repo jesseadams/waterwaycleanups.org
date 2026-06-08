@@ -410,6 +410,60 @@ class EventsAPIClient {
         });
     }
 
+    /**
+     * Unified walk-in from a directory entry (volunteer or minor).
+     *
+     * - Volunteer entry: adds the volunteer as a walk-in.
+     * - Minor entry: adds the minor AND auto-adds the guardian/parent as a
+     *   walk-in (looked up from the directory by guardian_email). This is the
+     *   "if a minor is found first, the parent is auto-added" behavior.
+     *
+     * Returns { added: [names], guardianAdded: bool }.
+     */
+    async walkInFromDirectory(eventId, entry, directory) {
+        var added = [];
+        if (!entry) return { added: added, guardianAdded: false };
+
+        if (entry.type === 'minor') {
+            var guardianEmail = entry.guardian_email || '';
+            var guardianAdded = false;
+
+            // Auto-add the guardian first so the parent is present.
+            if (guardianEmail) {
+                var guardian = (directory || []).find(function (d) {
+                    return d.type === 'volunteer' && d.email && d.email.toLowerCase() === guardianEmail.toLowerCase();
+                });
+                var gFirst = guardian ? guardian.first_name : '';
+                var gLast = guardian ? guardian.last_name : '';
+                if (!gFirst && guardian && guardian.full_name) {
+                    var parts = guardian.full_name.split(' ');
+                    gFirst = parts[0] || '';
+                    gLast = parts.slice(1).join(' ') || '';
+                }
+                if (gFirst || gLast) {
+                    try {
+                        await this.addWalkIn(eventId, gFirst || 'Guardian', gLast || '', guardianEmail);
+                        added.push((gFirst + ' ' + gLast).trim());
+                        guardianAdded = true;
+                    } catch (e) {
+                        // 409 = already has an RSVP; that's fine, parent is present.
+                        if (!(e && e.statusCode === 409)) throw e;
+                    }
+                }
+            }
+
+            // Then add the minor.
+            await this.addMinor(eventId, entry.first_name, entry.last_name, guardianEmail, entry.date_of_birth);
+            added.push((entry.first_name + ' ' + entry.last_name).trim());
+            return { added: added, guardianAdded: guardianAdded };
+        }
+
+        // Volunteer entry.
+        await this.addWalkIn(eventId, entry.first_name, entry.last_name, entry.email);
+        added.push((entry.first_name + ' ' + entry.last_name).trim());
+        return { added: added, guardianAdded: false };
+    }
+
     // ===== VOLUNTEER METHODS =====
 
     /**
@@ -419,6 +473,51 @@ class EventsAPIClient {
         return this.makeRequest(`/volunteers/${encodeURIComponent(email)}`, {
             method: 'GET'
         });
+    }
+
+    /**
+     * Fetch the combined volunteer + minor directory (for autocomplete),
+     * cached in-memory. Returns an array of entries:
+     *   { type: 'volunteer', email, first_name, last_name, full_name }
+     *   { type: 'minor', minor_id, guardian_email, date_of_birth, first_name, last_name, full_name }
+     * Available to any authenticated events user (works on admin + kiosk).
+     */
+    async getVolunteerDirectory(force = false) {
+        if (!force && this._volunteerDirectoryCache) {
+            return this._volunteerDirectoryCache;
+        }
+        const data = await this.makeRequest('/volunteers?limit=100&include_minors=true', { method: 'GET' });
+        const vList = (data && (data.volunteers || data.items || data.Items)) || [];
+        const mList = (data && data.minors) || [];
+
+        const volunteers = vList.map(v => {
+            const first = (v.first_name || '').trim();
+            const last = (v.last_name || '').trim();
+            return {
+                type: 'volunteer',
+                email: (v.email || '').trim(),
+                first_name: first,
+                last_name: last,
+                full_name: (v.full_name || `${first} ${last}`).trim()
+            };
+        }).filter(v => v.email || v.full_name);
+
+        const minors = mList.map(m => {
+            const first = (m.first_name || '').trim();
+            const last = (m.last_name || '').trim();
+            return {
+                type: 'minor',
+                minor_id: m.minor_id,
+                guardian_email: (m.guardian_email || '').trim().toLowerCase(),
+                date_of_birth: m.date_of_birth || '',
+                first_name: first,
+                last_name: last,
+                full_name: (m.full_name || `${first} ${last}`).trim()
+            };
+        }).filter(m => m.full_name);
+
+        this._volunteerDirectoryCache = volunteers.concat(minors);
+        return this._volunteerDirectoryCache;
     }
 
     /**

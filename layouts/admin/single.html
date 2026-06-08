@@ -28,6 +28,9 @@
 <!-- Load events API client -->
 <script src="{{ "js/events-api-client.js" | relURL }}"></script>
 
+<!-- Load volunteer autocomplete widget -->
+<script src="{{ "js/volunteer-autocomplete.js" | relURL }}"></script>
+
 <!-- Include API configuration from Hugo -->
 {{ partial "api-config.html" . }}
 
@@ -1330,6 +1333,57 @@
       const [attendanceUpdating, setAttendanceUpdating] = useState(null);
       const [showWalkInForm, setShowWalkInForm] = useState(false);
       const [walkInData, setWalkInData] = useState({ first_name: '', last_name: '', email: '' });
+      const walkInSearchRef = React.useRef(null);
+      const walkInAutocompleteRef = React.useRef(null);
+
+      // Attach the volunteer autocomplete to the walk-in search field whenever
+      // the walk-in form opens; clean it up when it closes.
+      useEffect(() => {
+        if (showWalkInForm && walkInSearchRef.current && window.VolunteerAutocomplete) {
+          if (walkInAutocompleteRef.current) walkInAutocompleteRef.current.destroy();
+          walkInAutocompleteRef.current = window.VolunteerAutocomplete.attach(walkInSearchRef.current, {
+            onSelect: async (entry, directory) => {
+              if (entry.type === 'minor') {
+                // Minor selected: add the minor AND auto-add the parent.
+                if (!selectedEventForRSVPs) return;
+                try {
+                  setAttendanceUpdating('walk-in');
+                  setError('');
+                  const res = await window.eventsAPI.walkInFromDirectory(
+                    selectedEventForRSVPs.event_id, entry, directory
+                  );
+                  const extra = res.guardianAdded ? ' (parent added too)' : '';
+                  setSuccess(`Added ${res.added.join(', ')}${extra}`);
+                  setWalkInData({ first_name: '', last_name: '', email: '' });
+                  if (walkInSearchRef.current) walkInSearchRef.current.value = '';
+                  setShowWalkInForm(false);
+                  await refreshRSVPs();
+                } catch (err) {
+                  setError(err.message || 'Failed to add minor');
+                } finally {
+                  setAttendanceUpdating(null);
+                }
+              } else {
+                // Volunteer selected: fill the fields for confirmation.
+                setWalkInData({
+                  first_name: entry.first_name || '',
+                  last_name: entry.last_name || '',
+                  email: entry.email || ''
+                });
+                if (walkInSearchRef.current) {
+                  walkInSearchRef.current.value = entry.full_name || entry.email || '';
+                }
+              }
+            }
+          });
+        }
+        return () => {
+          if (walkInAutocompleteRef.current) {
+            walkInAutocompleteRef.current.destroy();
+            walkInAutocompleteRef.current = null;
+          }
+        };
+      }, [showWalkInForm]);
       const [showMinorForm, setShowMinorForm] = useState(false);
       const [minorData, setMinorData] = useState({ first_name: '', last_name: '', guardian_email: '', date_of_birth: '' });
       const [accountMinors, setAccountMinors] = useState({});
@@ -2580,6 +2634,22 @@
                     key: 'walkin-title',
                     className: "text-sm font-medium text-blue-800 mb-2"
                   }, 'Add Walk-in Participant'),
+                  React.createElement('div', { key: 'walkin-search-wrap', className: "mb-2" }, [
+                    React.createElement('div', { key: 'search-pos', style: { position: 'relative' } },
+                      React.createElement('input', {
+                        key: 'search',
+                        ref: walkInSearchRef,
+                        type: 'text',
+                        autoComplete: 'off',
+                        placeholder: 'Search existing volunteer by name or email',
+                        className: "w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      })
+                    ),
+                    React.createElement('div', {
+                      key: 'hint',
+                      className: "text-xs text-gray-500 mt-1"
+                    }, 'Search volunteers or minors. Picking a minor adds them and their parent. Or type a new person below.')
+                  ]),
                   React.createElement('div', {
                     key: 'walkin-fields',
                     className: "grid grid-cols-1 md:grid-cols-4 gap-2"

@@ -107,6 +107,8 @@
       <div class="confirm-name">Walk-In Adult</div>
       <div class="confirm-message">Add an adult attendee who didn't RSVP</div>
       <div class="walkin-form">
+        <input id="walkin-search" type="text" class="checkin-input" placeholder="Search existing volunteer or minor by name" autocapitalize="off" autocomplete="off" />
+        <div id="walkin-search-hint" style="font-size:0.8rem;color:#a0c080;margin:-4px 0 4px;">Pick a minor to add them and their parent, or fill in the fields below to add someone new.</div>
         <input id="walkin-first" type="text" class="checkin-input" placeholder="First Name" autocapitalize="words" />
         <input id="walkin-last" type="text" class="checkin-input" placeholder="Last Name" autocapitalize="words" />
         <input id="walkin-email" type="email" class="checkin-input" placeholder="Email (optional)" autocapitalize="off" />
@@ -150,6 +152,7 @@
 <!-- Load dependencies -->
 <script src="{{ "js/auth-client.js" | relURL }}"></script>
 <script src="{{ "js/events-api-client.js" | relURL }}"></script>
+<script src="{{ "js/volunteer-autocomplete.js" | relURL }}"></script>
 
 <!-- API Configuration -->
 {{ partial "api-config.html" . }}
