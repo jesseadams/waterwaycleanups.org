@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(PYTHONPATH=/tmp/claude-1000/-home-jesse-git-waterwaycleanups-org/abeca67e-d48c-4068-a922-5294f00cfe80/scratchpad/pylibs python3 -m py_compile terraform/lambda_rsvp_confirmation.py)",
+      "Bash(terraform fmt *)",
+      "Bash(terraform validate *)"
+    ]
+  }
+}

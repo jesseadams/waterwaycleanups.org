@@ -22,7 +22,10 @@ from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
 
 import boto3
+import pytz
 from botocore.exceptions import ClientError
+
+ET = pytz.timezone('US/Eastern')
 
 aws_region = os.environ.get('AWS_REGION', 'us-east-1')
 dynamodb = boto3.resource('dynamodb', region_name=aws_region)
@@ -49,16 +52,20 @@ def parse_iso(dt_str):
 
 
 def format_event_date(start_dt, end_dt):
-    """Human-friendly local-ish date range for display in the email body."""
+    """Human-friendly Eastern-time date range for display in the email body."""
     if not start_dt:
         return 'Date to be announced'
-    # Times are stored with their offset; display in that original offset.
-    date_str = start_dt.strftime('%A, %B %-d, %Y')
-    start_t = start_dt.strftime('%-I:%M %p')
+    # start_dt/end_dt are UTC (see parse_iso); events are run in US/Eastern,
+    # so convert back before formatting or the displayed time is off by the
+    # UTC offset (e.g. showing 1:00 PM instead of 9:00 AM).
+    start_local = start_dt.astimezone(ET)
+    date_str = start_local.strftime('%A, %B %-d, %Y')
+    start_t = start_local.strftime('%-I:%M %p')
+    tz_abbr = start_local.strftime('%Z')
     if end_dt:
-        end_t = end_dt.strftime('%-I:%M %p')
-        return f"{date_str} from {start_t} to {end_t}"
-    return f"{date_str} at {start_t}"
+        end_t = end_dt.astimezone(ET).strftime('%-I:%M %p')
+        return f"{date_str} from {start_t} to {end_t} {tz_abbr}"
+    return f"{date_str} at {start_t} {tz_abbr}"
 
 
 def location_string(location):

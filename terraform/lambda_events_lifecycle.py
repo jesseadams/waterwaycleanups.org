@@ -11,6 +11,7 @@ dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
 aws_region = os.environ.get('AWS_REGION', 'us-east-1')
 ses = boto3.client('ses', region_name=aws_region)
+sesv2 = boto3.client('sesv2', region_name=aws_region)
 
 # Get environment variables
 events_table_name = os.environ.get('EVENTS_TABLE_NAME')
@@ -19,6 +20,36 @@ volunteers_table_name = os.environ.get('VOLUNTEERS_TABLE_NAME')
 sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
 sender_email = os.environ.get('SENDER_EMAIL', 'info@waterwaycleanups.org')
 site_url = os.environ.get('SITE_URL', 'https://waterwaycleanups.org').rstrip('/')
+contact_list_name = os.environ.get('CONTACT_LIST_NAME', 'WaterwayCleanups')
+
+
+def _set_contact_unsubscribe_all(email, unsubscribe_all):
+    """
+    Set UnsubscribeAll on a volunteer's SESv2 contact so suspended users stop
+    receiving every newsletter/topic send. The scheduled newsletter sender uses
+    ListManagementOptions, so SES honors UnsubscribeAll automatically — flipping
+    this flag is enough to suppress all sends without touching topic preferences.
+
+    Non-blocking: a missing contact or any SES error is logged but never fails
+    the suspend/unsuspend operation. Returns True only if the contact was updated.
+    """
+    if not email:
+        return False
+    try:
+        sesv2.update_contact(
+            ContactListName=contact_list_name,
+            EmailAddress=email,
+            UnsubscribeAll=unsubscribe_all,
+        )
+        print(f"Set UnsubscribeAll={unsubscribe_all} for contact {email}")
+        return True
+    except sesv2.exceptions.NotFoundException:
+        # No SES contact for this email (never subscribed) — nothing to suppress.
+        print(f"No SES contact found for {email}; skipping opt-out")
+        return False
+    except Exception as e:
+        print(f"Error updating SES contact {email}: {e}")
+        return False
 
 # Initialize tables
 events_table = dynamodb.Table(events_table_name)
@@ -310,7 +341,8 @@ def suspend_volunteer(body, headers):
       1. Flags the volunteers record as suspended (blocks login + dashboard).
       2. Hides them from the leaderboard (the flag is honored there).
       3. Cancels their active RSVPs for future events.
-      4. Emails them a notice with a link to the Code of Conduct.
+      4. Opts them out of all SES contact-list email (UnsubscribeAll).
+      5. Emails them a notice with a link to the Code of Conduct.
     """
     email = (body.get('email') or '').strip().lower()
     reason = (body.get('reason') or '').strip()
@@ -340,7 +372,11 @@ def suspend_volunteer(body, headers):
     # 3. Cancel active future RSVPs.
     cancelled = _cancel_future_active_rsvps(email)
 
-    # 4. Email notice (non-blocking).
+    # 4. Opt them out of all SES contact-list email (non-blocking).
+    opted_out = _set_contact_unsubscribe_all(email, True)
+
+    # 5. Email notice (non-blocking). Sent directly (not via the contact list),
+    #    so the opt-out above doesn't suppress this one-time notice.
     emailed = _send_suspension_email(email, first_name, reason)
 
     return {
@@ -352,12 +388,19 @@ def suspend_volunteer(body, headers):
             'email': email,
             'rsvps_cancelled': cancelled,
             'email_sent': emailed,
+            'email_opted_out': opted_out,
         })
     }
 
 
 def unsuspend_volunteer(body, headers):
-    """Reinstate a suspended volunteer. Does not restore cancelled RSVPs."""
+    """Reinstate a suspended volunteer. Does not restore cancelled RSVPs.
+
+    Re-subscribes them to SES email (clears UnsubscribeAll) so reinstated
+    volunteers receive newsletters again. Their per-topic preferences are left
+    as they were, so anyone who had deliberately opted out of a topic stays
+    opted out of that topic.
+    """
     email = (body.get('email') or '').strip().lower()
     if not email:
         return {'statusCode': 400, 'headers': headers,
@@ -373,10 +416,19 @@ def unsuspend_volunteer(body, headers):
         print(f"Error unsuspending volunteer {email}: {e}")
         return {'statusCode': 500, 'headers': headers,
                 'body': json.dumps({'error': 'Failed to reinstate volunteer'})}
+
+    # Clear the all-email opt-out so reinstated volunteers can be contacted again.
+    resubscribed = _set_contact_unsubscribe_all(email, False)
+
     return {
         'statusCode': 200,
         'headers': headers,
-        'body': json.dumps({'success': True, 'message': f'Volunteer {email} reinstated.', 'email': email})
+        'body': json.dumps({
+            'success': True,
+            'message': f'Volunteer {email} reinstated.',
+            'email': email,
+            'email_resubscribed': resubscribed,
+        })
     }
 
 

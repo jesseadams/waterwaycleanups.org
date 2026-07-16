@@ -169,7 +169,9 @@ resource "aws_iam_policy" "events_lambda_policy" {
       {
         Action = [
           "ses:SendEmail",
-          "ses:SendRawEmail"
+          "ses:SendRawEmail",
+          "sesv2:UpdateContact",
+          "sesv2:GetContact"
         ],
         Resource = "*",
         Effect   = "Allow"
@@ -267,17 +269,17 @@ output "events_authorizer_arn" {
 data "archive_file" "events_api_layer_zip" {
   type        = "zip"
   output_path = "${path.module}/events_api_layer.zip"
-  
+
   source {
     content  = file("${path.module}/events_api_utils.py")
     filename = "python/events_api_utils.py"
   }
-  
+
   source {
     content  = file("${path.module}/data_validation_utils.py")
     filename = "python/data_validation_utils.py"
   }
-  
+
   source {
     content  = file("${path.module}/cascading_updates_utils.py")
     filename = "python/cascading_updates_utils.py"
@@ -337,12 +339,12 @@ resource "aws_lambda_permission" "events_authorizer_api" {
 
 # API Gateway authorizer
 resource "aws_api_gateway_authorizer" "events_authorizer" {
-  name                   = "events-authorizer${local.resource_suffix}"
-  rest_api_id            = aws_api_gateway_rest_api.events_api.id
-  authorizer_uri         = aws_lambda_function.events_authorizer.invoke_arn
-  type                   = "TOKEN"
-  identity_source        = "method.request.header.Authorization"
-  authorizer_result_ttl_in_seconds = 0  # Disable caching for testing
+  name                             = "events-authorizer${local.resource_suffix}"
+  rest_api_id                      = aws_api_gateway_rest_api.events_api.id
+  authorizer_uri                   = aws_lambda_function.events_authorizer.invoke_arn
+  type                             = "TOKEN"
+  identity_source                  = "method.request.header.Authorization"
+  authorizer_result_ttl_in_seconds = 0 # Disable caching for testing
 }
 
 # ===== LAMBDA FUNCTIONS FOR EVENT MANAGEMENT =====
@@ -636,7 +638,7 @@ resource "aws_lambda_function" "volunteers_export" {
   handler          = "lambda_volunteers_export.handler"
   source_code_hash = data.archive_file.volunteers_export_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 60  # Longer timeout for export operations
+  timeout          = 60 # Longer timeout for export operations
 
   environment {
     variables = {
@@ -688,7 +690,7 @@ resource "aws_lambda_function" "events_lifecycle" {
   handler          = "lambda_events_lifecycle.handler"
   source_code_hash = data.archive_file.events_lifecycle_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 60  # Longer timeout for lifecycle operations
+  timeout          = 60 # Longer timeout for lifecycle operations
 
   environment {
     variables = {
@@ -698,6 +700,7 @@ resource "aws_lambda_function" "events_lifecycle" {
       SNS_TOPIC_ARN         = aws_sns_topic.events_topic.arn
       SENDER_EMAIL          = "info@waterwaycleanups.org"
       SITE_URL              = "https://${local.domain_name}"
+      CONTACT_LIST_NAME     = var.ses_contact_list_name
     }
   }
 
@@ -865,7 +868,7 @@ resource "aws_api_gateway_method" "events_post" {
   http_method   = "POST"
   authorization = "CUSTOM"
   authorizer_id = aws_api_gateway_authorizer.events_authorizer.id
-  
+
   depends_on = [
     aws_api_gateway_authorizer.events_authorizer
   ]
@@ -1543,7 +1546,7 @@ resource "aws_api_gateway_stage" "events_api_stage" {
   deployment_id = aws_api_gateway_deployment.events_api.id
   rest_api_id   = aws_api_gateway_rest_api.events_api.id
   stage_name    = local.is_production ? "prod" : "staging"
-  
+
   depends_on = [aws_api_gateway_deployment.events_api]
 }
 
@@ -1551,8 +1554,8 @@ resource "aws_api_gateway_stage" "events_api_stage" {
 
 # Usage plan for API throttling
 resource "aws_api_gateway_usage_plan" "events_api_usage_plan" {
-  name         = "events-api-usage-plan${local.resource_suffix}"
-  description  = "Usage plan for Events API with rate limiting"
+  name        = "events-api-usage-plan${local.resource_suffix}"
+  description = "Usage plan for Events API with rate limiting"
 
   api_stages {
     api_id = aws_api_gateway_rest_api.events_api.id
@@ -1560,13 +1563,13 @@ resource "aws_api_gateway_usage_plan" "events_api_usage_plan" {
   }
 
   quota_settings {
-    limit  = 10000  # 10,000 requests per day
+    limit  = 10000 # 10,000 requests per day
     period = "DAY"
   }
 
   throttle_settings {
-    rate_limit  = 100  # 100 requests per second
-    burst_limit = 200  # 200 burst requests
+    rate_limit  = 100 # 100 requests per second
+    burst_limit = 200 # 200 burst requests
   }
 
   tags = {
@@ -1775,7 +1778,7 @@ resource "aws_lambda_function" "events_export" {
   handler          = "lambda_events_export.handler"
   source_code_hash = data.archive_file.events_export_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 60  # Longer timeout for export operations
+  timeout          = 60 # Longer timeout for export operations
 
   environment {
     variables = {
@@ -1799,7 +1802,7 @@ resource "aws_lambda_function" "analytics" {
   handler          = "lambda_analytics.handler"
   source_code_hash = data.archive_file.analytics_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 60  # Longer timeout for analytics calculations
+  timeout          = 60 # Longer timeout for analytics calculations
 
   environment {
     variables = {
@@ -1824,7 +1827,7 @@ resource "aws_lambda_function" "volunteer_metrics" {
   handler          = "lambda_volunteer_metrics.handler"
   source_code_hash = data.archive_file.volunteer_metrics_zip.output_base64sha256
   runtime          = "python3.9"
-  timeout          = 60  # Longer timeout for metrics calculations
+  timeout          = 60 # Longer timeout for metrics calculations
 
   environment {
     variables = {
@@ -1875,10 +1878,10 @@ resource "aws_api_gateway_resource" "volunteers_metrics_by_email" {
 
 # GET /events/export - Export event data
 resource "aws_api_gateway_method" "events_export_get" {
-  rest_api_id   = aws_api_gateway_rest_api.events_api.id
-  resource_id   = aws_api_gateway_resource.events_export.id
-  http_method   = "GET"
-  authorization = "NONE"
+  rest_api_id      = aws_api_gateway_rest_api.events_api.id
+  resource_id      = aws_api_gateway_resource.events_export.id
+  http_method      = "GET"
+  authorization    = "NONE"
   api_key_required = true
 }
 
@@ -1893,10 +1896,10 @@ resource "aws_api_gateway_integration" "events_export_get" {
 
 # GET /analytics - Get analytics data
 resource "aws_api_gateway_method" "analytics_get" {
-  rest_api_id   = aws_api_gateway_rest_api.events_api.id
-  resource_id   = aws_api_gateway_resource.analytics.id
-  http_method   = "GET"
-  authorization = "NONE"
+  rest_api_id      = aws_api_gateway_rest_api.events_api.id
+  resource_id      = aws_api_gateway_resource.analytics.id
+  http_method      = "GET"
+  authorization    = "NONE"
   api_key_required = false
 }
 
@@ -1911,10 +1914,10 @@ resource "aws_api_gateway_integration" "analytics_get" {
 
 # GET /volunteers/metrics - Get volunteer metrics leaderboard
 resource "aws_api_gateway_method" "volunteers_metrics_get" {
-  rest_api_id   = aws_api_gateway_rest_api.events_api.id
-  resource_id   = aws_api_gateway_resource.volunteers_metrics.id
-  http_method   = "GET"
-  authorization = "NONE"
+  rest_api_id      = aws_api_gateway_rest_api.events_api.id
+  resource_id      = aws_api_gateway_resource.volunteers_metrics.id
+  http_method      = "GET"
+  authorization    = "NONE"
   api_key_required = true
 }
 
@@ -1929,10 +1932,10 @@ resource "aws_api_gateway_integration" "volunteers_metrics_get" {
 
 # GET /volunteers/metrics/{email} - Get detailed volunteer metrics
 resource "aws_api_gateway_method" "volunteers_metrics_by_email_get" {
-  rest_api_id   = aws_api_gateway_rest_api.events_api.id
-  resource_id   = aws_api_gateway_resource.volunteers_metrics_by_email.id
-  http_method   = "GET"
-  authorization = "NONE"
+  rest_api_id      = aws_api_gateway_rest_api.events_api.id
+  resource_id      = aws_api_gateway_resource.volunteers_metrics_by_email.id
+  http_method      = "GET"
+  authorization    = "NONE"
   api_key_required = true
 }
 

@@ -64,17 +64,28 @@ resource "aws_iam_role_policy_attachment" "rsvp_confirmation_lambda_attachment" 
   policy_arn = aws_iam_policy.rsvp_confirmation_lambda_policy.arn
 }
 
-# Package the lambda
-data "archive_file" "rsvp_confirmation_zip" {
-  type        = "zip"
-  source_file = "${path.module}/lambda_rsvp_confirmation.py"
-  output_path = "${path.module}/lambda_rsvp_confirmation.zip"
+# Package the lambda, bundling pytz for US/Eastern-aware date formatting
+resource "null_resource" "rsvp_confirmation_package" {
+  provisioner "local-exec" {
+    command = <<EOF
+rm -rf ${path.module}/lambda_rsvp_confirmation_package
+mkdir -p ${path.module}/lambda_rsvp_confirmation_package
+cp ${path.module}/lambda_rsvp_confirmation.py ${path.module}/lambda_rsvp_confirmation_package/
+pip install pytz -t ${path.module}/lambda_rsvp_confirmation_package/ >/dev/null 2>&1
+cd ${path.module}/lambda_rsvp_confirmation_package && python3 -c "import zipfile; import os; z=zipfile.ZipFile('../lambda_rsvp_confirmation.zip', 'w'); [z.write(os.path.join(root, f), os.path.join(root, f)) for root, _, files in os.walk('.') for f in files]; z.close()"
+cd ${path.module} && rm -rf lambda_rsvp_confirmation_package
+EOF
+  }
+
+  triggers = {
+    code_hash = filemd5("${path.module}/lambda_rsvp_confirmation.py")
+  }
 }
 
 resource "aws_lambda_function" "rsvp_confirmation" {
   function_name    = "rsvp_confirmation${local.resource_suffix}"
-  filename         = data.archive_file.rsvp_confirmation_zip.output_path
-  source_code_hash = data.archive_file.rsvp_confirmation_zip.output_base64sha256
+  filename         = "${path.module}/lambda_rsvp_confirmation.zip"
+  source_code_hash = filemd5("${path.module}/lambda_rsvp_confirmation.py")
   handler          = "lambda_rsvp_confirmation.handler"
   runtime          = "python3.9"
   role             = aws_iam_role.rsvp_confirmation_lambda_role.arn
@@ -88,6 +99,8 @@ resource "aws_lambda_function" "rsvp_confirmation" {
       SITE_URL          = "https://${local.domain_name}"
     }
   }
+
+  depends_on = [null_resource.rsvp_confirmation_package]
 }
 
 # Allow the RSVP SNS topic to invoke this lambda
