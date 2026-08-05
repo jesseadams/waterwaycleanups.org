@@ -11,7 +11,15 @@ Our dedicated leadership team brings together expertise in environmental conserv
 
 {{< /brick_team >}}
 
-{{< brick_team_section title="Volunteer Leads" functions="Volunteer Lead" >}}
+{{< brick_team_section title="Function Leads" flag="function_lead" openRolesSection="function_lead" >}}
+
+## Our Function Leads
+
+Our function leads bring specialized expertise to key areas of our work, from water quality monitoring to other focused initiatives. They apply their subject-matter knowledge to guide specific programs that support our broader mission.
+
+{{< /brick_team_section >}}
+
+{{< brick_team_section title="Volunteer Leads" functions="Volunteer Lead" openRolesSection="volunteer_lead" >}}
 
 ## Our Volunteer Leads
 

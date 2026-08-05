@@ -67,3 +67,36 @@ section.two-columns-section {
 .people .avatar {
     filter: none !important;
 }
+
+/* Team page - keep person boxes a consistent size regardless of how many
+   are in the last row (auto-fit stretches items to fill empty space,
+   auto-fill keeps the column count/width stable and leaves empty tracks instead) */
+ul.grid.people {
+    grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+/* Team page - open roles placeholder cards, mixed in alongside real
+   team members within each section's grid */
+ul.people li.open-role {
+    text-align: left;
+}
+ul.people li.open-role .box {
+    border-style: dashed;
+    border-color: var(--borderMedium);
+    background: transparent;
+}
+ul.people li.open-role .function {
+    display: inline-block;
+    margin: 0 0 0.75rem;
+    padding: 0.2rem 0.75rem;
+    border-radius: 1rem;
+    background: var(--accent);
+    color: var(--textDark);
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+ul.people li.open-role p {
+    font-size: 0.95rem;
+}

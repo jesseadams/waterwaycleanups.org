@@ -1,5 +1,8 @@
-{{- $functions := split (.Get "functions") "," -}}
+{{- $functionsAttr := .Get "functions" -}}
+{{- $functions := cond (ne $functionsAttr nil) (split $functionsAttr ",") slice -}}
+{{- $flag := .Get "flag" -}}
 {{- $title := .Get "title" -}}
+{{- $openRolesSection := .Get "openRolesSection" -}}
 {{- $inner := .Inner -}}
 
 <section class="features">
@@ -7,6 +10,6 @@
         {{- markdownify $inner -}}
     </div>
     <div class="container">
-        {{ partial "people_filtered.html" (dict "functions" $functions) }}
+        {{ partial "people_filtered.html" (dict "functions" $functions "flag" $flag "openRolesSection" $openRolesSection) }}
     </div>
 </section>

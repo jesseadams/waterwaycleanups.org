@@ -1,7 +1,19 @@
 {{- $functions := .functions -}}
+{{- $flag := .flag -}}
+{{- $openRolesSection := .openRolesSection -}}
 <ul class="grid people">
     {{- range (index page.Site.Data page.Site.Language.Lang).people -}}
-        {{- if in $functions .function -}}
+        {{- $match := false -}}
+        {{- if $flag -}}
+            {{- if index . $flag -}}
+                {{- $match = true -}}
+            {{- end -}}
+        {{- else if $functions -}}
+            {{- if in $functions .function -}}
+                {{- $match = true -}}
+            {{- end -}}
+        {{- end -}}
+        {{- if $match -}}
             <li>
                 <div class="box">
                 <img src="{{ .image }}" alt="{{ .name }}" class="avatar" />
@@ -24,6 +36,24 @@
                 </ul>
                 </div>
             </li>
+        {{- end -}}
+    {{- end -}}
+    {{- if $openRolesSection -}}
+        {{- range (index page.Site.Data page.Site.Language.Lang).open_roles -}}
+            {{- if eq .section $openRolesSection -}}
+                <li class="open-role">
+                    <div class="box">
+                        <div class="function">Open Position</div>
+                        <h3>{{- .title -}}</h3>
+                        <p><strong>The Big Picture:</strong> {{ .big_picture | safeHTML }}</p>
+                        <p><strong>The Details:</strong> {{ .details | safeHTML }}</p>
+                        <p><strong>Ideal for:</strong> {{ .ideal_for | safeHTML }}</p>
+                        <ul class="buttons">
+                            <li><a href="mailto:info@waterwaycleanups.org?subject={{ printf "Interested in %s" .title | urlquery }}" class="button">Apply Now</a></li>
+                        </ul>
+                    </div>
+                </li>
+            {{- end -}}
         {{- end -}}
     {{- end -}}
 </ul>

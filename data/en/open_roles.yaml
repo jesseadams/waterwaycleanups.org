@@ -1,0 +1,34 @@
+# Open volunteer/staff roles we're looking to fill.
+# Shown on the "Our Team" page as placeholder cards, grouped into the
+# existing team section they belong to.
+#
+# Fields:
+#   title       - Role name
+#   section     - Which team section this belongs to: "leadership", "function_lead", or "volunteer_lead"
+#   big_picture - One-line summary of why the role matters
+#   details     - What the person will actually do
+#   ideal_for   - Who this role is a good fit for
+
+- title: "Board Member"
+  section: "leadership"
+  big_picture: "Help guide the strategic direction of Waterway Cleanups as we grow our impact across Virginia's waterways."
+  details: "You will participate in board meetings, help shape organizational strategy and policy, support fundraising and community relationships, and provide oversight to ensure we're operating effectively and responsibly."
+  ideal_for: "Experienced leaders, nonprofit governance enthusiasts, and community advocates looking to make a lasting impact."
+
+- title: "Outreach Coordinator"
+  section: "function_lead"
+  big_picture: "Become the face of waterwaycleanups.org! This vital role bridges the gap between our organization and the wider community."
+  details: "You will manage our social media presence, represent us at tabling events, and coordinate with our amazing sponsors and partners."
+  ideal_for: "Creative communicators, social media savvy storytellers, and networkers."
+
+- title: "Nursery Operations Lead"
+  section: "function_lead"
+  big_picture: "The driving force behind our native plant nursery"
+  details: "You will manage the overall planning and coordination of day to day activities and oversee native plant propogation to provide material for riparian buffer restoration efforts."
+  ideal_for: "Native plant nerds, Gardeners"
+
+- title: "Volunteer Lead"
+  section: "volunteer_lead"
+  big_picture: "Help lead our community cleanup events and guide volunteers on the ground."
+  details: "Help attendees at cleanup events check in, handle event kick off and wrap up, and oversee the successful cleanup activities."
+  ideal_for: "Social butterflies, outdoor enthusiasts"
