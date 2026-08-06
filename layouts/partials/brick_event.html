@@ -2,7 +2,7 @@
     <style>
         .cleanup-metrics {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
             gap: 1rem;
             margin: 1.5rem 0;
         }
@@ -37,6 +37,12 @@
         <h1>{{ page.Title | safeHTML }}</h1>
         {{ with page.Params.cleanup_metrics }}
         <div class="cleanup-metrics">
+            {{ if page.Params.volunteer_count }}
+            <div class="cleanup-metric">
+                <div class="cleanup-metric-value">{{ page.Params.volunteer_count }}</div>
+                <div class="cleanup-metric-label">Volunteers</div>
+            </div>
+            {{ end }}
             <div class="cleanup-metric">
                 <div class="cleanup-metric-value">{{ .bags_of_trash | default 0 }}</div>
                 <div class="cleanup-metric-label">Bags of Trash Collected</div>

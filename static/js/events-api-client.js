@@ -299,6 +299,25 @@ class EventsAPIClient {
     }
 
     /**
+     * Add or update cleanup metrics on an existing event (admin only).
+     * Unlike completeEvent, this works on any event regardless of status
+     * (completed, ad hoc, or active) — use it to correct or backfill stats.
+     */
+    async updateCleanupMetrics(eventId, metrics) {
+        return this.makeRequest('/events/lifecycle', {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'update_cleanup_metrics',
+                event_id: eventId,
+                bags_of_trash: metrics.bags_of_trash,
+                number_of_tires: metrics.number_of_tires || 0,
+                large_items_weight_lbs: metrics.large_items_weight_lbs || 0,
+                volunteer_count: metrics.volunteer_count
+            })
+        });
+    }
+
+    /**
      * Create an ad hoc, private, completed event with cleanup metrics (admin only).
      * Ad hoc events appear only in aggregate impact stats, not as event pages.
      */

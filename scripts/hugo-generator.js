@@ -27,6 +27,7 @@ class HugoGenerator {
     // Table names with environment suffix
     const suffix = (this.environment === 'prod' || this.environment === 'production') ? '-production' : `-${this.environment}`;
     this.eventsTableName = `events${suffix}`;
+    this.rsvpsTableName = `event_rsvps${suffix}`;
     
     // Hugo content directory
     this.contentDir = path.join(__dirname, '..', 'content', 'en', 'events');
@@ -81,6 +82,29 @@ class HugoGenerator {
     } catch (error) {
       console.error('Error retrieving events from database:', error.message);
       throw error;
+    }
+  }
+
+  /**
+   * Count RSVPs marked 'attended' for an event, so completed event pages can
+   * show how many volunteers showed up. Never throws: a lookup failure just
+   * means the page renders without a volunteer count.
+   */
+  async getAttendedCount(eventId) {
+    try {
+      const params = {
+        TableName: this.rsvpsTableName,
+        KeyConditionExpression: 'event_id = :eid',
+        FilterExpression: '#s = :attended',
+        ExpressionAttributeNames: { '#s': 'status' },
+        ExpressionAttributeValues: { ':eid': eventId, ':attended': 'attended' },
+        Select: 'COUNT'
+      };
+      const result = await this.dynamodb.query(params).promise();
+      return result.Count || 0;
+    } catch (error) {
+      this.log(`Warning: could not get attended count for ${eventId}: ${error.message}`);
+      return 0;
     }
   }
 
@@ -142,6 +166,19 @@ class HugoGenerator {
         large_items_weight_lbs: Number(cm.large_items_weight_lbs) || 0,
         total_litter_lbs: Number(cm.total_litter_lbs) || 0
       };
+    }
+
+    // Add volunteer count for completed events so the event page can show how
+    // many people showed up. Prefer attended RSVPs (event._attendedCount, set
+    // in generateAllFiles); fall back to a stored volunteer_count for events
+    // without RSVP records.
+    if (event.status === 'completed') {
+      const volunteerCount = event._attendedCount > 0
+        ? event._attendedCount
+        : (Number(event.volunteer_count) || 0);
+      if (volunteerCount > 0) {
+        frontmatter.volunteer_count = volunteerCount;
+      }
     }
 
     return frontmatter;
@@ -295,6 +332,12 @@ class HugoGenerator {
    * Generate complete Hugo markdown file
    */
   async generateMarkdownFile(event) {
+    // Look up attended RSVP count for completed events so frontmatter can
+    // include a volunteer count on the cleanup page.
+    if (event.status === 'completed') {
+      event._attendedCount = await this.getAttendedCount(event.event_id);
+    }
+
     const frontmatter = this.generateFrontmatter(event);
     // Use slugified title as filename so the URL matches the title, not the event_id
     const slug = this.slugify(event.title);

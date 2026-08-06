@@ -65,6 +65,7 @@
       }) : '';
       var cm = ev.cleanup_metrics || {};
       var metricBits = [];
+      if (ev.attended_count) { metricBits.push(ev.attended_count + (ev.attended_count === 1 ? ' volunteer' : ' volunteers')); }
       if (cm.bags_of_trash) { metricBits.push(cm.bags_of_trash + ' bags'); }
       if (cm.number_of_tires) { metricBits.push(cm.number_of_tires + ' tires'); }
       if (cm.total_litter_lbs) { metricBits.push(cm.total_litter_lbs + ' lbs litter'); }

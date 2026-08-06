@@ -88,6 +88,8 @@ def handler(event, context):
             return update_completed_events(headers)
         elif action == 'complete_event':
             return complete_event(body, headers)
+        elif action == 'update_cleanup_metrics':
+            return update_cleanup_metrics(body, headers)
         elif action == 'create_adhoc_event':
             return create_adhoc_event(body, headers)
         elif action == 'suspend_volunteer':
@@ -105,7 +107,7 @@ def handler(event, context):
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
-                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, create_adhoc_event, suspend_volunteer, unsuspend_volunteer, archive_events, cancel_event, categorize_events'
+                    'error': 'Invalid action. Supported actions: update_completed_events, complete_event, update_cleanup_metrics, create_adhoc_event, suspend_volunteer, unsuspend_volunteer, archive_events, cancel_event, categorize_events'
                 })
             }
             
@@ -700,6 +702,104 @@ def complete_event(body, headers):
             'statusCode': 500,
             'headers': headers,
             'body': json.dumps({'error': f'Failed to complete event: {str(e)}'})
+        }
+
+def update_cleanup_metrics(body, headers):
+    """
+    Add or update cleanup metrics on an existing event, without touching
+    status/RSVPs. Unlike complete_event, this works on ANY event regardless
+    of status (completed, ad hoc, or even active) — it's meant for correcting
+    or backfilling stats after the fact.
+
+    Required: event_id, bags_of_trash
+    Optional: number_of_tires, large_items_weight_lbs, volunteer_count
+    Auto-calculated: total_litter_lbs = (bags_of_trash * 25) + large_items_weight_lbs
+    """
+    try:
+        event_id = body.get('event_id')
+        if not event_id:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'event_id is required'})
+            }
+
+        bags_of_trash = body.get('bags_of_trash')
+        if bags_of_trash is None:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({'error': 'bags_of_trash is required'})
+            }
+
+        bags_of_trash = int(bags_of_trash)
+        number_of_tires = int(body.get('number_of_tires', 0))
+        large_items_weight_lbs = float(body.get('large_items_weight_lbs', 0))
+        total_litter_lbs = (bags_of_trash * LBS_PER_BAG) + large_items_weight_lbs
+
+        # Verify event exists (any status is fine here)
+        try:
+            event_response = events_table.get_item(Key={'event_id': event_id})
+            if 'Item' not in event_response:
+                return {
+                    'statusCode': 404,
+                    'headers': headers,
+                    'body': json.dumps({'error': f'Event {event_id} not found'})
+                }
+        except ClientError as e:
+            return {
+                'statusCode': 500,
+                'headers': headers,
+                'body': json.dumps({'error': f'Failed to retrieve event: {e.response["Error"]["Message"]}'})
+            }
+
+        from decimal import Decimal
+        now = datetime.now(timezone.utc).isoformat()
+        update_expr = 'SET updated_at = :now, cleanup_metrics = :metrics'
+        expr_values = {
+            ':now': now,
+            ':metrics': {
+                'bags_of_trash': bags_of_trash,
+                'number_of_tires': number_of_tires,
+                'large_items_weight_lbs': Decimal(str(large_items_weight_lbs)),
+                'total_litter_lbs': Decimal(str(total_litter_lbs))
+            }
+        }
+
+        # volunteer_count is optional — only touch it if explicitly provided,
+        # since ad hoc/historical events rely on this field for impact stats.
+        if body.get('volunteer_count') is not None:
+            update_expr += ', volunteer_count = :vc'
+            expr_values[':vc'] = int(body.get('volunteer_count'))
+
+        events_table.update_item(
+            Key={'event_id': event_id},
+            UpdateExpression=update_expr,
+            ExpressionAttributeValues=expr_values
+        )
+
+        return {
+            'statusCode': 200,
+            'headers': headers,
+            'body': json.dumps({
+                'message': f'Cleanup metrics updated for {event_id}',
+                'event_id': event_id,
+                'cleanup_metrics': {
+                    'bags_of_trash': bags_of_trash,
+                    'number_of_tires': number_of_tires,
+                    'large_items_weight_lbs': large_items_weight_lbs,
+                    'total_litter_lbs': total_litter_lbs
+                },
+                'success': True
+            })
+        }
+
+    except Exception as e:
+        print(f"Error updating cleanup metrics: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': headers,
+            'body': json.dumps({'error': f'Failed to update cleanup metrics: {str(e)}'})
         }
 
 def archive_events(body, headers):

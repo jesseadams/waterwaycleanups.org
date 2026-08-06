@@ -1293,6 +1293,10 @@
       const [completingEvent, setCompletingEvent] = useState(null);
       const [completeFormData, setCompleteFormData] = useState({ bags: '', tires: '0', largeWeight: '0' });
 
+      // Edit cleanup stats form state (works on any event, including ad hoc/completed)
+      const [editingStatsEvent, setEditingStatsEvent] = useState(null);
+      const [statsFormData, setStatsFormData] = useState({ bags: '', tires: '0', largeWeight: '0', volunteerCount: '' });
+
       // Ad hoc event form state
       const [showAdhocForm, setShowAdhocForm] = useState(false);
       const [adhocFormData, setAdhocFormData] = useState({ title: '', date: '', location_name: '', volunteer_count: '', bags: '', tires: '0', largeWeight: '0' });
@@ -1811,6 +1815,51 @@
         setError('');
         setCompletingEvent(event);
         setCompleteFormData({ bags: '', tires: '0', largeWeight: '0' });
+      };
+
+      const handleEditStats = (event) => {
+        setError('');
+        const cm = event.cleanup_metrics || {};
+        setEditingStatsEvent(event);
+        setStatsFormData({
+          bags: cm.bags_of_trash != null ? String(cm.bags_of_trash) : '',
+          tires: cm.number_of_tires != null ? String(cm.number_of_tires) : '0',
+          largeWeight: cm.large_items_weight_lbs != null ? String(cm.large_items_weight_lbs) : '0',
+          volunteerCount: event.volunteer_count != null ? String(event.volunteer_count) : ''
+        });
+      };
+
+      const handleStatsSubmit = async (e) => {
+        e.preventDefault();
+        if (!editingStatsEvent) return;
+
+        const bags = parseInt(statsFormData.bags, 10);
+        if (!(bags >= 0)) { setError('Please enter a valid number of bags'); return; }
+        const tires = parseInt(statsFormData.tires, 10) || 0;
+        const largeWeight = parseFloat(statsFormData.largeWeight) || 0;
+        const totalLbs = (bags * 25) + largeWeight;
+        const volunteerCount = statsFormData.volunteerCount === '' ? undefined : parseInt(statsFormData.volunteerCount, 10) || 0;
+
+        try {
+          setIsLoading(true);
+          setError('');
+          if (window.eventsAPI && window.authClient) {
+            window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
+          }
+          await window.eventsAPI.updateCleanupMetrics(editingStatsEvent.event_id, {
+            bags_of_trash: bags,
+            number_of_tires: tires,
+            large_items_weight_lbs: largeWeight,
+            volunteer_count: volunteerCount
+          });
+          setSuccess(`Cleanup stats updated for "${editingStatsEvent.title}". ${totalLbs} lbs of litter removed.`);
+          setEditingStatsEvent(null);
+          await loadEvents();
+        } catch (error) {
+          setError(error.message || 'Failed to update cleanup stats');
+        } finally {
+          setIsLoading(false);
+        }
       };
 
       const handleCompleteSubmit = async (e) => {
@@ -2586,6 +2635,11 @@
                     onClick: () => handleCompleteEvent(event),
                     className: "bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
                   }, 'Complete') : null,
+                  event.status !== 'active' ? React.createElement('button', {
+                    key: 'edit-stats',
+                    onClick: () => handleEditStats(event),
+                    className: "bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700"
+                  }, event.cleanup_metrics ? 'Edit Stats' : 'Add Stats') : null,
                   React.createElement('button', {
                     key: 'delete',
                     onClick: () => handleEventDelete(event.event_id),
@@ -3422,6 +3476,113 @@
                     disabled: isLoading,
                     className: "px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
                   }, isLoading ? 'Completing...' : 'Complete Event')
+                ])
+              ])
+            ])) : null,
+            // Edit Cleanup Stats Modal (works on any event: completed, ad hoc, etc.)
+            editingStatsEvent ? React.createElement('div', {
+              key: 'edit-stats-modal',
+              className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            }, React.createElement('div', {
+              className: "bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            }, [
+              React.createElement('div', {
+                key: 'modal-header',
+                className: "flex justify-between items-center p-6 border-b"
+              }, [
+                React.createElement('h3', {
+                  key: 'title',
+                  className: "text-xl font-semibold"
+                }, editingStatsEvent.cleanup_metrics ? 'Edit Cleanup Stats' : 'Add Cleanup Stats'),
+                React.createElement('button', {
+                  key: 'close',
+                  onClick: () => setEditingStatsEvent(null),
+                  className: "text-gray-400 hover:text-gray-600 text-2xl"
+                }, '×')
+              ]),
+              React.createElement('form', {
+                key: 'form',
+                onSubmit: handleStatsSubmit,
+                className: "p-6 space-y-4"
+              }, [
+                React.createElement('p', {
+                  key: 'event-name',
+                  className: "text-sm text-gray-600"
+                }, [
+                  'Updating cleanup results for ',
+                  React.createElement('span', { key: 'name', className: "font-medium text-gray-900" }, `"${editingStatsEvent.title}"`),
+                  editingStatsEvent.ad_hoc ? ' (ad hoc event)' : '',
+                  '.'
+                ]),
+                React.createElement('div', { key: 'bags-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Bags of trash collected *'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    required: true,
+                    autoFocus: true,
+                    value: statsFormData.bags,
+                    onChange: (e) => setStatsFormData({ ...statsFormData, bags: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'tires-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Number of tires'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    value: statsFormData.tires,
+                    onChange: (e) => setStatsFormData({ ...statsFormData, tires: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'large-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Weight of larger items (lbs)'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    step: 'any',
+                    value: statsFormData.largeWeight,
+                    onChange: (e) => setStatsFormData({ ...statsFormData, largeWeight: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', { key: 'vol-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Number of volunteers'),
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'number',
+                    min: '0',
+                    value: statsFormData.volunteerCount,
+                    onChange: (e) => setStatsFormData({ ...statsFormData, volunteerCount: e.target.value }),
+                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                  })
+                ]),
+                React.createElement('div', {
+                  key: 'total',
+                  className: "bg-gray-50 rounded-md p-3 text-sm text-gray-700"
+                }, [
+                  'Estimated total litter removed: ',
+                  React.createElement('span', { key: 'lbs', className: "font-semibold text-gray-900" },
+                    `${((parseInt(statsFormData.bags, 10) || 0) * 25) + (parseFloat(statsFormData.largeWeight) || 0)} lbs`),
+                  React.createElement('span', { key: 'note', className: "block text-xs text-gray-500 mt-1" }, '(25 lbs per bag + larger items)')
+                ]),
+                React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-2" }, [
+                  React.createElement('button', {
+                    key: 'cancel',
+                    type: 'button',
+                    onClick: () => setEditingStatsEvent(null),
+                    className: "px-4 py-2 border rounded-md hover:bg-gray-50"
+                  }, 'Cancel'),
+                  React.createElement('button', {
+                    key: 'submit',
+                    type: 'submit',
+                    disabled: isLoading,
+                    className: "px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700 disabled:opacity-50"
+                  }, isLoading ? 'Saving...' : 'Save Stats')
                 ])
               ])
             ])) : null,

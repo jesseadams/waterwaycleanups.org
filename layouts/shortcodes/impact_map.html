@@ -130,6 +130,12 @@
       <span class="metric-value">v{{ $version }}</span>
     </div>
     {{ end }}
+    {{ if .Page.Params.volunteer_count }}
+    <div class="metric">
+      <span>Volunteers:</span>
+      <span class="metric-value">{{ .Page.Params.volunteer_count }}</span>
+    </div>
+    {{ end }}
     {{ with .Page.Params.cleanup_metrics }}
     <div class="metric">
       <span>Bags of Trash:</span>
@@ -206,6 +212,12 @@
     <div class="metric">
       <span>Event Version:</span>
       <span class="metric-value">v{{ $version }}</span>
+    </div>
+    {{ end }}
+    {{ if .Page.Params.volunteer_count }}
+    <div class="metric">
+      <span>Volunteers:</span>
+      <span class="metric-value">{{ .Page.Params.volunteer_count }}</span>
     </div>
     {{ end }}
     {{ with .Page.Params.cleanup_metrics }}
