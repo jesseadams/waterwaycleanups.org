@@ -1,6 +1,8 @@
 import json
 import os
 import re
+import urllib.request
+import urllib.error
 import boto3
 from datetime import datetime, timezone, timedelta
 from boto3.dynamodb.conditions import Key, Attr
@@ -9,6 +11,7 @@ from botocore.exceptions import ClientError
 # Initialize AWS clients
 dynamodb = boto3.resource('dynamodb')
 sns = boto3.client('sns')
+ssm = boto3.client('ssm')
 aws_region = os.environ.get('AWS_REGION', 'us-east-1')
 ses = boto3.client('ses', region_name=aws_region)
 sesv2 = boto3.client('sesv2', region_name=aws_region)
@@ -21,6 +24,80 @@ sns_topic_arn = os.environ.get('SNS_TOPIC_ARN')
 sender_email = os.environ.get('SENDER_EMAIL', 'info@waterwaycleanups.org')
 site_url = os.environ.get('SITE_URL', 'https://waterwaycleanups.org').rstrip('/')
 contact_list_name = os.environ.get('CONTACT_LIST_NAME', 'WaterwayCleanups')
+github_token_parameter = os.environ.get('GITHUB_TOKEN_PARAMETER', '')
+github_repo = os.environ.get('GITHUB_REPO', 'jesseadams/waterwaycleanups.org')
+github_branch = os.environ.get('GITHUB_BRANCH', 'main')
+
+# Cache for GitHub token (persists across warm Lambda invocations)
+_github_token_cache = None
+
+
+def _get_github_token():
+    """Fetch the GitHub token from SSM Parameter Store, with in-memory caching."""
+    global _github_token_cache
+    if _github_token_cache is not None:
+        return _github_token_cache
+    if not github_token_parameter:
+        return ''
+    try:
+        response = ssm.get_parameter(Name=github_token_parameter, WithDecryption=True)
+        _github_token_cache = response['Parameter']['Value']
+        return _github_token_cache
+    except Exception as e:
+        print(f"Error fetching GitHub token from SSM: {e}")
+        return ''
+
+
+def _environment_from_table_name(table_name):
+    """Infer the deploy environment (staging/production) from a DynamoDB table name suffix."""
+    if not table_name:
+        return 'staging'
+    if table_name.endswith('-production'):
+        return 'production'
+    if table_name.endswith('-staging'):
+        return 'staging'
+    return 'staging'
+
+
+def trigger_content_sync(environment=None):
+    """
+    Kick off the Content Sync GitHub Actions workflow so a direct DynamoDB
+    write (complete_event, create_adhoc_event, update_cleanup_metrics) shows
+    up on the live site without waiting for the nightly scheduled rebuild.
+
+    Best-effort only: never raises. Returns a dict describing the outcome so
+    callers can surface it to the admin UI.
+    """
+    environment = environment or _environment_from_table_name(events_table_name)
+    token = _get_github_token()
+    if not token:
+        print("GitHub token not available, skipping content-sync trigger")
+        return {'triggered': False, 'error': 'No GitHub token configured'}
+
+    try:
+        url = f"https://api.github.com/repos/{github_repo}/actions/workflows/content-sync.yml/dispatches"
+        req_headers = {
+            'Authorization': f'token {token}',
+            'Accept': 'application/vnd.github.v3+json',
+            'User-Agent': 'waterwaycleanups-admin',
+            'Content-Type': 'application/json'
+        }
+        data = json.dumps({
+            'ref': github_branch,
+            'inputs': {'environment': environment}
+        }).encode('utf-8')
+
+        req = urllib.request.Request(url, data=data, headers=req_headers, method='POST')
+        with urllib.request.urlopen(req, timeout=10):
+            pass
+        return {'triggered': True, 'environment': environment}
+    except urllib.error.HTTPError as e:
+        error_msg = f"HTTP {e.code}: {e.read().decode('utf-8')}"
+        print(f"Failed to trigger content-sync workflow: {error_msg}")
+        return {'triggered': False, 'error': error_msg}
+    except Exception as e:
+        print(f"Failed to trigger content-sync workflow: {e}")
+        return {'triggered': False, 'error': str(e)}
 
 
 def _set_contact_unsubscribe_all(email, unsubscribe_all):
@@ -528,6 +605,10 @@ def create_adhoc_event(body, headers):
                         })}
             raise
 
+        # Best-effort: kick off a content sync so this shows up on the live
+        # site without waiting for the nightly rebuild.
+        workflow_result = trigger_content_sync()
+
         return {
             'statusCode': 200,
             'headers': headers,
@@ -541,6 +622,7 @@ def create_adhoc_event(body, headers):
                     'large_items_weight_lbs': large_items_weight_lbs,
                     'total_litter_lbs': total_litter_lbs
                 },
+                'workflow': workflow_result,
                 'success': True
             })
         }
@@ -679,6 +761,10 @@ def complete_event(body, headers):
         # (no_show, cancelled, already attended) are left as-is.
         attended_count = mark_active_rsvps_attended(event_id)
 
+        # Best-effort: kick off a content sync so this shows up on the live
+        # site without waiting for the nightly rebuild.
+        workflow_result = trigger_content_sync()
+
         return {
             'statusCode': 200,
             'headers': headers,
@@ -692,6 +778,7 @@ def complete_event(body, headers):
                     'large_items_weight_lbs': large_items_weight_lbs,
                     'total_litter_lbs': total_litter_lbs
                 },
+                'workflow': workflow_result,
                 'success': True
             })
         }
@@ -778,6 +865,10 @@ def update_cleanup_metrics(body, headers):
             ExpressionAttributeValues=expr_values
         )
 
+        # Best-effort: kick off a content sync so this shows up on the live
+        # site without waiting for the nightly rebuild.
+        workflow_result = trigger_content_sync()
+
         return {
             'statusCode': 200,
             'headers': headers,
@@ -790,6 +881,7 @@ def update_cleanup_metrics(body, headers):
                     'large_items_weight_lbs': large_items_weight_lbs,
                     'total_litter_lbs': total_litter_lbs
                 },
+                'workflow': workflow_result,
                 'success': True
             })
         }

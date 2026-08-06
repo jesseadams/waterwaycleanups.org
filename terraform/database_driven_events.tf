@@ -184,6 +184,15 @@ resource "aws_iam_policy" "events_lambda_policy" {
           "arn:aws:lambda:*:*:function:events_lifecycle${local.resource_suffix}"
         ],
         Effect = "Allow"
+      },
+      {
+        Action = [
+          "ssm:GetParameter"
+        ],
+        Resource = [
+          "arn:aws:ssm:${var.aws_region}:*:parameter/waterwaycleanups/shared/github_token"
+        ],
+        Effect = "Allow"
       }
     ]
   })
@@ -694,13 +703,16 @@ resource "aws_lambda_function" "events_lifecycle" {
 
   environment {
     variables = {
-      EVENTS_TABLE_NAME     = aws_dynamodb_table.events.name
-      RSVPS_TABLE_NAME      = aws_dynamodb_table.event_rsvps.name
-      VOLUNTEERS_TABLE_NAME = aws_dynamodb_table.volunteers.name
-      SNS_TOPIC_ARN         = aws_sns_topic.events_topic.arn
-      SENDER_EMAIL          = "info@waterwaycleanups.org"
-      SITE_URL              = "https://${local.domain_name}"
-      CONTACT_LIST_NAME     = var.ses_contact_list_name
+      EVENTS_TABLE_NAME      = aws_dynamodb_table.events.name
+      RSVPS_TABLE_NAME       = aws_dynamodb_table.event_rsvps.name
+      VOLUNTEERS_TABLE_NAME  = aws_dynamodb_table.volunteers.name
+      SNS_TOPIC_ARN          = aws_sns_topic.events_topic.arn
+      SENDER_EMAIL           = "info@waterwaycleanups.org"
+      SITE_URL               = "https://${local.domain_name}"
+      CONTACT_LIST_NAME      = var.ses_contact_list_name
+      GITHUB_TOKEN_PARAMETER = "/waterwaycleanups/shared/github_token"
+      GITHUB_REPO            = var.github_repo
+      GITHUB_BRANCH          = var.github_branch
     }
   }
 

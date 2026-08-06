@@ -1846,13 +1846,16 @@
           if (window.eventsAPI && window.authClient) {
             window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
           }
-          await window.eventsAPI.updateCleanupMetrics(editingStatsEvent.event_id, {
+          const statsResult = await window.eventsAPI.updateCleanupMetrics(editingStatsEvent.event_id, {
             bags_of_trash: bags,
             number_of_tires: tires,
             large_items_weight_lbs: largeWeight,
             volunteer_count: volunteerCount
           });
-          setSuccess(`Cleanup stats updated for "${editingStatsEvent.title}". ${totalLbs} lbs of litter removed.`);
+          const statsSyncNote = statsResult?.workflow?.triggered
+            ? ' Site rebuild triggered — changes should be live in a few minutes.'
+            : ' Site will update on the next scheduled sync.';
+          setSuccess(`Cleanup stats updated for "${editingStatsEvent.title}". ${totalLbs} lbs of litter removed.${statsSyncNote}`);
           setEditingStatsEvent(null);
           await loadEvents();
         } catch (error) {
@@ -1878,12 +1881,15 @@
           if (window.eventsAPI && window.authClient) {
             window.eventsAPI.setSessionToken(window.authClient.getSessionToken());
           }
-          await window.eventsAPI.completeEvent(completingEvent.event_id, {
+          const completeResult = await window.eventsAPI.completeEvent(completingEvent.event_id, {
             bags_of_trash: bags,
             number_of_tires: tires,
             large_items_weight_lbs: largeWeight
           });
-          setSuccess(`Event "${completingEvent.title}" completed. ${totalLbs} lbs of litter removed.`);
+          const completeSyncNote = completeResult?.workflow?.triggered
+            ? ' Site rebuild triggered — changes should be live in a few minutes.'
+            : ' Site will update on the next scheduled sync.';
+          setSuccess(`Event "${completingEvent.title}" completed. ${totalLbs} lbs of litter removed.${completeSyncNote}`);
           setCompletingEvent(null);
           await loadEvents();
         } catch (error) {
@@ -1919,7 +1925,10 @@
             number_of_tires: tires,
             large_items_weight_lbs: largeWeight
           });
-          setSuccess(`Ad hoc event created. It will appear in impact stats on the next content sync.`);
+          const adhocSyncNote = result?.workflow?.triggered
+            ? ' Site rebuild triggered — it should appear in impact stats in a few minutes.'
+            : ' It will appear in impact stats on the next scheduled sync.';
+          setSuccess(`Ad hoc event created.${adhocSyncNote}`);
           setShowAdhocForm(false);
           await loadEvents();
         } catch (error) {
