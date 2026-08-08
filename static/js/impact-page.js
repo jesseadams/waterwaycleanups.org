@@ -70,6 +70,17 @@
     return 'Cleaned within the last 4 months';
   }
 
+  // Draw order priority when cleanups overlap on the map: green (most
+  // recent) should render on top of yellow, which renders on top of
+  // orange, which renders on top of red (oldest). Layers added to Leaflet
+  // later appear on top, so this is the ascending "add" order.
+  var COLOR_DRAW_PRIORITY = {};
+  COLOR_DRAW_PRIORITY[RECENCY_COLORS.unknown] = 0;
+  COLOR_DRAW_PRIORITY[RECENCY_COLORS.red] = 1;
+  COLOR_DRAW_PRIORITY[RECENCY_COLORS.orange] = 2;
+  COLOR_DRAW_PRIORITY[RECENCY_COLORS.yellow] = 3;
+  COLOR_DRAW_PRIORITY[RECENCY_COLORS.green] = 4;
+
   // All events, sorted most-recent cleanup first.
   var allEvents = (IMPACT_DATA.events || []).slice().sort(function(a, b) {
     return new Date(b.start_time) - new Date(a.start_time);
@@ -90,8 +101,14 @@
     mapLayers.forEach(function(layer) { map.removeLayer(layer); });
     mapLayers = [];
 
+    // Draw oldest (red) first and most recent (green) last so overlapping
+    // paths/areas always show the freshest cleanup on top.
+    var drawOrder = events.slice().sort(function(a, b) {
+      return COLOR_DRAW_PRIORITY[recencyColor(a)] - COLOR_DRAW_PRIORITY[recencyColor(b)];
+    });
+
     var bounds = [];
-    events.forEach(function(ev) {
+    drawOrder.forEach(function(ev) {
       var tmpl = getTemplate(ev);
       if (!tmpl || !tmpl.features) return;
 
