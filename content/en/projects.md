@@ -118,7 +118,7 @@ Each event will measure the number of bags of trash collected, with a goal of re
 
 ### Tracking Our Impact
 
-Volunteer participation numbers, hours contributed, bags collected, and pounds of debris removed will all be recorded using a standardized event tracking form. In addition, we will capture before and after photos at cleanup sites to visually demonstrate the environmental improvements achieved through the program.
+Volunteer participation numbers, hours contributed, bags collected, number of tires recovered, and pounds of debris removed will all be recorded using a standardized event tracking form. In addition, we will capture before and after photos at cleanup sites to visually demonstrate the environmental improvements achieved through the program.
 
 {{< /brick_blocks >}}
 

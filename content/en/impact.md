@@ -15,8 +15,27 @@ Every cleanup we've completed, mapped.
 <div id="impact-public-map" style="height:500px;width:100%;border-radius:0.5rem;border:1px solid #e5e7eb;z-index:1;"></div>
 
 <div class="impact-legend">
-  <span class="legend-item"><span class="legend-line" style="background:#dc2626;"></span> Cleanup Path</span>
-  <span class="legend-item"><span class="legend-dot" style="background:#dc2626;opacity:0.3;width:14px;height:14px;border:2px solid #dc2626;"></span> Focus Area</span>
+  <span class="legend-item"><span class="legend-line" style="background:#16a34a;"></span> Cleaned &lt; 4 months ago</span>
+  <span class="legend-item"><span class="legend-line" style="background:#eab308;"></span> Cleaned 4-5 months ago</span>
+  <span class="legend-item"><span class="legend-line" style="background:#f97316;"></span> Cleaned 6-9 months ago</span>
+  <span class="legend-item"><span class="legend-line" style="background:#dc2626;"></span> Cleaned 9+ months ago</span>
+</div>
+
+<div class="impact-year-filter" id="impact-year-filter">
+  <div class="impact-year-filter-header">
+    <span class="impact-year-filter-label">Filter by year</span>
+    <span class="impact-year-filter-controls">
+      <span class="impact-year-filter-range" id="impact-year-range-label">All years</span>
+      <button type="button" class="impact-year-filter-reset" id="impact-year-filter-reset" disabled>Reset</button>
+    </span>
+  </div>
+  <div class="impact-year-slider" id="impact-year-slider">
+    <div class="impact-year-slider-track"></div>
+    <div class="impact-year-slider-range" id="impact-year-slider-range"></div>
+    <input type="range" id="impact-year-slider-min" class="impact-year-slider-input" step="1" aria-label="Minimum year" />
+    <input type="range" id="impact-year-slider-max" class="impact-year-slider-input" step="1" aria-label="Maximum year" />
+  </div>
+  <div class="impact-year-slider-ticks" id="impact-year-slider-ticks"></div>
 </div>
 
 <div class="impact-event-list" id="impact-event-list"></div>
@@ -90,6 +109,59 @@ Every cleanup we've completed, mapped.
 .impact-event-card .event-miles { font-size: 0.8rem; color: #ea580c; font-weight: 600; }
 .impact-event-card .event-adhoc-badge { display: inline-block; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: #6b7280; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 0.25rem; padding: 0.05rem 0.35rem; vertical-align: middle; }
 .impact-event-card-adhoc { cursor: default; }
+
+.impact-year-filter {
+  background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem 1rem; margin-bottom: 1.5rem;
+}
+.impact-year-filter-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;
+}
+.impact-year-filter-label { font-weight: 700; color: #1f2937; font-size: 0.95rem; }
+.impact-year-filter-controls { display: flex; align-items: center; gap: 0.75rem; }
+.impact-year-filter-range { font-weight: 600; color: #059669; font-size: 0.95rem; }
+.impact-year-filter-reset {
+  font-size: 0.8rem; font-weight: 600; color: #6b7280;
+  background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 0.375rem;
+  padding: 0.25rem 0.65rem; cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.impact-year-filter-reset:hover:not(:disabled) { background: #e5e7eb; color: #1f2937; }
+.impact-year-filter-reset:disabled { cursor: default; opacity: 0.5; }
+.impact-year-slider {
+  position: relative; height: 32px; display: flex; align-items: center;
+}
+.impact-year-slider-track {
+  position: absolute; left: 0; right: 0; height: 6px; border-radius: 3px;
+  background: #e5e7eb;
+}
+.impact-year-slider-range {
+  position: absolute; height: 6px; border-radius: 3px;
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+}
+.impact-year-slider-input {
+  position: absolute; left: 0; right: 0; width: 100%; margin: 0;
+  -webkit-appearance: none; appearance: none; background: transparent;
+  pointer-events: none; height: 32px;
+}
+.impact-year-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none; pointer-events: auto;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #047857; border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+  margin-top: -7px;
+}
+.impact-year-slider-input::-moz-range-thumb {
+  pointer-events: auto; width: 14px; height: 14px; border-radius: 50%;
+  background: #047857; border: 3px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+}
+.impact-year-slider-input::-webkit-slider-runnable-track { background: transparent; }
+.impact-year-slider-input::-moz-range-track { background: transparent; }
+.impact-year-slider-ticks {
+  display: flex; justify-content: space-between; margin-top: 0.25rem;
+  font-size: 0.75rem; color: #9ca3af;
+}
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
