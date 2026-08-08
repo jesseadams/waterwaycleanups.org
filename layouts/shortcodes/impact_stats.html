@@ -11,6 +11,7 @@
   <div class="stat">
     <div class="stat-value"><span id="impact-stat-volunteers">{{ with $impact }}{{ .stats.volunteers }}{{ else }}—{{ end }}</span></div>
     <div class="stat-label">Volunteer Check-ins</div>
+    <div class="stat-sublabel"><span id="impact-stat-unique-volunteers">{{ with $impact }}{{ .stats.unique_volunteers | default 0 }}{{ else }}—{{ end }}</span> unique volunteers</div>
   </div>
   <div class="stat">
     <div class="stat-value"><span id="impact-stat-bags">{{ with $impact }}{{ .stats.bags_of_trash | default 0 }}{{ else }}-{{ end }}</span></div>

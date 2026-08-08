@@ -16,7 +16,7 @@
   // color of its path/area on the map.
   var RECENCY_COLORS = {
     green: '#16a34a',  // < 4 months
-    yellow: '#eab308', // 4-5 months
+    yellow: '#facc15', // 4-5 months
     orange: '#f97316', // 6-9 months
     red: '#dc2626',    // 9+ months
     unknown: '#9ca3af' // no date available
@@ -199,6 +199,9 @@
 
   function renderStats(events) {
     var totals = { cleanups: 0, miles: 0, volunteers: 0, bags_of_trash: 0, tires: 0, litter_lbs: 0 };
+    var uniqueVolunteerHashes = {};
+    var uniqueVolunteerCount = 0;
+    var hasHashData = false;
     events.forEach(function(ev) {
       var tmpl = getTemplate(ev);
       var cm = ev.cleanup_metrics || {};
@@ -208,6 +211,21 @@
       totals.bags_of_trash += Number(cm.bags_of_trash) || 0;
       totals.tires += Number(cm.number_of_tires) || 0;
       totals.litter_lbs += Number(cm.total_litter_lbs) || 0;
+
+      // Unique volunteers are deduped by hashed email (no PII in the data
+      // file). Events without hashes (older/ad hoc) can't be deduped, so
+      // their attended count is added on top as a best-effort fallback.
+      if (ev.volunteer_hashes && ev.volunteer_hashes.length) {
+        hasHashData = true;
+        ev.volunteer_hashes.forEach(function(hash) {
+          if (!uniqueVolunteerHashes[hash]) {
+            uniqueVolunteerHashes[hash] = true;
+            uniqueVolunteerCount++;
+          }
+        });
+      } else if (ev.attended_count) {
+        uniqueVolunteerCount += ev.attended_count;
+      }
     });
     totals.miles = Math.round(totals.miles * 10) / 10;
     totals.litter_lbs = Math.round(totals.litter_lbs * 10) / 10;
@@ -215,6 +233,7 @@
     setStat('impact-stat-cleanups', totals.cleanups);
     setStat('impact-stat-miles', totals.miles);
     setStat('impact-stat-volunteers', totals.volunteers);
+    setStat('impact-stat-unique-volunteers', hasHashData ? uniqueVolunteerCount : totals.volunteers);
     setStat('impact-stat-bags', totals.bags_of_trash);
     setStat('impact-stat-tires', totals.tires);
     setStat('impact-stat-litter', totals.litter_lbs);

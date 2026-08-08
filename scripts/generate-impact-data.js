@@ -10,6 +10,7 @@
 
 require('dotenv').config();
 const AWS = require('aws-sdk');
+const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
@@ -47,17 +48,22 @@ async function getTemplate(templateId, version) {
   return result.Item || null;
 }
 
-async function getAttendedCount(eventId) {
+async function getAttendedRsvps(eventId) {
   const params = {
     TableName: rsvpsTable,
     KeyConditionExpression: 'event_id = :eid',
     FilterExpression: '#s = :attended',
     ExpressionAttributeNames: { '#s': 'status' },
-    ExpressionAttributeValues: { ':eid': eventId, ':attended': 'attended' },
-    Select: 'COUNT'
+    ExpressionAttributeValues: { ':eid': eventId, ':attended': 'attended' }
   };
   const result = await dynamodb.query(params).promise();
-  return result.Count || 0;
+  return result.Items || [];
+}
+
+// Hash emails before writing them into the public JSON data file so we can
+// dedupe volunteers across events without exposing any PII on the site.
+function hashEmail(email) {
+  return crypto.createHash('sha256').update(email.trim().toLowerCase()).digest('hex').slice(0, 16);
 }
 
 async function main() {
@@ -76,10 +82,14 @@ async function main() {
   const impactData = {
     generated_at: new Date().toISOString(),
     environment: environment,
-    stats: { cleanups: 0, miles: 0, volunteers: 0, bags_of_trash: 0, tires: 0, litter_lbs: 0 },
+    stats: { cleanups: 0, miles: 0, volunteers: 0, unique_volunteers: 0, bags_of_trash: 0, tires: 0, litter_lbs: 0 },
     events: [],
     templates: {}
   };
+
+  // Tracks distinct volunteers (hashed email) across all completed events,
+  // so we can report a unique-checkin count alongside total check-ins.
+  const uniqueVolunteerHashes = new Set();
 
   for (const event of completedEvents) {
     const templateId = event.impact_template || null;
@@ -100,8 +110,10 @@ async function main() {
       }
     }
 
-    // Get attended count
-    const attendedCount = await getAttendedCount(event.event_id);
+    // Get attended RSVPs (used for both the total check-in count and to
+    // dedupe volunteers across events by hashed email)
+    const attendedRsvps = await getAttendedRsvps(event.event_id);
+    const attendedCount = attendedRsvps.length;
 
     const tmpl = cacheKey ? impactData.templates[cacheKey] : null;
     const miles = tmpl ? tmpl.estimated_miles : 0;
@@ -119,6 +131,13 @@ async function main() {
       ? attendedCount
       : (Number(event.volunteer_count) || 0);
 
+    // Hash each attendee's email so we can dedupe repeat volunteers across
+    // events without ever writing PII into the public impact JSON.
+    const volunteerHashes = attendedRsvps
+      .filter(rsvp => rsvp.email)
+      .map(rsvp => hashEmail(rsvp.email));
+    volunteerHashes.forEach(hash => uniqueVolunteerHashes.add(hash));
+
     impactData.events.push({
       event_id: event.event_id,
       title: event.title,
@@ -128,6 +147,7 @@ async function main() {
       impact_template: templateId,
       impact_template_version: version,
       attended_count: volunteerCount,
+      volunteer_hashes: volunteerHashes,
       cleanup_metrics: {
         bags_of_trash: bags,
         number_of_tires: tires,
@@ -145,6 +165,7 @@ async function main() {
 
   impactData.stats.miles = Math.round(impactData.stats.miles * 10) / 10;
   impactData.stats.litter_lbs = Math.round(impactData.stats.litter_lbs * 10) / 10;
+  impactData.stats.unique_volunteers = uniqueVolunteerHashes.size;
 
   // Write to Hugo data directory
   const outputPath = path.join(__dirname, '..', 'data', 'impact.json');
@@ -158,7 +179,7 @@ async function main() {
   fs.writeFileSync(jsOutputPath, 'window.IMPACT_DATA = ' + JSON.stringify(impactData) + ';');
   console.log(`   Written to ${jsOutputPath}`);
 
-  console.log(`   ${impactData.stats.cleanups} cleanups, ${impactData.stats.miles} miles, ${impactData.stats.volunteers} volunteers`);
+  console.log(`   ${impactData.stats.cleanups} cleanups, ${impactData.stats.miles} miles, ${impactData.stats.volunteers} check-ins, ${impactData.stats.unique_volunteers} unique volunteers`);
 }
 
 main().catch(err => {

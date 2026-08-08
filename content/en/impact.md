@@ -16,7 +16,7 @@ Every cleanup we've completed, mapped.
 
 <div class="impact-legend">
   <span class="legend-item"><span class="legend-line" style="background:#16a34a;"></span> Cleaned &lt; 4 months ago</span>
-  <span class="legend-item"><span class="legend-line" style="background:#eab308;"></span> Cleaned 4-5 months ago</span>
+  <span class="legend-item"><span class="legend-line" style="background:#facc15;"></span> Cleaned 4-5 months ago</span>
   <span class="legend-item"><span class="legend-line" style="background:#f97316;"></span> Cleaned 6-9 months ago</span>
   <span class="legend-item"><span class="legend-line" style="background:#dc2626;"></span> Cleaned 9+ months ago</span>
 </div>
@@ -86,6 +86,12 @@ Every cleanup we've completed, mapped.
   font-size: 1rem;
   font-weight: 700;
   color: #1f2937;
+}
+.impact-stats .stat-sublabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-top: 0.15rem;
 }
 .impact-legend {
   display: flex; gap: 1.5rem; flex-wrap: wrap; align-items: center;
