@@ -2287,7 +2287,7 @@
       };
 
       const filteredEvents = events.filter(event => {
-        if (eventFilters.hideCompleted && event.status === 'completed') return false;
+        if (eventFilters.hideCompleted && (event.status === 'completed' || event.status === 'cancelled')) return false;
         if (eventFilters.status && event.status !== eventFilters.status) return false;
         if (eventFilters.location && !event.location.name.toLowerCase().includes(eventFilters.location.toLowerCase())) return false;
         return true;
@@ -2528,7 +2528,7 @@
                   onChange: (e) => setEventFilters({ ...eventFilters, hideCompleted: e.target.checked }),
                   className: "h-4 w-4 text-blue-600 border-gray-300 rounded"
                 }),
-                'Hide completed events'
+                'Hide completed & cancelled events'
               ]),
               React.createElement('span', {
                 key: 'count',
