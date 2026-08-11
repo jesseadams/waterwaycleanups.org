@@ -21,6 +21,7 @@ declare global {
       REACT_APP_S3_BUCKET?: string;
       REACT_APP_S3_PREFIX?: string;
       REACT_APP_S3_REGION?: string;
+      REACT_APP_BEDROCK_NEWSLETTER_MODEL_ID?: string;
     };
   }
 }

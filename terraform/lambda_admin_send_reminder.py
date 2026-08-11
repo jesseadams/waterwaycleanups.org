@@ -13,6 +13,9 @@ session_table_name = os.environ.get('SESSION_TABLE_NAME')
 rsvps_table_name = os.environ.get('RSVPS_TABLE_NAME')
 events_table_name = os.environ.get('EVENTS_TABLE_NAME')
 message_log_table_name = os.environ.get('MESSAGE_LOG_TABLE_NAME')
+# Bedrock model used to draft reminder messages. Centrally configured in
+# config/ai-models.json and injected via Terraform (see terraform/ai_models.tf).
+BEDROCK_MODEL_ID = os.environ.get('BEDROCK_MODEL_ID', 'us.anthropic.claude-haiku-4-5-20251001-v1:0')
 
 session_table = dynamodb.Table(session_table_name)
 rsvps_table = dynamodb.Table(rsvps_table_name)
@@ -141,7 +144,7 @@ def handle_generate(headers, event_data, event_title, event_date, location_str):
         )
 
         response = bedrock.invoke_model(
-            modelId='us.anthropic.claude-haiku-4-5-20251001-v1:0',
+            modelId=BEDROCK_MODEL_ID,
             contentType='application/json',
             accept='application/json',
             body=json.dumps({

@@ -1,0 +1,20 @@
+{
+  "_comment": "Single source of truth for AWS Bedrock model IDs used for AI-generated email content. Update the model_id values here to change the model everywhere it's used — no need to hunt through Lambda/Terraform/frontend code.",
+  "bedrock_models": {
+    "newsletter_generation": {
+      "model_id": "us.anthropic.claude-sonnet-5",
+      "description": "Used by the SESv2 admin app (sesv2-admin) to generate newsletter/email template content from bullet points.",
+      "used_by": [
+        "sesv2-admin/src/utils/bedrock.ts"
+      ]
+    },
+    "rsvp_reminder_generation": {
+      "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+      "description": "Used by the admin-send-reminder Lambda to draft RSVP reminder messages for event attendees.",
+      "used_by": [
+        "terraform/lambda_admin_send_reminder.py",
+        "terraform/auth_system.tf (Bedrock IAM policy resource ARNs)"
+      ]
+    }
+  }
+}

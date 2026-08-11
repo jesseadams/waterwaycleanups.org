@@ -49,6 +49,7 @@ resource "aws_lambda_function" "admin_send_reminder" {
       RSVPS_TABLE_NAME       = aws_dynamodb_table.event_rsvps.name
       EVENTS_TABLE_NAME      = aws_dynamodb_table.events.name
       MESSAGE_LOG_TABLE_NAME = aws_dynamodb_table.event_message_log.name
+      BEDROCK_MODEL_ID       = local.rsvp_reminder_model_id
     }
   }
 

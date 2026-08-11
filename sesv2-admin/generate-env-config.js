@@ -12,6 +12,19 @@ const dotenv = require('dotenv');
 
 console.log('Generating runtime environment configuration...');
 
+// Load the centrally-managed Bedrock model ID for newsletter generation from
+// config/ai-models.json (repo root). Update that file to change the model
+// used everywhere it's referenced instead of editing this app's source.
+const aiModelsConfigPath = path.resolve(__dirname, '..', 'config', 'ai-models.json');
+let newsletterModelId = '';
+try {
+  const aiModelsConfig = JSON.parse(fs.readFileSync(aiModelsConfigPath, 'utf8'));
+  newsletterModelId = aiModelsConfig.bedrock_models.newsletter_generation.model_id;
+  console.log(`Loaded newsletter Bedrock model ID from ${aiModelsConfigPath}`);
+} catch (err) {
+  console.warn(`Could not load ${aiModelsConfigPath}, newsletter model ID will be empty:`, err.message);
+}
+
 // Load .env file
 const envPath = path.resolve(__dirname, '.env');
 let envValues = {};
@@ -48,7 +61,8 @@ window.ENV_CONFIG = {
   REACT_APP_REDIRECT_URL: "${combinedEnv.REACT_APP_REDIRECT_URL || 'http://localhost:3000'}",
   REACT_APP_S3_BUCKET: "${combinedEnv.REACT_APP_S3_BUCKET || ''}",
   REACT_APP_S3_PREFIX: "${combinedEnv.REACT_APP_S3_PREFIX || ''}",
-  REACT_APP_S3_REGION: "${combinedEnv.REACT_APP_S3_REGION || ''}"
+  REACT_APP_S3_REGION: "${combinedEnv.REACT_APP_S3_REGION || ''}",
+  REACT_APP_BEDROCK_NEWSLETTER_MODEL_ID: "${newsletterModelId}"
 };
 `;
 

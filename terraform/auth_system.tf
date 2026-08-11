@@ -171,8 +171,8 @@ resource "aws_iam_policy" "auth_lambda_policy" {
           "bedrock:GetFoundationModel"
         ],
         Resource = [
-          "arn:aws:bedrock:*::foundation-model/anthropic.claude-haiku-4-5-20251001-v1:0",
-          "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-haiku-4-5-20251001-v1:0"
+          "arn:aws:bedrock:*::foundation-model/${replace(local.rsvp_reminder_model_id, "us.", "")}",
+          "arn:aws:bedrock:*:*:inference-profile/${local.rsvp_reminder_model_id}"
         ],
         Effect = "Allow"
       },

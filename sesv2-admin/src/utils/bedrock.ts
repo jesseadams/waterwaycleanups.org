@@ -3,6 +3,16 @@ import { getAwsConfig } from './configure-aws';
 import { getEmailTemplate } from './sesv2';
 import awsConfig from '../aws-config';
 
+// Bedrock model ID for newsletter generation. Sourced from config/ai-models.json
+// (repo root) at build time via generate-env-config.js -> window.ENV_CONFIG, so it
+// can be updated in one place instead of hardcoding it here.
+// (window.ENV_CONFIG's shape, including REACT_APP_BEDROCK_NEWSLETTER_MODEL_ID,
+// is declared globally in amplifyconfiguration.ts.)
+const NEWSLETTER_MODEL_ID =
+  (typeof window !== 'undefined' && window.ENV_CONFIG && window.ENV_CONFIG.REACT_APP_BEDROCK_NEWSLETTER_MODEL_ID) ||
+  process.env.REACT_APP_BEDROCK_NEWSLETTER_MODEL_ID ||
+  'us.anthropic.claude-sonnet-4-20250514-v1:0';
+
 // We'll create the client fresh each time to ensure we have current credentials
 // This ensures we're always using the latest temporary credentials from Cognito
 const getBedrockClient = async (): Promise<BedrockRuntimeClient> => {
@@ -99,9 +109,10 @@ Please provide the newsletter in the following JSON format:
   try {
     const client = await getBedrockClient();
     
-    // Prepare the request for Claude Sonnet 4 via inference profile (latest available)
+    // Prepare the request for Claude via inference profile (model ID centrally
+    // configured in config/ai-models.json)
     const request = {
-      modelId: 'us.anthropic.claude-sonnet-4-20250514-v1:0',
+      modelId: NEWSLETTER_MODEL_ID,
       contentType: 'application/json',
       accept: 'application/json',
       body: JSON.stringify({
