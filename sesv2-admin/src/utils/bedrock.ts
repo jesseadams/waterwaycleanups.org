@@ -124,8 +124,6 @@ Please provide the newsletter in the following JSON format:
             content: prompt
           }
         ],
-        temperature: 0.7,
-        top_p: 0.9,
       }),
     };
 
