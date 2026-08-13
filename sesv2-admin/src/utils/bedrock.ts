@@ -44,6 +44,28 @@ interface GeneratedNewsletter {
   textContent: string;
 }
 
+// Parses the ===SUBJECT===/===HTML===/===TEXT===/===END=== delimited format
+// requested in the prompt. This sidesteps having the model produce JSON with
+// raw HTML embedded in a string value, which is error-prone to escape.
+const parseDelimitedNewsletter = (raw: string): GeneratedNewsletter => {
+  const section = (name: string): string | null => {
+    const pattern = new RegExp(`===${name}===\\s*([\\s\\S]*?)(?=\\n===[A-Z]+===|$)`, 'i');
+    const match = raw.match(pattern);
+    return match ? match[1].trim() : null;
+  };
+
+  const subject = section('SUBJECT');
+  const htmlContent = section('HTML');
+  const textContent = section('TEXT');
+
+  if (!subject || !htmlContent || !textContent) {
+    console.error('Unexpected newsletter response format:', raw);
+    throw new Error('Failed to parse newsletter content from model response');
+  }
+
+  return { subject, htmlContent, textContent };
+};
+
 export const generateNewsletterContent = async (params: NewsletterGenerationParams): Promise<GeneratedNewsletter> => {
   const { bullets, imageUrls = [], tone = 'enthusiastic', targetAudience = 'environmental volunteers and supporters' } = params;
 
@@ -99,12 +121,19 @@ HTML Requirements:
 - Use consistent typography and spacing
 - Maintain professional email-safe CSS styling
 
-Please provide the newsletter in the following JSON format:
-{
-  "subject": "Newsletter subject line",
-  "htmlContent": "<html>...</html>",
-  "textContent": "Plain text version..."
-}`;
+Output format (IMPORTANT — follow exactly):
+Return the newsletter as plain text using the three delimited sections below.
+Do NOT wrap anything in JSON, and do NOT escape quotes, newlines, or any
+characters inside the HTML — just write the raw HTML/text between the markers
+exactly as it should appear in the final email.
+
+===SUBJECT===
+Newsletter subject line here
+===HTML===
+<html>...the full HTML email...</html>
+===TEXT===
+Plain text version of the email...
+===END===`;
 
   try {
     const client = await getBedrockClient();
@@ -146,14 +175,12 @@ Please provide the newsletter in the following JSON format:
       throw new Error('No text content found in Bedrock response');
     }
 
-    // Extract JSON from the response
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('Failed to extract JSON from response');
-    }
-    
-    const generatedContent = JSON.parse(jsonMatch[0]);
-    
+    // Parse the delimited sections instead of asking the model to produce
+    // JSON. Raw HTML/CSS is full of quotes and newlines that models frequently
+    // fail to escape correctly inside a JSON string, which broke JSON.parse
+    // in practice. Plain delimiters avoid that escaping problem entirely.
+    const generatedContent = parseDelimitedNewsletter(content);
+
     // Process HTML content to properly embed images with appropriate sizing
     let processedHtml = generatedContent.htmlContent;
     imageUrls.forEach((url, index) => {
