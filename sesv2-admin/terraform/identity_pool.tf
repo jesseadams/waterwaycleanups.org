@@ -103,6 +103,17 @@ resource "aws_iam_policy" "bedrock_access_policy" {
           "arn:aws:bedrock:us-*::foundation-model/anthropic.claude-*",
           "arn:aws:bedrock:us-*:767072126027:inference-profile/*"
         ]
+      },
+      {
+        # Some Bedrock models (e.g. Claude Sonnet 5) are distributed via AWS
+        # Marketplace and require these actions to auto-subscribe/verify
+        # access on first invocation, even for on-demand usage.
+        Effect = "Allow"
+        Action = [
+          "aws-marketplace:ViewSubscriptions",
+          "aws-marketplace:Subscribe"
+        ]
+        Resource = "*"
       }
     ]
   })
