@@ -133,8 +133,19 @@ Please provide the newsletter in the following JSON format:
     
     // Parse the response
     const responseBody = JSON.parse(new TextDecoder().decode(response.body));
-    const content = responseBody.content[0].text;
-    
+
+    // Models with extended thinking/reasoning always on (e.g. Claude Sonnet 5)
+    // return additional content blocks (e.g. type "thinking") ahead of the
+    // actual text block, so find the text block instead of assuming index 0.
+    const responseContent: Array<{ type?: string; text?: string }> = responseBody.content || [];
+    const textBlock = responseContent.find((block) => block.type === 'text' && typeof block.text === 'string');
+    const content = textBlock?.text;
+
+    if (!content) {
+      console.error('Unexpected Bedrock response shape:', responseBody);
+      throw new Error('No text content found in Bedrock response');
+    }
+
     // Extract JSON from the response
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
