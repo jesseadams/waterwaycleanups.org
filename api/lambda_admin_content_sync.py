@@ -168,6 +168,40 @@ def handle_save_draft(body, session):
     edit_id = body.get('edit_id') or f"edit_{int(datetime.now().timestamp())}_{os.urandom(3).hex()}"
     is_new = not original_event_id
     
+    # Build the locations array. Prefer the new multi-location shape
+    # (event_data['locations']); fall back to the legacy flat fields so
+    # older callers keep working.
+    raw_locations = event_data.get('locations')
+    if isinstance(raw_locations, list) and len(raw_locations) > 0:
+        locations = []
+        for loc in raw_locations:
+            entry = {
+                'name': loc.get('name', ''),
+                'address': loc.get('address', ''),
+                'attendance_cap': int(loc.get('attendance_cap', 20) or 20)
+            }
+            if loc.get('location_url'):
+                entry['location_url'] = loc['location_url']
+            if loc.get('impact_template'):
+                entry['impact_template'] = loc['impact_template']
+                if loc.get('impact_template_version'):
+                    entry['impact_template_version'] = loc['impact_template_version']
+            locations.append(entry)
+    else:
+        locations = [{
+            'name': event_data.get('location_name', ''),
+            'address': event_data.get('location_address', ''),
+            'attendance_cap': int(event_data.get('attendance_cap', 20) or 20)
+        }]
+        if event_data.get('location_url'):
+            locations[0]['location_url'] = event_data['location_url']
+        if event_data.get('impact_template'):
+            locations[0]['impact_template'] = event_data['impact_template']
+            if event_data.get('impact_template_version'):
+                locations[0]['impact_template_version'] = event_data['impact_template_version']
+    
+    total_attendance_cap = sum(loc.get('attendance_cap', 20) for loc in locations)
+    
     # Prepare event data for DynamoDB events table format
     db_event_data = {
         'event_id': event_id,
@@ -175,11 +209,14 @@ def handle_save_draft(body, session):
         'description': event_data.get('description', ''),
         'start_time': event_data['start_time'],
         'end_time': event_data['end_time'],
+        'locations': locations,
+        # Legacy flat fields (derived from the first location) kept for
+        # backward compatibility with code that hasn't migrated to `locations`.
         'location': {
-            'name': event_data.get('location_name', ''),
-            'address': event_data.get('location_address', '')
+            'name': locations[0]['name'],
+            'address': locations[0]['address']
         },
-        'attendance_cap': int(event_data.get('attendance_cap', 20)),
+        'attendance_cap': total_attendance_cap,
         'status': event_data.get('status', 'active'),
         'hugo_config': {
             'image': event_data.get('image', '/uploads/waterway-cleanups/default.jpg'),
@@ -195,11 +232,12 @@ def handle_save_draft(body, session):
     # Store the hugo_slug so the admin UI can link to the event page
     db_event_data['hugo_slug'] = event_id
     
-    # Include impact template reference if set
-    if event_data.get('impact_template'):
-        db_event_data['impact_template'] = event_data['impact_template']
-        if event_data.get('impact_template_version'):
-            db_event_data['impact_template_version'] = event_data['impact_template_version']
+    # Legacy top-level impact template reference (first location's template),
+    # kept for backward compatibility with code reading the old shape.
+    if locations[0].get('impact_template'):
+        db_event_data['impact_template'] = locations[0]['impact_template']
+        if locations[0].get('impact_template_version'):
+            db_event_data['impact_template_version'] = locations[0]['impact_template_version']
     
     item = {
         'edit_id': edit_id,
@@ -404,9 +442,17 @@ def handle_publish(body, session):
                 event_data = edit['event_data']
                 events_table.put_item(Item=event_data)
                 
-                # Lock one-time impact templates when assigned to an event
-                impact_template_id = event_data.get('impact_template')
-                if impact_template_id:
+                # Lock one-time impact templates when assigned to any of the
+                # event's locations (legacy events may only have a top-level
+                # impact_template with no locations array).
+                impact_template_ids = set()
+                for loc in event_data.get('locations', []):
+                    if loc.get('impact_template'):
+                        impact_template_ids.add(loc['impact_template'])
+                if event_data.get('impact_template'):
+                    impact_template_ids.add(event_data['impact_template'])
+                
+                for impact_template_id in impact_template_ids:
                     try:
                         impact_table_name = os.environ.get('IMPACT_TEMPLATES_TABLE_NAME', 'impact_templates')
                         impact_table = dynamodb.Table(impact_table_name)

@@ -92,31 +92,50 @@ async function main() {
   const uniqueVolunteerHashes = new Set();
 
   for (const event of completedEvents) {
-    const templateId = event.impact_template || null;
-    const version = event.impact_template_version || 1;
-    const cacheKey = templateId ? `${templateId}:${version}` : null;
+    // Support one or more cleanup locations, each with its own impact
+    // template. Falls back to the legacy top-level impact_template for
+    // events not yet migrated to the `locations` array.
+    const locations = Array.isArray(event.locations) && event.locations.length > 0
+      ? event.locations
+      : (event.impact_template ? [{ impact_template: event.impact_template, impact_template_version: event.impact_template_version }] : []);
 
-    // Fetch template if present and not cached (used for the map + miles)
-    if (cacheKey && !impactData.templates[cacheKey]) {
-      const tmpl = await getTemplate(templateId, version);
-      if (tmpl) {
-        impactData.templates[cacheKey] = {
-          template_id: tmpl.template_id,
-          version: tmpl.version,
-          name: tmpl.name,
-          estimated_miles: parseFloat(tmpl.estimated_miles || 0),
-          features: tmpl.features || {}
-        };
+    const locationCacheKeys = [];
+    let miles = 0;
+
+    for (const location of locations) {
+      const templateId = location.impact_template || null;
+      const version = location.impact_template_version || 1;
+      if (!templateId) continue;
+      const cacheKey = `${templateId}:${version}`;
+      locationCacheKeys.push(cacheKey);
+
+      // Fetch template if present and not cached (used for the map + miles)
+      if (!impactData.templates[cacheKey]) {
+        const tmpl = await getTemplate(templateId, version);
+        if (tmpl) {
+          impactData.templates[cacheKey] = {
+            template_id: tmpl.template_id,
+            version: tmpl.version,
+            name: tmpl.name,
+            estimated_miles: parseFloat(tmpl.estimated_miles || 0),
+            features: tmpl.features || {}
+          };
+        }
       }
+
+      const tmpl = impactData.templates[cacheKey];
+      if (tmpl) miles += tmpl.estimated_miles;
     }
+
+    // Keep legacy single-template fields populated from the first location
+    // with a template, for any code still reading the old shape.
+    const templateId = locationCacheKeys.length > 0 ? locationCacheKeys[0].split(':')[0] : null;
+    const version = locationCacheKeys.length > 0 ? parseInt(locationCacheKeys[0].split(':')[1]) : 1;
 
     // Get attended RSVPs (used for both the total check-in count and to
     // dedupe volunteers across events by hashed email)
     const attendedRsvps = await getAttendedRsvps(event.event_id);
     const attendedCount = attendedRsvps.length;
-
-    const tmpl = cacheKey ? impactData.templates[cacheKey] : null;
-    const miles = tmpl ? tmpl.estimated_miles : 0;
 
     // Normalize cleanup metrics (may be absent on older completed events)
     const cm = event.cleanup_metrics || {};

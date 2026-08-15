@@ -179,11 +179,15 @@ def handler(event, context):
         
         # Apply location filter if specified (post-query filtering)
         if location_filter:
-            events = [
-                event for event in events 
-                if location_filter.lower() in event.get('location', {}).get('name', '').lower() or
-                   location_filter.lower() in event.get('location', {}).get('address', '').lower()
-            ]
+            lf = location_filter.lower()
+            def _matches_location(event):
+                locs = event.get('locations') or [event.get('location', {})]
+                return any(
+                    lf in (loc.get('name', '') or '').lower() or
+                    lf in (loc.get('address', '') or '').lower()
+                    for loc in locs
+                )
+            events = [event for event in events if _matches_location(event)]
         
         # Sort events by start_time (chronological order)
         events.sort(key=lambda x: x.get('start_time', ''))

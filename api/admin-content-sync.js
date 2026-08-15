@@ -178,6 +178,39 @@ async function handleSaveDraft(body, session) {
   const editId = body.edit_id || `edit_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
   const isNew = !body.event_id;
 
+  // Build the locations array. Prefer the new multi-location shape
+  // (eventData.locations); fall back to the legacy flat fields so older
+  // callers keep working.
+  let locations;
+  if (Array.isArray(eventData.locations) && eventData.locations.length > 0) {
+    locations = eventData.locations.map(loc => {
+      const entry = {
+        name: loc.name || '',
+        address: loc.address || '',
+        attendance_cap: parseInt(loc.attendance_cap) || 20
+      };
+      if (loc.location_url) entry.location_url = loc.location_url;
+      if (loc.impact_template) {
+        entry.impact_template = loc.impact_template;
+        if (loc.impact_template_version) entry.impact_template_version = loc.impact_template_version;
+      }
+      return entry;
+    });
+  } else {
+    locations = [{
+      name: eventData.location_name || '',
+      address: eventData.location_address || '',
+      attendance_cap: parseInt(eventData.attendance_cap) || 20
+    }];
+    if (eventData.location_url) locations[0].location_url = eventData.location_url;
+    if (eventData.impact_template) {
+      locations[0].impact_template = eventData.impact_template;
+      if (eventData.impact_template_version) locations[0].impact_template_version = eventData.impact_template_version;
+    }
+  }
+
+  const totalAttendanceCap = locations.reduce((sum, loc) => sum + (loc.attendance_cap || 0), 0);
+
   // Prepare event data for DynamoDB events table format
   const dbEventData = {
     event_id: eventId,
@@ -185,11 +218,14 @@ async function handleSaveDraft(body, session) {
     description: eventData.description,
     start_time: eventData.start_time,
     end_time: eventData.end_time,
+    locations: locations,
+    // Legacy flat fields (derived from the first location) kept for
+    // backward compatibility with code that hasn't migrated to `locations`.
     location: {
-      name: eventData.location_name,
-      address: eventData.location_address
+      name: locations[0].name,
+      address: locations[0].address
     },
-    attendance_cap: parseInt(eventData.attendance_cap) || 20,
+    attendance_cap: totalAttendanceCap,
     status: 'active',
     hugo_config: {
       image: eventData.image || '/uploads/waterway-cleanups/default.jpg',
@@ -197,6 +233,14 @@ async function handleSaveDraft(body, session) {
       preheader_is_light: eventData.preheader_is_light || false
     }
   };
+
+  // Legacy top-level impact template reference (first location's template).
+  if (locations[0].impact_template) {
+    dbEventData.impact_template = locations[0].impact_template;
+    if (locations[0].impact_template_version) {
+      dbEventData.impact_template_version = locations[0].impact_template_version;
+    }
+  }
 
   const item = {
     edit_id: editId,

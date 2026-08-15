@@ -243,18 +243,26 @@ class HugoGenerator {
     }
     
     content += `---\n`;
-    content += `## Location\n\n`;
-    
-    // Add location information
-    if (event.location) {
-      if (event.location.name) {
-        content += `${event.location.name}<br/>\n`;
+
+    // Support one or more cleanup locations. Falls back to the legacy
+    // single-location shape (event.location) for older events.
+    const locations = Array.isArray(event.locations) && event.locations.length > 0
+      ? event.locations
+      : (event.location ? [event.location] : []);
+
+    content += locations.length > 1 ? `## Locations\n\n` : `## Location\n\n`;
+
+    locations.forEach((location, index) => {
+      if (locations.length > 1) {
+        content += `**Location ${index + 1}${location.name ? ': ' + location.name : ''}**<br/>\n`;
+      } else if (location.name) {
+        content += `${location.name}<br/>\n`;
       }
-      if (event.location.address) {
-        content += `${event.location.address}\n\n`;
+      if (location.address) {
+        content += `${location.address}\n\n`;
       }
-    }
-    
+    });
+
     content += `---\n`;
     content += `## What We Provide\n\n`;
     content += `- Trash grabbers\n`;
@@ -265,14 +273,21 @@ class HugoGenerator {
     content += `Bring water, wear sturdy shoes, and dress for the weather. All ages welcome—kids under 18 must be accompanied by an adult.\n`;
     content += `{{< /tabs >}}\n\n`;
     
-    // Add impact map shortcode if template is set
-    if (event.impact_template) {
+    // Add an impact map shortcode for each location that has a template set
+    locations.forEach(location => {
+      if (location.impact_template) {
+        const version = location.impact_template_version || '';
+        content += `{{< impact_map template="${location.impact_template}"${version ? ` version="${version}"` : ''} >}}\n\n`;
+      }
+    });
+    // Legacy top-level impact_template (events not yet migrated to `locations`)
+    if (locations.length === 0 && event.impact_template) {
       const version = event.impact_template_version || '';
       content += `{{< impact_map template="${event.impact_template}"${version ? ` version="${version}"` : ''} >}}\n\n`;
     }
 
-    // Add RSVP shortcode with attendance cap
-    const attendanceCap = event.attendance_cap || 20;
+    // Add RSVP shortcode with attendance cap (sum across all locations)
+    const attendanceCap = event.attendance_cap || locations.reduce((sum, l) => sum + (l.attendance_cap || 0), 0) || 20;
     content += `{{< event_rsvp attendance_cap="${attendanceCap}" >}}\n`;
     
     return content;

@@ -148,13 +148,19 @@ POST /admin-content-sync
     "description": "Event description",
     "start_time": "2026-06-20T09:00:00-04:00",
     "end_time": "2026-06-20T12:00:00-04:00",
-    "location_name": "Park Name",
-    "location_address": "123 Main St",
-    "tags": ["tag1", "tag2"],
-    "attendance_cap": 20
+    "locations": [
+      { "name": "Park Name", "address": "123 Main St", "attendance_cap": 20 }
+    ],
+    "tags": ["tag1", "tag2"]
   }
 }
 ```
+
+An event can have multiple locations — add more entries to the `locations`
+array, each with its own `name`, `address`, `attendance_cap`, and optional
+`impact_template`/`impact_template_version`. The legacy flat fields
+(`location_name`, `location_address`, `attendance_cap`) are still accepted
+for a single location and are derived automatically from `locations` on save.
 
 #### List Pending Edits
 ```json

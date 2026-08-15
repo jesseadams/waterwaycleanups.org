@@ -272,6 +272,125 @@
       ]);
     };
 
+    // Reusable multi-location editor — one or more cleanup locations per event,
+    // each with its own name, address, map URL, impact map template, and
+    // attendance cap. Always keeps at least one location.
+    const LocationFields = ({ locations, onUpdate, onAdd, onRemove, impactTemplates, lockedTemplateIds }) => {
+      lockedTemplateIds = lockedTemplateIds || {};
+      return React.createElement('div', { className: "space-y-4" },
+        locations.map((loc, index) =>
+          React.createElement('div', {
+            key: index,
+            className: "border border-gray-200 rounded-md p-4 space-y-3 bg-gray-50/50"
+          }, [
+            React.createElement('div', { key: 'header', className: "flex items-center justify-between" }, [
+              React.createElement('span', { key: 'label', className: "text-sm font-semibold text-gray-700" },
+                `Location ${index + 1}`),
+              locations.length > 1 ? React.createElement('button', {
+                key: 'remove',
+                type: 'button',
+                onClick: () => onRemove(index),
+                className: "text-red-500 hover:text-red-700 text-xs font-medium"
+              }, 'Remove') : null
+            ]),
+            React.createElement('div', { key: 'name-addr', className: "grid grid-cols-1 md:grid-cols-2 gap-4" }, [
+              React.createElement('div', { key: 'name' }, [
+                React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Location Name *'),
+                React.createElement('input', {
+                  key: 'i', type: 'text', required: true, value: loc.name,
+                  onChange: (e) => onUpdate(index, 'name', e.target.value),
+                  placeholder: 'e.g. Widewater State Park',
+                  className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                })
+              ]),
+              React.createElement('div', { key: 'addr' }, [
+                React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Address *'),
+                React.createElement('input', {
+                  key: 'i', type: 'text', required: true, value: loc.address,
+                  onChange: (e) => onUpdate(index, 'address', e.target.value),
+                  placeholder: '1571 Widewater Beach Rd, Stafford, VA 22554',
+                  className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                })
+              ])
+            ]),
+            React.createElement('div', { key: 'mapurl' }, [
+              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Map/Directions URL (optional)'),
+              React.createElement('input', {
+                key: 'i', type: 'url', value: loc.location_url || '',
+                onChange: (e) => onUpdate(index, 'location_url', e.target.value),
+                placeholder: 'https://www.google.com/maps/...',
+                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              })
+            ]),
+            React.createElement('div', { key: 'cap-template', className: "grid grid-cols-1 md:grid-cols-2 gap-4" }, [
+              React.createElement('div', { key: 'cap' }, [
+                React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Attendance Cap'),
+                React.createElement('input', {
+                  key: 'i', type: 'number', min: 1, value: loc.attendance_cap,
+                  onChange: (e) => onUpdate(index, 'attendance_cap', e.target.value),
+                  className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                })
+              ]),
+              React.createElement('div', { key: 'impact-template' }, [
+                React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Impact Map Template'),
+                (() => {
+                  const isLockedOneTime = loc.impact_template && lockedTemplateIds[loc.impact_template];
+                  return React.createElement('select', {
+                    key: 'i',
+                    value: loc.impact_template || '',
+                    disabled: isLockedOneTime,
+                    onChange: (e) => {
+                      const templateId = e.target.value;
+                      const tmpl = impactTemplates.find(t => t.template_id === templateId);
+                      onUpdate(index, 'impact_template', templateId);
+                      onUpdate(index, 'impact_template_version', tmpl ? String(tmpl.version) : '');
+                    },
+                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none" + (isLockedOneTime ? " bg-gray-100 cursor-not-allowed" : "")
+                  }, [
+                    React.createElement('option', { key: 'none', value: '' }, '— None —'),
+                    ...impactTemplates.map(t =>
+                      React.createElement('option', { key: t.template_id, value: t.template_id },
+                        t.name + (t.reusable === false ? ' (one-time)' : '')
+                      )
+                    )
+                  ]);
+                })(),
+                loc.impact_template && lockedTemplateIds[loc.impact_template] ? React.createElement('p', {
+                  key: 'locked-hint', className: "text-xs text-amber-600 mt-1"
+                }, '🔒 This one-time template is locked and cannot be changed.') : null,
+                loc.impact_template ? (() => {
+                  const tmpl = impactTemplates.find(t => t.template_id === loc.impact_template);
+                  const latestVersion = tmpl ? parseInt(tmpl.version) : 1;
+                  const currentVersion = parseInt(loc.impact_template_version) || latestVersion;
+                  const versionOptions = Array.from({length: latestVersion}, function(_, i) { return i + 1; });
+                  return React.createElement('div', { key: 'version-select', className: "mt-1 flex items-center gap-2" }, [
+                    React.createElement('label', { key: 'vl', className: "text-xs text-gray-600" }, 'Version:'),
+                    React.createElement('select', {
+                      key: 'vs',
+                      value: String(currentVersion),
+                      onChange: (e) => onUpdate(index, 'impact_template_version', e.target.value),
+                      className: "px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
+                    }, versionOptions.map(v =>
+                      React.createElement('option', { key: v, value: String(v) },
+                        `v${v}${v === latestVersion ? ' (latest)' : ''}`
+                      )
+                    ))
+                  ]);
+                })() : null
+              ])
+            ])
+          ])
+        ).concat([
+          React.createElement('button', {
+            key: 'add-location',
+            type: 'button',
+            onClick: onAdd,
+            className: "text-sm font-medium text-blue-600 hover:text-blue-800"
+          }, '+ Add another location')
+        ])
+      );
+    };
+
     // Analytics Component
     const AnalyticsComponent = () => {
       const [analyticsData, setAnalyticsData] = useState(null);
@@ -643,22 +762,23 @@
       const [showForm, setShowForm] = useState(false);
       const [editingId, setEditingId] = useState(null);
       const [existingFile, setExistingFile] = useState(null);
+      const emptyLocation = () => ({
+        name: '', address: '', location_url: '',
+        impact_template: '', impact_template_version: '',
+        attendance_cap: 20
+      });
+
       const [formData, setFormData] = useState({
         title: '',
         seo_description: '',
         description: '',
         start_time: '',
         end_time: '',
-        location_name: '',
-        location_address: '',
-        location_url: '',
         image: '/uploads/waterway-cleanups/default.jpg',
+        locations: [emptyLocation()],
         tags: '',
-        attendance_cap: 20,
         preheader_is_light: false,
-        private: false,
-        impact_template: '',
-        impact_template_version: ''
+        private: false
       });
 
       const [impactTemplates, setImpactTemplates] = useState([]);
@@ -742,13 +862,37 @@
         setFormData({
           title: '', seo_description: '', description: '',
           start_time: '', end_time: '',
-          location_name: '', location_address: '', location_url: '',
           image: '/uploads/waterway-cleanups/default.jpg',
-          tags: '', attendance_cap: 20, preheader_is_light: false, private: false,
-          impact_template: '', impact_template_version: ''
+          locations: [emptyLocation()],
+          tags: '', preheader_is_light: false, private: false
         });
         setEditingId(null);
         setExistingFile(null);
+      };
+
+      // Normalize locations coming from stored event data, which may still be
+      // in the legacy single-location shape (location_name/location_address/etc.)
+      // or the newer `locations` array shape.
+      const normalizeLocations = (ed) => {
+        if (Array.isArray(ed.locations) && ed.locations.length > 0) {
+          return ed.locations.map(loc => ({
+            name: loc.name || '',
+            address: loc.address || '',
+            location_url: loc.location_url || '',
+            impact_template: loc.impact_template || '',
+            impact_template_version: loc.impact_template_version || '',
+            attendance_cap: loc.attendance_cap || 20
+          }));
+        }
+        // Legacy single-location shape
+        return [{
+          name: ed.location_name || '',
+          address: ed.location_address || '',
+          location_url: ed.location_url || '',
+          impact_template: ed.impact_template || '',
+          impact_template_version: ed.impact_template_version || '',
+          attendance_cap: ed.attendance_cap || 20
+        }];
       };
 
       const handleEditDraft = (edit) => {
@@ -759,20 +903,34 @@
           description: ed.description || '',
           start_time: ed.start_time ? ed.start_time.slice(0, 16) : '',
           end_time: ed.end_time ? ed.end_time.slice(0, 16) : '',
-          location_name: ed.location_name || '',
-          location_address: ed.location_address || '',
-          location_url: ed.location_url || '',
           image: ed.image || '/uploads/waterway-cleanups/default.jpg',
+          locations: normalizeLocations(ed),
           tags: (ed.tags || []).join(', '),
-          attendance_cap: ed.attendance_cap || 20,
           preheader_is_light: ed.preheader_is_light || false,
-          private: ed.private || false,
-          impact_template: ed.impact_template || '',
-          impact_template_version: ed.impact_template_version || ''
+          private: ed.private || false
         });
         setEditingId(edit.edit_id);
         setExistingFile(edit.edit_type === 'update' ? edit.file_path : null);
         setShowForm(true);
+      };
+
+      const updateLocation = (index, field, value) => {
+        setFormData(prev => {
+          const locations = prev.locations.slice();
+          locations[index] = { ...locations[index], [field]: value };
+          return { ...prev, locations };
+        });
+      };
+
+      const addLocation = () => {
+        setFormData(prev => ({ ...prev, locations: [...prev.locations, emptyLocation()] }));
+      };
+
+      const removeLocation = (index) => {
+        setFormData(prev => ({
+          ...prev,
+          locations: prev.locations.filter((_, i) => i !== index)
+        }));
       };
 
       const handleSaveDraft = async (e) => {
@@ -798,22 +956,34 @@
           const startWithTz = formData.start_time ? formData.start_time + ':00' + getEasternOffset(formData.start_time) : '';
           const endWithTz = formData.end_time ? formData.end_time + ':00' + getEasternOffset(formData.end_time) : '';
 
+          const locations = formData.locations.map(loc => ({
+            name: loc.name,
+            address: loc.address,
+            location_url: loc.location_url || '',
+            attendance_cap: parseInt(loc.attendance_cap) || 20,
+            impact_template: loc.impact_template || '',
+            impact_template_version: loc.impact_template_version || ''
+          }));
+
           const eventData = {
             title: formData.title,
             seo_description: formData.seo_description,
             description: formData.description,
             start_time: startWithTz,
             end_time: endWithTz,
-            location_name: formData.location_name,
-            location_address: formData.location_address,
-            location_url: formData.location_url,
             image: formData.image,
             tags: tags,
-            attendance_cap: parseInt(formData.attendance_cap) || 20,
+            locations: locations,
+            // Backward-compatible flat fields, derived from the first location,
+            // for any downstream code still reading the legacy single-location shape.
+            location_name: locations[0]?.name || '',
+            location_address: locations[0]?.address || '',
+            location_url: locations[0]?.location_url || '',
+            attendance_cap: locations.reduce((sum, loc) => sum + (loc.attendance_cap || 0), 0),
+            impact_template: locations[0]?.impact_template || '',
+            impact_template_version: locations[0]?.impact_template_version || '',
             preheader_is_light: formData.preheader_is_light,
-            private: formData.private,
-            impact_template: formData.impact_template || '',
-            impact_template_version: formData.impact_template_version || ''
+            private: formData.private
           };
 
           await apiCall('save_draft', {
@@ -945,123 +1115,53 @@
               })
             ])
           ]),
-          // Location row
-          React.createElement('div', { key: 'loc', className: "grid grid-cols-1 md:grid-cols-2 gap-4" }, [
-            React.createElement('div', { key: 'name' }, [
-              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Location Name *'),
-              React.createElement('input', {
-                key: 'i', type: 'text', required: true, value: formData.location_name,
-                onChange: (e) => updateField('location_name', e.target.value),
-                placeholder: 'e.g. Widewater State Park',
-                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              })
-            ]),
-            React.createElement('div', { key: 'addr' }, [
-              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Address *'),
-              React.createElement('input', {
-                key: 'i', type: 'text', required: true, value: formData.location_address,
-                onChange: (e) => updateField('location_address', e.target.value),
-                placeholder: '1571 Widewater Beach Rd, Stafford, VA 22554',
-                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              })
-            ])
+          // Event Photo (moved above locations)
+          React.createElement('div', { key: 'img' }, [
+            React.createElement(ImagePicker, {
+              key: 'picker',
+              value: formData.image,
+              onChange: (path) => updateField('image', path),
+              label: 'Event Photo'
+            })
           ]),
-          // Map URL
-          React.createElement('div', { key: 'mapurl' }, [
-            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Map/Directions URL (optional)'),
+          // Locations — one or more cleanup locations, each with its own
+          // name, address, impact map template, and attendance cap.
+          React.createElement('div', { key: 'locations' }, [
+            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-2" }, 'Cleanup Location(s) *'),
+            React.createElement(LocationFields, {
+              key: 'fields',
+              locations: formData.locations,
+              onUpdate: (index, field, value) => updateLocation(index, field, value),
+              onAdd: addLocation,
+              onRemove: removeLocation,
+              impactTemplates: impactTemplates
+            })
+          ]),
+          // Tags row
+          React.createElement('div', { key: 'tags' }, [
+            React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Tags (comma-separated)'),
             React.createElement('input', {
-              key: 'i', type: 'url', value: formData.location_url,
-              onChange: (e) => updateField('location_url', e.target.value),
-              placeholder: 'https://www.google.com/maps/...',
+              key: 'i', type: 'text', value: formData.tags,
+              onChange: (e) => updateField('tags', e.target.value),
+              placeholder: 'aquia-creek, state-park',
               className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
             })
           ]),
-          // Image, Tags, Cap row
-          React.createElement('div', { key: 'meta', className: "grid grid-cols-1 md:grid-cols-3 gap-4" }, [
-            React.createElement('div', { key: 'img' }, [
-              React.createElement(ImagePicker, {
-                key: 'picker',
-                value: formData.image,
-                onChange: (path) => updateField('image', path),
-                label: 'Event Photo'
-              })
-            ]),
-            React.createElement('div', { key: 'tags' }, [
-              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Tags (comma-separated)'),
-              React.createElement('input', {
-                key: 'i', type: 'text', value: formData.tags,
-                onChange: (e) => updateField('tags', e.target.value),
-                placeholder: 'aquia-creek, state-park',
-                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              })
-            ]),
-            React.createElement('div', { key: 'cap' }, [
-              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Attendance Cap'),
-              React.createElement('input', {
-                key: 'i', type: 'number', min: 1, value: formData.attendance_cap,
-                onChange: (e) => updateField('attendance_cap', e.target.value),
-                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              })
-            ]),
-            React.createElement('div', { key: 'impact-template' }, [
-              React.createElement('label', { key: 'l', className: "block text-sm font-medium text-gray-700 mb-1" }, 'Impact Map Template'),
-              React.createElement('select', {
-                key: 'i',
-                value: formData.impact_template,
-                onChange: (e) => {
-                  const templateId = e.target.value;
-                  const tmpl = impactTemplates.find(t => t.template_id === templateId);
-                  setFormData(prev => ({
-                    ...prev,
-                    impact_template: templateId,
-                    impact_template_version: tmpl ? String(tmpl.version) : ''
-                  }));
-                },
-                className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              }, [
-                React.createElement('option', { key: 'none', value: '' }, '— None —'),
-                ...impactTemplates.map(t =>
-                  React.createElement('option', { key: t.template_id, value: t.template_id },
-                    t.name + (t.reusable === false ? ' (one-time)' : '')
-                  )
-                )
-              ]),
-              formData.impact_template ? (() => {
-                const tmpl = impactTemplates.find(t => t.template_id === formData.impact_template);
-                const latestVersion = tmpl ? parseInt(tmpl.version) : 1;
-                const currentVersion = parseInt(formData.impact_template_version) || latestVersion;
-                // Build version options from 1 to latestVersion
-                const versionOptions = Array.from({length: latestVersion}, function(_, i) { return i + 1; });
-                return React.createElement('div', { key: 'version-select', className: "mt-1 flex items-center gap-2" }, [
-                  React.createElement('label', { key: 'vl', className: "text-xs text-gray-600" }, 'Version:'),
-                  React.createElement('select', {
-                    key: 'vs',
-                    value: String(currentVersion),
-                    onChange: (e) => setFormData(prev => ({ ...prev, impact_template_version: e.target.value })),
-                    className: "px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                  }, versionOptions.map(v =>
-                    React.createElement('option', { key: v, value: String(v) },
-                      `v${v}${v === latestVersion ? ' (latest)' : ''}`
-                    )
-                  ))
-                ]);
-              })() : null
-            ]),
-            React.createElement('div', { key: 'private', className: "flex items-center space-x-3 pt-2" }, [
-              React.createElement('input', {
-                key: 'i', type: 'checkbox', id: 'content-private-toggle',
-                checked: formData.private,
-                onChange: (e) => updateField('private', e.target.checked),
-                className: "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              }),
-              React.createElement('label', {
-                key: 'l', htmlFor: 'content-private-toggle',
-                className: "text-sm font-medium text-gray-700"
-              }, 'Private Event'),
-              React.createElement('span', {
-                key: 'hint', className: "text-xs text-gray-500"
-              }, '(Hidden from public listings, accessible via direct URL only)')
-            ])
+          // Private toggle
+          React.createElement('div', { key: 'private', className: "flex items-center space-x-3 pt-2" }, [
+            React.createElement('input', {
+              key: 'i', type: 'checkbox', id: 'content-private-toggle',
+              checked: formData.private,
+              onChange: (e) => updateField('private', e.target.checked),
+              className: "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            }),
+            React.createElement('label', {
+              key: 'l', htmlFor: 'content-private-toggle',
+              className: "text-sm font-medium text-gray-700"
+            }, 'Private Event'),
+            React.createElement('span', {
+              key: 'hint', className: "text-xs text-gray-500"
+            }, '(Hidden from public listings, accessible via direct URL only)')
           ]),
           // Submit
           React.createElement('div', { key: 'actions', className: "flex space-x-3 pt-2" }, [
@@ -1201,8 +1301,7 @@
                     diffData ? (() => {
                       const live = diffData.live || {};
                       const draft = diffData.draft || {};
-                      const fields = ['title', 'description', 'start_time', 'end_time', 'attendance_cap', 'status', 'impact_template', 'impact_template_version'];
-                      const locationFields = ['name', 'address'];
+                      const fields = ['title', 'description', 'start_time', 'end_time', 'status'];
                       const changes = [];
 
                       fields.forEach(f => {
@@ -1212,13 +1311,37 @@
                           changes.push({ field: f, from: liveVal || '(empty)', to: draftVal || '(empty)' });
                         }
                       });
-                      locationFields.forEach(f => {
-                        const liveVal = String((live.location || {})[f] || '');
-                        const draftVal = String((draft.location || {})[f] || '');
-                        if (liveVal !== draftVal) {
-                          changes.push({ field: 'location.' + f, from: liveVal || '(empty)', to: draftVal || '(empty)' });
+
+                      // Compare locations arrays (falls back to the legacy single-location
+                      // shape for events saved before multi-location support existed).
+                      const asLocationArray = (ev) => {
+                        if (Array.isArray(ev.locations) && ev.locations.length > 0) return ev.locations;
+                        if (ev.location) {
+                          return [{
+                            name: ev.location.name || ev.location_name || '',
+                            address: ev.location.address || ev.location_address || '',
+                            attendance_cap: ev.attendance_cap,
+                            impact_template: ev.impact_template,
+                            impact_template_version: ev.impact_template_version
+                          }];
                         }
-                      });
+                        return [];
+                      };
+                      const liveLocations = asLocationArray(live);
+                      const draftLocations = asLocationArray(draft);
+                      const maxLocations = Math.max(liveLocations.length, draftLocations.length);
+                      for (let i = 0; i < maxLocations; i++) {
+                        const liveLoc = liveLocations[i] || {};
+                        const draftLoc = draftLocations[i] || {};
+                        ['name', 'address', 'attendance_cap', 'impact_template', 'impact_template_version'].forEach(f => {
+                          const liveVal = String(liveLoc[f] || '');
+                          const draftVal = String(draftLoc[f] || '');
+                          if (liveVal !== draftVal) {
+                            changes.push({ field: `location[${i}].${f}`, from: liveVal || '(empty)', to: draftVal || '(empty)' });
+                          }
+                        });
+                      }
+
                       const livePrivate = String(live.private || false);
                       const draftPrivate = String(draft.private || false);
                       if (livePrivate !== draftPrivate) {
@@ -1275,19 +1398,61 @@
       });
       const [showEventForm, setShowEventForm] = useState(false);
       const [editingEvent, setEditingEvent] = useState(null);
+      const emptyEventLocation = () => ({
+        name: '', address: '', location_url: '',
+        impact_template: '', impact_template_version: '',
+        attendance_cap: 50
+      });
       const [eventFormData, setEventFormData] = useState({
         title: '',
         description: '',
         start_time: '',
         end_time: '',
-        location: { name: '', address: '' },
-        attendance_cap: 50,
+        locations: [emptyEventLocation()],
         status: 'active',
         hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
-        private: false,
-        impact_template: '',
-        impact_template_version: ''
+        private: false
       });
+
+      const updateEventLocation = (index, field, value) => {
+        setEventFormData(prev => {
+          const locations = prev.locations.slice();
+          locations[index] = { ...locations[index], [field]: value };
+          return { ...prev, locations };
+        });
+      };
+      const addEventLocation = () => {
+        setEventFormData(prev => ({ ...prev, locations: [...prev.locations, emptyEventLocation()] }));
+      };
+      const removeEventLocation = (index) => {
+        setEventFormData(prev => ({
+          ...prev,
+          locations: prev.locations.filter((_, i) => i !== index)
+        }));
+      };
+      // Normalize a live/draft event's location data (legacy single-location
+      // shape or the newer `locations` array) into the array shape the form uses.
+      const normalizeEventLocations = (ev) => {
+        if (Array.isArray(ev.locations) && ev.locations.length > 0) {
+          return ev.locations.map(loc => ({
+            name: loc.name || '',
+            address: loc.address || '',
+            location_url: loc.location_url || '',
+            impact_template: loc.impact_template || '',
+            impact_template_version: loc.impact_template_version || '',
+            attendance_cap: loc.attendance_cap || 20
+          }));
+        }
+        const loc = ev.location || {};
+        return [{
+          name: loc.name || '',
+          address: loc.address || '',
+          location_url: ev.location_url || '',
+          impact_template: ev.impact_template || '',
+          impact_template_version: ev.impact_template_version || '',
+          attendance_cap: ev.attendance_cap || 20
+        }];
+      };
 
       // Complete-event form state
       const [completingEvent, setCompletingEvent] = useState(null);
@@ -1665,6 +1830,25 @@
           const startTimeWithTz = addEasternOffset(eventFormData.start_time);
           const endTimeWithTz = addEasternOffset(eventFormData.end_time);
 
+          const locations = eventFormData.locations.map(loc => ({
+            name: loc.name,
+            address: loc.address,
+            location_url: loc.location_url || '',
+            attendance_cap: parseInt(loc.attendance_cap) || 20,
+            impact_template: loc.impact_template || '',
+            impact_template_version: loc.impact_template_version || ''
+          }));
+          // Backward-compatible flat fields, derived from the first location,
+          // for any downstream code still reading the legacy single-location shape.
+          const legacyLocationFields = {
+            location_name: locations[0]?.name || '',
+            location_address: locations[0]?.address || '',
+            location_url: locations[0]?.location_url || '',
+            attendance_cap: locations.reduce((sum, loc) => sum + (loc.attendance_cap || 0), 0),
+            impact_template: locations[0]?.impact_template || '',
+            impact_template_version: locations[0]?.impact_template_version || ''
+          };
+
           if (editingEvent) {
             // Queue the update via content sync API
             const contentSyncUrl = window.API_CONFIG && window.API_CONFIG.BASE_URL 
@@ -1689,16 +1873,13 @@
                   description: eventFormData.description,
                   start_time: startTimeWithTz,
                   end_time: endTimeWithTz,
-                  location_name: eventFormData.location.name,
-                  location_address: eventFormData.location.address,
-                  attendance_cap: eventFormData.attendance_cap,
+                  locations: locations,
+                  ...legacyLocationFields,
                   status: editingEvent.status || 'active',
                   image: eventFormData.hugo_config?.image || '/uploads/waterway-cleanups/default.jpg',
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
-                  private: eventFormData.private,
-                  impact_template: eventFormData.impact_template || '',
-                  impact_template_version: eventFormData.impact_template_version || ''
+                  private: eventFormData.private
                 }
               })
             });
@@ -1725,15 +1906,12 @@
                   description: eventFormData.description,
                   start_time: startTimeWithTz,
                   end_time: endTimeWithTz,
-                  location_name: eventFormData.location.name,
-                  location_address: eventFormData.location.address,
-                  attendance_cap: eventFormData.attendance_cap,
+                  locations: locations,
+                  ...legacyLocationFields,
                   image: eventFormData.hugo_config?.image || '/uploads/waterway-cleanups/default.jpg',
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
-                  private: eventFormData.private,
-                  impact_template: eventFormData.impact_template || '',
-                  impact_template_version: eventFormData.impact_template_version || ''
+                  private: eventFormData.private
                 }
               })
             });
@@ -1952,13 +2130,10 @@
           description: dataToEdit.description,
           start_time: dataToEdit.start_time,
           end_time: dataToEdit.end_time,
-          location: dataToEdit.location,
-          attendance_cap: dataToEdit.attendance_cap,
+          locations: normalizeEventLocations(dataToEdit),
           status: dataToEdit.status,
           hugo_config: dataToEdit.hugo_config || { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
-          private: dataToEdit.private || false,
-          impact_template: dataToEdit.impact_template || '',
-          impact_template_version: dataToEdit.impact_template_version || ''
+          private: dataToEdit.private || false
         });
         setShowEventForm(true);
       };
@@ -1969,13 +2144,10 @@
           description: '',
           start_time: '',
           end_time: '',
-          location: { name: '', address: '' },
-          attendance_cap: 50,
+          locations: [emptyEventLocation()],
           status: 'active',
           hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
-          private: false,
-          impact_template: '',
-          impact_template_version: ''
+          private: false
         });
       };
 
@@ -2286,10 +2458,22 @@
         }
       };
 
+      // An event may have multiple locations (event.locations array) or the
+      // legacy single-location shape (event.location). Return them as a list.
+      const getEventLocations = (event) => {
+        if (Array.isArray(event.locations) && event.locations.length > 0) return event.locations;
+        if (event.location) return [event.location];
+        return [];
+      };
+
       const filteredEvents = events.filter(event => {
         if (eventFilters.hideCompleted && (event.status === 'completed' || event.status === 'cancelled')) return false;
         if (eventFilters.status && event.status !== eventFilters.status) return false;
-        if (eventFilters.location && !event.location.name.toLowerCase().includes(eventFilters.location.toLowerCase())) return false;
+        if (eventFilters.location) {
+          const filter = eventFilters.location.toLowerCase();
+          const matches = getEventLocations(event).some(loc => (loc.name || '').toLowerCase().includes(filter));
+          if (!matches) return false;
+        }
         return true;
       });
 
@@ -2563,7 +2747,7 @@
                     className: "grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600"
                   }, [
                     React.createElement('div', { key: 'date' }, `📅 ${formatDate(event.start_time)}`),
-                    React.createElement('div', { key: 'location' }, `📍 ${event.location.name}`),
+                    React.createElement('div', { key: 'location' }, `📍 ${getEventLocations(event).map(loc => loc.name).filter(Boolean).join(', ') || 'No location set'}`),
                     React.createElement('div', { key: 'cap' }, `👥 ${event.attended_count > 0 ? event.attended_count + '/' : ''}${event.rsvp_count || 0} ${event.attended_count > 0 ? 'Attended' : 'RSVPs'} (Cap: ${event.attendance_cap})`)
                   ]),
                   event.cleanup_metrics ? React.createElement('div', {
@@ -3254,28 +3438,7 @@
                     })
                   ])
                 ]),
-                React.createElement('div', { key: 'location-name' }, [
-                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Location Name *'),
-                  React.createElement('input', {
-                    key: 'input',
-                    type: 'text',
-                    required: true,
-                    value: eventFormData.location.name,
-                    onChange: (e) => setEventFormData({...eventFormData, location: {...eventFormData.location, name: e.target.value}}),
-                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  })
-                ]),
-                React.createElement('div', { key: 'location-address' }, [
-                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Location Address *'),
-                  React.createElement('input', {
-                    key: 'input',
-                    type: 'text',
-                    required: true,
-                    value: eventFormData.location.address,
-                    onChange: (e) => setEventFormData({...eventFormData, location: {...eventFormData.location, address: e.target.value}}),
-                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
-                  })
-                ]),
+                // Event Photo (moved above locations)
                 React.createElement('div', { key: 'image-field' }, [
                   React.createElement(ImagePicker, {
                     key: 'picker',
@@ -3284,79 +3447,22 @@
                     label: 'Event Photo'
                   })
                 ]),
-                React.createElement('div', { key: 'cap-field' }, [
-                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Attendance Cap *'),
-                  React.createElement('input', {
-                    key: 'input',
-                    type: 'number',
-                    required: true,
-                    min: 1,
-                    value: eventFormData.attendance_cap,
-                    onChange: (e) => setEventFormData({...eventFormData, attendance_cap: parseInt(e.target.value)}),
-                    className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500"
+                // Locations — one or more cleanup locations, each with its own
+                // name, address, impact map template, and attendance cap.
+                React.createElement('div', { key: 'locations-field' }, [
+                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-2" }, 'Cleanup Location(s) *'),
+                  React.createElement(LocationFields, {
+                    key: 'fields',
+                    locations: eventFormData.locations,
+                    onUpdate: (index, field, value) => updateEventLocation(index, field, value),
+                    onAdd: addEventLocation,
+                    onRemove: removeEventLocation,
+                    impactTemplates: impactTemplates,
+                    lockedTemplateIds: impactTemplates.reduce((acc, t) => {
+                      if (t.locked || t.reusable === false) acc[t.template_id] = true;
+                      return acc;
+                    }, {})
                   })
-                ]),
-                React.createElement('div', { key: 'impact-template-field' }, [
-                  React.createElement('label', { key: 'label', className: "block text-sm font-medium mb-1" }, 'Impact Map Template'),
-                  (() => {
-                    const assignedTmpl = editingEvent && editingEvent.impact_template
-                      ? impactTemplates.find(t => t.template_id === editingEvent.impact_template)
-                      : null;
-                    const isLockedOneTime = assignedTmpl && (assignedTmpl.locked || assignedTmpl.reusable === false);
-                    return React.createElement('select', {
-                      key: 'select',
-                      value: eventFormData.impact_template || '',
-                      disabled: isLockedOneTime,
-                      onChange: (e) => {
-                        const templateId = e.target.value;
-                        const tmpl = impactTemplates.find(t => t.template_id === templateId);
-                        setEventFormData({
-                          ...eventFormData,
-                          impact_template: templateId,
-                          impact_template_version: tmpl ? String(tmpl.version) : ''
-                        });
-                      },
-                      className: "w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500" + (isLockedOneTime ? " bg-gray-100 cursor-not-allowed" : "")
-                    }, [
-                      React.createElement('option', { key: 'none', value: '' }, '— None —'),
-                      ...impactTemplates.map(t =>
-                        React.createElement('option', { key: t.template_id, value: t.template_id },
-                          t.name + (t.reusable === false ? ' (one-time)' : '')
-                        )
-                      )
-                    ]);
-                  })(),
-                  (() => {
-                    const assignedTmpl = editingEvent && editingEvent.impact_template
-                      ? impactTemplates.find(t => t.template_id === editingEvent.impact_template)
-                      : null;
-                    const isLockedOneTime = assignedTmpl && (assignedTmpl.locked || assignedTmpl.reusable === false);
-                    if (isLockedOneTime) {
-                      return React.createElement('p', { key: 'locked-hint', className: "text-xs text-amber-600 mt-1" },
-                        '🔒 This one-time template is locked and cannot be changed.'
-                      );
-                    }
-                    return null;
-                  })(),
-                  eventFormData.impact_template ? (() => {
-                    const tmpl = impactTemplates.find(t => t.template_id === eventFormData.impact_template);
-                    const latestVersion = tmpl ? parseInt(tmpl.version) : 1;
-                    const currentVersion = parseInt(eventFormData.impact_template_version) || latestVersion;
-                    const versionOptions = Array.from({length: latestVersion}, function(_, i) { return i + 1; });
-                    return React.createElement('div', { key: 'version-select', className: "mt-1 flex items-center gap-2" }, [
-                      React.createElement('label', { key: 'vl', className: "text-xs text-gray-600" }, 'Version:'),
-                      React.createElement('select', {
-                        key: 'vs',
-                        value: String(currentVersion),
-                        onChange: (e) => setEventFormData({...eventFormData, impact_template_version: e.target.value}),
-                        className: "px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                      }, versionOptions.map(v =>
-                        React.createElement('option', { key: v, value: String(v) },
-                          'v' + v + (v === latestVersion ? ' (latest)' : '')
-                        )
-                      ))
-                    ]);
-                  })() : null
                 ]),
                 React.createElement('div', { key: 'private-field', className: "flex items-center space-x-3 pt-2" }, [
                   React.createElement('input', {

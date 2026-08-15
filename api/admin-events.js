@@ -141,9 +141,13 @@ exports.handler = async (event) => {
     if (requestBody.location) {
       const locationFilter = requestBody.location.toLowerCase();
       events = events.filter(event => {
-        const location = event.location || {};
-        return (location.name || '').toLowerCase().includes(locationFilter) ||
-               (location.address || '').toLowerCase().includes(locationFilter);
+        const locations = Array.isArray(event.locations) && event.locations.length > 0
+          ? event.locations
+          : [event.location || {}];
+        return locations.some(location =>
+          (location.name || '').toLowerCase().includes(locationFilter) ||
+          (location.address || '').toLowerCase().includes(locationFilter)
+        );
       });
     }
 
