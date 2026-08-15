@@ -1330,7 +1330,7 @@
                       const liveLocations = asLocationArray(live);
                       const draftLocations = asLocationArray(draft);
                       const maxLocations = Math.max(liveLocations.length, draftLocations.length);
-                      for (let i = 0; i < maxLocations; i++) {
+                      Array.from({ length: maxLocations }).forEach((_, i) => {
                         const liveLoc = liveLocations[i] || {};
                         const draftLoc = draftLocations[i] || {};
                         ['name', 'address', 'attendance_cap', 'impact_template', 'impact_template_version'].forEach(f => {
@@ -1340,7 +1340,7 @@
                             changes.push({ field: `location[${i}].${f}`, from: liveVal || '(empty)', to: draftVal || '(empty)' });
                           }
                         });
-                      }
+                      });
 
                       const livePrivate = String(live.private || false);
                       const draftPrivate = String(draft.private || false);
