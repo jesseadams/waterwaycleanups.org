@@ -149,12 +149,23 @@ class HugoGenerator {
     frontmatter.event_id = event.event_id;
 
     // Support one or more cleanup locations. Falls back to the legacy
-    // single-location shape (event.location) for older events. Stored in
-    // frontmatter so the combined impact map and the RSVP location picker
-    // can both read it directly from Page.Params, without re-parsing content.
+    // single-location shape (event.location) for older events that haven't
+    // been re-saved through the multi-location admin form yet. That legacy
+    // shape keeps impact_template/attendance_cap as separate top-level
+    // fields (never on event.location itself), so carry them over onto the
+    // synthetic location here — otherwise frontmatter.locations would be
+    // missing the template reference the impact map and RSVP widget need.
+    // Stored in frontmatter so the combined impact map and the RSVP
+    // location picker can both read it directly from Page.Params, without
+    // re-parsing content.
     const locations = Array.isArray(event.locations) && event.locations.length > 0
       ? event.locations
-      : (event.location ? [event.location] : []);
+      : (event.location ? [{
+          ...event.location,
+          impact_template: event.location.impact_template || event.impact_template,
+          impact_template_version: event.location.impact_template_version || event.impact_template_version,
+          attendance_cap: event.location.attendance_cap || event.attendance_cap
+        }] : []);
 
     if (locations.length > 0) {
       frontmatter.locations = locations.map((loc, index) => {
@@ -273,10 +284,20 @@ class HugoGenerator {
     content += `---\n`;
 
     // Support one or more cleanup locations. Falls back to the legacy
-    // single-location shape (event.location) for older events.
+    // single-location shape (event.location) for older events that haven't
+    // been re-saved through the multi-location admin form yet. That legacy
+    // shape keeps impact_template as a separate top-level field (never on
+    // event.location itself), so carry it over onto the synthetic location
+    // here — otherwise the map would silently stop rendering for any event
+    // that hasn't been touched since multi-location support was added.
     const locations = Array.isArray(event.locations) && event.locations.length > 0
       ? event.locations
-      : (event.location ? [event.location] : []);
+      : (event.location ? [{
+          ...event.location,
+          impact_template: event.location.impact_template || event.impact_template,
+          impact_template_version: event.location.impact_template_version || event.impact_template_version,
+          attendance_cap: event.location.attendance_cap || event.attendance_cap
+        }] : []);
 
     content += locations.length > 1 ? `## Locations\n\n` : `## Location\n\n`;
 
