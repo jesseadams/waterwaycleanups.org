@@ -232,6 +232,20 @@ def count_current_attendance(event_id, location_id=None):
         return 0
 
 
+def location_id_for(event_id, loc, index):
+    """
+    Get a location's id, falling back to the same synthetic
+    "loc_{event_id}_{index}" scheme used when generating Hugo frontmatter
+    (scripts/hugo-generator.js) and when saving locations from the admin UI
+    (api/lambda_admin_content_sync.py). Older events saved before location_id
+    existed have no location_id field on their DynamoDB locations, so the
+    frontend sends this synthetic id and this lambda must derive the exact
+    same id to match it — otherwise every legacy multi-location event would
+    reject RSVPs with "Selected location was not found for this event."
+    """
+    return loc.get('location_id') or f"loc_{event_id}_{index}"
+
+
 def resolve_location(event_data, location_id):
     """
     Resolve which location (and its attendance_cap) an RSVP applies to.
@@ -247,19 +261,21 @@ def resolve_location(event_data, location_id):
         cap = int(event_data.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
         return None, cap
 
+    event_id = event_data.get('event_id', '')
+
     if len(locations) == 1:
         # Only one location — no ambiguity, use it regardless of whether the
         # caller specified a location_id.
         loc = locations[0]
-        return loc.get('location_id'), int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+        return location_id_for(event_id, loc, 0), int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
 
     # Multiple locations — the caller must tell us which one.
     if not location_id:
         return 'MISSING', 0
 
-    for loc in locations:
-        if loc.get('location_id') == location_id:
-            return loc.get('location_id'), int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+    for index, loc in enumerate(locations):
+        if location_id_for(event_id, loc, index) == location_id:
+            return location_id, int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
 
     return 'INVALID', 0
 
