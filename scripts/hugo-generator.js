@@ -455,9 +455,30 @@ class HugoGenerator {
         yaml += `${spaces}${key}:\n`;
         yaml += this.yamlStringify(value, indent + 1);
       } else if (Array.isArray(value)) {
+        if (value.length === 0) {
+          yaml += `${spaces}${key}: []\n`;
+          continue;
+        }
         yaml += `${spaces}${key}:\n`;
         for (const item of value) {
-          yaml += `${spaces}  - ${item}\n`;
+          if (item !== null && typeof item === 'object' && !Array.isArray(item)) {
+            // Array of objects (e.g. `locations`) — render each as a YAML
+            // block mapping under a "- " sequence marker. Without this,
+            // template-literal coercion below (`${item}`) stringifies the
+            // object to the literal text "[object Object]", silently
+            // corrupting the frontmatter.
+            const itemYaml = this.yamlStringify(item, indent + 2);
+            const stripLen = (indent + 2) * 2;
+            const lines = itemYaml.split('\n').filter(line => line.length > 0);
+            lines.forEach((line, idx) => {
+              const rest = line.slice(stripLen);
+              yaml += idx === 0 ? `${spaces}  - ${rest}\n` : `${spaces}    ${rest}\n`;
+            });
+          } else if (typeof item === 'string') {
+            yaml += `${spaces}  - ${item}\n`;
+          } else {
+            yaml += `${spaces}  - ${item}\n`;
+          }
         }
       } else if (typeof value === 'string') {
         // Escape quotes and handle multiline strings
