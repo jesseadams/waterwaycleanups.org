@@ -206,11 +206,12 @@ def check_existing_rsvps(event_id, attendees):
     return existing_attendees, new_attendees
 
 
-def count_current_attendance(event_id):
+def count_current_attendance(event_id, location_id=None):
     """
-    Count the current number of attendees for an event.
-    Each individual RSVP record counts as 1 attendee.
-    
+    Count the current number of attendees for an event, optionally scoped to
+    a single location. Each individual RSVP record counts as 1 attendee.
+    Only active (non-cancelled) RSVPs count toward capacity.
+
     Returns:
         int: Current attendance count
     """
@@ -218,10 +219,49 @@ def count_current_attendance(event_id):
         response = event_rsvps_table.query(
             KeyConditionExpression=Key('event_id').eq(event_id)
         )
-        return len(response.get('Items', []))
+        items = response.get('Items', [])
+        items = [item for item in items if item.get('status', 'active') == 'active']
+        if location_id:
+            # Legacy RSVP records (created before multi-location support)
+            # have no location_id — don't count them against a specific
+            # location's cap, only against location-less events.
+            items = [item for item in items if item.get('location_id') == location_id]
+        return len(items)
     except ClientError as e:
         print(f"Error counting attendance: {e}")
         return 0
+
+
+def resolve_location(event_data, location_id):
+    """
+    Resolve which location (and its attendance_cap) an RSVP applies to.
+
+    Returns:
+        tuple: (resolved_location_id_or_None, attendance_cap)
+        resolved_location_id is None when the event has no `locations` array
+        (legacy single-location event), meaning capacity is event-wide.
+    """
+    locations = event_data.get('locations')
+    if not isinstance(locations, list) or len(locations) == 0:
+        # Legacy event with no locations array — capacity is event-wide.
+        cap = int(event_data.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+        return None, cap
+
+    if len(locations) == 1:
+        # Only one location — no ambiguity, use it regardless of whether the
+        # caller specified a location_id.
+        loc = locations[0]
+        return loc.get('location_id'), int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+
+    # Multiple locations — the caller must tell us which one.
+    if not location_id:
+        return 'MISSING', 0
+
+    for loc in locations:
+        if loc.get('location_id') == location_id:
+            return loc.get('location_id'), int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+
+    return 'INVALID', 0
 
 
 def validate_capacity(current_attendance, requested_count, capacity):
@@ -236,7 +276,7 @@ def validate_capacity(current_attendance, requested_count, capacity):
     return is_valid, remaining
 
 
-def create_rsvp_records(event_id, attendees, guardian_email):
+def create_rsvp_records(event_id, attendees, guardian_email, location_id=None):
     """
     Create individual RSVP records for each attendee.
     Uses individual put_item calls instead of transactions for better error handling.
@@ -280,6 +320,8 @@ def create_rsvp_records(event_id, attendees, guardian_email):
                 'updated_at': timestamp,
                 'submission_date': timestamp
             }
+            if location_id:
+                item['location_id'] = location_id
         elif attendee_type == 'minor':
             attendee_id = attendee.get('minor_id')
             item = {
@@ -296,6 +338,8 @@ def create_rsvp_records(event_id, attendees, guardian_email):
                 'updated_at': timestamp,
                 'submission_date': timestamp
             }
+            if location_id:
+                item['location_id'] = location_id
         else:
             results.append({
                 'attendee_id': attendee.get('email') or attendee.get('minor_id'),
@@ -436,7 +480,6 @@ def handler(event, context):
                 }
             
             event_data = event_response['Item']
-            attendance_cap = int(event_data.get('attendance_cap', body.get('attendance_cap', DEFAULT_ATTENDANCE_CAP)))
             
         except ClientError as e:
             print(f"Error checking event: {e.response['Error']['Message']}")
@@ -446,6 +489,31 @@ def handler(event, context):
                 'body': json.dumps({
                     'success': False,
                     'message': 'Failed to verify event'
+                })
+            }
+        
+        # Resolve which location this RSVP applies to (events with more than
+        # one location require the caller to specify location_id) and get
+        # that location's attendance cap.
+        requested_location_id = body.get('location_id')
+        resolved_location_id, attendance_cap = resolve_location(event_data, requested_location_id)
+        
+        if resolved_location_id == 'MISSING':
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'This event has multiple locations. Please select a location before registering.'
+                })
+            }
+        if resolved_location_id == 'INVALID':
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'Selected location was not found for this event.'
                 })
             }
         
@@ -468,8 +536,9 @@ def handler(event, context):
                 })
             }
         
-        # Count current attendance (Requirement 4.1)
-        current_attendance = count_current_attendance(event_id)
+        # Count current attendance (Requirement 4.1) — scoped to the selected
+        # location when the event has more than one location.
+        current_attendance = count_current_attendance(event_id, resolved_location_id)
         
         # Validate capacity (Requirement 4.2, 4.3, 4.5)
         requested_count = len(new_attendees)
@@ -490,7 +559,7 @@ def handler(event, context):
         
         # Create RSVP records atomically (Requirement 2.3, 2.4, 2.5)
         try:
-            results = create_rsvp_records(event_id, new_attendees, guardian_email)
+            results = create_rsvp_records(event_id, new_attendees, guardian_email, resolved_location_id)
         except Exception as e:
             print(f"Error creating RSVP records: {e}")
             return {
@@ -567,6 +636,8 @@ def handler(event, context):
             'current_attendance': current_attendance + len(new_attendees),
             'attendance_cap': attendance_cap
         }
+        if resolved_location_id:
+            response_data['location_id'] = resolved_location_id
         
         # Add duplicate info if some attendees were filtered
         if len(existing_attendees) > 0:

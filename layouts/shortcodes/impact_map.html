@@ -1,6 +1,12 @@
 {{- $template_id := .Get "template" -}}
 {{- $version := .Get "version" | default "" -}}
 {{- $show_metrics := .Get "show_metrics" | default "true" -}}
+{{- /* An event page can render this shortcode more than once when it has
+     multiple locations, and two locations may share the same template
+     (e.g. a reusable template). Using $template_id alone as the DOM id
+     would produce duplicate ids and make Leaflet initialize the same
+     container twice. .Ordinal makes each shortcode invocation unique. */ -}}
+{{- $map_id := printf "impact-map-%s-%d" $template_id .Ordinal -}}
 
 {{- /* Access impact template data - Hugo preserves hyphens in data keys */ -}}
 {{- $templateData := (dict) -}}
@@ -112,7 +118,7 @@
     </div>
   </div>
 
-  <div class="impact-map-canvas" id="impact-map-{{ $template_id }}"></div>
+  <div class="impact-map-canvas" id="{{ $map_id }}"></div>
 
   {{ if eq $show_metrics "true" }}
   <div class="impact-map-metrics">
@@ -164,8 +170,10 @@
       setTimeout(renderWhenReady, 100);
       return;
     }
-    var container = document.getElementById('impact-map-{{ $template_id }}').closest('.impact-map-widget');
-    if (container) {
+    var canvas = document.getElementById('{{ $map_id }}');
+    var container = canvas && canvas.closest('.impact-map-widget');
+    if (container && !container.dataset.rendered) {
+      container.dataset.rendered = 'true';
       window.ImpactMap.render(container, templateData);
     }
   }
@@ -197,7 +205,7 @@
       </span>
     </div>
   </div>
-  <div class="impact-map-canvas" id="impact-map-{{ $template_id }}"></div>
+  <div class="impact-map-canvas" id="{{ $map_id }}"></div>
   {{ if eq $show_metrics "true" }}
   <div class="impact-map-metrics">
     <div class="metric">

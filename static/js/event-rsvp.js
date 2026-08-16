@@ -267,6 +267,17 @@ async function initializeRsvpWidget(widget) {
   const rsvpSuccessMessage = widget.querySelector('.rsvp-success');
   const rsvpErrorMessage = widget.querySelector('.rsvp-error');
 
+  // Parse the event's locations (if any) so the RSVP can be scoped to
+  // whichever one the volunteer picks. Single-location and legacy events
+  // have no picker and no location_id is sent with the RSVP.
+  let locations = [];
+  try {
+    locations = widget.dataset.locations ? JSON.parse(widget.dataset.locations) : [];
+  } catch (e) {
+    console.error('Error parsing event locations:', e);
+  }
+  initLocationPicker(widget, eventId, locations);
+
   // Completed events get a read-only treatment: the registration UI is hidden,
   // and only volunteers who attended see a confirmation of their attendance
   // (including any minors who attended with them). Handle this first and bail
@@ -343,6 +354,18 @@ async function initializeRsvpWidget(widget) {
         return;
       }
 
+      // If this event has more than one location, a location must be
+      // selected before registering.
+      if (locations.length > 1 && !getSelectedLocationId(widget)) {
+        if (rsvpErrorMessage) {
+          rsvpErrorMessage.textContent = 'Please select which location you\'ll be cleaning up at before registering.';
+          rsvpErrorMessage.classList.remove('hidden');
+        }
+        const picker = widget.querySelector('.rsvp-location-picker');
+        if (picker) picker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
       // User is authenticated - determine which UI to show based on minors count
       if (minorsList.length > 0) {
         // Render multi-person selector UI
@@ -353,6 +376,67 @@ async function initializeRsvpWidget(widget) {
       }
     });
   }
+}
+
+/**
+ * Wire up the per-location picker (only rendered when an event has more
+ * than one location). Selecting a location:
+ *  - visually marks that option as selected
+ *  - updates the displayed capacity/status to that location's numbers
+ *  - dispatches a window event so the combined impact map can highlight
+ *    and zoom to that location's route
+ * @param {HTMLElement} widget - The RSVP widget element
+ * @param {string} eventId - The event ID
+ * @param {Array} locations - Array of { location_id, name, address, attendance_cap }
+ */
+function initLocationPicker(widget, eventId, locations) {
+  const options = widget.querySelectorAll('.rsvp-location-option');
+  if (options.length === 0) return;
+
+  const rsvpStatus = widget.querySelector('.rsvp-status');
+  const rsvpCount = widget.querySelector('.rsvp-count');
+  const rsvpCapacity = widget.querySelector('.rsvp-capacity');
+
+  options.forEach(option => {
+    option.addEventListener('click', () => {
+      const locationId = option.dataset.locationId;
+
+      options.forEach(o => {
+        o.classList.remove('border-eden-green', 'ring-2', 'ring-eden-green', 'bg-green-50');
+        o.classList.add('border-gray-300');
+      });
+      option.classList.remove('border-gray-300');
+      option.classList.add('border-eden-green', 'ring-2', 'ring-eden-green', 'bg-green-50');
+      widget.dataset.selectedLocationId = locationId;
+
+      // Clear the "please select a location" error, if shown.
+      const rsvpErrorMessage = widget.querySelector('.rsvp-error');
+      if (rsvpErrorMessage && !rsvpErrorMessage.classList.contains('hidden')) {
+        rsvpErrorMessage.classList.add('hidden');
+      }
+
+      // Update the count/capacity display to this location's numbers.
+      const loc = locations.find(l => l.location_id === locationId);
+      const cap = loc ? (parseInt(loc.attendance_cap, 10) || 15) : 15;
+      if (rsvpCapacity) rsvpCapacity.textContent = cap;
+      updateRsvpCount(eventId, rsvpCount, rsvpStatus, cap, locationId);
+
+      // Let the combined impact map know which location is now selected so
+      // it can highlight the route and zoom in.
+      window.dispatchEvent(new CustomEvent('impact-map:select-location', {
+        detail: { location_id: locationId }
+      }));
+    });
+  });
+}
+
+/**
+ * Get the currently selected location_id from the picker, if any.
+ * @param {HTMLElement} widget
+ * @returns {string|undefined}
+ */
+function getSelectedLocationId(widget) {
+  return widget.dataset.selectedLocationId || undefined;
 }
 
 /**
@@ -842,7 +926,8 @@ async function handleMultiPersonRsvpSubmission(widget, eventId, selectedAttendee
     console.log('Built attendees array:', attendeesArray);
     
     // Task 7.2: Submit multi-person RSVP request
-    const result = await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap);
+    const locationId = getSelectedLocationId(widget);
+    const result = await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, locationId);
     console.log('Multi-person RSVP result:', result);
     
     // Task 7.3: Update UI based on submission result
@@ -903,7 +988,7 @@ function buildAttendeesArray(selectedAttendees) {
  * @param {number} attendanceCap - The attendance cap
  * @returns {Promise<Object>} API response with per-attendee results
  */
-async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap) {
+async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, locationId) {
   // Get session token from localStorage
   const sessionToken = localStorage.getItem('auth_session_token');
   
@@ -931,6 +1016,9 @@ async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap) {
 
   if (attendanceCap !== undefined) {
     payload.attendance_cap = attendanceCap;
+  }
+  if (locationId) {
+    payload.location_id = locationId;
   }
 
   console.log('Sending multi-person RSVP request to:', apiUrl);
@@ -1070,7 +1158,7 @@ function updateUIAfterSubmission(widget, result, eventId, attendanceCap) {
     }
     
     // Update RSVP count and status
-    updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+    updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap, result.location_id);
     
     // Refresh user RSVP status after a short delay
     setTimeout(() => {
@@ -1298,7 +1386,8 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
     }
 
     // Submit the RSVP using direct API call (name is looked up server-side from volunteer record)
-    const result = await submitEventRsvpDirect(eventId, attendanceCap);
+    const locationId = getSelectedLocationId(widget);
+    const result = await submitEventRsvpDirect(eventId, attendanceCap, locationId);
     
     if (result.success) {
       // Fire Google Analytics event for registration submission
@@ -1323,7 +1412,7 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
       }
       
       // Update RSVP count and check user status
-      updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+      updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap, locationId);
       setTimeout(() => {
         checkUserRsvpStatus(widget, eventId);
       }, 500);
@@ -1357,7 +1446,7 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
  * @param {number} attendanceCap - Attendance cap
  * @returns {Promise<Object>} RSVP submission result
  */
-async function submitEventRsvpDirect(eventId, attendanceCap) {
+async function submitEventRsvpDirect(eventId, attendanceCap, locationId) {
   // Get session token from localStorage
   const sessionToken = localStorage.getItem('auth_session_token');
   
@@ -1380,6 +1469,9 @@ async function submitEventRsvpDirect(eventId, attendanceCap) {
 
   if (attendanceCap !== undefined) {
     payload.attendance_cap = attendanceCap;
+  }
+  if (locationId) {
+    payload.location_id = locationId;
   }
 
   console.log('Sending RSVP request to:', apiUrl);
@@ -1440,7 +1532,7 @@ async function submitEventRsvpDirect(eventId, attendanceCap) {
  * @param {HTMLElement} statusElement - Element to display the status message
  * @param {number} attendanceCap - Maximum number of attendees
  */
-async function updateRsvpCount(eventId, countElement, statusElement, attendanceCap) {
+async function updateRsvpCount(eventId, countElement, statusElement, attendanceCap, locationId) {
   try {
     // First, let's test if the API configuration is loaded
     console.log('Testing API configuration...');
@@ -1451,13 +1543,20 @@ async function updateRsvpCount(eventId, countElement, statusElement, attendanceC
     }
     
     const data = await checkEventRsvp(eventId);
+
+    // If scoped to a specific location and the check API returned a
+    // per-location breakdown, use that location's count instead of the
+    // event-wide total.
+    let rsvpCount = data.rsvp_count || 0;
+    if (locationId && data.location_counts && data.location_counts[locationId]) {
+      rsvpCount = data.location_counts[locationId].rsvp_count || 0;
+    }
     
     if (countElement) {
-      countElement.textContent = data.rsvp_count || 0;
+      countElement.textContent = rsvpCount;
     }
     
     if (statusElement) {
-      const rsvpCount = data.rsvp_count || 0;
       if (rsvpCount >= attendanceCap) {
         statusElement.textContent = 'This event is now full';
         statusElement.classList.add('text-red-500');

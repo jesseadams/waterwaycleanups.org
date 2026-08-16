@@ -3,12 +3,20 @@
 {{- /* Use event_id from front matter if available (set by hugo-generator from DB), otherwise derive from URL */ -}}
 {{- $event_id := .Page.Params.event_id | default (.Page.RelPermalink | strings.TrimPrefix "/events/" | strings.TrimSuffix "/") -}}
 
+{{- /* Multiple cleanup locations, when set. When there's more than one,
+     the widget shows a location picker and the RSVP is scoped to whichever
+     location the volunteer selects. */ -}}
+{{- $locations := slice -}}
+{{- if .Page.Params.locations -}}
+  {{- $locations = .Page.Params.locations -}}
+{{- end -}}
+
 {{- /* Add event start time metadata if available */ -}}
 {{ if .Page.Params.start_time }}
 <meta name="event-start-time" content="{{ .Page.Params.start_time }}">
 {{ end }}
 
-<div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}">
+<div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}"{{ if $locations }} data-locations="{{ $locations | jsonify }}"{{ end }}>
   <div class="mb-4">
     <h3 class="text-xl font-bold text-eden-green mb-1">Event Registration</h3>
     <p class="text-gray-600">
@@ -16,6 +24,21 @@
       &bull; <span class="rsvp-status">Checking availability...</span>
     </p>
   </div>
+
+  {{ if gt (len $locations) 1 }}
+  <div class="rsvp-location-picker mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Which location will you clean up at? *</label>
+    <div class="rsvp-location-options grid grid-cols-1 sm:grid-cols-2 gap-2">
+      {{ range $locations }}
+      <button type="button" class="rsvp-location-option text-left border border-gray-300 rounded-md p-3 hover:border-eden-green focus:outline-none focus:ring-2 focus:ring-eden-green" data-location-id="{{ .location_id }}">
+        <div class="font-semibold text-gray-900">{{ .name }}</div>
+        <div class="text-sm text-gray-600">{{ .address }}</div>
+        <div class="text-xs text-gray-500 mt-1 rsvp-location-spots" data-location-id="{{ .location_id }}" data-cap="{{ .attendance_cap }}">{{ .attendance_cap }} spots</div>
+      </button>
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
   
   <button type="button" class="rsvp-toggle-button bg-eden-green hover:bg-green-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
     Sign Up

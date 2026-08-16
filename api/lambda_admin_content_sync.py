@@ -170,12 +170,15 @@ def handle_save_draft(body, session):
     
     # Build the locations array. Prefer the new multi-location shape
     # (event_data['locations']); fall back to the legacy flat fields so
-    # older callers keep working.
+    # older callers keep working. Every location gets a stable location_id
+    # so RSVPs can reference a specific location even if locations are
+    # later reordered/renamed.
     raw_locations = event_data.get('locations')
     if isinstance(raw_locations, list) and len(raw_locations) > 0:
         locations = []
-        for loc in raw_locations:
+        for i, loc in enumerate(raw_locations):
             entry = {
+                'location_id': loc.get('location_id') or f"loc_{event_id}_{i}",
                 'name': loc.get('name', ''),
                 'address': loc.get('address', ''),
                 'attendance_cap': int(loc.get('attendance_cap', 20) or 20)
@@ -189,6 +192,7 @@ def handle_save_draft(body, session):
             locations.append(entry)
     else:
         locations = [{
+            'location_id': f"loc_{event_id}_0",
             'name': event_data.get('location_name', ''),
             'address': event_data.get('location_address', ''),
             'attendance_cap': int(event_data.get('attendance_cap', 20) or 20)

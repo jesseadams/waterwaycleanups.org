@@ -180,11 +180,14 @@ async function handleSaveDraft(body, session) {
 
   // Build the locations array. Prefer the new multi-location shape
   // (eventData.locations); fall back to the legacy flat fields so older
-  // callers keep working.
+  // callers keep working. Every location gets a stable location_id so
+  // RSVPs can reference a specific location even if locations are later
+  // reordered/renamed.
   let locations;
   if (Array.isArray(eventData.locations) && eventData.locations.length > 0) {
-    locations = eventData.locations.map(loc => {
+    locations = eventData.locations.map((loc, i) => {
       const entry = {
+        location_id: loc.location_id || `loc_${eventId}_${i}`,
         name: loc.name || '',
         address: loc.address || '',
         attendance_cap: parseInt(loc.attendance_cap) || 20
@@ -198,6 +201,7 @@ async function handleSaveDraft(body, session) {
     });
   } else {
     locations = [{
+      location_id: `loc_${eventId}_0`,
       name: eventData.location_name || '',
       address: eventData.location_address || '',
       attendance_cap: parseInt(eventData.attendance_cap) || 20

@@ -148,8 +148,36 @@ class HugoGenerator {
     // Store the database event_id so RSVP shortcode can use it directly
     frontmatter.event_id = event.event_id;
 
-    // Add impact template reference if set
-    if (event.impact_template) {
+    // Support one or more cleanup locations. Falls back to the legacy
+    // single-location shape (event.location) for older events. Stored in
+    // frontmatter so the combined impact map and the RSVP location picker
+    // can both read it directly from Page.Params, without re-parsing content.
+    const locations = Array.isArray(event.locations) && event.locations.length > 0
+      ? event.locations
+      : (event.location ? [event.location] : []);
+
+    if (locations.length > 0) {
+      frontmatter.locations = locations.map((loc, index) => {
+        const entry = {
+          location_id: loc.location_id || `loc_${event.event_id}_${index}`,
+          name: loc.name || '',
+          address: loc.address || '',
+          attendance_cap: Number(loc.attendance_cap) || 20
+        };
+        if (loc.location_url) entry.location_url = loc.location_url;
+        if (loc.impact_template) {
+          entry.impact_template = loc.impact_template;
+          if (loc.impact_template_version) {
+            entry.impact_template_version = parseInt(loc.impact_template_version) || loc.impact_template_version;
+          }
+        }
+        return entry;
+      });
+    }
+
+    // Legacy top-level impact template reference (events not yet migrated
+    // to `locations`), kept for backward compatibility.
+    if (locations.length === 0 && event.impact_template) {
       frontmatter.impact_template = event.impact_template;
       if (event.impact_template_version) {
         frontmatter.impact_template_version = parseInt(event.impact_template_version) || event.impact_template_version;
@@ -273,20 +301,22 @@ class HugoGenerator {
     content += `Bring water, wear sturdy shoes, and dress for the weather. All ages welcome—kids under 18 must be accompanied by an adult.\n`;
     content += `{{< /tabs >}}\n\n`;
     
-    // Add an impact map shortcode for each location that has a template set
-    locations.forEach(location => {
-      if (location.impact_template) {
-        const version = location.impact_template_version || '';
-        content += `{{< impact_map template="${location.impact_template}"${version ? ` version="${version}"` : ''} >}}\n\n`;
-      }
-    });
-    // Legacy top-level impact_template (events not yet migrated to `locations`)
-    if (locations.length === 0 && event.impact_template) {
+    // Render every location's impact map on a single combined map. Locations
+    // and their templates are read from frontmatter (Page.Params.locations)
+    // by the shortcode, so no per-location args are needed here.
+    const hasAnyTemplate = locations.some(l => l.impact_template) || (locations.length === 0 && event.impact_template);
+    if (hasAnyTemplate) {
+      content += `{{< impact_map_multi >}}\n\n`;
+    } else if (locations.length === 0 && event.impact_template) {
+      // Legacy single-template event with no locations array at all
       const version = event.impact_template_version || '';
       content += `{{< impact_map template="${event.impact_template}"${version ? ` version="${version}"` : ''} >}}\n\n`;
     }
 
-    // Add RSVP shortcode with attendance cap (sum across all locations)
+    // Add RSVP shortcode. Attendance cap and location choices are read from
+    // frontmatter (Page.Params.locations / Page.Params.attendance_cap) by
+    // the shortcode, so a single event-level cap arg is only needed as a
+    // fallback for legacy single-location events.
     const attendanceCap = event.attendance_cap || locations.reduce((sum, l) => sum + (l.attendance_cap || 0), 0) || 20;
     content += `{{< event_rsvp attendance_cap="${attendanceCap}" >}}\n`;
     

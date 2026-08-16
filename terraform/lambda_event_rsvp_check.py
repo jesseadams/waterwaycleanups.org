@@ -58,6 +58,11 @@ def format_rsvp_record(rsvp_item):
 
     # Include the RSVP status so the frontend can distinguish attended vs active
     formatted_rsvp['status'] = rsvp_item.get('status', 'active')
+
+    # Include which location this RSVP is for, when the event has more than
+    # one location (absent on legacy records and single-location events).
+    if rsvp_item.get('location_id'):
+        formatted_rsvp['location_id'] = rsvp_item['location_id']
     
     # Include age for minor attendees
     if attendee_type == 'minor' and 'age' in rsvp_item:
@@ -195,6 +200,23 @@ def handler(event, context):
         active_rsvps = [item for item in response.get('Items', []) if item.get('status', 'active') == 'active']
         rsvp_count = len(active_rsvps)
         
+        # Per-location breakdown, for events with more than one location.
+        # RSVPs created before multi-location support have no location_id
+        # and are excluded from these per-location counts.
+        locations = event_response['Item'].get('locations')
+        location_counts = None
+        if isinstance(locations, list) and len(locations) > 1:
+            location_counts = {}
+            for loc in locations:
+                loc_id = loc.get('location_id')
+                if not loc_id:
+                    continue
+                count = len([r for r in active_rsvps if r.get('location_id') == loc_id])
+                location_counts[loc_id] = {
+                    'rsvp_count': count,
+                    'attendance_cap': int(loc.get('attendance_cap', 0))
+                }
+        
         # Get the specific RSVPs if email is provided
         user_registered = False
         user_rsvps = []
@@ -240,6 +262,8 @@ def handler(event, context):
             'user_registered': user_registered,
             'success': True
         }
+        if location_counts is not None:
+            response_body['location_counts'] = location_counts
         
         # Include user_rsvps array if email was provided
         if 'email' in body:

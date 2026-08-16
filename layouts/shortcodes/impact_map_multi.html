@@ -1,0 +1,237 @@
+{{- /* Combined impact map: renders every cleanup location's parking, path,
+     zone, and meeting-spot features on one shared Leaflet map. The RSVP
+     location picker dispatches an impact-map:select-location window event
+     when the volunteer picks a location, which highlights that route and
+     zooms to it. */ -}}
+{{- $show_metrics := .Get "show_metrics" | default "true" -}}
+{{- $page := .Page -}}
+{{- $locations := slice -}}
+{{- if $page.Params.locations -}}
+  {{- $locations = $page.Params.locations -}}
+{{- else if $page.Params.impact_template -}}
+  {{- $locations = slice (dict "location_id" "legacy" "name" "" "address" "" "impact_template" $page.Params.impact_template "impact_template_version" $page.Params.impact_template_version) -}}
+{{- end -}}
+
+{{- if gt (len $locations) 0 -}}
+
+{{- $locationTemplates := slice -}}
+{{- range $locations -}}
+  {{- $loc := . -}}
+  {{- if $loc.impact_template -}}
+    {{- $templateData := dict -}}
+    {{- with index $.Site.Data "impact-templates" -}}
+      {{- with index . $loc.impact_template -}}
+        {{- $templateData = . -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $templateData.features -}}
+      {{- $locationTemplates = $locationTemplates | append (dict "location_id" $loc.location_id "name" $loc.name "templateData" $templateData "fromApi" false) -}}
+    {{- else -}}
+      {{- $locationTemplates = $locationTemplates | append (dict "location_id" $loc.location_id "name" $loc.name "template_id" $loc.impact_template "template_version" $loc.impact_template_version "fromApi" true) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- if gt (len $locationTemplates) 0 -}}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+  crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""></script>
+
+<style>
+  .impact-map-widget {
+    margin: 1.5rem 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+  }
+  .impact-map-canvas {
+    height: 450px;
+    width: 100%;
+    z-index: 1;
+  }
+  .impact-map-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .impact-map-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1f2937;
+  }
+  .impact-map-metrics {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.875rem;
+    color: #4b5563;
+  }
+  .impact-map-metrics .metric {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .impact-map-metrics .metric-value {
+    font-weight: 700;
+    color: #1f2937;
+  }
+  .impact-map-legend {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .impact-map-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+  }
+  .impact-map-legend .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .impact-map-legend .legend-line {
+    width: 16px;
+    height: 3px;
+    display: inline-block;
+    border-radius: 2px;
+  }
+  .impact-popup-miles {
+    color: #ea580c;
+    font-weight: 600;
+  }
+</style>
+
+<div class="impact-map-widget" data-multi="true">
+  <div class="impact-map-header">
+    <h4>🗺️ Impact Map{{ if gt (len $locations) 1 }} — All Locations{{ end }}</h4>
+    <div class="impact-map-legend">
+      {{ if gt (len $locations) 1 }}
+      <span class="legend-item">
+        <span class="legend-line" style="background: #ea580c;"></span> Selected route
+      </span>
+      <span class="legend-item">
+        <span class="legend-line" style="background: #94a3b8;"></span> Other locations
+      </span>
+      {{ else }}
+      <span class="legend-item">
+        <span class="legend-dot" style="background: #2563eb;"></span> Parking
+      </span>
+      <span class="legend-item">
+        <span class="legend-line" style="background: #ea580c;"></span> Cleanup Path
+      </span>
+      {{ end }}
+      <span class="legend-item">
+        <span style="color: #eab308; font-size: 1.1em; line-height: 1;">★</span> Meeting Spot
+      </span>
+    </div>
+  </div>
+
+  <div class="impact-map-canvas" id="impact-map-multi-{{ .Ordinal }}"></div>
+
+  {{ if eq $show_metrics "true" }}
+  <div class="impact-map-metrics">
+    <div class="metric">
+      <span>Estimated Impact:</span>
+      <span class="metric-value"><span class="impact-miles-value">0</span> miles</span>
+    </div>
+    {{ if $page.Params.volunteer_count }}
+    <div class="metric">
+      <span>Volunteers:</span>
+      <span class="metric-value">{{ $page.Params.volunteer_count }}</span>
+    </div>
+    {{ end }}
+    {{ with $page.Params.cleanup_metrics }}
+    <div class="metric">
+      <span>Bags of Trash:</span>
+      <span class="metric-value">{{ .bags_of_trash | default 0 }}</span>
+    </div>
+    <div class="metric">
+      <span>Tires:</span>
+      <span class="metric-value">{{ .number_of_tires | default 0 }}</span>
+    </div>
+    <div class="metric">
+      <span>Litter Removed:</span>
+      <span class="metric-value">{{ .total_litter_lbs | default 0 }} lbs</span>
+    </div>
+    {{ end }}
+  </div>
+  {{ end }}
+</div>
+
+<script src="/js/impact-map.js"></script>
+<script>
+(function() {
+  var mapId = 'impact-map-multi-{{ .Ordinal }}';
+  var locationSpecs = {{ $locationTemplates | jsonify | safeJS }};
+  var apiBase = (window.API_CONFIG && window.API_CONFIG.BASE_URL) || '';
+
+  function loadFromApi(spec) {
+    var url = apiBase + '/impact-templates?id=' + encodeURIComponent(spec.template_id);
+    if (spec.template_version) url += '&version=' + encodeURIComponent(spec.template_version);
+    return fetch(url)
+      .then(function (res) { if (!res.ok) throw new Error('Failed to load template'); return res.json(); })
+      .then(function (data) {
+        if (data.success && data.template) {
+          return { location_id: spec.location_id, name: spec.name, templateData: data.template };
+        }
+        return null;
+      })
+      .catch(function (err) {
+        console.error('Impact map error:', err);
+        return null;
+      });
+  }
+
+  function renderWhenReady() {
+    if (typeof L === 'undefined' || typeof window.ImpactMap === 'undefined') {
+      setTimeout(renderWhenReady, 100);
+      return;
+    }
+    var canvas = document.getElementById(mapId);
+    var container = canvas && canvas.closest('.impact-map-widget');
+    if (!container || container.dataset.rendered) return;
+    container.dataset.rendered = 'true';
+
+    Promise.all(locationSpecs.map(function (spec) {
+      return spec.fromApi ? loadFromApi(spec) : Promise.resolve(spec);
+    })).then(function (resolved) {
+      var locationTemplates = resolved.filter(Boolean);
+      var controller = window.ImpactMap.renderCombined(container, locationTemplates);
+      if (!controller) return;
+
+      window._impactMapControllers = window._impactMapControllers || {};
+      window._impactMapControllers[mapId] = controller;
+
+      window.addEventListener('impact-map:select-location', function (e) {
+        controller.select(e.detail && e.detail.location_id);
+      });
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderWhenReady);
+  } else {
+    renderWhenReady();
+  }
+})();
+</script>
+
+{{- end -}}
+{{- end -}}

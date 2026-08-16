@@ -272,6 +272,13 @@
       ]);
     };
 
+    // Generate a stable id for a location so RSVPs can reference a specific
+    // location even if locations are reordered/renamed later.
+    const generateLocationId = () => {
+      if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+      return 'loc_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+    };
+
     // Reusable multi-location editor — one or more cleanup locations per event,
     // each with its own name, address, map URL, impact map template, and
     // attendance cap. Always keeps at least one location.
@@ -762,7 +769,9 @@
       const [showForm, setShowForm] = useState(false);
       const [editingId, setEditingId] = useState(null);
       const [existingFile, setExistingFile] = useState(null);
+
       const emptyLocation = () => ({
+        location_id: generateLocationId(),
         name: '', address: '', location_url: '',
         impact_template: '', impact_template_version: '',
         attendance_cap: 20
@@ -876,6 +885,7 @@
       const normalizeLocations = (ed) => {
         if (Array.isArray(ed.locations) && ed.locations.length > 0) {
           return ed.locations.map(loc => ({
+            location_id: loc.location_id || generateLocationId(),
             name: loc.name || '',
             address: loc.address || '',
             location_url: loc.location_url || '',
@@ -886,6 +896,7 @@
         }
         // Legacy single-location shape
         return [{
+          location_id: generateLocationId(),
           name: ed.location_name || '',
           address: ed.location_address || '',
           location_url: ed.location_url || '',
@@ -957,6 +968,7 @@
           const endWithTz = formData.end_time ? formData.end_time + ':00' + getEasternOffset(formData.end_time) : '';
 
           const locations = formData.locations.map(loc => ({
+            location_id: loc.location_id || generateLocationId(),
             name: loc.name,
             address: loc.address,
             location_url: loc.location_url || '',
@@ -1399,6 +1411,7 @@
       const [showEventForm, setShowEventForm] = useState(false);
       const [editingEvent, setEditingEvent] = useState(null);
       const emptyEventLocation = () => ({
+        location_id: generateLocationId(),
         name: '', address: '', location_url: '',
         impact_template: '', impact_template_version: '',
         attendance_cap: 50
@@ -1435,6 +1448,7 @@
       const normalizeEventLocations = (ev) => {
         if (Array.isArray(ev.locations) && ev.locations.length > 0) {
           return ev.locations.map(loc => ({
+            location_id: loc.location_id || generateLocationId(),
             name: loc.name || '',
             address: loc.address || '',
             location_url: loc.location_url || '',
@@ -1445,6 +1459,7 @@
         }
         const loc = ev.location || {};
         return [{
+          location_id: generateLocationId(),
           name: loc.name || '',
           address: loc.address || '',
           location_url: ev.location_url || '',
@@ -1831,6 +1846,7 @@
           const endTimeWithTz = addEasternOffset(eventFormData.end_time);
 
           const locations = eventFormData.locations.map(loc => ({
+            location_id: loc.location_id || generateLocationId(),
             name: loc.name,
             address: loc.address,
             location_url: loc.location_url || '',
