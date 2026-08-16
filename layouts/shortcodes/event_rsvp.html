@@ -5,11 +5,9 @@
 
 {{- /* Multiple cleanup locations, when set. When there's more than one,
      the widget shows a location picker and the RSVP is scoped to whichever
-     location the volunteer selects. */ -}}
-{{- $locations := slice -}}
-{{- if .Page.Params.locations -}}
-  {{- $locations = .Page.Params.locations -}}
-{{- end -}}
+     location the volunteer selects. Malformed entries (e.g. an entry that
+     isn't an object) are filtered out rather than crashing the build. */ -}}
+{{- $locations := partial "valid-locations.html" .Page.Params.locations -}}
 
 {{- /* Add event start time metadata if available */ -}}
 {{ if .Page.Params.start_time }}

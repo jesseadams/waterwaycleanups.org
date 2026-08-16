@@ -1,0 +1,18 @@
+{{- /* Filters a page's `locations` frontmatter param down to entries that
+     are actually maps (objects), dropping anything malformed (e.g. a
+     nested list, string, or other unexpected shape) so a single bad entry
+     can't crash the whole site build. Pass the raw locations value (e.g.
+     .Page.Params.locations) as the partial's context; returns a slice
+     (possibly empty) of valid location maps. */ -}}
+{{- $raw := . -}}
+{{- $result := slice -}}
+{{- if $raw -}}
+  {{- range $raw -}}
+    {{- $item := . -}}
+    {{- $itemType := printf "%T" $item -}}
+    {{- if in $itemType "map" -}}
+      {{- $result = $result | append $item -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $result -}}

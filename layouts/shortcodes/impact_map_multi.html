@@ -5,11 +5,13 @@
      zooms to it. */ -}}
 {{- $show_metrics := .Get "show_metrics" | default "true" -}}
 {{- $page := .Page -}}
-{{- $locations := slice -}}
-{{- if $page.Params.locations -}}
-  {{- $locations = $page.Params.locations -}}
-{{- else if $page.Params.impact_template -}}
-  {{- $locations = slice (dict "location_id" "legacy" "name" "" "address" "" "impact_template" $page.Params.impact_template "impact_template_version" $page.Params.impact_template_version) -}}
+{{- /* Malformed frontmatter (e.g. a locations entry that isn't an object)
+     is filtered out here rather than allowed to crash the whole build. */ -}}
+{{- $locations := partial "valid-locations.html" $page.Params.locations -}}
+{{- if eq (len $locations) 0 -}}
+  {{- if $page.Params.impact_template -}}
+    {{- $locations = slice (dict "location_id" "legacy" "name" "" "address" "" "impact_template" $page.Params.impact_template "impact_template_version" $page.Params.impact_template_version) -}}
+  {{- end -}}
 {{- end -}}
 
 {{- if gt (len $locations) 0 -}}
