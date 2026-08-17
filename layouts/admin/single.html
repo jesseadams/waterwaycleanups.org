@@ -3162,6 +3162,40 @@
                     ])))
                   ])
                 ]) : null,
+                // Per-location breakdown, for events with more than one location.
+                // RSVPs with no location_id (legacy records) are grouped under
+                // "Unspecified" rather than dropped.
+                (() => {
+                  const eventLocations = getEventLocations(event);
+                  if (!(eventLocations.length > 1)) return null;
+                  const activeForCounts = eventRSVPs.filter(r => r.status !== 'cancelled');
+                  const counts = eventLocations.map(loc => ({
+                    location_id: loc.location_id,
+                    name: loc.name || 'Unnamed location',
+                    cap: loc.attendance_cap || 0,
+                    count: activeForCounts.filter(r => r.location_id === loc.location_id).length
+                  }));
+                  const unspecifiedCount = activeForCounts.filter(r => !r.location_id).length;
+                  return React.createElement('div', {
+                    key: 'location-breakdown',
+                    className: "mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2"
+                  }, [
+                    ...counts.map(c => React.createElement('div', {
+                      key: c.location_id,
+                      className: "flex items-center justify-between text-sm bg-purple-50 border border-purple-100 rounded px-3 py-2"
+                    }, [
+                      React.createElement('span', { key: 'name', className: "font-medium text-purple-800" }, `📍 ${c.name}`),
+                      React.createElement('span', { key: 'count', className: "text-purple-700" }, `${c.count}/${c.cap} registered`)
+                    ])),
+                    unspecifiedCount > 0 ? React.createElement('div', {
+                      key: 'unspecified',
+                      className: "flex items-center justify-between text-sm bg-gray-50 border border-gray-200 rounded px-3 py-2"
+                    }, [
+                      React.createElement('span', { key: 'name', className: "font-medium text-gray-600" }, '📍 Unspecified (legacy RSVPs)'),
+                      React.createElement('span', { key: 'count', className: "text-gray-600" }, `${unspecifiedCount} registered`)
+                    ]) : null
+                  ]);
+                })(),
                 // RSVP table
                 rsvpsLoading ? React.createElement('div', {
                   key: 'loading',
@@ -3184,10 +3218,11 @@
                       React.createElement('th', { key: 'name', className: "text-left py-2 px-3" }, 'Name'),
                       React.createElement('th', { key: 'email', className: "text-left py-2 px-3" }, 'Email'),
                       React.createElement('th', { key: 'type', className: "text-left py-2 px-3" }, 'Type'),
+                      getEventLocations(event).length > 1 ? React.createElement('th', { key: 'location', className: "text-left py-2 px-3" }, 'Location') : null,
                       React.createElement('th', { key: 'status', className: "text-left py-2 px-3" }, 'Status'),
                       React.createElement('th', { key: 'date', className: "text-left py-2 px-3" }, 'Date'),
                       React.createElement('th', { key: 'actions', className: "text-right py-2 px-3" }, 'Actions')
-                    ])
+                    ].filter(Boolean))
                   ),
                   React.createElement('tbody', { key: 'tbody' },
                     (() => {
@@ -3250,6 +3285,12 @@
                               ? `minor${rsvp.age ? ' ('+rsvp.age+')' : ''}`
                               : (rsvp.attendee_type || 'volunteer'))
                           ),
+                          getEventLocations(event).length > 1 ? React.createElement('td', { key: 'location', className: "py-2 px-3 text-gray-600" },
+                            (() => {
+                              const loc = getEventLocations(event).find(l => l.location_id === rsvp.location_id);
+                              return loc ? loc.name : React.createElement('span', { className: "text-gray-400 italic" }, 'Unspecified');
+                            })()
+                          ) : null,
                           React.createElement('td', { key: 'status', className: "py-2 px-3" },
                             React.createElement('span', {
                               className: `inline-block px-2 py-0.5 text-xs rounded ${
@@ -3334,6 +3375,7 @@
                                 className: "inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-500"
                               }, 'account minor')
                             ),
+                            getEventLocations(event).length > 1 ? React.createElement('td', { key: 'location', className: "py-2 px-3 text-gray-400" }, '—') : null,
                             React.createElement('td', { key: 'status', className: "py-2 px-3" },
                               React.createElement('span', {
                                 className: "inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-500"

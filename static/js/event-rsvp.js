@@ -270,12 +270,7 @@ async function initializeRsvpWidget(widget) {
   // Parse the event's locations (if any) so the RSVP can be scoped to
   // whichever one the volunteer picks. Single-location and legacy events
   // have no picker and no location_id is sent with the RSVP.
-  let locations = [];
-  try {
-    locations = widget.dataset.locations ? JSON.parse(widget.dataset.locations) : [];
-  } catch (e) {
-    console.error('Error parsing event locations:', e);
-  }
+  const locations = getWidgetLocations(widget);
   initLocationPicker(widget, eventId, locations);
 
   // Completed events get a read-only treatment: the registration UI is hidden,
@@ -292,13 +287,19 @@ async function initializeRsvpWidget(widget) {
     // Fall through to normal behavior on error rather than blocking the page.
   }
 
-  // Set initial capacity display
-  if (rsvpCapacity) {
-    rsvpCapacity.textContent = attendanceCap;
-  }
+  if (locations.length > 1) {
+    // Multi-location events show a "X/Y registered" summary inside each
+    // location's own box rather than a single shared line above the picker.
+    updateAllLocationCounts(widget, eventId, locations);
+  } else {
+    // Set initial capacity display
+    if (rsvpCapacity) {
+      rsvpCapacity.textContent = attendanceCap;
+    }
 
-  // Check initial RSVP status for this event
-  updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+    // Check initial RSVP status for this event
+    updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+  }
   
   // Check if user is authenticated and fetch minors list
   let minorsList = [];
@@ -393,10 +394,6 @@ function initLocationPicker(widget, eventId, locations) {
   const options = widget.querySelectorAll('.rsvp-location-option');
   if (options.length === 0) return;
 
-  const rsvpStatus = widget.querySelector('.rsvp-status');
-  const rsvpCount = widget.querySelector('.rsvp-count');
-  const rsvpCapacity = widget.querySelector('.rsvp-capacity');
-
   options.forEach(option => {
     option.addEventListener('click', () => {
       const locationId = option.dataset.locationId;
@@ -415,12 +412,6 @@ function initLocationPicker(widget, eventId, locations) {
         rsvpErrorMessage.classList.add('hidden');
       }
 
-      // Update the count/capacity display to this location's numbers.
-      const loc = locations.find(l => l.location_id === locationId);
-      const cap = loc ? (parseInt(loc.attendance_cap, 10) || 15) : 15;
-      if (rsvpCapacity) rsvpCapacity.textContent = cap;
-      updateRsvpCount(eventId, rsvpCount, rsvpStatus, cap, locationId);
-
       // Let the combined impact map know which location is now selected so
       // it can highlight the route and zoom in.
       window.dispatchEvent(new CustomEvent('impact-map:select-location', {
@@ -431,12 +422,133 @@ function initLocationPicker(widget, eventId, locations) {
 }
 
 /**
+ * Refresh the "X/Y registered • Z spots left" line inside every location
+ * box. Unlike the single-location path (which only fetches on the selected
+ * location), this fetches once and fans the per-location counts out to
+ * each box so a volunteer can compare availability before picking one.
+ * @param {HTMLElement} widget
+ * @param {string} eventId
+ * @param {Array} locations
+ */
+async function updateAllLocationCounts(widget, eventId, locations) {
+  const statusBoxes = widget.querySelectorAll('.rsvp-location-status');
+  if (statusBoxes.length === 0) return;
+
+  let data;
+  try {
+    data = await checkEventRsvp(eventId);
+  } catch (error) {
+    console.error('Error fetching per-location RSVP counts:', error);
+    data = null;
+  }
+
+  statusBoxes.forEach(box => {
+    const locationId = box.dataset.locationId;
+    const loc = locations.find(l => l.location_id === locationId);
+    const cap = parseInt(box.dataset.cap, 10) || (loc ? parseInt(loc.attendance_cap, 10) : 15) || 15;
+
+    const countEl = box.querySelector('.rsvp-location-count');
+    const capEl = box.querySelector('.rsvp-location-cap');
+    const spotsEl = box.querySelector('.rsvp-location-spots');
+
+    let count = 0;
+    if (data && data.location_counts && data.location_counts[locationId]) {
+      count = data.location_counts[locationId].rsvp_count || 0;
+    }
+
+    if (capEl) capEl.textContent = cap;
+    if (countEl) countEl.textContent = count;
+    if (spotsEl) {
+      if (!data) {
+        spotsEl.textContent = `${cap} spots available`;
+      } else if (count >= cap) {
+        spotsEl.textContent = 'Full';
+        spotsEl.classList.add('text-red-500');
+      } else {
+        const spotsLeft = cap - count;
+        spotsEl.textContent = `${spotsLeft} ${spotsLeft === 1 ? 'spot' : 'spots'} left`;
+        spotsEl.classList.remove('text-red-500');
+      }
+    }
+  });
+}
+
+/**
+ * Parse an RSVP widget's embedded locations JSON (set by the event_rsvp
+ * shortcode via the data-locations attribute).
+ * @param {HTMLElement} widget
+ * @returns {Array} locations, or [] if the event has none/a single one
+ */
+function getWidgetLocations(widget) {
+  try {
+    return widget.dataset.locations ? JSON.parse(widget.dataset.locations) : [];
+  } catch (e) {
+    console.error('Error parsing event locations:', e);
+    return [];
+  }
+}
+
+/**
  * Get the currently selected location_id from the picker, if any.
  * @param {HTMLElement} widget
  * @returns {string|undefined}
  */
 function getSelectedLocationId(widget) {
   return widget.dataset.selectedLocationId || undefined;
+}
+
+/**
+ * Mark a location as visually selected in the picker (used to restore the
+ * volunteer's already-RSVPed location when the page loads, and after a
+ * "change location" action).
+ * @param {HTMLElement} widget
+ * @param {string} locationId
+ */
+function selectLocationOption(widget, locationId) {
+  const options = widget.querySelectorAll('.rsvp-location-option');
+  options.forEach(option => {
+    const isMatch = option.dataset.locationId === locationId;
+    option.classList.toggle('border-eden-green', isMatch);
+    option.classList.toggle('ring-2', isMatch);
+    option.classList.toggle('ring-eden-green', isMatch);
+    option.classList.toggle('bg-green-50', isMatch);
+    option.classList.toggle('border-gray-300', !isMatch);
+  });
+  widget.dataset.selectedLocationId = locationId;
+}
+
+/**
+ * Get a location's display name from its id, for showing "You RSVPed for
+ * <name>" after registration.
+ * @param {Array} locations
+ * @param {string} locationId
+ * @returns {string|null}
+ */
+function getLocationName(locations, locationId) {
+  if (!locationId) return null;
+  const loc = locations.find(l => l.location_id === locationId);
+  return loc ? loc.name : null;
+}
+
+/**
+ * Refresh the registration-count display after any RSVP change (new RSVP,
+ * cancellation, location change). Multi-location events refresh every
+ * location's own box; single-location/legacy events refresh the one
+ * shared summary line, as before.
+ * @param {HTMLElement} widget
+ * @param {string} eventId
+ * @param {HTMLElement} countElement - shared .rsvp-count element (single-location only)
+ * @param {HTMLElement} statusElement - shared .rsvp-status element (single-location only)
+ * @param {number} attendanceCap
+ * @param {string} [locationId] - unused for multi-location refresh (all boxes are refreshed)
+ */
+function refreshRsvpCounts(widget, eventId, countElement, statusElement, attendanceCap, locationId) {
+  const locations = getWidgetLocations(widget);
+  if (locations.length > 1) {
+    updateAllLocationCounts(widget, eventId, locations);
+  } else {
+    updateRsvpCount(eventId, countElement, statusElement, attendanceCap, locationId);
+  }
 }
 
 /**
@@ -1158,7 +1270,7 @@ function updateUIAfterSubmission(widget, result, eventId, attendanceCap) {
     }
     
     // Update RSVP count and status
-    updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap, result.location_id);
+    refreshRsvpCounts(widget, eventId, rsvpCount, rsvpStatus, attendanceCap, result.location_id);
     
     // Refresh user RSVP status after a short delay
     setTimeout(() => {
@@ -1250,7 +1362,7 @@ async function handleIndividualCancellation(widget, eventId, attendeeId, attende
       }
       
       // Update RSVP count (Requirement 6.4)
-      updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+      refreshRsvpCounts(widget, eventId, rsvpCount, rsvpStatus, attendanceCap);
       
       // Remove the cancelled attendee from the UI
       const selectorContainer = widget.querySelector('.multi-person-selector-container');
@@ -1412,7 +1524,7 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
       }
       
       // Update RSVP count and check user status
-      updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap, locationId);
+      refreshRsvpCounts(widget, eventId, rsvpCount, rsvpStatus, attendanceCap, locationId);
       setTimeout(() => {
         checkUserRsvpStatus(widget, eventId);
       }, 500);
@@ -1794,6 +1906,22 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
     rsvpForm.classList.add('hidden');
   }
 
+  // Figure out which location this RSVP is for (all attendees submitted
+  // together share the same location_id) so we can display it and let the
+  // volunteer switch to a different one.
+  const locations = getWidgetLocations(widget);
+  const rsvpWithLocation = rsvps.find(r => r.location_id);
+  const currentLocationId = rsvpWithLocation ? rsvpWithLocation.location_id : null;
+  const currentLocationName = getLocationName(locations, currentLocationId);
+
+  if (currentLocationId) {
+    // Reflect the RSVPed location in the picker and on the combined map.
+    selectLocationOption(widget, currentLocationId);
+    window.dispatchEvent(new CustomEvent('impact-map:select-location', {
+      detail: { location_id: currentLocationId }
+    }));
+  }
+
   if (rsvpSuccessMessage) {
     // Build attendees list HTML
     let attendeesHTML = '';
@@ -1816,7 +1944,7 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
             <button 
               type="button" 
               class="text-xs text-red-600 hover:text-red-800 underline"
-              onclick="cancelIndividualRsvp('${rsvp.attendee_id}', '${rsvp.attendee_type}', '${name}')"
+              onclick="handleCancelRsvpClick('${rsvp.attendee_id}', '${rsvp.attendee_type}', '${name}')"
             >
               Cancel
             </button>
@@ -1854,15 +1982,148 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
         `;
       }
     }
+
+    // Show which location the volunteer RSVPed for, with a way to switch
+    // to a different one when the event has more than one location.
+    let locationHTML = '';
+    if (locations.length > 1) {
+      const locationLabel = currentLocationName
+        ? `📍 <strong>${currentLocationName}</strong>`
+        : '📍 Location not set';
+      locationHTML = `
+        <div class="mt-2 flex items-center justify-between gap-2">
+          <span class="text-sm text-gray-700">${locationLabel}</span>
+          <button
+            type="button"
+            class="text-xs text-blue-600 hover:text-blue-800 underline font-medium change-location-button"
+            data-current-location-id="${currentLocationId || ''}"
+          >
+            Change location
+          </button>
+        </div>
+      `;
+    }
     
     rsvpSuccessMessage.innerHTML = `
       <div class="text-green-700">
         <div class="font-semibold mb-2">✓ You're registered for this event</div>
+        ${locationHTML}
         ${attendeesHTML}
       </div>
     `;
     rsvpSuccessMessage.classList.remove('hidden');
+
+    const changeLocationButton = rsvpSuccessMessage.querySelector('.change-location-button');
+    if (changeLocationButton) {
+      changeLocationButton.addEventListener('click', () => {
+        showChangeLocationPicker(widget, userEmail, rsvps, locations, currentLocationId);
+      });
+    }
   }
+}
+
+/**
+ * Show an inline picker letting the volunteer switch which location their
+ * existing RSVP applies to. Confirming re-submits every attendee currently
+ * registered under the old location_id to the newly picked one (cancel +
+ * re-create, since there's no dedicated "move" endpoint).
+ * @param {HTMLElement} widget
+ * @param {string} userEmail
+ * @param {Array} rsvps - The volunteer's (and their minors') current RSVP records
+ * @param {Array} locations
+ * @param {string} currentLocationId
+ */
+function showChangeLocationPicker(widget, userEmail, rsvps, locations, currentLocationId) {
+  const rsvpSuccessMessage = widget.querySelector('.rsvp-success');
+  const rsvpErrorMessage = widget.querySelector('.rsvp-error');
+  if (!rsvpSuccessMessage) return;
+
+  const optionsHtml = locations.map(loc => `
+    <button
+      type="button"
+      class="change-location-option text-left border rounded-md p-2 text-sm ${loc.location_id === currentLocationId ? 'border-eden-green bg-green-50' : 'border-gray-300 hover:border-eden-green'}"
+      data-location-id="${loc.location_id}"
+    >
+      <div class="font-medium text-gray-900">${loc.name}</div>
+      <div class="text-xs text-gray-600">${loc.address || ''}</div>
+    </button>
+  `).join('');
+
+  const pickerContainer = document.createElement('div');
+  pickerContainer.className = 'change-location-picker mt-3 p-3 bg-blue-50 border border-blue-200 rounded';
+  pickerContainer.innerHTML = `
+    <div class="text-sm font-medium text-blue-900 mb-2">Pick a new location:</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">${optionsHtml}</div>
+    <div class="flex gap-2">
+      <button type="button" class="confirm-location-change bg-blue-600 text-white px-3 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50" disabled>
+        Confirm Change
+      </button>
+      <button type="button" class="cancel-location-change bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-400">
+        Cancel
+      </button>
+    </div>
+  `;
+  rsvpSuccessMessage.appendChild(pickerContainer);
+
+  let selectedLocationId = null;
+  const confirmButton = pickerContainer.querySelector('.confirm-location-change');
+  pickerContainer.querySelectorAll('.change-location-option').forEach(option => {
+    option.addEventListener('click', () => {
+      selectedLocationId = option.dataset.locationId;
+      pickerContainer.querySelectorAll('.change-location-option').forEach(o => {
+        o.classList.toggle('border-eden-green', o === option);
+        o.classList.toggle('bg-green-50', o === option);
+        o.classList.toggle('border-gray-300', o !== option);
+      });
+      confirmButton.disabled = selectedLocationId === currentLocationId;
+    });
+  });
+
+  pickerContainer.querySelector('.cancel-location-change').addEventListener('click', () => {
+    pickerContainer.remove();
+  });
+
+  confirmButton.addEventListener('click', async () => {
+    if (!selectedLocationId || selectedLocationId === currentLocationId) return;
+    confirmButton.disabled = true;
+    confirmButton.textContent = 'Changing...';
+
+    const eventId = widget.dataset.eventId;
+    try {
+      // Cancel every attendee currently registered under the old location,
+      // then re-submit them all under the newly picked one.
+      for (const rsvp of rsvps) {
+        await cancelIndividualRsvp(eventId, rsvp.attendee_id, rsvp.attendee_type);
+      }
+
+      const attendeesArray = buildAttendeesArray(rsvps.map(r => ({
+        type: r.attendee_type,
+        id: r.attendee_id,
+        email: r.attendee_type === 'volunteer' ? r.attendee_id : undefined,
+        minor_id: r.attendee_type === 'minor' ? r.attendee_id : undefined,
+        first_name: r.first_name,
+        last_name: r.last_name,
+        age: r.age
+      })));
+
+      const attendanceCap = parseInt(widget.dataset.attendanceCap || '15', 10);
+      await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, selectedLocationId);
+
+      pickerContainer.remove();
+      await checkUserRsvpStatus(widget, eventId);
+      const rsvpCount = widget.querySelector('.rsvp-count');
+      const rsvpStatus = widget.querySelector('.rsvp-status');
+      refreshRsvpCounts(widget, eventId, rsvpCount, rsvpStatus, attendanceCap, selectedLocationId);
+    } catch (error) {
+      console.error('Error changing location:', error);
+      if (rsvpErrorMessage) {
+        rsvpErrorMessage.textContent = error.message || 'Failed to change location. Please try again.';
+        rsvpErrorMessage.classList.remove('hidden');
+      }
+      confirmButton.disabled = false;
+      confirmButton.textContent = 'Confirm Change';
+    }
+  });
 }
 
 /**
@@ -1924,12 +2185,16 @@ async function showAddMoreAttendeesUI(button) {
 }
 
 /**
- * Cancel an individual RSVP (for multi-person registrations)
+ * Handle a click on a "Cancel" link next to a registered attendee: confirms
+ * with the volunteer, then calls the cancel-event-rsvp API and updates the
+ * UI. Distinct from the lower-level cancelIndividualRsvp(eventId,
+ * attendeeId, attendeeType) API helper further up this file — this one is
+ * the UI-facing wrapper invoked directly from inline onclick handlers.
  * @param {string} attendeeId - The attendee ID to cancel
  * @param {string} attendeeType - The attendee type (volunteer or minor)
  * @param {string} attendeeName - The attendee name for confirmation
  */
-async function cancelIndividualRsvp(attendeeId, attendeeType, attendeeName) {
+async function handleCancelRsvpClick(attendeeId, attendeeType, attendeeName) {
   // Find the widget
   const widget = document.querySelector('.event-rsvp-widget');
   if (!widget) {
@@ -2072,7 +2337,7 @@ async function cancelIndividualRsvp(attendeeId, attendeeType, attendeeName) {
     const rsvpCount = widget.querySelector('.rsvp-count');
     const rsvpStatus = widget.querySelector('.rsvp-status');
     const attendanceCap = parseInt(widget.dataset.attendanceCap || '15', 10);
-    updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+    refreshRsvpCounts(widget, eventId, rsvpCount, rsvpStatus, attendanceCap);
     
     // Show success message
     const rsvpSuccessMessage = widget.querySelector('.rsvp-success');
@@ -2153,7 +2418,7 @@ async function showCancelRsvpOption(button) {
       const rsvpCount = widget.querySelector('.rsvp-count');
       const rsvpStatus = widget.querySelector('.rsvp-status');
       const attendanceCap = parseInt(widget.dataset.attendanceCap || '15', 10);
-      updateRsvpCount(eventId, rsvpCount, rsvpStatus, attendanceCap);
+      refreshRsvpCounts(widget, eventId, rsvpCount, rsvpStatus, attendanceCap);
     }
   } catch (error) {
     // Show error message

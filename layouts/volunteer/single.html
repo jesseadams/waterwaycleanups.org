@@ -1224,6 +1224,30 @@
                     key: 'rsvp-date',
                     className: "mb-1"
                   }, `RSVP'ed on ${formatDate(rsvp.created_at)}`),
+                  // Show which location this RSVP is for, when the event has
+                  // more than one location. Resolved server-side onto each
+                  // attendee (location_name); absent for legacy RSVPs and
+                  // single-location events.
+                  (() => {
+                    const hasMultipleLocations = Array.isArray(rsvp.event_locations) && rsvp.event_locations.length > 1;
+                    const attendeeWithLocation = (rsvp.attendees || []).find(a => a.location_name);
+                    const locationName = attendeeWithLocation
+                      ? attendeeWithLocation.location_name
+                      : (rsvp.event_location && rsvp.event_location.name);
+                    if (!locationName) return null;
+                    return React.createElement('div', {
+                      key: 'location',
+                      className: "mb-1"
+                    }, [
+                      React.createElement('span', { key: 'icon' }, '📍 '),
+                      locationName,
+                      hasMultipleLocations ? React.createElement('a', {
+                        key: 'change',
+                        href: `${getEventUrl(rsvp.event_id)}#top`,
+                        className: "ml-2 text-blue-600 hover:text-blue-800 underline text-xs"
+                      }, 'Change location') : null
+                    ]);
+                  })(),
                   // Show attendees list if available
                   rsvp.attendees && rsvp.attendees.length > 0 ? React.createElement('div', {
                     key: 'attendees',

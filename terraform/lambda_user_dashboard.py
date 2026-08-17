@@ -77,6 +77,24 @@ def format_event_display_date(event_data, extracted_date):
     # For display, show formatted date and time
     return extracted_date.strftime("%B %d, %Y at %I:%M %p")
 
+def resolve_location_name(event_data, location_id):
+    """
+    Resolve a location_id to its display name using the event's `locations`
+    array. Returns None when the event has no locations array (legacy
+    single-location events), the RSVP predates location_id, or the id no
+    longer matches any current location.
+    """
+    if not location_id:
+        return None
+    locations = event_data.get('locations')
+    if not isinstance(locations, list):
+        return None
+    for loc in locations:
+        if loc.get('location_id') == location_id:
+            return loc.get('name')
+    return None
+
+
 def get_event_details(event_id):
     """
     Get event details from the events table
@@ -323,7 +341,14 @@ def handler(event, context):
                             'first_name': rsvp.get('first_name', ''),
                             'last_name': rsvp.get('last_name', ''),
                             'age': rsvp.get('age'),
-                            'created_at': rsvp.get('created_at', '')
+                            'created_at': rsvp.get('created_at', ''),
+                            # Which of the event's multiple locations this
+                            # RSVP is for, plus its resolved name so the
+                            # dashboard can display it without a second
+                            # lookup. Absent on legacy records and
+                            # single-location events.
+                            'location_id': rsvp.get('location_id'),
+                            'location_name': resolve_location_name(event_data, rsvp.get('location_id'))
                         }
                         
                         # Create joined RSVP data with event information
@@ -347,6 +372,9 @@ def handler(event, context):
                             'event_start_time': event_data.get('start_time', ''),
                             'event_end_time': event_data.get('end_time', ''),
                             'event_location': event_data.get('location', {}),
+                            # Full locations list, so the dashboard can show a
+                            # "Change location" picker without a second API call.
+                            'event_locations': event_data.get('locations', []),
                             'event_status': event_data.get('status', 'active'),
                             'event_attendance_cap': event_data.get('attendance_cap', 0),
                             
@@ -379,6 +407,7 @@ def handler(event, context):
                             'event_start_time': rsvp['event_start_time'],
                             'event_end_time': rsvp['event_end_time'],
                             'event_location': rsvp['event_location'],
+                            'event_locations': rsvp['event_locations'],
                             'event_status': rsvp['event_status'],
                             'event_attendance_cap': rsvp['event_attendance_cap'],
                             'event_date': rsvp['event_date'],

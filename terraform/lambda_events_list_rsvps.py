@@ -154,6 +154,9 @@ def handler(event, context):
                             'cancelled_at': rsvp.get('cancelled_at'),
                             'hours_before_event': rsvp.get('hours_before_event'),
                             'additional_comments': rsvp.get('additional_comments'),
+                            # Which of the event's multiple locations this RSVP is
+                            # for (absent on legacy records and single-location events).
+                            'location_id': rsvp.get('location_id'),
                             # Volunteer data — prefer RSVP names, fall back to volunteer table
                             'first_name': resolved_first,
                             'last_name': resolved_last,
@@ -196,6 +199,7 @@ def handler(event, context):
                             'cancelled_at': rsvp.get('cancelled_at'),
                             'hours_before_event': rsvp.get('hours_before_event'),
                             'additional_comments': rsvp.get('additional_comments'),
+                            'location_id': rsvp.get('location_id'),
                             'first_name': rsvp.get('first_name'),
                             'last_name': rsvp.get('last_name'),
                             'volunteer_name': rsvp['email'],
