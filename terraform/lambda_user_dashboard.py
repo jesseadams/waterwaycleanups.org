@@ -80,7 +80,12 @@ def format_event_display_date(event_data, extracted_date):
 def resolve_location_name(event_data, location_id):
     """
     Resolve a location_id to its display name using the event's `locations`
-    array. Returns None when the event has no locations array (legacy
+    array. Falls back to the same synthetic "loc_{event_id}_{index}" scheme
+    used by lambda_event_rsvp_submit.py's location_id_for() whenever a
+    location has no real location_id of its own — RSVP records for events
+    saved before location_id existed are stored under that synthetic id, so
+    comparing against the raw (often-empty) loc.get('location_id') would
+    never match. Returns None when the event has no locations array (legacy
     single-location events), the RSVP predates location_id, or the id no
     longer matches any current location.
     """
@@ -89,8 +94,10 @@ def resolve_location_name(event_data, location_id):
     locations = event_data.get('locations')
     if not isinstance(locations, list):
         return None
-    for loc in locations:
-        if loc.get('location_id') == location_id:
+    event_id = event_data.get('event_id', '')
+    for index, loc in enumerate(locations):
+        resolved_id = loc.get('location_id') or f"loc_{event_id}_{index}"
+        if resolved_id == location_id:
             return loc.get('name')
     return None
 

@@ -882,10 +882,21 @@
       // Normalize locations coming from stored event data, which may still be
       // in the legacy single-location shape (location_name/location_address/etc.)
       // or the newer `locations` array shape.
+      //
+      // IMPORTANT: locations that already exist (loaded from a live/draft
+      // event) but have no location_id must resolve to the same synthetic
+      // "loc_{event_id}_{index}" id that lambda_event_rsvp_submit.py's
+      // location_id_for() derives and stamps onto RSVP records — NOT a
+      // fresh generateLocationId() UUID. Existing RSVPs for these locations
+      // are already stored under the synthetic id; assigning a random id
+      // here and saving the form would permanently orphan those RSVPs from
+      // their location (they'd stop being counted/displayed). generateLocationId()
+      // is reserved for brand-new locations added via "Add location" (see
+      // emptyLocation() below), which have no existing RSVPs to preserve.
       const normalizeLocations = (ed) => {
         if (Array.isArray(ed.locations) && ed.locations.length > 0) {
-          return ed.locations.map(loc => ({
-            location_id: loc.location_id || generateLocationId(),
+          return ed.locations.map((loc, index) => ({
+            location_id: loc.location_id || `loc_${ed.event_id}_${index}`,
             name: loc.name || '',
             address: loc.address || '',
             location_url: loc.location_url || '',
@@ -896,7 +907,7 @@
         }
         // Legacy single-location shape
         return [{
-          location_id: generateLocationId(),
+          location_id: `loc_${ed.event_id}_0`,
           name: ed.location_name || '',
           address: ed.location_address || '',
           location_url: ed.location_url || '',
@@ -1445,10 +1456,17 @@
       };
       // Normalize a live/draft event's location data (legacy single-location
       // shape or the newer `locations` array) into the array shape the form uses.
+      //
+      // Same rule as ContentEditor's normalizeLocations above: existing
+      // locations with no location_id must resolve to the synthetic
+      // "loc_{event_id}_{index}" id RSVP records already use
+      // (lambda_event_rsvp_submit.py's location_id_for()), not a random
+      // generateLocationId() UUID — otherwise saving this form would orphan
+      // every existing RSVP for that location.
       const normalizeEventLocations = (ev) => {
         if (Array.isArray(ev.locations) && ev.locations.length > 0) {
-          return ev.locations.map(loc => ({
-            location_id: loc.location_id || generateLocationId(),
+          return ev.locations.map((loc, index) => ({
+            location_id: loc.location_id || `loc_${ev.event_id}_${index}`,
             name: loc.name || '',
             address: loc.address || '',
             location_url: loc.location_url || '',
@@ -1459,7 +1477,7 @@
         }
         const loc = ev.location || {};
         return [{
-          location_id: generateLocationId(),
+          location_id: `loc_${ev.event_id}_0`,
           name: loc.name || '',
           address: loc.address || '',
           location_url: ev.location_url || '',
@@ -2475,11 +2493,24 @@
       };
 
       // An event may have multiple locations (event.locations array) or the
-      // legacy single-location shape (event.location). Return them as a list.
+      // legacy single-location shape (event.location). Return them as a list,
+      // resolving each location's id to the same synthetic
+      // "loc_{event_id}_{index}" fallback used by the RSVP lambdas
+      // (lambda_event_rsvp_submit.py's location_id_for) and the Hugo
+      // frontmatter generator (scripts/hugo-generator.js) whenever a
+      // location has no real location_id of its own. Events created before
+      // location_id existed have RSVP records stored under that synthetic
+      // id, so comparing against the raw (often-undefined) loc.location_id
+      // would never match and every count/lookup below would silently show
+      // "Unspecified"/0.
       const getEventLocations = (event) => {
-        if (Array.isArray(event.locations) && event.locations.length > 0) return event.locations;
-        if (event.location) return [event.location];
-        return [];
+        const raw = Array.isArray(event.locations) && event.locations.length > 0
+          ? event.locations
+          : (event.location ? [event.location] : []);
+        return raw.map((loc, index) => ({
+          ...loc,
+          location_id: loc.location_id || `loc_${event.event_id}_${index}`
+        }));
       };
 
       const filteredEvents = events.filter(event => {
