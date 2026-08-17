@@ -286,6 +286,13 @@
     var allBounds = [];
     var currentSelection = null;
 
+    // With only one location there's no picker to select it (the RSVP
+    // widget only renders a location picker when there's more than one),
+    // so there's nothing that would ever call select() to un-gray the
+    // route. Render it in full "selected" color from the start instead of
+    // the muted default used to distinguish locations from each other.
+    var isSingleLocation = locationTemplates.length <= 1;
+
     function styleFor(kind, isSelected) {
       var palette = isSelected ? COMBINED_COLORS.selected : COMBINED_COLORS.default;
       if (kind === 'zone') {
@@ -308,7 +315,7 @@
 
       if (features.zones) {
         features.zones.forEach(function (zone) {
-          var polygon = L.polygon(zone.coordinates, styleFor('zone', false)).addTo(map);
+          var polygon = L.polygon(zone.coordinates, styleFor('zone', isSingleLocation)).addTo(map);
           var perim = calculatePolygonPerimeter(zone.coordinates);
           polygon.bindPopup(
             '<div class="impact-popup">' +
@@ -324,7 +331,7 @@
 
       if (features.paths) {
         features.paths.forEach(function (path) {
-          var polyline = L.polyline(path.coordinates, styleFor('path', false)).addTo(map);
+          var polyline = L.polyline(path.coordinates, styleFor('path', isSingleLocation)).addTo(map);
           var miles = calculatePathMiles(path.coordinates);
           polyline.bindPopup(
             '<div class="impact-popup">' +
@@ -342,8 +349,8 @@
         features.parking.forEach(function (spot) {
           var marker = L.circleMarker(spot.coordinates, {
             radius: 9,
-            fillColor: COMBINED_COLORS.default.parking,
-            color: '#334155',
+            fillColor: isSingleLocation ? COMBINED_COLORS.selected.parking : COMBINED_COLORS.default.parking,
+            color: isSingleLocation ? '#1e40af' : '#334155',
             weight: 2,
             opacity: 1,
             fillOpacity: 0.75
