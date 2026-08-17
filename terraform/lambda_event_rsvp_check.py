@@ -71,6 +71,19 @@ def format_rsvp_record(rsvp_item):
     return formatted_rsvp
 
 
+def location_id_for(event_id, loc, index):
+    """
+    Get a location's id, falling back to the same synthetic
+    "loc_{event_id}_{index}" scheme used by lambda_event_rsvp_submit.py,
+    scripts/hugo-generator.js, and api/lambda_admin_content_sync.py. Events
+    saved before location_id existed have no location_id field on their
+    DynamoDB locations, so RSVP records for them get created under this
+    synthetic id — this lambda must derive the exact same id or per-location
+    counts for those locations would be silently dropped (skipped) below.
+    """
+    return loc.get('location_id') or f"loc_{event_id}_{index}"
+
+
 def query_guardian_rsvps(event_id, email):
     """
     Query all RSVPs for a volunteer and their minors.
@@ -207,10 +220,8 @@ def handler(event, context):
         location_counts = None
         if isinstance(locations, list) and len(locations) > 1:
             location_counts = {}
-            for loc in locations:
-                loc_id = loc.get('location_id')
-                if not loc_id:
-                    continue
+            for index, loc in enumerate(locations):
+                loc_id = location_id_for(event_id, loc, index)
                 count = len([r for r in active_rsvps if r.get('location_id') == loc_id])
                 location_counts[loc_id] = {
                     'rsvp_count': count,

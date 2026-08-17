@@ -369,8 +369,13 @@ async function initializeRsvpWidget(widget) {
 
       // User is authenticated - determine which UI to show based on minors count
       if (minorsList.length > 0) {
-        // Render multi-person selector UI
-        await renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap);
+        // Render multi-person selector UI. For multi-location events, scope
+        // the displayed capacity to the selected location rather than the
+        // event-wide total (the sum of all locations' caps).
+        const effectiveCap = locations.length > 1
+          ? getLocationCap(locations, getSelectedLocationId(widget), attendanceCap)
+          : attendanceCap;
+        await renderMultiPersonSelector(widget, eventId, minorsList, effectiveCap, getSelectedLocationId(widget));
       } else {
         // Render existing single-person form (direct RSVP)
         await handleDirectRsvp(widget, eventId, attendanceCap);
@@ -531,6 +536,22 @@ function getLocationName(locations, locationId) {
 }
 
 /**
+ * Get a location's attendance cap from its id, falling back to the
+ * event-wide cap when the location isn't found (e.g. no location selected
+ * yet). Used so the multi-person selector shows "spots remaining" against
+ * the selected location's cap rather than the sum of every location's cap.
+ * @param {Array} locations
+ * @param {string} [locationId]
+ * @param {number} fallbackCap
+ * @returns {number}
+ */
+function getLocationCap(locations, locationId, fallbackCap) {
+  if (!locationId) return fallbackCap;
+  const loc = locations.find(l => l.location_id === locationId);
+  return loc ? (parseInt(loc.attendance_cap, 10) || fallbackCap) : fallbackCap;
+}
+
+/**
  * Refresh the registration-count display after any RSVP change (new RSVP,
  * cancellation, location change). Multi-location events refresh every
  * location's own box; single-location/legacy events refresh the one
@@ -558,7 +579,7 @@ function refreshRsvpCounts(widget, eventId, countElement, statusElement, attenda
  * @param {Array} minorsList - List of minors for the authenticated user
  * @param {number} attendanceCap - The attendance cap
  */
-async function renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap) {
+async function renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap, locationId) {
   console.log('Rendering multi-person selector for event:', eventId);
   console.log('Minors list:', minorsList);
   
@@ -616,7 +637,7 @@ async function renderMultiPersonSelector(widget, eventId, minorsList, attendance
   selectorContainer.innerHTML = selectorHtml;
   
   // Initialize the selector state and event handlers
-  initializeMultiPersonSelector(widget, eventId, userEmail, minorsList, attendanceCap, existingRsvps);
+  initializeMultiPersonSelector(widget, eventId, userEmail, minorsList, attendanceCap, existingRsvps, locationId);
 }
 
 /**
@@ -752,7 +773,7 @@ function buildMultiPersonSelectorHtml(userEmail, minorsList, existingRsvps, atte
  * @param {number} attendanceCap - The attendance cap
  * @param {Array} existingRsvps - List of existing RSVPs
  */
-function initializeMultiPersonSelector(widget, eventId, userEmail, minorsList, attendanceCap, existingRsvps) {
+function initializeMultiPersonSelector(widget, eventId, userEmail, minorsList, attendanceCap, existingRsvps, locationId) {
   const selectorContainer = widget.querySelector('.multi-person-selector-container');
   if (!selectorContainer) return;
   
@@ -775,9 +796,14 @@ function initializeMultiPersonSelector(widget, eventId, userEmail, minorsList, a
       selectedCountElement.textContent = selectedCount;
     }
     
-    // Fetch current RSVP count to calculate remaining capacity
+    // Fetch current RSVP count to calculate remaining capacity. When this
+    // event has more than one location, scope the count (and cap) to the
+    // selected location rather than the event-wide total.
     checkEventRsvp(eventId).then(data => {
-      const currentCount = data.rsvp_count || 0;
+      let currentCount = data.rsvp_count || 0;
+      if (locationId && data.location_counts && data.location_counts[locationId]) {
+        currentCount = data.location_counts[locationId].rsvp_count || 0;
+      }
       const remaining = attendanceCap - currentCount;
       
       if (remainingCapacityElement) {
@@ -1381,7 +1407,7 @@ async function handleIndividualCancellation(widget, eventId, attendeeId, attende
       setTimeout(() => {
         // Re-fetch minors list and re-render
         const minorsList = JSON.parse(sessionStorage.getItem('auth_minors_list') || '{"minors":[]}').minors;
-        renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap);
+        renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap, getSelectedLocationId(widget));
       }, 1000);
       
     } else {
@@ -2138,7 +2164,12 @@ async function showAddMoreAttendeesUI(button) {
   }
 
   const eventId = widget.dataset.eventId;
-  const attendanceCap = parseInt(widget.dataset.attendanceCap || '15', 10);
+  const eventWideCap = parseInt(widget.dataset.attendanceCap || '15', 10);
+  const locations = getWidgetLocations(widget);
+  const selectedLocationId = getSelectedLocationId(widget);
+  const attendanceCap = locations.length > 1
+    ? getLocationCap(locations, selectedLocationId, eventWideCap)
+    : eventWideCap;
 
   // Hide the success message to show the selector
   const rsvpSuccessMessage = widget.querySelector('.rsvp-success');
@@ -2181,7 +2212,7 @@ async function showAddMoreAttendeesUI(button) {
   }
 
   // Render the multi-person selector (it will automatically disable already-registered attendees)
-  await renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap);
+  await renderMultiPersonSelector(widget, eventId, minorsList, attendanceCap, selectedLocationId);
 }
 
 /**
