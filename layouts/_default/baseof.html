@@ -175,6 +175,7 @@
         </div>
         <div>
           <div class="container">
+            <div>{{ markdownify (index .Site.Data .Language.Lang).footer.about_text }}</div>
 		        <div>{{ markdownify (index .Site.Data .Language.Lang).footer.footer_text }}</div>
             {{- if gt (len .Site.Languages) 1 -}}
             <div>

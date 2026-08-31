@@ -9,7 +9,7 @@ preheader_is_light: false
 {{< brick_hero >}}
 # Cleaning Up Virginia's Waterways
 
-At Waterway Cleanups, we are dedicated to restoring and preserving our local waterways through community action and education. Together, we can make a significant impact on our environment and future.
+Our mission is to prevent plastic, trash, and other pollution from entering our waterways by engaging communities through hands-on cleanups, raising awareness through educational programs, advocating for the health of our environment, and planting native plants. We are dedicated to protecting and restoring our local waterways — including the Rappahannock River, Potomac River, Accokeek Creek, Potomac Creek, and Aquia Creek. 
 
 {{< button "Join a Cleanup" "/#cleanups" >}}
 
@@ -23,7 +23,7 @@ At Waterway Cleanups, we are dedicated to restoring and preserving our local wat
 <p class="h3">Get Connected</p>
 
 ## Upcoming Community Cleanups
-Join us at an upcoming event and help protect the Rappahannock, Potomac, Aquia Creek, and beyond—every volunteer makes a difference.
+Join us at an upcoming event and help protect the Rappahannock, Potomac, Accokeek Creek, and beyond — every volunteer makes a difference.
 {{< /brick_events >}}
 
 {{< brick_two_columns text_align="center" >}}
