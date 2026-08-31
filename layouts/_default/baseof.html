@@ -175,8 +175,10 @@
         </div>
         <div>
           <div class="container">
-            <div>{{ markdownify (index .Site.Data .Language.Lang).footer.about_text }}</div>
-		        <div>{{ markdownify (index .Site.Data .Language.Lang).footer.footer_text }}</div>
+            <div>
+              {{ markdownify (index .Site.Data .Language.Lang).footer.about_text }}</br>
+              {{ markdownify (index .Site.Data .Language.Lang).footer.footer_text }}
+            </div>
             {{- if gt (len .Site.Languages) 1 -}}
             <div>
               <select aria-label="Change language" onchange="if(this.value) document.location.href = '/'+this.value+'/';"><option>Change language</option>{{ range .Site.Languages }}<option value="{{ .Lang }}" {{ if eq page.Language.Lang .Lang }}disabled{{ end }}>{{ .LanguageName }}</option>{{ end }}</select></div>
