@@ -232,6 +232,13 @@ def handle_save_draft(body, session):
     # Only include private flag if explicitly set to true
     if event_data.get('private', False):
         db_event_data['private'] = True
+
+    # External RSVP URL: when set, the public event page is awareness-only —
+    # it links out to this URL (opened in a new tab) instead of rendering
+    # the built-in RSVP widget. Attendance tracking and manual RSVP
+    # assignment in the admin panel are unaffected either way.
+    if event_data.get('external_rsvp_url'):
+        db_event_data['external_rsvp_url'] = event_data['external_rsvp_url']
     
     # Store the hugo_slug so the admin UI can link to the event page
     db_event_data['hugo_slug'] = event_id

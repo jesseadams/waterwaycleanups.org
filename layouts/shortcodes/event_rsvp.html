@@ -3,16 +3,35 @@
 {{- /* Use event_id from front matter if available (set by hugo-generator from DB), otherwise derive from URL */ -}}
 {{- $event_id := .Page.Params.event_id | default (.Page.RelPermalink | strings.TrimPrefix "/events/" | strings.TrimSuffix "/") -}}
 
+{{- /* Add event start time metadata if available */ -}}
+{{ if .Page.Params.start_time }}
+<meta name="event-start-time" content="{{ .Page.Params.start_time }}">
+{{ end }}
+
+{{- /* External RSVP events are awareness-only: registration happens on an
+     external site, not on this page. Skip the built-in registration
+     widget entirely and just link out (in a new tab). Attendance tracking
+     and manual RSVP assignment still work normally on the backend/admin
+     side since they operate directly on the DynamoDB event/RSVP records,
+     independent of what's rendered here. */ -}}
+{{- with .Page.Params.external_rsvp_url }}
+<div class="event-rsvp-widget event-rsvp-external mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-external-rsvp-url="{{ . }}">
+  <h3 class="text-xl font-bold text-eden-green mb-1">Event Registration</h3>
+  <p class="text-gray-600 mb-4">This event is organized through an external site. Sign up there to reserve your spot.</p>
+  <a href="{{ . }}" target="_blank" rel="noopener noreferrer"
+     class="rsvp-external-link inline-block bg-eden-green hover:bg-green-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+     onclick="if (typeof gtag === 'function') { gtag('event', 'external_rsvp_click', { cleanup_id: '{{ $event_id }}' }); }">
+    Sign Up on External Site
+    <span class="sr-only">(opens in a new tab)</span>
+  </a>
+</div>
+{{ else }}
+
 {{- /* Multiple cleanup locations, when set. When there's more than one,
      the widget shows a location picker and the RSVP is scoped to whichever
      location the volunteer selects. Malformed entries (e.g. an entry that
      isn't an object) are filtered out rather than crashing the build. */ -}}
 {{- $locations := partial "valid-locations.html" .Page.Params.locations -}}
-
-{{- /* Add event start time metadata if available */ -}}
-{{ if .Page.Params.start_time }}
-<meta name="event-start-time" content="{{ .Page.Params.start_time }}">
-{{ end }}
 
 <div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}"{{ if $locations }} data-locations="{{ $locations | jsonify }}"{{ end }}>
   <div class="mb-4">
@@ -81,3 +100,4 @@ if (typeof AuthClient !== 'undefined') {
   console.error('❌ AuthClient class not found - auth-client.js may not have loaded');
 }
 </script>
+{{ end }}

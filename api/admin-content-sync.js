@@ -238,6 +238,14 @@ async function handleSaveDraft(body, session) {
     }
   };
 
+  // External RSVP URL: when set, the public event page is awareness-only —
+  // it links out to this URL (opened in a new tab) instead of rendering the
+  // built-in RSVP widget. Attendance tracking and manual RSVP assignment in
+  // the admin panel are unaffected either way.
+  if (eventData.external_rsvp_url) {
+    dbEventData.external_rsvp_url = eventData.external_rsvp_url;
+  }
+
   // Legacy top-level impact template reference (first location's template).
   if (locations[0].impact_template) {
     dbEventData.impact_template = locations[0].impact_template;

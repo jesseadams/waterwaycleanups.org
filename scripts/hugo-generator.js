@@ -145,6 +145,15 @@ class HugoGenerator {
       frontmatter.private = true;
     }
 
+    // External RSVP URL: when set, the page is awareness-only and the RSVP
+    // shortcode renders a link out to this URL (opened in a new tab)
+    // instead of the built-in registration widget. Attendance tracking and
+    // manual RSVP assignment via the admin panel keep working either way,
+    // since they operate on the DynamoDB event/RSVP records directly.
+    if (event.external_rsvp_url) {
+      frontmatter.external_rsvp_url = event.external_rsvp_url;
+    }
+
     // Store the database event_id so RSVP shortcode can use it directly
     frontmatter.event_id = event.event_id;
 
@@ -334,10 +343,12 @@ class HugoGenerator {
       content += `{{< impact_map template="${event.impact_template}"${version ? ` version="${version}"` : ''} >}}\n\n`;
     }
 
-    // Add RSVP shortcode. Attendance cap and location choices are read from
-    // frontmatter (Page.Params.locations / Page.Params.attendance_cap) by
-    // the shortcode, so a single event-level cap arg is only needed as a
-    // fallback for legacy single-location events.
+    // Add RSVP shortcode. Attendance cap, location choices, and the
+    // external RSVP URL (if any) are all read from frontmatter
+    // (Page.Params.locations / Page.Params.attendance_cap /
+    // Page.Params.external_rsvp_url) by the shortcode, so a single
+    // event-level cap arg is only needed as a fallback for legacy
+    // single-location events.
     const attendanceCap = event.attendance_cap || locations.reduce((sum, l) => sum + (l.attendance_cap || 0), 0) || 20;
     content += `{{< event_rsvp attendance_cap="${attendanceCap}" >}}\n`;
     

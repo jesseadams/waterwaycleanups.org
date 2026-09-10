@@ -787,7 +787,8 @@
         locations: [emptyLocation()],
         tags: '',
         preheader_is_light: false,
-        private: false
+        private: false,
+        external_rsvp_url: ''
       });
 
       const [impactTemplates, setImpactTemplates] = useState([]);
@@ -873,7 +874,8 @@
           start_time: '', end_time: '',
           image: '/uploads/waterway-cleanups/default.jpg',
           locations: [emptyLocation()],
-          tags: '', preheader_is_light: false, private: false
+          tags: '', preheader_is_light: false, private: false,
+          external_rsvp_url: ''
         });
         setEditingId(null);
         setExistingFile(null);
@@ -929,7 +931,8 @@
           locations: normalizeLocations(ed),
           tags: (ed.tags || []).join(', '),
           preheader_is_light: ed.preheader_is_light || false,
-          private: ed.private || false
+          private: ed.private || false,
+          external_rsvp_url: ed.external_rsvp_url || ''
         });
         setEditingId(edit.edit_id);
         setExistingFile(edit.edit_type === 'update' ? edit.file_path : null);
@@ -1006,7 +1009,8 @@
             impact_template: locations[0]?.impact_template || '',
             impact_template_version: locations[0]?.impact_template_version || '',
             preheader_is_light: formData.preheader_is_light,
-            private: formData.private
+            private: formData.private,
+            external_rsvp_url: formData.external_rsvp_url || ''
           };
 
           await apiCall('save_draft', {
@@ -1185,6 +1189,25 @@
             React.createElement('span', {
               key: 'hint', className: "text-xs text-gray-500"
             }, '(Hidden from public listings, accessible via direct URL only)')
+          ]),
+          // External RSVP URL — when set, the public event page is
+          // awareness-only: it links out to this URL (opened in a new tab)
+          // instead of rendering the built-in RSVP widget. Attendance
+          // tracking and manual RSVP assignment in the admin panel keep
+          // working normally either way.
+          React.createElement('div', { key: 'external-rsvp' }, [
+            React.createElement('label', {
+              key: 'l', className: "block text-sm font-medium text-gray-700 mb-1"
+            }, 'External RSVP URL (optional)'),
+            React.createElement('input', {
+              key: 'i', type: 'url', value: formData.external_rsvp_url || '',
+              onChange: (e) => updateField('external_rsvp_url', e.target.value),
+              placeholder: 'https://example.com/register',
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            }),
+            React.createElement('p', {
+              key: 'hint', className: "text-xs text-gray-500 mt-1"
+            }, "If set, the event page is awareness-only and links out to this URL (opens in a new tab) instead of showing the built-in RSVP form. You can still track attendance and add RSVPs manually from this admin panel.")
           ]),
           // Submit
           React.createElement('div', { key: 'actions', className: "flex space-x-3 pt-2" }, [
@@ -1371,6 +1394,12 @@
                         changes.push({ field: 'private', from: livePrivate, to: draftPrivate });
                       }
 
+                      const liveExternalRsvp = live.external_rsvp_url || '';
+                      const draftExternalRsvp = draft.external_rsvp_url || '';
+                      if (liveExternalRsvp !== draftExternalRsvp) {
+                        changes.push({ field: 'external_rsvp_url', from: liveExternalRsvp || '(empty)', to: draftExternalRsvp || '(empty)' });
+                      }
+
                       if (!diffData.live) {
                         return React.createElement('div', { className: "text-sm text-green-700" },
                           edit.edit_type === 'delete' ? '🗑 This event will be deleted.' : '✨ New event — no previous version to compare.'
@@ -1435,7 +1464,8 @@
         locations: [emptyEventLocation()],
         status: 'active',
         hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
-        private: false
+        private: false,
+        external_rsvp_url: ''
       });
 
       const updateEventLocation = (index, field, value) => {
@@ -1913,7 +1943,8 @@
                   image: eventFormData.hugo_config?.image || '/uploads/waterway-cleanups/default.jpg',
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
-                  private: eventFormData.private
+                  private: eventFormData.private,
+                  external_rsvp_url: eventFormData.external_rsvp_url || ''
                 }
               })
             });
@@ -1945,7 +1976,8 @@
                   image: eventFormData.hugo_config?.image || '/uploads/waterway-cleanups/default.jpg',
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
-                  private: eventFormData.private
+                  private: eventFormData.private,
+                  external_rsvp_url: eventFormData.external_rsvp_url || ''
                 }
               })
             });
@@ -2167,7 +2199,8 @@
           locations: normalizeEventLocations(dataToEdit),
           status: dataToEdit.status,
           hugo_config: dataToEdit.hugo_config || { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
-          private: dataToEdit.private || false
+          private: dataToEdit.private || false,
+          external_rsvp_url: dataToEdit.external_rsvp_url || ''
         });
         setShowEventForm(true);
       };
@@ -2181,7 +2214,8 @@
           locations: [emptyEventLocation()],
           status: 'active',
           hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
-          private: false
+          private: false,
+          external_rsvp_url: ''
         });
       };
 
@@ -2831,6 +2865,10 @@
                       key: 'private-badge',
                       className: "inline-block px-2 py-1 text-xs rounded bg-purple-100 text-purple-800 ml-2"
                     }, '🔒 PRIVATE') : null,
+                    event.external_rsvp_url ? React.createElement('span', {
+                      key: 'external-rsvp-badge',
+                      className: "inline-block px-2 py-1 text-xs rounded bg-teal-100 text-teal-800 ml-2"
+                    }, '🔗 EXTERNAL RSVP') : null,
                     pendingDeletions.has(event.event_id) ? React.createElement('span', {
                       key: 'deletion-badge',
                       className: "inline-block px-2 py-1 text-xs rounded bg-orange-100 text-orange-800 ml-2"
@@ -3571,6 +3609,25 @@
                     key: 'hint',
                     className: "text-xs text-gray-500"
                   }, '(Hidden from public listings, accessible via direct URL only)')
+                ]),
+                // External RSVP URL — when set, the public event page is
+                // awareness-only: it links out to this URL (opened in a new
+                // tab) instead of rendering the built-in RSVP widget.
+                // Attendance tracking and manual RSVP assignment in the
+                // admin panel keep working normally either way.
+                React.createElement('div', { key: 'external-rsvp-field' }, [
+                  React.createElement('label', {
+                    key: 'l', className: "block text-sm font-medium text-gray-700 mb-1"
+                  }, 'External RSVP URL (optional)'),
+                  React.createElement('input', {
+                    key: 'i', type: 'url', value: eventFormData.external_rsvp_url || '',
+                    onChange: (e) => setEventFormData({...eventFormData, external_rsvp_url: e.target.value}),
+                    placeholder: 'https://example.com/register',
+                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  }),
+                  React.createElement('p', {
+                    key: 'hint', className: "text-xs text-gray-500 mt-1"
+                  }, "If set, the event page is awareness-only and links out to this URL (opens in a new tab) instead of showing the built-in RSVP form. You can still track attendance and add RSVPs manually from this admin panel.")
                 ]),
                 React.createElement('div', { key: 'actions', className: "flex justify-end space-x-3 pt-4" }, [
                   React.createElement('button', {
