@@ -788,7 +788,8 @@
         tags: '',
         preheader_is_light: false,
         private: false,
-        external_rsvp_url: ''
+        external_rsvp_url: '',
+        scouting_group: false
       });
 
       const [impactTemplates, setImpactTemplates] = useState([]);
@@ -875,7 +876,7 @@
           image: '/uploads/waterway-cleanups/default.jpg',
           locations: [emptyLocation()],
           tags: '', preheader_is_light: false, private: false,
-          external_rsvp_url: ''
+          external_rsvp_url: '', scouting_group: false
         });
         setEditingId(null);
         setExistingFile(null);
@@ -932,7 +933,8 @@
           tags: (ed.tags || []).join(', '),
           preheader_is_light: ed.preheader_is_light || false,
           private: ed.private || false,
-          external_rsvp_url: ed.external_rsvp_url || ''
+          external_rsvp_url: ed.external_rsvp_url || '',
+          scouting_group: ed.scouting_group || false
         });
         setEditingId(edit.edit_id);
         setExistingFile(edit.edit_type === 'update' ? edit.file_path : null);
@@ -1010,7 +1012,8 @@
             impact_template_version: locations[0]?.impact_template_version || '',
             preheader_is_light: formData.preheader_is_light,
             private: formData.private,
-            external_rsvp_url: formData.external_rsvp_url || ''
+            external_rsvp_url: formData.external_rsvp_url || '',
+            scouting_group: formData.scouting_group || false
           };
 
           await apiCall('save_draft', {
@@ -1189,6 +1192,26 @@
             React.createElement('span', {
               key: 'hint', className: "text-xs text-gray-500"
             }, '(Hidden from public listings, accessible via direct URL only)')
+          ]),
+          // Scouting Groups toggle — each location becomes a single-claim
+          // slot for one troop/pack leader (set each location's Attendance
+          // Cap to 1 above). The public page shows Reserved/Available per
+          // location instead of a headcount, and the RSVP form collects
+          // Troop/Pack + unit number.
+          React.createElement('div', { key: 'scouting-group', className: "flex items-center space-x-3" }, [
+            React.createElement('input', {
+              key: 'i', type: 'checkbox', id: 'content-scouting-group-toggle',
+              checked: formData.scouting_group,
+              onChange: (e) => updateField('scouting_group', e.target.checked),
+              className: "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            }),
+            React.createElement('label', {
+              key: 'l', htmlFor: 'content-scouting-group-toggle',
+              className: "text-sm font-medium text-gray-700"
+            }, 'Scouting Groups Event'),
+            React.createElement('span', {
+              key: 'hint', className: "text-xs text-gray-500"
+            }, '(Each location can only be claimed by one troop/pack; set each location\'s Attendance Cap to 1)')
           ]),
           // External RSVP URL — when set, the public event page is
           // awareness-only: it links out to this URL (opened in a new tab)
@@ -1400,6 +1423,12 @@
                         changes.push({ field: 'external_rsvp_url', from: liveExternalRsvp || '(empty)', to: draftExternalRsvp || '(empty)' });
                       }
 
+                      const liveScoutingGroup = String(live.scouting_group || false);
+                      const draftScoutingGroup = String(draft.scouting_group || false);
+                      if (liveScoutingGroup !== draftScoutingGroup) {
+                        changes.push({ field: 'scouting_group', from: liveScoutingGroup, to: draftScoutingGroup });
+                      }
+
                       if (!diffData.live) {
                         return React.createElement('div', { className: "text-sm text-green-700" },
                           edit.edit_type === 'delete' ? '🗑 This event will be deleted.' : '✨ New event — no previous version to compare.'
@@ -1465,7 +1494,8 @@
         status: 'active',
         hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
         private: false,
-        external_rsvp_url: ''
+        external_rsvp_url: '',
+        scouting_group: false
       });
 
       const updateEventLocation = (index, field, value) => {
@@ -1944,7 +1974,8 @@
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
                   private: eventFormData.private,
-                  external_rsvp_url: eventFormData.external_rsvp_url || ''
+                  external_rsvp_url: eventFormData.external_rsvp_url || '',
+                  scouting_group: eventFormData.scouting_group || false
                 }
               })
             });
@@ -1977,7 +2008,8 @@
                   tags: eventFormData.hugo_config?.tags || [],
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
                   private: eventFormData.private,
-                  external_rsvp_url: eventFormData.external_rsvp_url || ''
+                  external_rsvp_url: eventFormData.external_rsvp_url || '',
+                  scouting_group: eventFormData.scouting_group || false
                 }
               })
             });
@@ -2200,7 +2232,8 @@
           status: dataToEdit.status,
           hugo_config: dataToEdit.hugo_config || { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
           private: dataToEdit.private || false,
-          external_rsvp_url: dataToEdit.external_rsvp_url || ''
+          external_rsvp_url: dataToEdit.external_rsvp_url || '',
+          scouting_group: dataToEdit.scouting_group || false
         });
         setShowEventForm(true);
       };
@@ -2215,7 +2248,8 @@
           status: 'active',
           hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
           private: false,
-          external_rsvp_url: ''
+          external_rsvp_url: '',
+          scouting_group: false
         });
       };
 
@@ -2869,6 +2903,10 @@
                       key: 'external-rsvp-badge',
                       className: "inline-block px-2 py-1 text-xs rounded bg-teal-100 text-teal-800 ml-2"
                     }, '🔗 EXTERNAL RSVP') : null,
+                    event.scouting_group ? React.createElement('span', {
+                      key: 'scouting-group-badge',
+                      className: "inline-block px-2 py-1 text-xs rounded bg-amber-100 text-amber-800 ml-2"
+                    }, '🏕️ SCOUTING GROUPS') : null,
                     pendingDeletions.has(event.event_id) ? React.createElement('span', {
                       key: 'deletion-badge',
                       className: "inline-block px-2 py-1 text-xs rounded bg-orange-100 text-orange-800 ml-2"
@@ -3254,7 +3292,9 @@
                       className: "flex items-center justify-between text-sm bg-purple-50 border border-purple-100 rounded px-3 py-2"
                     }, [
                       React.createElement('span', { key: 'name', className: "font-medium text-purple-800" }, `📍 ${c.name}`),
-                      React.createElement('span', { key: 'count', className: "text-purple-700" }, `${c.count}/${c.cap} registered`)
+                      React.createElement('span', { key: 'count', className: "text-purple-700" },
+                        event.scouting_group ? (c.count >= c.cap ? '🔒 Reserved' : '✅ Available') : `${c.count}/${c.cap} registered`
+                      )
                     ])),
                     unspecifiedCount > 0 ? React.createElement('div', {
                       key: 'unspecified',
@@ -3288,6 +3328,7 @@
                       React.createElement('th', { key: 'email', className: "text-left py-2 px-3" }, 'Email'),
                       React.createElement('th', { key: 'type', className: "text-left py-2 px-3" }, 'Type'),
                       getEventLocations(event).length > 1 ? React.createElement('th', { key: 'location', className: "text-left py-2 px-3" }, 'Location') : null,
+                      event.scouting_group ? React.createElement('th', { key: 'unit', className: "text-left py-2 px-3" }, 'Unit') : null,
                       React.createElement('th', { key: 'status', className: "text-left py-2 px-3" }, 'Status'),
                       React.createElement('th', { key: 'date', className: "text-left py-2 px-3" }, 'Date'),
                       React.createElement('th', { key: 'actions', className: "text-right py-2 px-3" }, 'Actions')
@@ -3359,6 +3400,11 @@
                               const loc = getEventLocations(event).find(l => l.location_id === rsvp.location_id);
                               return loc ? loc.name : React.createElement('span', { className: "text-gray-400 italic" }, 'Unspecified');
                             })()
+                          ) : null,
+                          event.scouting_group ? React.createElement('td', { key: 'unit', className: "py-2 px-3 text-gray-600" },
+                            rsvp.unit_type && rsvp.unit_number
+                              ? `${rsvp.unit_type} ${rsvp.unit_number}`
+                              : React.createElement('span', { className: "text-gray-400 italic" }, '—')
                           ) : null,
                           React.createElement('td', { key: 'status', className: "py-2 px-3" },
                             React.createElement('span', {
@@ -3445,6 +3491,7 @@
                               }, 'account minor')
                             ),
                             getEventLocations(event).length > 1 ? React.createElement('td', { key: 'location', className: "py-2 px-3 text-gray-400" }, '—') : null,
+                            event.scouting_group ? React.createElement('td', { key: 'unit', className: "py-2 px-3 text-gray-400" }, '—') : null,
                             React.createElement('td', { key: 'status', className: "py-2 px-3" },
                               React.createElement('span', {
                                 className: "inline-block px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-500"
@@ -3609,6 +3656,31 @@
                     key: 'hint',
                     className: "text-xs text-gray-500"
                   }, '(Hidden from public listings, accessible via direct URL only)')
+                ]),
+                // Scouting Groups toggle — each location becomes a
+                // single-claim slot for one troop/pack leader (set each
+                // location's Attendance Cap to 1 above). The public page
+                // shows Reserved/Available per location instead of a
+                // headcount, and the RSVP form collects Troop/Pack + unit
+                // number.
+                React.createElement('div', { key: 'scouting-group-field', className: "flex items-center space-x-3" }, [
+                  React.createElement('input', {
+                    key: 'input',
+                    type: 'checkbox',
+                    id: 'event-scouting-group-toggle',
+                    checked: eventFormData.scouting_group,
+                    onChange: (e) => setEventFormData({...eventFormData, scouting_group: e.target.checked}),
+                    className: "h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  }),
+                  React.createElement('label', {
+                    key: 'label',
+                    htmlFor: 'event-scouting-group-toggle',
+                    className: "text-sm font-medium text-gray-700"
+                  }, 'Scouting Groups Event'),
+                  React.createElement('span', {
+                    key: 'hint',
+                    className: "text-xs text-gray-500"
+                  }, '(Each location can only be claimed by one troop/pack; set each location\'s Attendance Cap to 1)')
                 ]),
                 // External RSVP URL — when set, the public event page is
                 // awareness-only: it links out to this URL (opened in a new

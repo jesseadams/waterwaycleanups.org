@@ -154,6 +154,14 @@ class HugoGenerator {
       frontmatter.external_rsvp_url = event.external_rsvp_url;
     }
 
+    // Scouting Groups: each location is a single-claim slot for one
+    // troop/pack leader. When set, the event_rsvp shortcode shows
+    // Reserved/Available per location instead of a headcount, and collects
+    // Troop/Pack + unit number on the RSVP form.
+    if (event.scouting_group === true) {
+      frontmatter.scouting_group = true;
+    }
+
     // Store the database event_id so RSVP shortcode can use it directly
     frontmatter.event_id = event.event_id;
 

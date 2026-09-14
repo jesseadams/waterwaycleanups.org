@@ -63,6 +63,16 @@ def format_rsvp_record(rsvp_item):
     # one location (absent on legacy records and single-location events).
     if rsvp_item.get('location_id'):
         formatted_rsvp['location_id'] = rsvp_item['location_id']
+
+    # Scouting Groups: which unit (troop/pack) claimed this location. Safe
+    # to include here because format_rsvp_record is only ever called on the
+    # requesting volunteer's own RSVPs (via query_guardian_rsvps, scoped by
+    # their email) — never on the public aggregate location_counts, which
+    # only ever exposes counts/caps, not identifying details.
+    if rsvp_item.get('unit_type'):
+        formatted_rsvp['unit_type'] = rsvp_item['unit_type']
+    if rsvp_item.get('unit_number'):
+        formatted_rsvp['unit_number'] = rsvp_item['unit_number']
     
     # Include age for minor attendees
     if attendee_type == 'minor' and 'age' in rsvp_item:

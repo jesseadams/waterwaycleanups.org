@@ -246,6 +246,32 @@ def location_id_for(event_id, loc, index):
     return loc.get('location_id') or f"loc_{event_id}_{index}"
 
 
+VALID_UNIT_TYPES = ('Troop', 'Pack')
+
+
+def validate_scouting_unit(event_data, unit_type, unit_number):
+    """
+    Scouting Groups events (event_data['scouting_group'] is truthy) require
+    the registering leader to specify which kind of unit they're
+    representing ("Troop" or "Pack") and that unit's number, so the RSVP
+    record identifies who claimed the location. Not required for ordinary
+    events.
+
+    Returns:
+        str or None: an error message if invalid, otherwise None.
+    """
+    if not event_data.get('scouting_group'):
+        return None
+
+    if unit_type not in VALID_UNIT_TYPES:
+        return 'Please select whether you are registering a Troop or a Pack.'
+
+    if not unit_number or not str(unit_number).strip():
+        return 'Please enter your unit (troop/pack) number.'
+
+    return None
+
+
 def resolve_location(event_data, location_id):
     """
     Resolve which location (and its attendance_cap) an RSVP applies to.
@@ -292,7 +318,7 @@ def validate_capacity(current_attendance, requested_count, capacity):
     return is_valid, remaining
 
 
-def create_rsvp_records(event_id, attendees, guardian_email, location_id=None):
+def create_rsvp_records(event_id, attendees, guardian_email, location_id=None, unit_type=None, unit_number=None):
     """
     Create individual RSVP records for each attendee.
     Uses individual put_item calls instead of transactions for better error handling.
@@ -338,6 +364,13 @@ def create_rsvp_records(event_id, attendees, guardian_email, location_id=None):
             }
             if location_id:
                 item['location_id'] = location_id
+            # Scouting Groups: record which unit (troop/pack) claimed this
+            # location. Only ever set on the volunteer/leader record, never
+            # on a minor's record.
+            if unit_type:
+                item['unit_type'] = unit_type
+            if unit_number:
+                item['unit_number'] = str(unit_number).strip()
         elif attendee_type == 'minor':
             attendee_id = attendee.get('minor_id')
             item = {
@@ -532,6 +565,23 @@ def handler(event, context):
                     'message': 'Selected location was not found for this event.'
                 })
             }
+
+        # Scouting Groups events require the registering leader to specify
+        # which kind of unit (Troop/Pack) and its number. This is validated
+        # here (rather than earlier) so it only applies to events flagged as
+        # scouting_group, and only once we know the event exists.
+        unit_type = body.get('unit_type')
+        unit_number = body.get('unit_number')
+        unit_error = validate_scouting_unit(event_data, unit_type, unit_number)
+        if unit_error:
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'message': unit_error
+                })
+            }
         
         # Check for duplicate attendees (Requirement 3.1, 3.2, 3.3)
         existing_attendees, new_attendees = check_existing_rsvps(event_id, attendees)
@@ -561,12 +611,19 @@ def handler(event, context):
         is_valid, remaining_capacity = validate_capacity(current_attendance, requested_count, attendance_cap)
         
         if not is_valid:
+            # Scouting Groups locations are single-claim slots (attendance_cap
+            # of 1) — surface a clearer "already reserved" message instead of
+            # the generic "spots remaining" wording.
+            if event_data.get('scouting_group') and attendance_cap == 1:
+                capacity_message = 'This location has already been reserved by another troop or pack. Please choose a different location.'
+            else:
+                capacity_message = f'This event has reached its maximum capacity. Only {remaining_capacity} spots remaining.'
             return {
                 'statusCode': 400,
                 'headers': headers,
                 'body': json.dumps({
                     'success': False,
-                    'message': f'This event has reached its maximum capacity. Only {remaining_capacity} spots remaining.',
+                    'message': capacity_message,
                     'remaining_capacity': remaining_capacity,
                     'current_attendance': current_attendance,
                     'attendance_cap': attendance_cap
@@ -575,7 +632,10 @@ def handler(event, context):
         
         # Create RSVP records atomically (Requirement 2.3, 2.4, 2.5)
         try:
-            results = create_rsvp_records(event_id, new_attendees, guardian_email, resolved_location_id)
+            results = create_rsvp_records(
+                event_id, new_attendees, guardian_email, resolved_location_id,
+                unit_type=unit_type, unit_number=unit_number
+            )
         except Exception as e:
             print(f"Error creating RSVP records: {e}")
             return {
@@ -654,6 +714,10 @@ def handler(event, context):
         }
         if resolved_location_id:
             response_data['location_id'] = resolved_location_id
+        if unit_type:
+            response_data['unit_type'] = unit_type
+        if unit_number:
+            response_data['unit_number'] = str(unit_number).strip()
         
         # Add duplicate info if some attendees were filtered
         if len(existing_attendees) > 0:

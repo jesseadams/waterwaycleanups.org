@@ -33,7 +33,14 @@
      isn't an object) are filtered out rather than crashing the build. */ -}}
 {{- $locations := partial "valid-locations.html" .Page.Params.locations -}}
 
-<div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}"{{ if $locations }} data-locations="{{ $locations | jsonify }}"{{ end }}>
+{{- /* Scouting Groups events: each location is a single-claim slot for one
+     troop/pack leader (attendance_cap is 1 per location). The public page
+     shows "Reserved"/"Available" instead of a running count, and the RSVP
+     form additionally collects which kind of unit (Troop/Pack) and its
+     number. Set via the event's `scouting_group: true` frontmatter flag. */ -}}
+{{- $scouting_group := .Page.Params.scouting_group | default false -}}
+
+<div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}" data-scouting-group="{{ $scouting_group }}"{{ if $locations }} data-locations="{{ $locations | jsonify }}"{{ end }}>
   <div class="mb-4">
     <h3 class="text-xl font-bold text-eden-green mb-1">Event Registration</h3>
     {{ if le (len $locations) 1 }}
@@ -47,18 +54,45 @@
 
   {{ if gt (len $locations) 1 }}
   <div class="rsvp-location-picker mb-4">
-    <label class="block text-sm font-medium text-gray-700 mb-2">Which location will you clean up at? *</label>
+    <label class="block text-sm font-medium text-gray-700 mb-2">
+      {{ if $scouting_group }}Which location would your troop/pack like to claim? *{{ else }}Which location will you clean up at? *{{ end }}
+    </label>
     <div class="rsvp-location-options grid grid-cols-1 sm:grid-cols-2 gap-2">
       {{ range $locations }}
       <button type="button" class="rsvp-location-option text-left border border-gray-300 rounded-md p-3 hover:border-eden-green focus:outline-none focus:ring-2 focus:ring-eden-green" data-location-id="{{ .location_id }}">
         <div class="font-semibold text-gray-900">{{ .name }}</div>
         <div class="text-sm text-gray-600">{{ .address }}</div>
+        {{ if $scouting_group }}
+        <div class="text-xs font-semibold mt-2 rsvp-location-status" data-location-id="{{ .location_id }}" data-cap="{{ .attendance_cap }}">
+          <span class="rsvp-location-availability">Checking availability...</span>
+        </div>
+        {{ else }}
         <div class="text-xs text-gray-500 mt-2 rsvp-location-status" data-location-id="{{ .location_id }}" data-cap="{{ .attendance_cap }}">
           <span class="rsvp-location-count">0</span>/<span class="rsvp-location-cap">{{ .attendance_cap }}</span> registered
           &bull; <span class="rsvp-location-spots">Checking availability...</span>
         </div>
+        {{ end }}
       </button>
       {{ end }}
+    </div>
+  </div>
+  {{ end }}
+
+  {{ if $scouting_group }}
+  <div class="rsvp-unit-fields mb-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Registering as *</label>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="flex gap-4">
+        <label class="inline-flex items-center gap-1">
+          <input type="radio" name="rsvp-unit-type" class="rsvp-unit-type-input" value="Troop">
+          <span>Troop</span>
+        </label>
+        <label class="inline-flex items-center gap-1">
+          <input type="radio" name="rsvp-unit-type" class="rsvp-unit-type-input" value="Pack">
+          <span>Pack</span>
+        </label>
+      </div>
+      <input type="text" inputmode="numeric" class="rsvp-unit-number-input border border-gray-300 rounded-md px-3 py-2 w-40" placeholder="Unit number">
     </div>
   </div>
   {{ end }}

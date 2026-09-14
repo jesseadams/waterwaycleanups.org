@@ -367,6 +367,21 @@ async function initializeRsvpWidget(widget) {
         return;
       }
 
+      // Scouting Groups events require the leader to specify Troop/Pack and
+      // a unit number before registering.
+      if (widget.dataset.scoutingGroup === 'true') {
+        const unitFields = getUnitFields(widget);
+        if (!unitFields.unit_type || !unitFields.unit_number) {
+          if (rsvpErrorMessage) {
+            rsvpErrorMessage.textContent = 'Please select Troop or Pack and enter your unit number before registering.';
+            rsvpErrorMessage.classList.remove('hidden');
+          }
+          const unitSection = widget.querySelector('.rsvp-unit-fields');
+          if (unitSection) unitSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+      }
+
       // User is authenticated - determine which UI to show based on minors count
       if (minorsList.length > 0) {
         // Render multi-person selector UI. For multi-location events, scope
@@ -382,6 +397,22 @@ async function initializeRsvpWidget(widget) {
       }
     });
   }
+}
+
+/**
+ * Read the Troop/Pack unit type and unit number entered in a Scouting
+ * Groups event's RSVP widget (rendered by the event_rsvp shortcode only
+ * when the event's `scouting_group` frontmatter flag is set).
+ * @param {HTMLElement} widget
+ * @returns {{unit_type: string|undefined, unit_number: string|undefined}}
+ */
+function getUnitFields(widget) {
+  const typeInput = widget.querySelector('.rsvp-unit-type-input:checked');
+  const numberInput = widget.querySelector('.rsvp-unit-number-input');
+  return {
+    unit_type: typeInput ? typeInput.value : undefined,
+    unit_number: numberInput && numberInput.value.trim() ? numberInput.value.trim() : undefined
+  };
 }
 
 /**
@@ -401,6 +432,18 @@ function initLocationPicker(widget, eventId, locations) {
 
   options.forEach(option => {
     option.addEventListener('click', () => {
+      // Scouting Groups locations are single-claim slots: once reserved by
+      // another troop/pack, they can't be selected. updateAllLocationCounts
+      // marks reserved options with data-reserved="true".
+      if (option.dataset.reserved === 'true') {
+        const rsvpErrorMessage = widget.querySelector('.rsvp-error');
+        if (rsvpErrorMessage) {
+          rsvpErrorMessage.textContent = 'That location has already been reserved by another troop or pack. Please choose an available location.';
+          rsvpErrorMessage.classList.remove('hidden');
+        }
+        return;
+      }
+
       const locationId = option.dataset.locationId;
 
       options.forEach(o => {
@@ -439,6 +482,8 @@ async function updateAllLocationCounts(widget, eventId, locations) {
   const statusBoxes = widget.querySelectorAll('.rsvp-location-status');
   if (statusBoxes.length === 0) return;
 
+  const isScoutingGroup = widget.dataset.scoutingGroup === 'true';
+
   let data;
   try {
     data = await checkEventRsvp(eventId);
@@ -452,21 +497,52 @@ async function updateAllLocationCounts(widget, eventId, locations) {
     const loc = locations.find(l => l.location_id === locationId);
     const cap = parseInt(box.dataset.cap, 10) || (loc ? parseInt(loc.attendance_cap, 10) : 15) || 15;
 
-    const countEl = box.querySelector('.rsvp-location-count');
-    const capEl = box.querySelector('.rsvp-location-cap');
-    const spotsEl = box.querySelector('.rsvp-location-spots');
-
     let count = 0;
     if (data && data.location_counts && data.location_counts[locationId]) {
       count = data.location_counts[locationId].rsvp_count || 0;
     }
+    const isReserved = count >= cap;
+
+    if (isScoutingGroup) {
+      // Scouting Groups locations are single-claim slots: show only
+      // "Reserved" or "Available", never a headcount, and disable the
+      // option once claimed so it can't be selected.
+      const availabilityEl = box.querySelector('.rsvp-location-availability');
+      if (availabilityEl) {
+        if (!data) {
+          availabilityEl.textContent = 'Available';
+          availabilityEl.classList.remove('text-red-600');
+          availabilityEl.classList.add('text-green-700');
+        } else if (isReserved) {
+          availabilityEl.textContent = '🔒 Reserved';
+          availabilityEl.classList.remove('text-green-700');
+          availabilityEl.classList.add('text-red-600');
+        } else {
+          availabilityEl.textContent = '✅ Available';
+          availabilityEl.classList.remove('text-red-600');
+          availabilityEl.classList.add('text-green-700');
+        }
+      }
+
+      const option = box.closest('.rsvp-location-option');
+      if (option) {
+        option.dataset.reserved = data && isReserved ? 'true' : 'false';
+        option.classList.toggle('opacity-50', !!(data && isReserved));
+        option.classList.toggle('cursor-not-allowed', !!(data && isReserved));
+      }
+      return;
+    }
+
+    const countEl = box.querySelector('.rsvp-location-count');
+    const capEl = box.querySelector('.rsvp-location-cap');
+    const spotsEl = box.querySelector('.rsvp-location-spots');
 
     if (capEl) capEl.textContent = cap;
     if (countEl) countEl.textContent = count;
     if (spotsEl) {
       if (!data) {
         spotsEl.textContent = `${cap} spots available`;
-      } else if (count >= cap) {
+      } else if (isReserved) {
         spotsEl.textContent = 'Full';
         spotsEl.classList.add('text-red-500');
       } else {
@@ -1065,7 +1141,8 @@ async function handleMultiPersonRsvpSubmission(widget, eventId, selectedAttendee
     
     // Task 7.2: Submit multi-person RSVP request
     const locationId = getSelectedLocationId(widget);
-    const result = await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, locationId);
+    const unitFields = widget.dataset.scoutingGroup === 'true' ? getUnitFields(widget) : {};
+    const result = await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, locationId, unitFields.unit_type, unitFields.unit_number);
     console.log('Multi-person RSVP result:', result);
     
     // Task 7.3: Update UI based on submission result
@@ -1126,7 +1203,7 @@ function buildAttendeesArray(selectedAttendees) {
  * @param {number} attendanceCap - The attendance cap
  * @returns {Promise<Object>} API response with per-attendee results
  */
-async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, locationId) {
+async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, locationId, unitType, unitNumber) {
   // Get session token from localStorage
   const sessionToken = localStorage.getItem('auth_session_token');
   
@@ -1157,6 +1234,13 @@ async function submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, loc
   }
   if (locationId) {
     payload.location_id = locationId;
+  }
+  // Scouting Groups: which unit (troop/pack) is claiming this location.
+  if (unitType) {
+    payload.unit_type = unitType;
+  }
+  if (unitNumber) {
+    payload.unit_number = unitNumber;
   }
 
   console.log('Sending multi-person RSVP request to:', apiUrl);
@@ -1525,7 +1609,8 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
 
     // Submit the RSVP using direct API call (name is looked up server-side from volunteer record)
     const locationId = getSelectedLocationId(widget);
-    const result = await submitEventRsvpDirect(eventId, attendanceCap, locationId);
+    const unitFields = widget.dataset.scoutingGroup === 'true' ? getUnitFields(widget) : {};
+    const result = await submitEventRsvpDirect(eventId, attendanceCap, locationId, unitFields.unit_type, unitFields.unit_number);
     
     if (result.success) {
       // Fire Google Analytics event for registration submission
@@ -1584,7 +1669,7 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
  * @param {number} attendanceCap - Attendance cap
  * @returns {Promise<Object>} RSVP submission result
  */
-async function submitEventRsvpDirect(eventId, attendanceCap, locationId) {
+async function submitEventRsvpDirect(eventId, attendanceCap, locationId, unitType, unitNumber) {
   // Get session token from localStorage
   const sessionToken = localStorage.getItem('auth_session_token');
   
@@ -1610,6 +1695,13 @@ async function submitEventRsvpDirect(eventId, attendanceCap, locationId) {
   }
   if (locationId) {
     payload.location_id = locationId;
+  }
+  // Scouting Groups: which unit (troop/pack) is claiming this location.
+  if (unitType) {
+    payload.unit_type = unitType;
+  }
+  if (unitNumber) {
+    payload.unit_number = unitNumber;
   }
 
   console.log('Sending RSVP request to:', apiUrl);
@@ -2133,7 +2225,10 @@ function showChangeLocationPicker(widget, userEmail, rsvps, locations, currentLo
       })));
 
       const attendanceCap = parseInt(widget.dataset.attendanceCap || '15', 10);
-      await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, selectedLocationId);
+      // Preserve the unit_type/unit_number that was originally on the RSVP
+      // (Scouting Groups events) so switching locations doesn't drop it.
+      const existingUnit = rsvps.find(r => r.unit_type) || {};
+      await submitMultiPersonRsvp(eventId, attendeesArray, attendanceCap, selectedLocationId, existingUnit.unit_type, existingUnit.unit_number);
 
       pickerContainer.remove();
       await checkUserRsvpStatus(widget, eventId);

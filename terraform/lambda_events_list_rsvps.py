@@ -157,6 +157,10 @@ def handler(event, context):
                             # Which of the event's multiple locations this RSVP is
                             # for (absent on legacy records and single-location events).
                             'location_id': rsvp.get('location_id'),
+                            # Scouting Groups: which unit (troop/pack) and number
+                            # claimed this location (absent on non-scouting events).
+                            'unit_type': rsvp.get('unit_type'),
+                            'unit_number': rsvp.get('unit_number'),
                             # Volunteer data — prefer RSVP names, fall back to volunteer table
                             'first_name': resolved_first,
                             'last_name': resolved_last,
@@ -200,6 +204,8 @@ def handler(event, context):
                             'hours_before_event': rsvp.get('hours_before_event'),
                             'additional_comments': rsvp.get('additional_comments'),
                             'location_id': rsvp.get('location_id'),
+                            'unit_type': rsvp.get('unit_type'),
+                            'unit_number': rsvp.get('unit_number'),
                             'first_name': rsvp.get('first_name'),
                             'last_name': rsvp.get('last_name'),
                             'volunteer_name': rsvp['email'],

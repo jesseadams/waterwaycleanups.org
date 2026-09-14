@@ -233,6 +233,13 @@ def handle_save_draft(body, session):
     if event_data.get('private', False):
         db_event_data['private'] = True
 
+    # Scouting Groups: each location is a single-claim slot for one troop/pack
+    # leader. When set, the public RSVP widget shows Reserved/Available per
+    # location instead of a headcount, and requires the registering leader
+    # to specify Troop/Pack + unit number (see lambda_event_rsvp_submit.py).
+    if event_data.get('scouting_group', False):
+        db_event_data['scouting_group'] = True
+
     # External RSVP URL: when set, the public event page is awareness-only —
     # it links out to this URL (opened in a new tab) instead of rendering
     # the built-in RSVP widget. Attendance tracking and manual RSVP
