@@ -10,6 +10,13 @@ body.kiosk-mode .innerbody > *:not(#checkin-root) {
   display: none !important;
 }
 
+/* Hide the site header/preheader once a cleanup has been selected and
+   check-in is active, so the attendee list has full screen focus. */
+body.checkin-active header,
+body.checkin-active .preheader {
+  display: none !important;
+}
+
 body.kiosk-mode {
   overflow: hidden;
   background: #1a2e1a;
@@ -23,7 +30,7 @@ body.kiosk-mode .innerbody {
 #checkin-root {
   font-family: 'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   overflow: hidden;
   background: linear-gradient(135deg, #1a2e1a 0%, #2d4a2d 100%);
   color: #fff;
@@ -31,6 +38,293 @@ body.kiosk-mode .innerbody {
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+}
+
+/* ===== Kiosk Mode Toggle Switch =====
+   Fixed above every screen (login, event select, check-in, overlays) so it
+   can be flipped at any point in the flow, not just from the login screen. */
+.kiosk-toggle-wrap {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.kiosk-toggle-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.kiosk-toggle-track {
+  position: relative;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid #4a6a4a;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.kiosk-toggle-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+}
+
+.kiosk-toggle-input:checked + .kiosk-toggle-track {
+  background: #bbdb97;
+}
+
+.kiosk-toggle-input:checked + .kiosk-toggle-track .kiosk-toggle-thumb {
+  transform: translateX(18px);
+}
+
+.kiosk-toggle-input:focus-visible + .kiosk-toggle-track {
+  outline: 2px solid #bbdb97;
+  outline-offset: 2px;
+}
+
+.kiosk-toggle-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #bbdb97;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* Once in kiosk mode, shrink the control to a bare switch (no label,
+   tighter target) so it's unobtrusive on the kiosk display but still
+   reachable to exit kiosk mode. */
+body.kiosk-mode .kiosk-toggle-label {
+  display: none;
+}
+
+body.kiosk-mode .kiosk-toggle-wrap {
+  padding: 6px;
+  top: 8px;
+  right: 8px;
+}
+
+/* ===== Offline Sync Status Widget =====
+   Sits to the left of the kiosk toggle, fixed on every screen, so the
+   volunteer/admin always has visibility into connectivity and any queued
+   offline changes waiting to sync back to the server. */
+.sync-status {
+  position: fixed;
+  top: 14px;
+  right: 150px;
+  z-index: 400;
+}
+
+body.kiosk-mode .sync-status {
+  top: 8px;
+  right: 66px;
+}
+
+.sync-status-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sync-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #22c55e;
+}
+
+.sync-status-dot-online {
+  background: #22c55e;
+}
+
+.sync-status-dot-offline {
+  background: #dc2626;
+}
+
+.sync-status-dot-syncing {
+  background: #f59e0b;
+  animation: syncPulse 1.2s ease-in-out infinite;
+}
+
+.sync-status-dot-failed {
+  background: #dc2626;
+}
+
+@keyframes syncPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+.sync-status-text {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #bbdb97;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+body.kiosk-mode .sync-status-text {
+  display: none;
+}
+
+.sync-status-panel {
+  display: none;
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  max-height: 400px;
+  overflow-y: auto;
+  background: #1a2e1a;
+  border: 2px solid #4a6a4a;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  text-align: left;
+}
+
+.sync-status.sync-status-open .sync-status-panel {
+  display: block;
+}
+
+.sync-status-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #bbdb97;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #3a5a3a;
+}
+
+.sync-status-lastsync {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #6a8a6a;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.sync-status-empty {
+  font-size: 0.85rem;
+  color: #a0c080;
+  padding: 8px 4px;
+}
+
+.sync-queue-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: rgba(255,255,255,0.05);
+}
+
+.sync-queue-item-failed {
+  background: rgba(220,38,38,0.12);
+}
+
+.sync-queue-item-syncing {
+  background: rgba(245,158,11,0.12);
+}
+
+.sync-queue-item-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.sync-queue-item-desc {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.sync-queue-item-status {
+  font-size: 0.75rem;
+  color: #a0c080;
+  margin-top: 2px;
+}
+
+.sync-queue-item-failed .sync-queue-item-status {
+  color: #f87171;
+}
+
+.sync-queue-item-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.sync-queue-btn {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid #4a6a4a;
+  background: rgba(255,255,255,0.08);
+  color: #bbdb97;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.sync-queue-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.sync-queue-btn-danger {
+  border-color: rgba(220,38,38,0.4);
+  color: #f87171;
+}
+
+/* Badge shown on attendee cards for records created offline and not yet
+   confirmed by the server. */
+.attendee-pending-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: rgba(245,158,11,0.2);
+  color: #f59e0b;
+  padding: 2px 8px;
+  border-radius: 10px;
+  vertical-align: middle;
+  margin-left: 6px;
+  white-space: nowrap;
 }
 
 /* ===== Screens ===== */
@@ -237,6 +531,10 @@ body.kiosk-mode .innerbody {
   justify-content: space-between;
   width: 100%;
   padding: 16px 24px;
+  /* Extra right padding reserves room for the fixed sync-status + 
+     kiosk-toggle-wrap controls (top:14px; right:14px/150px) so the "Total"
+     stat doesn't sit under them. */
+  padding-right: 310px;
   background: rgba(0,0,0,0.2);
   position: fixed;
   top: 0;

@@ -30,6 +30,10 @@
     const screen = $(`#screen-${name}`);
     if (screen) screen.classList.add('active');
     currentScreen = name;
+
+    // Hide the site header/preheader once an event has been selected and
+    // check-in is underway, so the kiosk-style screen has full focus.
+    document.body.classList.toggle('checkin-active', name === 'checkin');
   }
 
   function showMessage(text, type) {
@@ -51,6 +55,7 @@
 
     // Check if already authenticated
     if (window.authClient && window.authClient.isAuthenticated()) {
+      primeOfflineCaches();
       goToEventSelect();
       return;
     }
@@ -85,6 +90,7 @@
         if (window.eventsAPI && result.session_token) {
           window.eventsAPI.setSessionToken(result.session_token);
         }
+        primeOfflineCaches();
         goToEventSelect();
       } catch (err) {
         showMessage(err.message || 'Invalid code', 'error');
@@ -101,6 +107,13 @@
     codeInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') verifyBtn.click();
     });
+  }
+
+  // ===== Offline Support =====
+  function primeOfflineCaches() {
+    if (window.CheckinOfflineStore && window.eventsAPI) {
+      window.CheckinOfflineStore.primeCaches(window.eventsAPI);
+    }
   }
 
   // ===== Screen: Event Selection =====
@@ -123,22 +136,20 @@
       const data = await window.eventsAPI.getEvents({ status: 'active' });
       const events = (data.events || data || []);
 
-      // Filter to today's and upcoming events, sorted by start_time
+      // Filter to today's and all upcoming events, sorted by start_time
       const now = new Date();
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const relevantEvents = events
         .filter(e => {
           if (!e.start_time) return false;
           const eventDate = new Date(e.start_time);
-          // Show events from today onward (within next 7 days for relevance)
-          const weekFromNow = new Date(todayStart);
-          weekFromNow.setDate(weekFromNow.getDate() + 7);
-          return eventDate >= todayStart && eventDate <= weekFromNow;
+          // Show any event from today onward
+          return eventDate >= todayStart;
         })
         .sort((a, b) => new Date(a.start_time) - new Date(b.start_time));
 
       if (relevantEvents.length === 0) {
-        list.innerHTML = '<div class="checkin-empty"><div class="checkin-empty-icon">📋</div><p>No upcoming events found in the next 7 days.</p></div>';
+        list.innerHTML = '<div class="checkin-empty"><div class="checkin-empty-icon">📋</div><p>No upcoming events found.</p></div>';
         return;
       }
 
@@ -198,6 +209,13 @@
       goToEventSelect();
     });
 
+    // Prime the offline cache for this specific event's attendee list, so
+    // if the connection drops mid-checkin, search/lookup keeps working off
+    // the last snapshot plus any locally-queued changes.
+    if (window.CheckinOfflineStore) {
+      window.CheckinOfflineStore.primeEventAttendees(window.eventsAPI, event.event_id);
+    }
+
     // Load attendees
     await loadAttendees();
 
@@ -219,7 +237,8 @@
         guardianEmail: a.guardian_email || a.email || '',
         status: a.attendance_status || a.status || 'active',
         type: a.attendee_type || 'volunteer',
-        age: a.age || null
+        age: a.age || null,
+        pendingSync: !!a._pendingSync
       }));
 
       // Sort: pending first, then checked-in, then no-show
@@ -308,11 +327,12 @@
         : 'Tap to Check In';
 
       const typeLabel = a.type === 'minor' ? ` <span class="attendee-type-badge">Minor${a.age ? ', ' + a.age : ''}</span>` : '';
+      const pendingLabel = a.pendingSync ? ` <span class="attendee-pending-badge" title="Saved on this device, will sync when back online">⏳ Not synced</span>` : '';
 
       card.innerHTML = `
         <div class="attendee-avatar">${initials}</div>
         <div class="attendee-info">
-          <div class="attendee-name">${escapeHtml(a.firstName)} ${escapeHtml(a.lastName)}${typeLabel}</div>
+          <div class="attendee-name">${escapeHtml(a.firstName)} ${escapeHtml(a.lastName)}${typeLabel}${pendingLabel}</div>
           <div class="attendee-email">${escapeHtml(a.email)}</div>
         </div>
         <div class="attendee-status-badge ${badgeClass}">${badgeText}</div>
@@ -400,12 +420,14 @@
       newConfirm.textContent = 'Checking in...';
       try {
         // Check in the guardian/volunteer
-        await window.eventsAPI.confirmAttendance(selectedEvent.event_id, attendee.id);
+        const attendeeLabel = `${attendee.firstName} ${attendee.lastName}`.trim();
+        const result = await window.eventsAPI.confirmAttendance(selectedEvent.event_id, attendee.id, attendeeLabel);
 
         // Check in all their active minors too
         for (const minor of activeMinors) {
           try {
-            await window.eventsAPI.confirmAttendance(selectedEvent.event_id, minor.id);
+            const minorLabel = `${minor.firstName} ${minor.lastName}`.trim();
+            await window.eventsAPI.confirmAttendance(selectedEvent.event_id, minor.id, minorLabel);
           } catch (err) {
             console.error(`Failed to check in minor ${minor.firstName}:`, err);
           }
@@ -416,6 +438,9 @@
           ? `${attendee.firstName} + ${activeMinors.length} minor${activeMinors.length > 1 ? 's' : ''}`
           : attendee.firstName;
         showSuccess(successLabel, attendee.lastName);
+        if (result && result.queued) {
+          showMessage('Offline — check-in saved and will sync automatically', 'info');
+        }
         await loadAttendees();
       } catch (err) {
         showMessage(err.message || 'Check-in failed', 'error');
@@ -489,7 +514,8 @@
               showSuccess(entry.first_name, entry.last_name);
               await loadAttendees();
               const extra = res.guardianAdded ? ' (parent added too)' : '';
-              showMessage('Added ' + res.added.join(', ') + extra, 'info');
+              const offlineNote = !navigator.onLine ? ' — offline, will sync automatically' : '';
+              showMessage('Added ' + res.added.join(', ') + extra + offlineNote, 'info');
             } catch (err) {
               showMessage(err.message || 'Failed to add minor', 'error');
             } finally {
@@ -518,9 +544,12 @@
       newSubmit.disabled = true;
       newSubmit.textContent = 'Adding...';
       try {
-        await window.eventsAPI.addWalkIn(selectedEvent.event_id, firstName, lastName, email);
+        const result = await window.eventsAPI.addWalkIn(selectedEvent.event_id, firstName, lastName, email);
         hide(overlay);
         showSuccess(firstName, lastName);
+        if (result && result.queued) {
+          showMessage('Offline — walk-in saved and will sync automatically', 'info');
+        }
         await loadAttendees();
       } catch (err) {
         showMessage(err.message || 'Failed to add walk-in', 'error');
@@ -598,6 +627,9 @@
 
         hide(overlay);
         showSuccess(firstName, `${lastName} (minor)`);
+        if (result && result.queued) {
+          showMessage('Offline — minor saved and will sync automatically', 'info');
+        }
         await loadAttendees();
       } catch (err) {
         showMessage(err.message || 'Failed to add minor walk-in', 'error');
@@ -615,16 +647,132 @@
     return div.innerHTML;
   }
 
+  // ===== Offline Sync Status Widget =====
+  function formatRelativeTime(isoString) {
+    if (!isoString) return 'never';
+    const diffMs = Date.now() - new Date(isoString).getTime();
+    const diffSec = Math.round(diffMs / 1000);
+    if (diffSec < 10) return 'just now';
+    if (diffSec < 60) return `${diffSec}s ago`;
+    const diffMin = Math.round(diffSec / 60);
+    if (diffMin < 60) return `${diffMin}m ago`;
+    const diffHr = Math.round(diffMin / 60);
+    return `${diffHr}h ago`;
+  }
+
+  function renderSyncQueue() {
+    const queueEl = $('#sync-status-queue');
+    if (!queueEl || !window.CheckinOfflineStore) return;
+
+    const items = window.CheckinOfflineStore.getQueueItems();
+    if (items.length === 0) {
+      queueEl.innerHTML = '<div class="sync-status-empty">Nothing queued — everything is synced.</div>';
+      return;
+    }
+
+    queueEl.innerHTML = '';
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = `sync-queue-item sync-queue-item-${item.status}`;
+      const statusLabel = item.status === 'syncing' ? 'Syncing…'
+        : item.status === 'failed' ? 'Failed'
+        : 'Waiting for connection';
+      row.innerHTML = `
+        <div class="sync-queue-item-main">
+          <div class="sync-queue-item-desc">${escapeHtml(item.description || item.type)}</div>
+          <div class="sync-queue-item-status">${statusLabel}${item.lastError ? ' — ' + escapeHtml(item.lastError) : ''}</div>
+        </div>
+        <div class="sync-queue-item-actions"></div>
+      `;
+      const actions = row.querySelector('.sync-queue-item-actions');
+      if (item.status === 'failed') {
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'sync-queue-btn';
+        retryBtn.textContent = 'Retry';
+        retryBtn.addEventListener('click', () => window.CheckinOfflineStore.retryQueueItem(window.eventsAPI, item.id));
+        const dismissBtn = document.createElement('button');
+        dismissBtn.className = 'sync-queue-btn sync-queue-btn-danger';
+        dismissBtn.textContent = 'Discard';
+        dismissBtn.addEventListener('click', () => {
+          window.CheckinOfflineStore.dismissQueueItem(item.id);
+          loadAttendees();
+        });
+        actions.appendChild(retryBtn);
+        actions.appendChild(dismissBtn);
+      }
+      queueEl.appendChild(row);
+    });
+  }
+
+  function renderSyncStatus(status) {
+    const dot = $('#sync-status-dot');
+    const text = $('#sync-status-text');
+    const lastSync = $('#sync-status-lastsync');
+    if (!dot || !text) return;
+
+    let stateClass = 'sync-status-dot-online';
+    let label = 'Online';
+
+    if (!status.online) {
+      stateClass = 'sync-status-dot-offline';
+      label = status.pendingCount > 0 ? `Offline · ${status.pendingCount} queued` : 'Offline';
+    } else if (status.syncing) {
+      stateClass = 'sync-status-dot-syncing';
+      label = 'Syncing…';
+    } else if (status.failedCount > 0) {
+      stateClass = 'sync-status-dot-failed';
+      label = `${status.failedCount} sync issue${status.failedCount > 1 ? 's' : ''}`;
+    } else if (status.pendingCount > 0) {
+      stateClass = 'sync-status-dot-syncing';
+      label = `${status.pendingCount} pending`;
+    }
+
+    dot.className = `sync-status-dot ${stateClass}`;
+    text.textContent = label;
+    if (lastSync) {
+      lastSync.textContent = status.lastSyncedAt ? `Last synced ${formatRelativeTime(status.lastSyncedAt)}` : '';
+    }
+
+    renderSyncQueue();
+  }
+
+  function initSyncStatusWidget() {
+    if (!window.CheckinOfflineStore) return;
+    const btn = $('#sync-status-btn');
+    const panel = $('#sync-status-panel');
+    const widget = $('#sync-status');
+    if (btn && panel) {
+      btn.addEventListener('click', () => {
+        const isOpen = widget.classList.toggle('sync-status-open');
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      });
+      document.addEventListener('click', (e) => {
+        if (widget && !widget.contains(e.target)) {
+          widget.classList.remove('sync-status-open');
+          btn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    window.CheckinOfflineStore.onChange(renderSyncStatus);
+    renderSyncStatus(window.CheckinOfflineStore.getStatus());
+
+    // Keep the "Last synced Xm ago" text fresh even with no other activity.
+    setInterval(() => renderSyncStatus(window.CheckinOfflineStore.getStatus()), 15000);
+  }
+
   // ===== Kiosk Mode Toggle =====
-  function enableKioskMode() {
-    document.body.classList.add('kiosk-mode');
+  function setKioskMode(on) {
+    document.body.classList.toggle('kiosk-mode', on);
+    const toggle = $('#kiosk-toggle');
+    if (toggle) toggle.checked = on;
   }
 
   // Check URL param for kiosk mode
   function checkKioskParam() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('kiosk') === 'true') {
-      enableKioskMode();
+      setKioskMode(true);
     }
   }
 
@@ -632,12 +780,29 @@
   document.addEventListener('DOMContentLoaded', () => {
     checkKioskParam();
     initLoginScreen();
+    initSyncStatusWidget();
 
-    // Kiosk mode toggle button
+    // Whenever the offline queue drains an item, refresh the visible
+    // attendee list so "Not synced" badges clear and stats reflect the
+    // now-confirmed server state.
+    if (window.CheckinOfflineStore) {
+      let lastPendingCount = window.CheckinOfflineStore.getStatus().pendingCount;
+      window.CheckinOfflineStore.onChange((status) => {
+        if (status.pendingCount < lastPendingCount && currentScreen === 'checkin' && selectedEvent) {
+          loadAttendees();
+        }
+        lastPendingCount = status.pendingCount;
+      });
+    }
+
+    // Kiosk mode toggle switch — lives outside the per-screen markup so it
+    // stays visible and clickable on every screen (login, event select,
+    // check-in, etc.), letting the admin flip in/out of kiosk mode anytime.
     const kioskToggle = $('#kiosk-toggle');
     if (kioskToggle) {
-      kioskToggle.addEventListener('click', () => {
-        document.body.classList.toggle('kiosk-mode');
+      kioskToggle.checked = document.body.classList.contains('kiosk-mode');
+      kioskToggle.addEventListener('change', () => {
+        setKioskMode(kioskToggle.checked);
       });
     }
 

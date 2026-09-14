@@ -4,8 +4,34 @@
 
 <div id="checkin-root">
 
+  <!-- Kiosk Mode Toggle: lives outside the individual screens so it is
+       always rendered and clickable, regardless of which screen is active. -->
+  <label id="kiosk-toggle-wrap" class="kiosk-toggle-wrap">
+    <input type="checkbox" id="kiosk-toggle" class="kiosk-toggle-input" aria-label="Toggle kiosk mode" />
+    <span class="kiosk-toggle-track"><span class="kiosk-toggle-thumb"></span></span>
+    <span class="kiosk-toggle-label">Kiosk Mode</span>
+  </label>
+
   <!-- Global message -->
   <div id="checkin-message" class="checkin-message" style="display:none;position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:300;"></div>
+
+  <!-- ===== Offline Sync Status =====
+       Always mounted (like the kiosk toggle) so the volunteer/admin can see
+       connection state and any queued changes waiting to sync, no matter
+       which screen is active. -->
+  <div id="sync-status" class="sync-status">
+    <button id="sync-status-btn" class="sync-status-btn" type="button" aria-expanded="false">
+      <span id="sync-status-dot" class="sync-status-dot"></span>
+      <span id="sync-status-text" class="sync-status-text">Online</span>
+    </button>
+    <div id="sync-status-panel" class="sync-status-panel">
+      <div class="sync-status-panel-header">
+        <span>Sync Status</span>
+        <span id="sync-status-lastsync" class="sync-status-lastsync"></span>
+      </div>
+      <div id="sync-status-queue" class="sync-status-queue"></div>
+    </div>
+  </div>
 
   <!-- ===== Screen 1: Admin Login ===== -->
   <div id="screen-login" class="checkin-screen active">
@@ -29,10 +55,6 @@
         Verify &amp; Continue
       </button>
     </div>
-
-    <button id="kiosk-toggle" class="checkin-btn checkin-btn-secondary checkin-btn-small" style="margin-top:32px;">
-      Toggle Kiosk Mode
-    </button>
   </div>
 
   <!-- ===== Screen 2: Event Selection ===== -->
@@ -152,6 +174,7 @@
 <!-- Load dependencies -->
 <script src="{{ "js/auth-client.js" | relURL }}"></script>
 <script src="{{ "js/events-api-client.js" | relURL }}"></script>
+<script src="{{ "js/checkin-offline-store.js" | relURL }}"></script>
 <script src="{{ "js/volunteer-autocomplete.js" | relURL }}"></script>
 
 <!-- API Configuration -->
@@ -166,6 +189,11 @@
     var token = localStorage.getItem('auth_session_token');
     if (token && window.eventsAPI) {
       window.eventsAPI.setSessionToken(token);
+    }
+    // Wrap eventsAPI methods with offline caching + a background sync queue
+    // before any other code (search, check-in, walk-ins) starts using them.
+    if (window.CheckinOfflineStore && window.eventsAPI) {
+      window.CheckinOfflineStore.init(window.eventsAPI);
     }
   }
 </script>

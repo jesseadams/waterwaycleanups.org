@@ -47,8 +47,13 @@ class EventsAPIClient {
         // Strip leading slash for consistent matching
         const cleanEndpoint = endpoint.replace(/^\//, '');
         
-        // For events-specific endpoints, use the Events API Gateway
-        const eventsEndpoints = ['events', 'analytics', 'volunteers/metrics', 'volunteers/export'];
+        // For events-specific endpoints, use the Events API Gateway.
+        // Note: 'volunteers' covers /volunteers, /volunteers/{email},
+        // /volunteers/{email}/rsvps, /volunteers/metrics, and /volunteers/export,
+        // all of which live on the events API (not the legacy waiver API).
+        // 'admin-volunteers' does not match this prefix and correctly falls
+        // through to BASE_URL below.
+        const eventsEndpoints = ['events', 'analytics', 'volunteers'];
         const isEventsEndpoint = eventsEndpoints.some(ep => cleanEndpoint.startsWith(ep));
         
         if (isEventsEndpoint) {
