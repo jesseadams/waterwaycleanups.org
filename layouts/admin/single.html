@@ -3293,7 +3293,13 @@
                     }, [
                       React.createElement('span', { key: 'name', className: "font-medium text-purple-800" }, `📍 ${c.name}`),
                       React.createElement('span', { key: 'count', className: "text-purple-700" },
-                        event.scouting_group ? (c.count >= c.cap ? '🔒 Reserved' : '✅ Available') : `${c.count}/${c.cap} registered`
+                        // Scouting Groups locations are single-claim slots: any
+                        // existing RSVP reserves the location, regardless of
+                        // whatever attendance_cap happens to be stored on it
+                        // (the admin form has no field to set it to 1, so it
+                        // defaults to 20/50 — comparing count >= cap would keep
+                        // showing "Available" after a troop/pack has claimed it).
+                        event.scouting_group ? (c.count > 0 ? '🔒 Reserved' : '✅ Available') : `${c.count}/${c.cap} registered`
                       )
                     ])),
                     unspecifiedCount > 0 ? React.createElement('div', {

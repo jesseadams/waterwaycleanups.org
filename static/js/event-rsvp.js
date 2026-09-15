@@ -382,6 +382,17 @@ async function initializeRsvpWidget(widget) {
         }
       }
 
+      // Scouting Groups events are a single reservation per location for
+      // the registering leader (the location itself, not a headcount, is
+      // what's being claimed) — always go through the direct single-person
+      // RSVP path, even if the leader has minors on file. The multi-person
+      // attendee selector is for ordinary cleanup events where a guardian
+      // brings along one or more minors.
+      if (widget.dataset.scoutingGroup === 'true') {
+        await handleDirectRsvp(widget, eventId, attendanceCap);
+        return;
+      }
+
       // User is authenticated - determine which UI to show based on minors count
       if (minorsList.length > 0) {
         // Render multi-person selector UI. For multi-location events, scope
@@ -501,7 +512,13 @@ async function updateAllLocationCounts(widget, eventId, locations) {
     if (data && data.location_counts && data.location_counts[locationId]) {
       count = data.location_counts[locationId].rsvp_count || 0;
     }
-    const isReserved = count >= cap;
+    // Scouting Groups locations are single-claim slots: any existing RSVP
+    // reserves the location, regardless of what attendance_cap happens to
+    // be stored on it (that field isn't reliably set to 1 for these events
+    // — e.g. it may default to the event-wide cap). Treating "reserved" as
+    // count >= cap would leave the location showing "Available" once
+    // claimed if cap is anything greater than 1.
+    const isReserved = isScoutingGroup ? count > 0 : count >= cap;
 
     if (isScoutingGroup) {
       // Scouting Groups locations are single-claim slots: show only
@@ -2072,8 +2089,10 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
       
       attendeesHTML += '</div>';
       
-      // Add "Add More Attendees" button only if user has minors
-      // Check sessionStorage for cached minors list
+      // Add "Add More Attendees" button only if user has minors. Never
+      // shown for Scouting Groups events — a location is a single-claim
+      // reservation for the leader, not a headcount, so there's no concept
+      // of adding more attendees to it.
       const minorsCache = sessionStorage.getItem('auth_minors_list');
       let hasMinors = false;
       
@@ -2086,7 +2105,7 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
         }
       }
       
-      if (hasMinors) {
+      if (hasMinors && widget.dataset.scoutingGroup !== 'true') {
         attendeesHTML += `
           <div class="mt-3">
             <button 

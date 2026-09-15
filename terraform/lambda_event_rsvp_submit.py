@@ -276,11 +276,20 @@ def resolve_location(event_data, location_id):
     """
     Resolve which location (and its attendance_cap) an RSVP applies to.
 
+    For Scouting Groups events (event_data['scouting_group'] is truthy),
+    each location is a single-claim slot for one troop/pack leader: the
+    effective cap is always treated as 1, regardless of whatever
+    attendance_cap happens to be stored on the location. That field isn't
+    reliably set to 1 for these events (e.g. the admin UI has no field for
+    it, so it can default to the event-wide cap), and trusting a larger
+    stored value would let more than one unit claim the same location.
+
     Returns:
         tuple: (resolved_location_id_or_None, attendance_cap)
         resolved_location_id is None when the event has no `locations` array
         (legacy single-location event), meaning capacity is event-wide.
     """
+    is_scouting_group = bool(event_data.get('scouting_group'))
     locations = event_data.get('locations')
     if not isinstance(locations, list) or len(locations) == 0:
         # Legacy event with no locations array — capacity is event-wide.
@@ -293,7 +302,8 @@ def resolve_location(event_data, location_id):
         # Only one location — no ambiguity, use it regardless of whether the
         # caller specified a location_id.
         loc = locations[0]
-        return location_id_for(event_id, loc, 0), int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+        cap = 1 if is_scouting_group else int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+        return location_id_for(event_id, loc, 0), cap
 
     # Multiple locations — the caller must tell us which one.
     if not location_id:
@@ -301,7 +311,8 @@ def resolve_location(event_data, location_id):
 
     for index, loc in enumerate(locations):
         if location_id_for(event_id, loc, index) == location_id:
-            return location_id, int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+            cap = 1 if is_scouting_group else int(loc.get('attendance_cap', DEFAULT_ATTENDANCE_CAP))
+            return location_id, cap
 
     return 'INVALID', 0
 

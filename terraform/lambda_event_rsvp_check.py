@@ -229,13 +229,22 @@ def handler(event, context):
         locations = event_response['Item'].get('locations')
         location_counts = None
         if isinstance(locations, list) and len(locations) > 1:
+            # Scouting Groups events: each location is a single-claim slot,
+            # so always report a cap of 1 rather than whatever
+            # attendance_cap happens to be stored on the location (that
+            # field isn't reliably set to 1 for these events). Without
+            # this, the frontend's "Reserved"/"Available" display and any
+            # other consumer of this response would keep showing a
+            # location as available after it's already been claimed.
+            is_scouting_group = bool(event_response['Item'].get('scouting_group'))
             location_counts = {}
             for index, loc in enumerate(locations):
                 loc_id = location_id_for(event_id, loc, index)
                 count = len([r for r in active_rsvps if r.get('location_id') == loc_id])
+                cap = 1 if is_scouting_group else int(loc.get('attendance_cap', 0))
                 location_counts[loc_id] = {
                     'rsvp_count': count,
-                    'attendance_cap': int(loc.get('attendance_cap', 0))
+                    'attendance_cap': cap
                 }
         
         # Get the specific RSVPs if email is provided
