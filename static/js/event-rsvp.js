@@ -1637,14 +1637,28 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
         });
         console.log(`Fired gtag event 'registration_submission' for cleanup_id: ${eventId}`);
       }
-      
-      // Show success message
+
+      const isScoutingGroup = widget.dataset.scoutingGroup === 'true';
+
+      // The location is now claimed — hide the "Registering as" Troop/Pack
+      // + unit number fields so there's nothing left to fill in.
+      if (isScoutingGroup) {
+        const unitFieldsEl = widget.querySelector('.rsvp-unit-fields');
+        if (unitFieldsEl) unitFieldsEl.style.setProperty('display', 'none', 'important');
+      }
+
+      // Show success message. For Scouting Groups, identify the registrant
+      // by their unit (e.g. "Troop 2220") rather than their email, matching
+      // how they'll be shown once checkUserRsvpStatus refreshes the widget.
+      const registeredAsLabel = isScoutingGroup && unitFields.unit_type && unitFields.unit_number
+        ? `${unitFields.unit_type} ${unitFields.unit_number}`
+        : userEmail;
       if (rsvpSuccessMessage) {
         rsvpSuccessMessage.innerHTML = `
           <div class="text-center">
             <span>✅ You're registered for this event!</span>
             <div class="mt-2 text-sm text-gray-600">
-              Registered as: <strong>${userEmail}</strong>
+              Registered as: <strong>${registeredAsLabel}</strong>
             </div>
           </div>
         `;
@@ -2041,6 +2055,13 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
     rsvpForm.classList.add('hidden');
   }
 
+  // The location is already claimed — hide the "Registering as" Troop/Pack
+  // + unit number fields, there's nothing left to fill in.
+  if (widget.dataset.scoutingGroup === 'true') {
+    const unitFieldsEl = widget.querySelector('.rsvp-unit-fields');
+    if (unitFieldsEl) unitFieldsEl.style.setProperty('display', 'none', 'important');
+  }
+
   // Figure out which location this RSVP is for (all attendees submitted
   // together share the same location_id) so we can display it and let the
   // volunteer switch to a different one.
@@ -2067,7 +2088,12 @@ function updateUIForExistingRsvp(widget, userEmail, rsvps = []) {
       rsvps.forEach(rsvp => {
         const isVolunteer = rsvp.attendee_type === 'volunteer';
         const icon = isVolunteer ? '👤' : '👶';
-        const name = isVolunteer ? 'You' : `${rsvp.first_name} ${rsvp.last_name}`;
+        // Scouting Groups: identify the registering leader by their unit
+        // (e.g. "Troop 2220") rather than "You" — the unit, not the
+        // individual, is what's claiming the location.
+        const name = isVolunteer
+          ? (rsvp.unit_type && rsvp.unit_number ? `${rsvp.unit_type} ${rsvp.unit_number}` : 'You')
+          : `${rsvp.first_name} ${rsvp.last_name}`;
         const age = rsvp.age ? ` (${rsvp.age})` : '';
         
         attendeesHTML += `
