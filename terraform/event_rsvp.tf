@@ -1001,7 +1001,12 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
     aws_api_gateway_integration.cleanup_suggestions_get_integration,
     aws_api_gateway_integration.cleanup_suggestions_options_integration,
     aws_api_gateway_method_response.cleanup_suggestions_options_response,
-    aws_api_gateway_integration_response.cleanup_suggestions_options_integration_response
+    aws_api_gateway_integration_response.cleanup_suggestions_options_integration_response,
+    # VDOT Adopt-a-Highway application endpoint
+    aws_api_gateway_integration.vdot_submit_integration,
+    aws_api_gateway_integration.vdot_submit_options_integration,
+    aws_api_gateway_method_response.vdot_submit_options_response,
+    aws_api_gateway_integration_response.vdot_submit_options_integration_response
   ]
 
   rest_api_id = aws_api_gateway_rest_api.volunteer_waiver_api.id
@@ -1110,6 +1115,11 @@ resource "aws_api_gateway_deployment" "volunteer_waiver_deployment_v2" {
       aws_api_gateway_integration.cleanup_suggestions_options_integration,
       aws_api_gateway_method_response.cleanup_suggestions_options_response,
       aws_api_gateway_integration_response.cleanup_suggestions_options_integration_response,
+      # VDOT Adopt-a-Highway application endpoint
+      aws_api_gateway_integration.vdot_submit_integration,
+      aws_api_gateway_integration.vdot_submit_options_integration,
+      aws_api_gateway_method_response.vdot_submit_options_response,
+      aws_api_gateway_integration_response.vdot_submit_options_integration_response,
       # Force redeployment timestamp
       timestamp()
     ]))

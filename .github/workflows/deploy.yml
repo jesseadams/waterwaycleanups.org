@@ -66,25 +66,62 @@ jobs:
         with:
           python-version: '3.9'
 
+      # Each of these zips is also rebuilt by its own Lambda's
+      # `null_resource { provisioner "local-exec" }` in terraform/*.tf during
+      # "terraform apply". That's not enough on its own, though: `local-exec`
+      # provisioners only run on apply, never on `terraform plan` -- and the
+      # `source_code_hash = filemd5(...)/filebase64sha256(...)` on each
+      # aws_lambda_function is evaluated during plan too, so it errors out
+      # ("no such file or directory") on a fresh checkout unless the zip
+      # already exists on disk first. These zips are gitignored (rebuilt
+      # fresh every deploy so stale committed dependency trees never drift
+      # from what's actually declared), so this pre-build step is what makes
+      # the PR "terraform plan" step above work on a clean checkout.
       - name: Build Lambda packages
         run: |
           cd terraform
-          
-          # Build process scheduled newsletters Lambda package
+
+          # Scheduled newsletters processor
           rm -rf lambda_process_package
           mkdir -p lambda_process_package
           cp lambda_process_scheduled_newsletters.py lambda_process_package/
           pip install pytz -t lambda_process_package/ --quiet
           cd lambda_process_package && zip -r ../lambda_scheduled_newsletters.zip . && cd ..
           rm -rf lambda_process_package
-          
-          # Build scheduled newsletters API Lambda package
+
+          # Scheduled newsletters API
           rm -rf lambda_api_package
           mkdir -p lambda_api_package
           cp lambda_scheduled_newsletters_api.py lambda_api_package/
           pip install pytz -t lambda_api_package/ --quiet
           cd lambda_api_package && zip -r ../lambda_scheduled_newsletters_api.zip . && cd ..
           rm -rf lambda_api_package
+
+          # RSVP confirmation email
+          rm -rf lambda_rsvp_confirmation_package
+          mkdir -p lambda_rsvp_confirmation_package
+          cp lambda_rsvp_confirmation.py lambda_rsvp_confirmation_package/
+          pip install pytz -t lambda_rsvp_confirmation_package/ --quiet
+          cd lambda_rsvp_confirmation_package && zip -r ../lambda_rsvp_confirmation.zip . && cd ..
+          rm -rf lambda_rsvp_confirmation_package
+
+          # VDOT Adopt-a-Highway submission (pypdf fills the AcroForm PDF;
+          # reportlab+pillow draw the captured signature image onto the
+          # Applicant's Signature line). Installed with explicit
+          # platform/python-version/implementation targeting Lambda's
+          # runtime -- pip's dependency-marker resolution (e.g. pypdf's
+          # conditional typing_extensions requirement) is evaluated against
+          # the *running* interpreter, not the --python-version flag, so
+          # building with a newer local Python can silently omit a
+          # dependency the Lambda runtime actually needs at import time.
+          rm -rf lambda_vdot_submit_package
+          mkdir -p lambda_vdot_submit_package
+          cp lambda_vdot_submit.py lambda_vdot_submit_package/
+          cp vdot_coordinators.py lambda_vdot_submit_package/
+          cp vdot_aah_application.pdf lambda_vdot_submit_package/
+          pip install pypdf typing_extensions reportlab pillow --platform manylinux2014_x86_64 --target lambda_vdot_submit_package/ --python-version 3.9 --only-binary=:all: --implementation cp --no-deps --quiet
+          cd lambda_vdot_submit_package && zip -r ../lambda_vdot_submit.zip . && cd ..
+          rm -rf lambda_vdot_submit_package
 
       - name: Create Terraform state resources
         if: env.IS_PR != 'true'

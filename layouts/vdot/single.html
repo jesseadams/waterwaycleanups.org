@@ -1,0 +1,986 @@
+{{ define "content" }}
+<section class="title">
+  <div class="container medium">
+    <h1>Adopt-a-Highway Application</h1>
+    <p>
+      We have partnered with Virginia Department of Transportation (VDOT) and their <a href="https://www.vdot.virginia.gov/about/programs/aah" target="new">Adopt-a-Highway Program</a>. We all have a shared mission of keeping Virginia beautiful for residents and visitors. This is also a key part of Virginia's environmental strategy to prevent litter from entering wild areas and waterways.
+    </p>
+    <p>
+      Participation in Virginia's Adopt-a-Highway program is free. Highway Adopters commit to cleaning their stretch of highway at least two times per year, for an adoption period of three years. Highway Adopters must report their pickups to VDOT so we can accurately account for their efforts.
+    </p>
+    <p>
+      VDOT provides Highway Adopters with safety equipment and trash bags. VDOT will install two signs recognizing your group’s adoption after you have reported two successful litter pickups.
+    </p>
+  </div>
+</section>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+
+<style>
+  .vdot-page { max-width: 1000px; margin: 0 auto; padding: 2rem 1rem; }
+  .vdot-page h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .vdot-page .subtitle { color: #6b7280; margin-bottom: 1.5rem; }
+  .vdot-page h2 { font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem; }
+  .vdot-page h3 { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .vdot-hint { font-size: 0.85rem; color: #6b7280; margin-bottom: 0.75rem; }
+
+  #vdot-map { height: 450px; width: 100%; border-radius: 0.5rem; border: 1px solid #d1d5db; z-index: 1; }
+  .vdot-legend {
+    display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; color: #374151;
+    margin: 0.5rem 0 1rem;
+  }
+  .vdot-legend span { display: inline-flex; align-items: center; gap: 0.35rem; }
+  .vdot-legend .swatch { width: 18px; height: 4px; border-radius: 2px; display: inline-block; }
+
+  .vdot-selected-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+  .vdot-selected-list li {
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem;
+    padding: 0.65rem 0.85rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.5rem;
+    font-size: 0.9rem;
+  }
+  .vdot-selected-list .seg-info strong { color: #166534; }
+  .vdot-selected-list .seg-meta { color: #4b5563; font-size: 0.8rem; margin-top: 0.15rem; }
+  .vdot-selected-list button {
+    border: none; background: none; color: #dc2626; cursor: pointer; font-size: 0.85rem;
+    font-weight: 600; padding: 0.15rem 0.4rem; flex-shrink: 0;
+  }
+  .vdot-empty-note { font-size: 0.85rem; color: #9ca3af; padding: 0.75rem; }
+
+  .vdot-form { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+  .vdot-form fieldset { border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; }
+  .vdot-form legend { font-weight: 700; padding: 0 0.35rem; color: #166534; }
+  .vdot-form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+  .vdot-form label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.25rem; }
+  .vdot-form input, .vdot-form textarea, .vdot-form select {
+    width: 100%; padding: 0.65rem; border: 1px solid #d1d5db; border-radius: 0.5rem;
+    font-size: 0.95rem; transition: border-color 0.2s;
+  }
+  .vdot-form input:focus, .vdot-form textarea:focus, .vdot-form select:focus {
+    outline: none; border-color: #059669; box-shadow: 0 0 0 2px rgba(5,150,105,0.2);
+  }
+  .vdot-radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.4rem; }
+  .vdot-radio-group label { font-weight: 400; display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0; }
+  .vdot-radio-group input { width: auto; }
+
+  .vdot-submit-btn {
+    padding: 1rem 2rem; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 0.5rem;
+    background: #059669; color: #fff; cursor: pointer; transition: background 0.2s;
+  }
+  .vdot-submit-btn:hover { background: #047857; }
+  .vdot-submit-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+  .vdot-success { padding: 1.5rem; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.5rem; text-align: center; }
+  .vdot-success h3 { color: #166534; font-size: 1.25rem; margin-bottom: 0.5rem; }
+  .vdot-error { padding: 0.75rem; background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; color: #dc2626; font-size: 0.9rem; }
+  .vdot-zoom-note {
+    padding: 0.6rem 0.85rem; background: #fffbeb; border: 1px solid #fde68a; border-radius: 0.5rem;
+    color: #92400e; font-size: 0.85rem; margin-bottom: 0.5rem;
+  }
+  .vdot-agreement { font-size: 0.9rem; color: #374151; }
+  .vdot-agreement label { display: flex; align-items: flex-start; gap: 0.5rem; font-weight: 400; cursor: pointer; }
+  .vdot-agreement input[type="checkbox"] { width: auto; margin-top: 0.2rem; flex-shrink: 0; }
+  .vdot-agreement a { color: #059669; font-weight: 600; }
+
+  .vdot-signature-pad {
+    display: block; width: 100%; max-width: 500px; height: 150px; border: 1px solid #d1d5db;
+    border-radius: 0.5rem; background: #fff; touch-action: none; cursor: crosshair;
+  }
+  .vdot-signature-controls {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    margin-top: 0.5rem; max-width: 500px;
+  }
+  .vdot-signature-date { font-size: 0.85rem; color: #6b7280; }
+  .vdot-signature-clear-btn {
+    padding: 0.4rem 0.85rem; border: 1px solid #d1d5db; border-radius: 0.375rem; background: #fff;
+    font-size: 0.85rem; font-weight: 600; color: #374151; cursor: pointer; transition: background 0.15s;
+  }
+  .vdot-signature-clear-btn:hover { background: #f3f4f6; }
+
+  /* The theme's title section (bottom padding) and the generic brick
+     section (top padding) stack up to ~11rem of empty space by default.
+     This <style> block only loads on this page, so tighten both here. */
+  section.title { padding-bottom: 1rem; }
+  section.brick { padding-top: 1rem; }
+  .vdot-page { padding-top: 0; }
+  .vdot-page h2:first-child { margin-top: 0; }
+</style>
+
+<section class="brick">
+<div class="container">
+<div class="vdot-page" id="vdot-root">
+
+  <h2>1. Choose your road segment(s)</h2>
+  <p class="vdot-hint">
+    Zoom in to see selectable road segments. Roads that are already adopted or marked unsuitable
+    for adoption are automatically excluded and won't appear on the map. Click a segment to
+    select it (it will turn red); click again to deselect. Your selection must be one
+    <strong>contiguous</strong> stretch of road (each segment you add must connect end-to-end with
+    your current selection) totaling at least <strong>0.4 miles</strong>. If you don't see a road
+    you expected, it may already be adopted — double check on the
+    <a href="https://vdotgisportal.vdot.virginia.gov/portalx/apps/View/index.html?appid=2739ca569e564c6882b96bfa7840bc1f" target="_blank" rel="noopener">official VDOT Adopt-a-Highway map</a>.
+  </p>
+  <div class="vdot-legend">
+    <span><i class="swatch" style="background:#4d4d4d;"></i> Available (click to select)</span>
+    <span><i class="swatch" style="background:#dc2626;"></i> Selected</span>
+  </div>
+  <div id="vdot-zoom-note" class="vdot-zoom-note" style="display:none;">
+    Zoom in further to load selectable road segments for this area.
+  </div>
+  <div id="vdot-status-error" class="vdot-error" style="display:none;">
+    We couldn't verify which roads are already adopted right now, so no segments are shown for
+    this area. Please try again in a moment.
+  </div>
+  <div id="vdot-map"></div>
+  <div id="vdot-selection-error" class="vdot-error" style="display:none; margin-top:0.5rem;"></div>
+
+  <h2>2. Selected segments</h2>
+  <ul class="vdot-selected-list" id="vdot-selected-list"></ul>
+  <p class="vdot-empty-note" id="vdot-empty-note">No segments selected yet — click a gray road on the map above.</p>
+  <p class="vdot-hint" id="vdot-total-miles" style="display:none; font-weight:600;"></p>
+
+  <h2>3. Application details</h2>
+  <div id="vdot-form-container">
+    <form class="vdot-form" id="vdot-form">
+      <fieldset>
+        <legend>Group / Individual</legend>
+        <div class="vdot-form-row">
+          <div>
+            <label for="vdot-group-name">Name of Adopting Group / Individual *</label>
+            <input type="text" id="vdot-group-name" required />
+          </div>
+          <div>
+            <label for="vdot-sign-title">Title for AAH Sign (max 48 characters) *</label>
+            <input type="text" id="vdot-sign-title" maxlength="48" required />
+          </div>
+        </div>
+        <div style="margin-top:0.75rem;">
+          <label>Type of Group</label>
+          <div class="vdot-radio-group">
+            <label><input type="radio" name="vdot-group-type" value="family_friends" /> Family/friends</label>
+            <label><input type="radio" name="vdot-group-type" value="individual" /> Individual</label>
+            <label><input type="radio" name="vdot-group-type" value="business" /> Business</label>
+            <label><input type="radio" name="vdot-group-type" value="community_group" checked /> Community Group</label>
+            <label><input type="radio" name="vdot-group-type" value="faith_based" /> Faith-Based Org.</label>
+            <label><input type="radio" name="vdot-group-type" value="private_club" /> Private Club</label>
+            <label><input type="radio" name="vdot-group-type" value="government_military" /> Government/Military</label>
+            <label><input type="radio" name="vdot-group-type" value="school_group" /> School Group</label>
+            <label><input type="radio" name="vdot-group-type" value="other" /> Miscellaneous/Other</label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Primary Contact</legend>
+        <div class="vdot-form-row">
+          <div>
+            <label for="vdot-primary-name">Name *</label>
+            <input type="text" id="vdot-primary-name" required />
+          </div>
+          <div>
+            <label for="vdot-primary-email">Email *</label>
+            <input type="email" id="vdot-primary-email" required />
+          </div>
+          <div>
+            <label for="vdot-primary-phone-home">Phone (home)</label>
+            <input type="tel" id="vdot-primary-phone-home" />
+          </div>
+          <div>
+            <label for="vdot-primary-phone-work">Phone (work)</label>
+            <input type="tel" id="vdot-primary-phone-work" />
+          </div>
+        </div>
+        <div class="vdot-form-row" style="margin-top:0.75rem;">
+          <div style="grid-column:1/-1;">
+            <label for="vdot-primary-address">Mailing Address</label>
+            <input type="text" id="vdot-primary-address" />
+          </div>
+          <div>
+            <label for="vdot-primary-city">City</label>
+            <input type="text" id="vdot-primary-city" />
+          </div>
+          <div>
+            <label for="vdot-primary-state">State</label>
+            <input type="text" id="vdot-primary-state" value="VA" />
+          </div>
+          <div>
+            <label for="vdot-primary-zip">ZIP</label>
+            <input type="text" id="vdot-primary-zip" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Secondary Contact (optional)</legend>
+        <div class="vdot-form-row">
+          <div>
+            <label for="vdot-secondary-name">Name</label>
+            <input type="text" id="vdot-secondary-name" />
+          </div>
+          <div>
+            <label for="vdot-secondary-email">Email</label>
+            <input type="email" id="vdot-secondary-email" />
+          </div>
+          <div>
+            <label for="vdot-secondary-phone-home">Phone (home)</label>
+            <input type="tel" id="vdot-secondary-phone-home" />
+          </div>
+          <div>
+            <label for="vdot-secondary-phone-work">Phone (work)</label>
+            <input type="tel" id="vdot-secondary-phone-work" />
+          </div>
+        </div>
+        <div class="vdot-form-row" style="margin-top:0.75rem;">
+          <div style="grid-column:1/-1;">
+            <label for="vdot-secondary-address">Mailing Address</label>
+            <input type="text" id="vdot-secondary-address" />
+          </div>
+          <div>
+            <label for="vdot-secondary-city">City</label>
+            <input type="text" id="vdot-secondary-city" />
+          </div>
+          <div>
+            <label for="vdot-secondary-state">State</label>
+            <input type="text" id="vdot-secondary-state" />
+          </div>
+          <div>
+            <label for="vdot-secondary-zip">ZIP</label>
+            <input type="text" id="vdot-secondary-zip" />
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Safety Information</legend>
+        <p class="vdot-hint">No one under age 10 can participate in the Adopt-A-Highway program.</p>
+        <div class="vdot-form-row">
+          <div>
+            <label for="vdot-minors-count">Participants aged 10&ndash;17</label>
+            <input type="number" id="vdot-minors-count" min="0" value="0" />
+          </div>
+          <div>
+            <label for="vdot-adults-count">Adult participants</label>
+            <input type="number" id="vdot-adults-count" min="0" />
+          </div>
+        </div>
+        <div style="margin-top:0.75rem;">
+          <label for="vdot-safety-precautions">Special safety precautions needed (e.g. a participant uses a wheelchair)</label>
+          <textarea id="vdot-safety-precautions" rows="2"></textarea>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Applicant's Signature</legend>
+        <p class="vdot-hint">Sign below using your mouse, finger, or stylus. This will be placed on the official application in the Applicant's Signature line, alongside today's date.</p>
+        <canvas id="vdot-signature-pad" class="vdot-signature-pad" width="500" height="150"></canvas>
+        <div class="vdot-signature-controls">
+          <span class="vdot-signature-date" id="vdot-signature-date"></span>
+          <button type="button" id="vdot-signature-clear" class="vdot-signature-clear-btn">Clear</button>
+        </div>
+      </fieldset>
+
+      <div class="vdot-agreement">
+        <label>
+          <input type="checkbox" id="vdot-agree-terms" required />
+          I agree to the
+          <a href="https://www.vdot.virginia.gov/about/programs/aah/#d.en.44842" target="_blank" rel="noopener">Terms &amp; Conditions and Safety Guidelines</a>.
+        </label>
+      </div>
+
+      <div id="vdot-error" class="vdot-error" style="display:none;"></div>
+      <button type="submit" id="vdot-submit" class="vdot-submit-btn">Submit Application</button>
+    </form>
+  </div>
+
+  <div id="vdot-success" class="vdot-success" style="display:none;">
+    <h3>✅ Application Submitted!</h3>
+    <p>Thanks! We've filled out your VDOT Adopt-a-Highway application and it's on its way for review.</p>
+    <p style="margin-top:1rem;"><a href="/vdot/" style="color:#059669;font-weight:600;">Submit another application</a></p>
+  </div>
+
+</div>
+</div>
+</section>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+{{ partial "api-config.html" . }}
+
+<script>
+(function () {
+  // ---- Map setup ----
+  var map = L.map('vdot-map').setView([38.43, -77.40], 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  // Live VDOT / VGIN ArcGIS services (same sources used by VDOT's public
+  // Adopt-a-Highway map: https://vdotgisportal.vdot.virginia.gov/portalx/apps/View/index.html?appid=2739ca569e564c6882b96bfa7840bc1f)
+  var SEGMENTS_LAYER_URL = 'https://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/LRS_Edge_Rte_Overlap/FeatureServer/0/query';
+  var SEGMENTS_WHERE = "(RTE_TYPE_NM <> 'U.S. Route') AND (RTE_TYPE_NM <> 'Interstate') AND (FROM_JURISDICTION_CD LIKE '0%') AND (FROM_JURISDICTION_CD <> '000') AND (FROM_JURISDICTION_CD <> '043')";
+  var ADOPTED_LAYER_URL = 'https://vdotgisportal.vdot.virginia.gov/env/rest/services/Adopt_A_Highway_Prod/Adopt_a_Highway_PRD_Public/FeatureServer/0/query';
+  var MIN_SELECT_ZOOM = 14;
+  // How close a candidate segment needs to be to an adopted/unsuitable line
+  // to be treated as "the same stretch of road" and excluded from the
+  // selectable set. The two layers come from different underlying VDOT/VGIN
+  // datasets, so their vertices don't line up exactly even along the same
+  // physical road.
+  var ADOPTED_MATCH_METERS = 25;
+  // How close two segment endpoints need to be to be treated as "the same
+  // intersection/node" for contiguity checks. These segments come from the
+  // same routed network layer, so shared endpoints should line up closely.
+  var CONTIGUOUS_MATCH_METERS = 15;
+  // VDOT Adopt-a-Highway minimum adoption length.
+  var MIN_TOTAL_MILES = 0.4;
+
+  var segmentsLayer = L.layerGroup().addTo(map);
+  var zoomNote = document.getElementById('vdot-zoom-note');
+
+  var selected = {}; // objectId -> { layer, attrs }
+
+  function haversineMiles(latlngs) {
+    var total = 0;
+    var R = 3958.8; // miles
+    for (var i = 1; i < latlngs.length; i++) {
+      var a = latlngs[i - 1], b = latlngs[i];
+      var dLat = (b.lat - a.lat) * Math.PI / 180;
+      var dLng = (b.lng - a.lng) * Math.PI / 180;
+      var lat1 = a.lat * Math.PI / 180;
+      var lat2 = b.lat * Math.PI / 180;
+      var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      total += R * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+    return total;
+  }
+
+  function bboxParam() {
+    var b = map.getBounds();
+    return [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
+  }
+
+  // Local equirectangular projection (fine for the short distances involved
+  // here) so we can measure how close a candidate road segment is to an
+  // already-adopted/unsuitable line without pulling in a full geometry lib.
+  function distPointToSegmentMeters(p, a, b) {
+    var latScale = 110540;
+    var lngScale = 111320 * Math.cos(p.lat * Math.PI / 180);
+    function toXY(pt) { return { x: (pt.lng - p.lng) * lngScale, y: (pt.lat - p.lat) * latScale }; }
+    var A = toXY(a), B = toXY(b);
+    var abx = B.x - A.x, aby = B.y - A.y;
+    var lenSq = abx * abx + aby * aby;
+    var t = lenSq > 0 ? (-A.x * abx - A.y * aby) / lenSq : 0;
+    t = Math.max(0, Math.min(1, t));
+    var cx = A.x + t * abx, cy = A.y + t * aby;
+    return Math.sqrt(cx * cx + cy * cy);
+  }
+
+  function distPointToPolylineMeters(p, latlngs) {
+    var min = Infinity;
+    for (var i = 1; i < latlngs.length; i++) {
+      var d = distPointToSegmentMeters(p, latlngs[i - 1], latlngs[i]);
+      if (d < min) min = d;
+    }
+    return min;
+  }
+
+  // Simple point-to-point ground distance (equirectangular approximation,
+  // fine for the short distances involved when comparing road endpoints).
+  function distPointsMeters(a, b) {
+    var latScale = 110540;
+    var lngScale = 111320 * Math.cos(a.lat * Math.PI / 180);
+    var dx = (b.lng - a.lng) * lngScale;
+    var dy = (b.lat - a.lat) * latScale;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function segmentEndpoints(latlngs) {
+    return [latlngs[0], latlngs[latlngs.length - 1]];
+  }
+
+  function endpointsTouch(latlngsA, latlngsB) {
+    var a = segmentEndpoints(latlngsA);
+    var b = segmentEndpoints(latlngsB);
+    return a.some(function (pa) {
+      return b.some(function (pb) { return distPointsMeters(pa, pb) <= CONTIGUOUS_MATCH_METERS; });
+    });
+  }
+
+  // A candidate segment can be added if the current selection is empty
+  // (starting a fresh stretch) or if it shares an endpoint with at least
+  // one already-selected segment.
+  function isContiguousWithSelection(latlngs) {
+    var ids = Object.keys(selected);
+    if (!ids.length) return true;
+    return ids.some(function (id) { return endpointsTouch(latlngs, selected[id].attrs.latlngs); });
+  }
+
+  // Splits a set of selected segment ids into connected groups (by shared
+  // endpoints). Used to make sure removing a segment doesn't leave the
+  // remaining selection in two or more disconnected pieces.
+  function computeConnectedGroups(ids) {
+    var visited = {};
+    var groups = [];
+    ids.forEach(function (id) {
+      if (visited[id]) return;
+      var stack = [id];
+      var group = [];
+      visited[id] = true;
+      while (stack.length) {
+        var cur = stack.pop();
+        group.push(cur);
+        ids.forEach(function (other) {
+          if (visited[other]) return;
+          if (endpointsTouch(selected[cur].attrs.latlngs, selected[other].attrs.latlngs)) {
+            visited[other] = true;
+            stack.push(other);
+          }
+        });
+      }
+      groups.push(group);
+    });
+    return groups;
+  }
+
+  function totalSelectedMiles() {
+    return Object.keys(selected).reduce(function (sum, id) { return sum + selected[id].attrs.miles; }, 0);
+  }
+
+  // Groups every selected segment's two endpoints into "nodes" (clusters of
+  // points within CONTIGUOUS_MATCH_METERS of each other). A node touched by
+  // only one segment-endpoint is a dead end of the selected network; a node
+  // touched by two or more is an internal junction where segments connect.
+  function clusterSelectedEndpoints(ids) {
+    var clusters = [];
+    ids.forEach(function (id) {
+      var seg = selected[id].attrs;
+      var ll = seg.latlngs;
+      [
+        { end: 'p0', point: ll[0], desc: (seg.fromDesc || '').trim() },
+        { end: 'p1', point: ll[ll.length - 1], desc: (seg.toDesc || '').trim() }
+      ].forEach(function (ep) {
+        var cluster = null;
+        for (var i = 0; i < clusters.length; i++) {
+          if (distPointsMeters(ep.point, clusters[i].point) <= CONTIGUOUS_MATCH_METERS) {
+            cluster = clusters[i];
+            break;
+          }
+        }
+        if (!cluster) {
+          cluster = { point: ep.point, desc: '', members: [] };
+          clusters.push(cluster);
+        }
+        cluster.members.push({ id: id, end: ep.end });
+        if (!cluster.desc && ep.desc) cluster.desc = ep.desc;
+      });
+    });
+    return clusters;
+  }
+
+  // Computes a single overall "Begin" and "End" location for the whole
+  // selected stretch of road, instead of one begin/end per individual
+  // segment. The two endpoints touched by only one segment (i.e. not shared
+  // with any neighboring segment) are the true ends of the contiguous
+  // stretch; everywhere segments meet is an internal junction and shouldn't
+  // show up as a start/stop on the application.
+  function computeRouteBeginEnd(ids) {
+    if (!ids.length) return { begin: '', end: '' };
+
+    function clusterLabel(cluster) {
+      if (cluster.desc) return cluster.desc;
+      var member = cluster.members[0];
+      return (selected[member.id].attrs.routeName || '').trim();
+    }
+
+    var clusters = clusterSelectedEndpoints(ids);
+    var terminals = clusters.filter(function (c) { return c.members.length === 1; });
+
+    if (terminals.length === 2) {
+      return { begin: clusterLabel(terminals[0]), end: clusterLabel(terminals[1]) };
+    }
+
+    if (terminals.length > 2) {
+      // A branching selection (e.g. segments meeting at a Y/T junction) has
+      // more than two dead ends. Fall back to the pair that's farthest
+      // apart so the application still shows exactly one begin and one end
+      // rather than one per branch.
+      var best = null;
+      for (var i = 0; i < terminals.length; i++) {
+        for (var j = i + 1; j < terminals.length; j++) {
+          var d = distPointsMeters(terminals[i].point, terminals[j].point);
+          if (!best || d > best.d) best = { d: d, a: terminals[i], b: terminals[j] };
+        }
+      }
+      return { begin: clusterLabel(best.a), end: clusterLabel(best.b) };
+    }
+
+    // 0 or 1 dead ends (e.g. a closed loop) shouldn't normally happen for an
+    // AAH selection, but fall back gracefully to the first/last selected
+    // segment's own endpoints rather than failing.
+    var firstSeg = selected[ids[0]].attrs;
+    var lastSeg = selected[ids[ids.length - 1]].attrs;
+    return {
+      begin: (firstSeg.fromDesc || firstSeg.routeName || '').trim(),
+      end: (lastSeg.toDesc || lastSeg.routeName || '').trim()
+    };
+  }
+
+  // Returns true if every one of a candidate segment's sample points lies
+  // within ADOPTED_MATCH_METERS of at least one adopted/unsuitable polyline,
+  // i.e. the candidate is effectively the same stretch of road as an
+  // existing permit and should be excluded from selection.
+  function overlapsAdopted(latlngs, adoptedPolylines) {
+    if (!adoptedPolylines.length || latlngs.length < 2) return false;
+    var samplePoints = [
+      latlngs[0],
+      latlngs[Math.floor((latlngs.length - 1) * 0.33)],
+      latlngs[Math.floor((latlngs.length - 1) * 0.66)],
+      latlngs[latlngs.length - 1]
+    ];
+    return samplePoints.every(function (pt) {
+      return adoptedPolylines.some(function (poly) {
+        return distPointToPolylineMeters(pt, poly) <= ADOPTED_MATCH_METERS;
+      });
+    });
+  }
+
+  function buildQueryUrl(baseUrl, params) {
+    var qs = Object.keys(params).map(function (k) {
+      return encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }).join('&');
+    return baseUrl + '?' + qs;
+  }
+
+  function renderSelectedList() {
+    var list = document.getElementById('vdot-selected-list');
+    var emptyNote = document.getElementById('vdot-empty-note');
+    var totalMilesEl = document.getElementById('vdot-total-miles');
+    var selectionErrorEl = document.getElementById('vdot-selection-error');
+    var ids = Object.keys(selected);
+    list.innerHTML = '';
+    emptyNote.style.display = ids.length ? 'none' : 'block';
+
+    ids.forEach(function (id) {
+      var seg = selected[id].attrs;
+      var li = document.createElement('li');
+      var info = document.createElement('div');
+      info.className = 'seg-info';
+      info.innerHTML = '<strong>' + seg.routeName + '</strong>' +
+        (seg.jurisdiction ? ' &mdash; ' + seg.jurisdiction : '') +
+        '<div class="seg-meta">' +
+        (seg.fromDesc || seg.toDesc ? ('from ' + (seg.fromDesc || '?') + ' to ' + (seg.toDesc || '?') + ' &middot; ') : '') +
+        seg.miles.toFixed(2) + ' mi</div>';
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', function () { removeSegment(id); });
+      li.appendChild(info);
+      li.appendChild(removeBtn);
+      list.appendChild(li);
+    });
+
+    if (!ids.length) {
+      totalMilesEl.style.display = 'none';
+      selectionErrorEl.style.display = 'none';
+      return;
+    }
+
+    var totalMiles = totalSelectedMiles();
+    totalMilesEl.style.display = 'block';
+    totalMilesEl.textContent = 'Total selected: ' + totalMiles.toFixed(2) + ' mi' +
+      (totalMiles < MIN_TOTAL_MILES ? ' (minimum 0.4 mi required)' : '');
+    totalMilesEl.style.color = totalMiles < MIN_TOTAL_MILES ? '#b45309' : '#166534';
+
+    var groups = computeConnectedGroups(ids);
+    if (groups.length > 1) {
+      selectionErrorEl.textContent = 'Your selected segments form ' + groups.length + ' separate, unconnected ' +
+        'stretches of road. Adopt-a-Highway applications must cover a single contiguous stretch — remove ' +
+        'segments until only one connected group remains.';
+      selectionErrorEl.style.display = 'block';
+    } else {
+      selectionErrorEl.style.display = 'none';
+    }
+  }
+
+  // Visual styles for candidate/selected segments. Weight doubles as the
+  // clickable hit-width for Leaflet's SVG renderer, so bumping it up makes
+  // segments meaningfully easier to click/tap, not just wider-looking.
+  var SEGMENT_STYLE = { color: '#4d4d4d', weight: 5, opacity: 0.65 };
+  var SEGMENT_HOVER_STYLE = { color: '#111827', weight: 7, opacity: 0.9 };
+  var SEGMENT_SELECTED_STYLE = { color: '#dc2626', weight: 7, opacity: 0.95 };
+
+  function removeSegment(id) {
+    if (!selected[id]) return;
+    selected[id].layer.setStyle(SEGMENT_STYLE);
+    delete selected[id];
+    renderSelectedList();
+  }
+
+  function toggleSegment(id, layer, attrs) {
+    if (selected[id]) {
+      removeSegment(id);
+      return;
+    }
+
+    if (!isContiguousWithSelection(attrs.latlngs)) {
+      var selectionErrorEl = document.getElementById('vdot-selection-error');
+      selectionErrorEl.textContent = 'That segment doesn\'t connect to your current selection. Adopt-a-Highway ' +
+        'applications must cover a single contiguous stretch of road — pick a segment that touches one of your ' +
+        'selected segments, or remove your current selection to start a new stretch.';
+      selectionErrorEl.style.display = 'block';
+      return;
+    }
+
+    layer.setStyle(SEGMENT_SELECTED_STYLE);
+    selected[id] = { layer: layer, attrs: attrs };
+    renderSelectedList();
+  }
+
+  function fetchAdoptedPolylines() {
+    // NOTE: this layer's geometry has M-values enabled (hasM: true), which
+    // breaks Esri's f=geojson converter for it specifically (returns a 400
+    // "Unable to perform query operation" on many/most bboxes). Use the
+    // native f=json response instead and parse esriGeometryPolyline "paths"
+    // directly ([[ [lng,lat], ... ], ...] per feature).
+    var url = buildQueryUrl(ADOPTED_LAYER_URL, {
+      where: "ADOPTIONSTATUS = 'Adopted' OR ADOPTIONSTATUS = 'Not Adoptable'",
+      outFields: 'OBJECTID',
+      geometry: bboxParam(),
+      geometryType: 'esriGeometryEnvelope',
+      inSR: 4326,
+      spatialRel: 'esriSpatialRelIntersects',
+      outSR: 4326,
+      f: 'json',
+      returnGeometry: true,
+      resultRecordCount: 1000
+    });
+
+    return fetch(url).then(function (r) { return r.json(); }).then(function (esriJson) {
+      var polylines = [];
+      if (!esriJson || esriJson.error) {
+        if (esriJson && esriJson.error) console.error('Adopted-status query error', esriJson.error);
+        return null;
+      }
+      if (!esriJson.features) return polylines;
+      esriJson.features.forEach(function (feature) {
+        var paths = feature.geometry && feature.geometry.paths;
+        if (!paths) return;
+        paths.forEach(function (path) {
+          // path is an array of [lng, lat] (or [lng, lat, m] with hasM) pairs.
+          var latlngs = path.map(function (coord) { return L.latLng(coord[1], coord[0]); });
+          if (latlngs.length >= 2) polylines.push(latlngs);
+        });
+      });
+      return polylines;
+    }).catch(function (err) {
+      console.error('Failed to load adopted/unsuitable road status', err);
+      // Fail closed on the exclusion side: if we can't confirm what's
+      // adopted, don't show any candidate segments rather than risk letting
+      // someone apply for an already-adopted road.
+      return null;
+    });
+  }
+
+  function loadSegmentsLayer() {
+    if (map.getZoom() < MIN_SELECT_ZOOM) {
+      segmentsLayer.clearLayers();
+      zoomNote.style.display = 'block';
+      return;
+    }
+    zoomNote.style.display = 'none';
+
+    var segmentsUrl = buildQueryUrl(SEGMENTS_LAYER_URL, {
+      where: SEGMENTS_WHERE,
+      outFields: 'OBJECTID,RTE_NM,RTE_COMMON_NM,STREET_NM,RTE_INTERSECTION_FROM_DSC,RTE_INTERSECTION_TO_DSC,FROM_JURISDICTION_NM,TO_JURISDICTION_NM',
+      geometry: bboxParam(),
+      geometryType: 'esriGeometryEnvelope',
+      inSR: 4326,
+      spatialRel: 'esriSpatialRelIntersects',
+      outSR: 4326,
+      f: 'geojson',
+      resultRecordCount: 1000
+    });
+
+    Promise.all([
+      fetch(segmentsUrl).then(function (r) { return r.json(); }),
+      fetchAdoptedPolylines()
+    ]).then(function (results) {
+      var geojson = results[0];
+      var adoptedPolylines = results[1];
+
+      // Keep currently-selected layers; rebuild the rest.
+      var stillSelectedIds = Object.keys(selected);
+      segmentsLayer.clearLayers();
+      stillSelectedIds.forEach(function (id) { segmentsLayer.addLayer(selected[id].layer); });
+
+      var statusErrorEl = document.getElementById('vdot-status-error');
+      if (adoptedPolylines === null) {
+        // Fetch failed; show nothing rather than risk a false "available",
+        // but tell the user why so it doesn't look like a silent bug.
+        statusErrorEl.style.display = 'block';
+        return;
+      }
+      statusErrorEl.style.display = 'none';
+
+      if (!geojson || !geojson.features) return;
+
+      geojson.features.forEach(function (feature) {
+        var p = feature.properties;
+        var id = String(p.OBJECTID);
+        if (selected[id]) return; // already rendered above, still selected/highlighted
+
+        var layer = L.geoJSON(feature, {
+          style: SEGMENT_STYLE
+        });
+        var latlngs = [];
+        layer.eachLayer(function (l) {
+          if (l.getLatLngs) {
+            var ll = l.getLatLngs();
+            latlngs = latlngs.concat(Array.isArray(ll[0]) ? ll.flat(Infinity) : ll);
+          }
+        });
+
+        if (overlapsAdopted(latlngs, adoptedPolylines)) return; // skip: already adopted/unsuitable
+
+        var miles = haversineMiles(latlngs);
+        var routeName = p.RTE_COMMON_NM || p.STREET_NM || p.RTE_NM || 'Unnamed road';
+        var attrs = {
+          objectId: id,
+          routeName: routeName,
+          jurisdiction: p.FROM_JURISDICTION_NM || p.TO_JURISDICTION_NM || '',
+          fromDesc: p.RTE_INTERSECTION_FROM_DSC || '',
+          toDesc: p.RTE_INTERSECTION_TO_DSC || '',
+          miles: miles,
+          latlngs: latlngs
+        };
+
+        layer.on('click', function () { toggleSegment(id, layer, attrs); });
+        // Hover highlight makes it obvious what will get selected before
+        // clicking, and the wider weight (set via SEGMENT_STYLE/HOVER_STYLE)
+        // gives the mouse/touch a bigger target to land on.
+        layer.on('mouseover', function () { if (!selected[id]) layer.setStyle(SEGMENT_HOVER_STYLE); });
+        layer.on('mouseout', function () { if (!selected[id]) layer.setStyle(SEGMENT_STYLE); });
+        layer.eachLayer(function (l) {
+          if (l._path) l._path.style.cursor = 'pointer';
+        });
+        layer.bindTooltip(routeName, { sticky: true });
+        layer.addTo(segmentsLayer);
+      });
+    }).catch(function (err) { console.error('Failed to load selectable road segments', err); });
+  }
+
+  map.on('moveend', function () {
+    loadSegmentsLayer();
+  });
+  loadSegmentsLayer();
+
+  // ---- Signature pad ----
+  // Freehand canvas signature, captured as a PNG data URL and sent to the
+  // backend so it can be drawn onto the Applicant's Signature line of the
+  // official PDF (that field is a real /Sig AcroForm field, which we can't
+  // fill with text, so we draw the image directly onto the page instead).
+  var sigCanvas = document.getElementById('vdot-signature-pad');
+  var sigCtx = sigCanvas.getContext('2d');
+  var sigDrawing = false;
+  var sigHasStrokes = false;
+  var sigLastPoint = null;
+
+  function sigDateString() {
+    var d = new Date();
+    var mm = String(d.getMonth() + 1).padStart(2, '0');
+    var dd = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + mm + '-' + dd;
+  }
+  document.getElementById('vdot-signature-date').textContent = 'Date: ' + sigDateString();
+
+  function sigCanvasPoint(evt) {
+    var rect = sigCanvas.getBoundingClientRect();
+    var clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    var clientY = evt.touches ? evt.touches[0].clientY : evt.clientY;
+    return {
+      x: (clientX - rect.left) * (sigCanvas.width / rect.width),
+      y: (clientY - rect.top) * (sigCanvas.height / rect.height)
+    };
+  }
+
+  function sigStart(evt) {
+    evt.preventDefault();
+    sigDrawing = true;
+    sigLastPoint = sigCanvasPoint(evt);
+  }
+  function sigMove(evt) {
+    if (!sigDrawing) return;
+    evt.preventDefault();
+    var point = sigCanvasPoint(evt);
+    sigCtx.strokeStyle = '#111827';
+    sigCtx.lineWidth = 2;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+    sigCtx.beginPath();
+    sigCtx.moveTo(sigLastPoint.x, sigLastPoint.y);
+    sigCtx.lineTo(point.x, point.y);
+    sigCtx.stroke();
+    sigLastPoint = point;
+    sigHasStrokes = true;
+  }
+  function sigEnd(evt) {
+    if (evt) evt.preventDefault();
+    sigDrawing = false;
+    sigLastPoint = null;
+  }
+
+  sigCanvas.addEventListener('mousedown', sigStart);
+  sigCanvas.addEventListener('mousemove', sigMove);
+  sigCanvas.addEventListener('mouseup', sigEnd);
+  sigCanvas.addEventListener('mouseleave', sigEnd);
+  sigCanvas.addEventListener('touchstart', sigStart);
+  sigCanvas.addEventListener('touchmove', sigMove);
+  sigCanvas.addEventListener('touchend', sigEnd);
+
+  document.getElementById('vdot-signature-clear').addEventListener('click', function () {
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    sigHasStrokes = false;
+  });
+
+  function getSignatureDataUrl() {
+    return sigHasStrokes ? sigCanvas.toDataURL('image/png') : '';
+  }
+
+  // ---- Form submission ----
+  var form = document.getElementById('vdot-form');
+  var errorEl = document.getElementById('vdot-error');
+  var submitBtn = document.getElementById('vdot-submit');
+
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function checkedGroupType() {
+    var el = form.querySelector('input[name="vdot-group-type"]:checked');
+    return el ? el.value : '';
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errorEl.style.display = 'none';
+
+    var segmentIds = Object.keys(selected);
+    if (!segmentIds.length) {
+      errorEl.textContent = 'Please select at least one road segment on the map.';
+      errorEl.style.display = 'block';
+      window.scrollTo({ top: document.getElementById('vdot-map').offsetTop - 80, behavior: 'smooth' });
+      return;
+    }
+
+    if (computeConnectedGroups(segmentIds).length > 1) {
+      errorEl.textContent = 'Your selected segments must form a single contiguous stretch of road. Please remove ' +
+        'segments until only one connected group remains.';
+      errorEl.style.display = 'block';
+      window.scrollTo({ top: document.getElementById('vdot-map').offsetTop - 80, behavior: 'smooth' });
+      return;
+    }
+
+    if (totalSelectedMiles() < MIN_TOTAL_MILES) {
+      errorEl.textContent = 'Your selected stretch must be at least ' + MIN_TOTAL_MILES.toFixed(1) +
+        ' miles long (currently ' + totalSelectedMiles().toFixed(2) + ' mi). Please select more connecting segments.';
+      errorEl.style.display = 'block';
+      window.scrollTo({ top: document.getElementById('vdot-map').offsetTop - 80, behavior: 'smooth' });
+      return;
+    }
+
+    var groupName = val('vdot-group-name');
+    var signTitle = val('vdot-sign-title');
+    var primaryName = val('vdot-primary-name');
+    var primaryEmail = val('vdot-primary-email');
+    if (!groupName || !signTitle || !primaryName || !primaryEmail) {
+      errorEl.textContent = 'Group name, sign title, primary contact name, and primary contact email are required.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    if (!document.getElementById('vdot-agree-terms').checked) {
+      errorEl.textContent = 'Please confirm that you agree to the Terms & Conditions and Safety Guidelines.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    var signatureDataUrl = getSignatureDataUrl();
+    if (!signatureDataUrl) {
+      errorEl.textContent = 'Please sign in the Applicant\'s Signature box before submitting.';
+      errorEl.style.display = 'block';
+      window.scrollTo({ top: sigCanvas.offsetTop - 80, behavior: 'smooth' });
+      return;
+    }
+
+    var applicant = {
+      groupName: groupName,
+      signTitle: signTitle,
+      groupType: checkedGroupType(),
+      primaryContactName: primaryName,
+      primaryEmail: primaryEmail,
+      primaryPhoneHome: val('vdot-primary-phone-home'),
+      primaryPhoneWork: val('vdot-primary-phone-work'),
+      primaryAddress: val('vdot-primary-address'),
+      primaryCity: val('vdot-primary-city'),
+      primaryState: val('vdot-primary-state'),
+      primaryZip: val('vdot-primary-zip'),
+      secondaryContactName: val('vdot-secondary-name'),
+      secondaryEmail: val('vdot-secondary-email'),
+      secondaryPhoneHome: val('vdot-secondary-phone-home'),
+      secondaryPhoneWork: val('vdot-secondary-phone-work'),
+      secondaryAddress: val('vdot-secondary-address'),
+      secondaryCity: val('vdot-secondary-city'),
+      secondaryState: val('vdot-secondary-state'),
+      secondaryZip: val('vdot-secondary-zip'),
+      minorsCount: val('vdot-minors-count') || '0',
+      adultsCount: val('vdot-adults-count'),
+      safetyPrecautions: val('vdot-safety-precautions')
+    };
+
+    var segments = segmentIds.map(function (id) {
+      var seg = selected[id].attrs;
+      return {
+        objectId: seg.objectId,
+        routeName: seg.routeName,
+        jurisdiction: seg.jurisdiction,
+        fromDesc: seg.fromDesc,
+        toDesc: seg.toDesc,
+        miles: Number(seg.miles.toFixed(2))
+      };
+    });
+
+    // The PDF's Route Info section is for a single contiguous stretch, so
+    // send one overall begin/end for the whole selection (the two true dead
+    // ends of the connected chain) instead of one begin/end per segment —
+    // the backend still gets each segment's own detail via `segments` above
+    // for the email body/reference.
+    var routeBeginEnd = computeRouteBeginEnd(segmentIds);
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Submitting...';
+
+    try {
+      var apiUrl = (window.API_CONFIG && window.API_CONFIG.VDOT_SUBMIT) || '';
+      var res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicant: applicant,
+          segments: segments,
+          routeBegin: routeBeginEnd.begin,
+          routeEnd: routeBeginEnd.end,
+          signatureImage: signatureDataUrl,
+          signatureDate: sigDateString()
+        })
+      });
+      var data = await res.json();
+      if (!data.success) throw new Error(data.message || 'Submission failed');
+
+      document.getElementById('vdot-form-container').style.display = 'none';
+      document.getElementById('vdot-success').style.display = 'block';
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Application';
+    }
+  });
+})();
+</script>
+{{ end }}

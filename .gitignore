@@ -56,6 +56,11 @@ temp/
 .terraform*
 lambda.zip
 
+# Lambda packaging scratch directories (pip install -t ... output) --
+# rebuilt fresh by terraform null_resource provisioners / CI on every
+# deploy, should never be committed.
+terraform/lambda_*_package/
+
 # Built assets
 static/css/tailwind-output.css
 static/css/tailwind-output.css.map
