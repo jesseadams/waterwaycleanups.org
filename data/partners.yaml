@@ -1,3 +1,13 @@
+- name: "Virginia State Parks"
+  image: "virginia-state-parks-logo.png"
+  dir: "/uploads/partners"
+  url: "https://www.dcr.virginia.gov/state-parks/"
+
+- name: "Virginia Department of Transportation"
+  image: "vdot-logo.png"
+  dir: "/uploads/partners"
+  url: "https://www.vdot.virginia.gov/"
+
 - name: "Crow's Nest Research Center"
   image: "crowsnestlogo.png"
   dir: "/uploads/partners"
@@ -7,13 +17,3 @@
   image: "friends-of-rappahannock-logo.png"
   dir: "/uploads/partners"
   url: "https://riverfriends.org"
-
-- name: "Karen for Nature"
-  image: "karen-for-nature-logo.png"
-  dir: "/uploads/partners"
-  url: "https://www.karenfornature.com"
-
-- name: "Virginia State Parks"
-  image: "virginia-state-parks-logo.png"
-  dir: "/uploads/partners"
-  url: "https://www.dcr.virginia.gov/state-parks/"

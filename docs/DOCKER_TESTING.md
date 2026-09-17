@@ -4,7 +4,7 @@ This guide explains how to run Playwright tests in Docker, mirroring the exact e
 
 ## Why Docker Testing?
 
-- **Consistency**: Same environment as CI (Hugo 0.147.1, Node 18, all browsers)
+- **Consistency**: Same environment as CI (Hugo 0.165.0, Node 18, all browsers)
 - **Isolation**: No conflicts with local dependencies
 - **WebKit Support**: Runs WebKit tests on Linux without library issues
 - **Reproducibility**: Identical results across different machines
@@ -89,7 +89,7 @@ The Docker container mounts your `~/.aws` credentials read-only, allowing tests 
 ## CI Parity
 
 This Docker setup exactly mirrors the GitHub Actions workflow:
-- Same Hugo version (0.147.1)
+- Same Hugo version (0.165.0)
 - Same Node version (18)
 - Same Playwright version
 - Same browser versions

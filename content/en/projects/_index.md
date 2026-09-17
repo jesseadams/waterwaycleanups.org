@@ -22,6 +22,39 @@ Join us in our mission to keep our waterways clean and healthy. Explore our ongo
 
 {{< /brick_hero_two_col_bg >}}
 
+{{< brick_image align="start" gallery_dir="/uploads/gallery-vdot-aah/" >}}
+{{< p class="h3 sub-heading text-genoa-green" >}}2026 Project{{< /p >}}
+
+## VDOT: Adopt a Highway
+
+{{< badges "Waterway Cleanups, Pollution Mitigation" >}}
+
+![](/uploads/gallery/vdot-aah.jpg)
+
+We have partnered with Virginia Department of Transportation (VDOT) and their Adopt-a-Highway Program. We all have a shared mission of keeping Virginia beautiful for residents and visitors. This is also a key part of Virginia's environmental strategy to prevent litter from entering wild areas and waterways.
+
+Participation in Virginia's Adopt-a-Highway program is free. Highway Adopters commit to cleaning their stretch of highway at least two times per year, for an adoption period of three years. Highway Adopters must report their pickups to VDOT so we can accurately account for their efforts.
+
+VDOT provides Highway Adopters with safety equipment and trash bags. VDOT will install two signs recognizing your group’s adoption after you have reported two successful litter pickups.
+
+If you would like to adopt a highway, please submit a <a href="/vdot" target="new">Adopt-a-Highway Application</a>.
+{{< /brick_image >}}
+
+{{< brick_image2 align="start" >}}
+{{< p class="h3 sub-heading text-genoa-green" >}}2026 Project{{< /p >}}
+
+## Scouting America: Scouting for Clean Waterways
+
+{{< badges "Waterway Cleanups, Pollution Mitigation, Awareness" >}}
+
+![](/uploads/gallery/scouting-for-clean-waterways.jpg)
+
+Scouting for Clean Waterways is a nationwide initiative that empowers all Scouts and Venturers to take action against aquatic trash. Environmental stewardship and community service are fundamental values of the Scouting movement. By supporting Scouting for Clean Waterways, we can align with these core principles and provide Scouts with opportunities to live the Scout Oath and Law in meaningful ways, fostering character development and leadership skills.
+
+We have partnered with the Aquia District of the National Capital Area Council to hold an annual, district-wide event to provide opportunities to scouts of all ages to participate in this program.
+
+{{< /brick_image2 >}}
+
 {{< brick_image align="start" gallery_dir="/uploads/gallery-rain-barrels/" >}}
 {{< p class="h3 sub-heading text-genoa-green" >}}2025 Project{{< /p >}}
 
@@ -76,7 +109,7 @@ Through this program, we aim not only to clean our waters but to inspire a movem
 
 {{< badges "Waterway Cleanups, Pollution Mitigation, Awareness, Wildlife Protection" >}}
 
-![](/uploads/gallery/05.jpg)
+![](/uploads/gallery/dixon-park.jpg)
 
 This is Waterway Cleanups's inaugural seasonal program dedicated to reducing pollution in Stafford County, Virginia's rivers, streams, and creeks. 
 

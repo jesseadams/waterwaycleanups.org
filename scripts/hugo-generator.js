@@ -537,7 +537,8 @@ class HugoGenerator {
     
     try {
       const files = fs.readdirSync(this.contentDir);
-      const markdownFiles = files.filter(file => file.endsWith('.md'));
+      // Exclude _index.md (the Hugo section page for /events/, not a generated event)
+      const markdownFiles = files.filter(file => file.endsWith('.md') && file !== '_index.md');
       
       let removedCount = 0;
       

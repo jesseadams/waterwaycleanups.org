@@ -93,10 +93,10 @@ npm --version
 
 - `content/en/` - Main content files organized by language
   - `_index.md` - Homepage content
-  - `events.md` - Events listing page
+  - `events/_index.md` - Events listing page
   - `events/` - Individual event listings for cleanups
   - `contact.md` - Contact page
-  - `projects.md` - Projects information page
+  - `projects/_index.md` - Projects information page
   - `404.md` - Custom 404 error page
   - `bricks/` - Reusable brick content components
     - `cta.md` - Call to action component
@@ -210,7 +210,7 @@ The main landing page featuring:
 - Sponsors and partners gallery
 - Call-to-action for donations
 
-### Events Page (`content/en/events.md`)
+### Events Page (`content/en/events/_index.md`)
 A comprehensive listing of all cleanup events with:
 - Filtering options
 - Event details
@@ -230,7 +230,7 @@ Contact form and organization information including:
 - Physical address
 - Social media links
 
-### Projects Page (`content/en/projects.md`)
+### Projects Page (`content/en/projects/_index.md`)
 Showcase of completed and ongoing cleanup projects with:
 - Project descriptions
 - Impact metrics

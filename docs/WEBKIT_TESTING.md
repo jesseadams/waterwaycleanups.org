@@ -35,7 +35,7 @@ npm run test:e2e:webkit:docker # Run webkit tests only
 ## Why Docker?
 
 The Docker environment:
-- Mirrors GitHub Actions (Ubuntu 24.04, Node 18, Hugo 0.147.1)
+- Mirrors GitHub Actions (Ubuntu 24.04, Node 18, Hugo 0.165.0)
 - Includes all browser dependencies
 - Automatically mounts AWS credentials
 - Saves test results to local filesystem
