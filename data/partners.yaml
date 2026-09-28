@@ -17,3 +17,8 @@
   image: "friends-of-rappahannock-logo.png"
   dir: "/uploads/partners"
   url: "https://riverfriends.org"
+
+- name: "Tread Lightly!"
+  image: "tread-lightly.png"
+  dir: "/uploads/partners"
+  url: "https://treadlightly.org/"
