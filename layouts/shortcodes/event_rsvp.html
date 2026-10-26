@@ -40,7 +40,7 @@
      number. Set via the event's `scouting_group: true` frontmatter flag. */ -}}
 {{- $scouting_group := .Page.Params.scouting_group | default false -}}
 
-<div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}" data-scouting-group="{{ $scouting_group }}"{{ if $locations }} data-locations="{{ $locations | jsonify }}"{{ end }}>
+<div class="event-rsvp-widget mt-8 p-4 rounded bg-white" data-event-id="{{ $event_id }}" data-attendance-cap="{{ $attendance_cap }}" data-scouting-group="{{ $scouting_group }}"{{ with .Page.Params.rsvp_deadline }} data-rsvp-deadline="{{ . }}"{{ end }}{{ if $locations }} data-locations="{{ $locations | jsonify }}"{{ end }}>
   <div class="mb-4">
     <h3 class="text-xl font-bold text-eden-green mb-1">Event Registration</h3>
     {{ if le (len $locations) 1 }}
@@ -100,6 +100,10 @@
   <button type="button" class="rsvp-toggle-button bg-eden-green hover:bg-green-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full md:w-auto">
     Sign Up
   </button>
+
+  <div class="rsvp-closed-message mt-4 p-3 bg-gray-100 text-gray-700 border border-gray-300 rounded" style="display: none;">
+    RSVPs for this event are now closed.
+  </div>
 
   <div class="rsvp-success hidden mt-4 p-3 bg-green-100 text-green-700 border border-green-200 rounded">
     Thank you for registering! We look forward to seeing you at the event.

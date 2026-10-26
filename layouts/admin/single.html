@@ -789,7 +789,8 @@
         preheader_is_light: false,
         private: false,
         external_rsvp_url: '',
-        scouting_group: false
+        scouting_group: false,
+        rsvp_deadline: ''
       });
 
       const [impactTemplates, setImpactTemplates] = useState([]);
@@ -876,7 +877,7 @@
           image: '/uploads/waterway-cleanups/default.jpg',
           locations: [emptyLocation()],
           tags: '', preheader_is_light: false, private: false,
-          external_rsvp_url: '', scouting_group: false
+          external_rsvp_url: '', scouting_group: false, rsvp_deadline: ''
         });
         setEditingId(null);
         setExistingFile(null);
@@ -934,7 +935,8 @@
           preheader_is_light: ed.preheader_is_light || false,
           private: ed.private || false,
           external_rsvp_url: ed.external_rsvp_url || '',
-          scouting_group: ed.scouting_group || false
+          scouting_group: ed.scouting_group || false,
+          rsvp_deadline: ed.rsvp_deadline ? ed.rsvp_deadline.slice(0, 16) : ''
         });
         setEditingId(edit.edit_id);
         setExistingFile(edit.edit_type === 'update' ? edit.file_path : null);
@@ -1013,7 +1015,10 @@
             preheader_is_light: formData.preheader_is_light,
             private: formData.private,
             external_rsvp_url: formData.external_rsvp_url || '',
-            scouting_group: formData.scouting_group || false
+            scouting_group: formData.scouting_group || false,
+            rsvp_deadline: formData.rsvp_deadline
+              ? formData.rsvp_deadline + ':00' + getEasternOffset(formData.rsvp_deadline)
+              : ''
           };
 
           await apiCall('save_draft', {
@@ -1218,6 +1223,22 @@
           // instead of rendering the built-in RSVP widget. Attendance
           // tracking and manual RSVP assignment in the admin panel keep
           // working normally either way.
+          // RSVP Deadline — after this date/time (Eastern) the built-in RSVP
+          // form stops accepting sign-ups. Blank means no deadline.
+          React.createElement('div', { key: 'rsvp-deadline' }, [
+            React.createElement('label', {
+              key: 'l', className: "block text-sm font-medium text-gray-700 mb-1"
+            }, 'RSVP Deadline (optional)'),
+            React.createElement('input', {
+              key: 'i', type: 'datetime-local', value: formData.rsvp_deadline || '',
+              max: formData.end_time || undefined,
+              onChange: (e) => updateField('rsvp_deadline', e.target.value),
+              className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            }),
+            React.createElement('p', {
+              key: 'hint', className: "text-xs text-gray-500 mt-1"
+            }, "Eastern time. After this moment, sign-ups are closed for this event. Leave blank for no deadline.")
+          ]),
           React.createElement('div', { key: 'external-rsvp' }, [
             React.createElement('label', {
               key: 'l', className: "block text-sm font-medium text-gray-700 mb-1"
@@ -1423,6 +1444,12 @@
                         changes.push({ field: 'external_rsvp_url', from: liveExternalRsvp || '(empty)', to: draftExternalRsvp || '(empty)' });
                       }
 
+                      const liveRsvpDeadline = live.rsvp_deadline || '';
+                      const draftRsvpDeadline = draft.rsvp_deadline || '';
+                      if (liveRsvpDeadline !== draftRsvpDeadline) {
+                        changes.push({ field: 'rsvp_deadline', from: liveRsvpDeadline || '(empty)', to: draftRsvpDeadline || '(empty)' });
+                      }
+
                       const liveScoutingGroup = String(live.scouting_group || false);
                       const draftScoutingGroup = String(draft.scouting_group || false);
                       if (liveScoutingGroup !== draftScoutingGroup) {
@@ -1495,7 +1522,8 @@
         hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
         private: false,
         external_rsvp_url: '',
-        scouting_group: false
+        scouting_group: false,
+        rsvp_deadline: ''
       });
 
       const updateEventLocation = (index, field, value) => {
@@ -1975,7 +2003,8 @@
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
                   private: eventFormData.private,
                   external_rsvp_url: eventFormData.external_rsvp_url || '',
-                  scouting_group: eventFormData.scouting_group || false
+                  scouting_group: eventFormData.scouting_group || false,
+                  rsvp_deadline: addEasternOffset(eventFormData.rsvp_deadline)
                 }
               })
             });
@@ -2009,7 +2038,8 @@
                   preheader_is_light: eventFormData.hugo_config?.preheader_is_light || false,
                   private: eventFormData.private,
                   external_rsvp_url: eventFormData.external_rsvp_url || '',
-                  scouting_group: eventFormData.scouting_group || false
+                  scouting_group: eventFormData.scouting_group || false,
+                  rsvp_deadline: addEasternOffset(eventFormData.rsvp_deadline)
                 }
               })
             });
@@ -2233,7 +2263,8 @@
           hugo_config: dataToEdit.hugo_config || { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
           private: dataToEdit.private || false,
           external_rsvp_url: dataToEdit.external_rsvp_url || '',
-          scouting_group: dataToEdit.scouting_group || false
+          scouting_group: dataToEdit.scouting_group || false,
+          rsvp_deadline: dataToEdit.rsvp_deadline || ''
         });
         setShowEventForm(true);
       };
@@ -2249,7 +2280,8 @@
           hugo_config: { image: '/uploads/waterway-cleanups/default.jpg', tags: [], preheader_is_light: false },
           private: false,
           external_rsvp_url: '',
-          scouting_group: false
+          scouting_group: false,
+          rsvp_deadline: ''
         });
       };
 
@@ -3693,6 +3725,23 @@
                 // tab) instead of rendering the built-in RSVP widget.
                 // Attendance tracking and manual RSVP assignment in the
                 // admin panel keep working normally either way.
+                // RSVP Deadline — after this date/time (Eastern) the built-in
+                // RSVP form stops accepting sign-ups. Blank means no deadline.
+                React.createElement('div', { key: 'rsvp-deadline-field' }, [
+                  React.createElement('label', {
+                    key: 'l', className: "block text-sm font-medium text-gray-700 mb-1"
+                  }, 'RSVP Deadline (optional)'),
+                  React.createElement('input', {
+                    key: 'i', type: 'datetime-local',
+                    value: formatDateForInput(eventFormData.rsvp_deadline),
+                    max: formatDateForInput(eventFormData.end_time) || undefined,
+                    onChange: (e) => setEventFormData({...eventFormData, rsvp_deadline: e.target.value}),
+                    className: "w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  }),
+                  React.createElement('p', {
+                    key: 'hint', className: "text-xs text-gray-500 mt-1"
+                  }, "Eastern time. After this moment, sign-ups are closed for this event. Leave blank for no deadline.")
+                ]),
                 React.createElement('div', { key: 'external-rsvp-field' }, [
                   React.createElement('label', {
                     key: 'l', className: "block text-sm font-medium text-gray-700 mb-1"

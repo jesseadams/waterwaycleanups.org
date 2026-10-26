@@ -246,6 +246,11 @@ async function handleSaveDraft(body, session) {
     dbEventData.external_rsvp_url = eventData.external_rsvp_url;
   }
 
+  // Optional RSVP cutoff (ISO 8601 with offset).
+  if (eventData.rsvp_deadline) {
+    dbEventData.rsvp_deadline = eventData.rsvp_deadline;
+  }
+
   // Legacy top-level impact template reference (first location's template).
   if (locations[0].impact_template) {
     dbEventData.impact_template = locations[0].impact_template;

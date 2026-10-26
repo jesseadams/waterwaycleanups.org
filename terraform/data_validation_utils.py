@@ -97,6 +97,20 @@ class EventValidator:
             except ValidationError:
                 pass  # Individual datetime errors already captured above
         
+        # RSVP deadline validation (optional; must not be after the event ends)
+        if data.get('rsvp_deadline'):
+            try:
+                deadline = EventValidator._validate_iso_datetime(data['rsvp_deadline'])
+                if 'end_time' in data:
+                    end = EventValidator._validate_iso_datetime(data['end_time'])
+                    if deadline > end:
+                        errors.append(ValidationError(
+                            "RSVP deadline cannot be after the event end time",
+                            "rsvp_deadline", "INVALID_RANGE"))
+            except ValidationError as e:
+                e.field = "rsvp_deadline"
+                errors.append(e)
+
         # Location validation
         if 'location' in data:
             location_errors = EventValidator._validate_location(data['location'])

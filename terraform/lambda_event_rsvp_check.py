@@ -3,6 +3,7 @@ import os
 import boto3
 from boto3.dynamodb.conditions import Key
 from botocore.exceptions import ClientError
+from datetime import datetime, timezone
 from decimal import Decimal
 
 # Initialize DynamoDB client
@@ -17,6 +18,24 @@ event_rsvps_table_name = os.environ.get('EVENT_RSVPS_TABLE_NAME', rsvps_table_na
 events_table = dynamodb.Table(events_table_name)
 rsvps_table = dynamodb.Table(rsvps_table_name)
 event_rsvps_table = dynamodb.Table(event_rsvps_table_name)
+
+def is_rsvp_deadline_passed(event_data, now=None):
+    """
+    True when the event has an `rsvp_deadline` (ISO 8601 datetime with
+    offset) and the current time is at or after it. Events without a
+    deadline never close. An unparseable deadline is ignored.
+    """
+    deadline_str = event_data.get('rsvp_deadline')
+    if not deadline_str:
+        return False
+    try:
+        deadline = datetime.fromisoformat(str(deadline_str).replace('Z', '+00:00'))
+    except ValueError:
+        return False
+    if deadline.tzinfo is None:
+        deadline = deadline.replace(tzinfo=timezone.utc)
+    now = now or datetime.now(timezone.utc)
+    return now >= deadline
 
 def convert_decimals(obj):
     """
@@ -202,6 +221,8 @@ def handler(event, context):
                     })
                 }
             event_status = event_response['Item'].get('status', 'active')
+            rsvp_deadline = event_response['Item'].get('rsvp_deadline')
+            rsvp_closed = is_rsvp_deadline_passed(event_response['Item'])
         except ClientError as e:
             print(f"Error checking event: {e.response['Error']['Message']}")
             return {
@@ -290,8 +311,11 @@ def handler(event, context):
             'event_status': event_status,
             'rsvp_count': rsvp_count,
             'user_registered': user_registered,
+            'rsvp_closed': rsvp_closed,
             'success': True
         }
+        if rsvp_deadline:
+            response_body['rsvp_deadline'] = rsvp_deadline
         if location_counts is not None:
             response_body['location_counts'] = location_counts
         

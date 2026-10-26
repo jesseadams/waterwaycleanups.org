@@ -240,6 +240,18 @@ def handle_save_draft(body, session):
     if event_data.get('scouting_group', False):
         db_event_data['scouting_group'] = True
 
+    # Optional RSVP cutoff (ISO 8601 with offset). After this moment the RSVP
+    # Lambda rejects new sign-ups and the public widget shows "closed".
+    if event_data.get('rsvp_deadline'):
+        try:
+            deadline_dt = datetime.fromisoformat(str(event_data['rsvp_deadline']).replace('Z', '+00:00'))
+            end_dt = datetime.fromisoformat(str(event_data['end_time']).replace('Z', '+00:00'))
+        except ValueError:
+            return respond(400, {'success': False, 'message': 'Invalid RSVP deadline format'})
+        if deadline_dt.tzinfo is not None and end_dt.tzinfo is not None and deadline_dt > end_dt:
+            return respond(400, {'success': False, 'message': 'RSVP deadline cannot be after the event end time'})
+        db_event_data['rsvp_deadline'] = event_data['rsvp_deadline']
+
     # External RSVP URL: when set, the public event page is awareness-only —
     # it links out to this URL (opened in a new tab) instead of rendering
     # the built-in RSVP widget. Attendance tracking and manual RSVP

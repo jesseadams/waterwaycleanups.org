@@ -212,6 +212,43 @@ function hideRegistrationControls(widget) {
 }
 
 /**
+ * Whether the widget's event has an RSVP deadline (data-rsvp-deadline, an
+ * ISO 8601 datetime with offset) that has already passed.
+ * @param {HTMLElement} widget
+ * @returns {boolean}
+ */
+function isRsvpDeadlinePassed(widget) {
+  const deadline = widget.dataset.rsvpDeadline;
+  if (!deadline) return false;
+  const deadlineMs = Date.parse(deadline);
+  if (Number.isNaN(deadlineMs)) return false;
+  return Date.now() >= deadlineMs;
+}
+
+/**
+ * Close sign-up on the widget: hide the Sign Up button, location picker,
+ * unit fields and any open attendee selector, and show the closed message.
+ * Inline `display: none !important` is used for the same reason as in
+ * hideRegistrationControls (the `.hidden` class loses to unlayered button CSS).
+ * Flags the widget so click handlers can bail out too.
+ * @param {HTMLElement} widget
+ */
+function applyRsvpClosedState(widget) {
+  widget.dataset.rsvpClosed = 'true';
+
+  const hide = (el) => el && el.style.setProperty('display', 'none', 'important');
+  hide(widget.querySelector('.rsvp-toggle-button'));
+  hide(widget.querySelector('.rsvp-location-picker'));
+  hide(widget.querySelector('.rsvp-unit-fields'));
+
+  const selector = widget.querySelector('.multi-person-selector-container');
+  if (selector) selector.remove();
+
+  const closedMessage = widget.querySelector('.rsvp-closed-message');
+  if (closedMessage) closedMessage.style.setProperty('display', 'block', 'important');
+}
+
+/**
  * Render a read-only "you attended" summary for a completed event.
  * @param {HTMLElement} widget
  * @param {Object|undefined} volunteer - The volunteer's attended RSVP record
@@ -287,6 +324,12 @@ async function initializeRsvpWidget(widget) {
     // Fall through to normal behavior on error rather than blocking the page.
   }
 
+  // RSVP deadline: the page is static, so compare against the deadline in the
+  // browser. The submit Lambda enforces the same cutoff server-side.
+  if (isRsvpDeadlinePassed(widget)) {
+    applyRsvpClosedState(widget);
+  }
+
   if (locations.length > 1) {
     // Multi-location events show a "X/Y registered" summary inside each
     // location's own box rather than a single shared line above the picker.
@@ -343,6 +386,12 @@ async function initializeRsvpWidget(widget) {
   // Toggle form visibility when button is clicked
   if (rsvpButton) {
     rsvpButton.addEventListener('click', async () => {
+      // Sign-up is closed once the RSVP deadline has passed.
+      if (isRsvpDeadlinePassed(widget)) {
+        applyRsvpClosedState(widget);
+        return;
+      }
+
       // Check if user is authenticated
       const isAuthenticated = window.authClient && window.authClient.isAuthenticated();
       
@@ -1673,6 +1722,11 @@ async function handleDirectRsvp(widget, eventId, attendanceCap) {
     }
   } catch (error) {
     console.error('RSVP submission error:', error);
+
+    // The deadline passed while the page was open: close the widget.
+    if (error.code === 'RSVP_DEADLINE_PASSED') {
+      applyRsvpClosedState(widget);
+    }
     
     // Show error message in the widget's error element
     if (rsvpErrorMessage) {
@@ -1780,7 +1834,9 @@ async function submitEventRsvpDirect(eventId, attendanceCap, locationId, unitTyp
     if (response.status >= 500) {
       throw new Error('Server error. Please try again later or contact support at info@waterwaycleanups.org');
     }
-    throw new Error(data.message || data.error || 'Failed to submit RSVP');
+    const submitError = new Error(data.message || data.error || 'Failed to submit RSVP');
+    submitError.code = data.error_code;
+    throw submitError;
   }
   
   return data;

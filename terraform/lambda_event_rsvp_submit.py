@@ -246,6 +246,27 @@ def location_id_for(event_id, loc, index):
     return loc.get('location_id') or f"loc_{event_id}_{index}"
 
 
+def is_rsvp_deadline_passed(event_data, now=None):
+    """
+    True when the event has an `rsvp_deadline` (ISO 8601 datetime with
+    offset) and the current time is at or after it. Events without a
+    deadline never close. An unparseable deadline is ignored (fails open)
+    so a bad value can't lock everyone out of an event.
+    """
+    deadline_str = event_data.get('rsvp_deadline')
+    if not deadline_str:
+        return False
+    try:
+        deadline = datetime.fromisoformat(str(deadline_str).replace('Z', '+00:00'))
+    except ValueError:
+        print(f"Ignoring unparseable rsvp_deadline: {deadline_str}")
+        return False
+    if deadline.tzinfo is None:
+        deadline = deadline.replace(tzinfo=timezone.utc)
+    now = now or datetime.now(timezone.utc)
+    return now >= deadline
+
+
 VALID_UNIT_TYPES = ('Troop', 'Pack')
 
 
@@ -552,6 +573,20 @@ def handler(event, context):
                 })
             }
         
+        # Enforce the optional RSVP deadline. Checked server-side so a stale
+        # page (or a direct API call) can't register after the cutoff.
+        if is_rsvp_deadline_passed(event_data):
+            return {
+                'statusCode': 400,
+                'headers': headers,
+                'body': json.dumps({
+                    'success': False,
+                    'message': 'RSVPs for this event are now closed.',
+                    'error_code': 'RSVP_DEADLINE_PASSED',
+                    'rsvp_deadline': event_data.get('rsvp_deadline')
+                })
+            }
+
         # Resolve which location this RSVP applies to (events with more than
         # one location require the caller to specify location_id) and get
         # that location's attendance cap.

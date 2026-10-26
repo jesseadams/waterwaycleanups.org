@@ -162,6 +162,13 @@ class HugoGenerator {
       frontmatter.scouting_group = true;
     }
 
+    // Optional RSVP cutoff. The event_rsvp shortcode passes it to the widget,
+    // which closes sign-up client-side once it passes (the site is static, so
+    // this can't be decided at build time). The RSVP Lambda enforces it too.
+    if (event.rsvp_deadline) {
+      frontmatter.rsvp_deadline = event.rsvp_deadline;
+    }
+
     // Store the database event_id so RSVP shortcode can use it directly
     frontmatter.event_id = event.event_id;
 
