@@ -3570,7 +3570,7 @@
                 ]));
 
                 const eventLocations = getEventLocations(event);
-                if (eventLocations.length <= 1) {
+                if (!(eventLocations.length > 1)) {
                   return renderRsvpTable(eventRSVPs, 'rsvp-list');
                 }
 
