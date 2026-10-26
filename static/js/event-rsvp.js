@@ -241,6 +241,11 @@ function applyRsvpClosedState(widget) {
   hide(widget.querySelector('.rsvp-location-picker'));
   hide(widget.querySelector('.rsvp-unit-fields'));
 
+  // Hide the "X/Y registered • N spots left" line (single-location events)
+  // and the per-location availability text (multi-location events).
+  hide(widget.querySelector('.rsvp-summary-line'));
+  widget.querySelectorAll('.rsvp-location-status').forEach(hide);
+
   const selector = widget.querySelector('.multi-person-selector-container');
   if (selector) selector.remove();
 
