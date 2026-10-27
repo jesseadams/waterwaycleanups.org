@@ -1,0 +1,4 @@
+- name: "SiteQuench"
+  image: "sitequench.png"
+  dir: "/uploads/sponsors"
+  url: "https://www.sitequench.com/"
