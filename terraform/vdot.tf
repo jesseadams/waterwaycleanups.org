@@ -64,7 +64,7 @@ mkdir -p ${path.module}/lambda_vdot_submit_package
 cp ${path.module}/lambda_vdot_submit.py ${path.module}/lambda_vdot_submit_package/
 cp ${path.module}/vdot_coordinators.py ${path.module}/lambda_vdot_submit_package/
 cp ${path.module}/vdot_aah_application.pdf ${path.module}/lambda_vdot_submit_package/
-pip install pypdf typing_extensions reportlab pillow --platform manylinux2014_x86_64 --target ${path.module}/lambda_vdot_submit_package/ --python-version 3.9 --only-binary=:all: --implementation cp --no-deps >/dev/null 2>&1
+pip install pypdf typing_extensions reportlab pillow --platform manylinux2014_x86_64 --target ${path.module}/lambda_vdot_submit_package/ --python-version 3.12 --only-binary=:all: --implementation cp --no-deps >/dev/null 2>&1
 cd ${path.module}/lambda_vdot_submit_package && python3 -c "import zipfile; import os; z=zipfile.ZipFile('../lambda_vdot_submit.zip', 'w'); [z.write(os.path.join(root, f), os.path.join(root, f)) for root, _, files in os.walk('.') for f in files]; z.close()"
 cd ${path.module} && rm -rf lambda_vdot_submit_package
 EOF
@@ -86,7 +86,7 @@ resource "aws_lambda_function" "vdot_submit" {
   # null_resource before this hash is read.
   source_code_hash = filebase64sha256("${path.module}/lambda_vdot_submit.zip")
   handler          = "lambda_vdot_submit.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.12"
   role             = aws_iam_role.vdot_submit_role.arn
   timeout          = 30
   memory_size      = 384

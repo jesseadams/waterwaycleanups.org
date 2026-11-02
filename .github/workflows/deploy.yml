@@ -119,7 +119,7 @@ jobs:
           cp lambda_vdot_submit.py lambda_vdot_submit_package/
           cp vdot_coordinators.py lambda_vdot_submit_package/
           cp vdot_aah_application.pdf lambda_vdot_submit_package/
-          pip install pypdf typing_extensions reportlab pillow --platform manylinux2014_x86_64 --target lambda_vdot_submit_package/ --python-version 3.9 --only-binary=:all: --implementation cp --no-deps --quiet
+          pip install pypdf typing_extensions reportlab pillow --platform manylinux2014_x86_64 --target lambda_vdot_submit_package/ --python-version 3.12 --only-binary=:all: --implementation cp --no-deps --quiet
           cd lambda_vdot_submit_package && zip -r ../lambda_vdot_submit.zip . && cd ..
           rm -rf lambda_vdot_submit_package
 

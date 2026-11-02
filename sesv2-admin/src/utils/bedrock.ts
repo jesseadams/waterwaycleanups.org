@@ -56,7 +56,22 @@ const parseDelimitedNewsletter = (raw: string): GeneratedNewsletter => {
 
   const subject = section('SUBJECT');
   const htmlContent = section('HTML');
-  const textContent = section('TEXT');
+  let textContent = section('TEXT');
+
+  // The plain-text part is only a fallback for email clients; if the model
+  // omitted it, derive it from the HTML rather than failing the whole run.
+  if (!textContent && subject && htmlContent && /<\/html>/i.test(htmlContent)) {
+    textContent = htmlContent
+      .replace(/<(style|head|title)[\s\S]*?<\/\1>/gi, '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|div|h[1-6]|tr|li)>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/[ \t]+\n/g, '\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
 
   if (!subject || !htmlContent || !textContent) {
     console.error('Unexpected newsletter response format:', raw);
@@ -146,7 +161,9 @@ Plain text version of the email...
       accept: 'application/json',
       body: JSON.stringify({
         anthropic_version: 'bedrock-2023-05-31',
-        max_tokens: 4000,
+        // The base template HTML alone is large, and the model must reproduce
+        // it plus a text version. 4000 tokens truncated output mid-HTML.
+        max_tokens: 16000,
         messages: [
           {
             role: 'user',
@@ -173,6 +190,11 @@ Plain text version of the email...
     if (!content) {
       console.error('Unexpected Bedrock response shape:', responseBody);
       throw new Error('No text content found in Bedrock response');
+    }
+
+    if (responseBody.stop_reason === 'max_tokens') {
+      console.error('Newsletter response truncated by max_tokens:', responseBody.usage);
+      throw new Error('Newsletter response was truncated (max_tokens reached)');
     }
 
     // Parse the delimited sections instead of asking the model to produce
