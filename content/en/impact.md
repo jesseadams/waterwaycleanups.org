@@ -40,9 +40,6 @@ Every cleanup we've completed, mapped.
   <div class="impact-graph-panel" id="impact-graph-panel" hidden>
     <div class="impact-graph-controls">
       <div class="impact-graph-metrics" id="impact-graph-metrics" role="tablist" aria-label="Metric"></div>
-      <label class="impact-graph-cumulative">
-        <input type="checkbox" id="impact-graph-cumulative" /> Cumulative
-      </label>
     </div>
     <div class="impact-graph-chart" id="impact-graph-chart"></div>
     <div class="impact-graph-note" id="impact-graph-note"></div>
@@ -180,9 +177,10 @@ Every cleanup we've completed, mapped.
   font-size: 0.75rem; color: #9ca3af;
 }
 .impact-graph-toggle {
-  margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600; color: #047857;
-  background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline;
+  display: block; margin: 0.5rem 0 0 auto; font-size: 0.75rem; font-weight: 400; color: #9ca3af;
+  background: none; border: none; padding: 0; cursor: pointer;
 }
+.impact-graph-toggle:hover { color: #047857; text-decoration: underline; }
 .impact-graph-panel { margin-top: 1rem; border-top: 1px solid #e5e7eb; padding-top: 1rem; }
 .impact-graph-controls {
   display: flex; justify-content: space-between; align-items: center;
@@ -196,10 +194,7 @@ Every cleanup we've completed, mapped.
 .impact-graph-metrics button[aria-selected="true"] {
   background: #047857; border-color: #047857; color: #fff;
 }
-.impact-graph-cumulative { font-size: 0.8rem; color: #374151; display: flex; align-items: center; gap: 0.35rem; }
 .impact-graph-chart svg { width: 100%; height: auto; display: block; }
-.impact-graph-chart .bar { fill: #059669; }
-.impact-graph-chart .bar:hover { fill: #047857; }
 .impact-graph-chart .line { fill: none; stroke: #059669; stroke-width: 2.5; }
 .impact-graph-chart .dot { fill: #047857; }
 .impact-graph-chart .grid { stroke: #e5e7eb; stroke-width: 1; }

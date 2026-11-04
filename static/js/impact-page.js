@@ -296,7 +296,6 @@
   var graphMetricsEl = document.getElementById('impact-graph-metrics');
   var graphChartEl = document.getElementById('impact-graph-chart');
   var graphNoteEl = document.getElementById('impact-graph-note');
-  var graphCumulative = document.getElementById('impact-graph-cumulative');
   var graphOpen = false;
   var graphMetricKey = 'cleanups';
   var lastFilteredEvents = [];
@@ -363,11 +362,11 @@
       return;
     }
 
-    var cumulative = graphCumulative && graphCumulative.checked;
+    // Always cumulative: running total of the metric over time
     var running = 0;
     var points = buckets.map(function(b) {
       running += b.value;
-      return { label: b.label, value: roundTo(cumulative ? running : b.value, metric.decimals) };
+      return { label: b.label, value: roundTo(running, metric.decimals) };
     });
 
     var W = 720, H = 300, padL = 48, padR = 16, padT = 16, padB = 44;
@@ -400,19 +399,11 @@
       var cx = x + slot / 2;
       var cy = padT + plotH - h;
 
-      if (cumulative) {
-        linePts.push(cx + ',' + cy);
-        var dot = svgEl('circle', { class: 'dot', cx: cx, cy: cy, r: 3.5 });
-        var dt = svgEl('title'); dt.textContent = p.label + ': ' + p.value;
-        dot.appendChild(dt);
-        svg.appendChild(dot);
-      } else {
-        var barW = Math.max(2, slot * 0.7);
-        var bar = svgEl('rect', { class: 'bar', x: cx - barW / 2, y: cy, width: barW, height: Math.max(h, 0) });
-        var bt = svgEl('title'); bt.textContent = p.label + ': ' + p.value;
-        bar.appendChild(bt);
-        svg.appendChild(bar);
-      }
+      linePts.push(cx + ',' + cy);
+      var dot = svgEl('circle', { class: 'dot', cx: cx, cy: cy, r: 3.5 });
+      var dt = svgEl('title'); dt.textContent = p.label + ': ' + p.value;
+      dot.appendChild(dt);
+      svg.appendChild(dot);
 
       if (i % labelEvery === 0) {
         var lbl = svgEl('text', { x: cx, y: H - padB + 16, 'text-anchor': 'middle' });
@@ -421,15 +412,15 @@
       }
     });
 
-    if (cumulative && linePts.length > 1) {
+    if (linePts.length > 1) {
       svg.insertBefore(svgEl('polyline', { class: 'line', points: linePts.join(' ') }),
         svg.querySelector('.dot'));
     }
 
     graphChartEl.appendChild(svg);
     if (graphNoteEl) {
-      graphNoteEl.textContent = (buckets[0].step === 3 ? 'Grouped by quarter' : 'Grouped by month')
-        + ', for the years selected above.';
+      graphNoteEl.textContent = 'Running total by '
+        + (buckets[0].step === 3 ? 'quarter' : 'month') + ', for the years selected above.';
     }
   }
 
@@ -461,9 +452,6 @@
       graphMetricsEl.appendChild(btn);
     });
     graphToggle.addEventListener('click', function() { setGraphOpen(!graphOpen); });
-    if (graphCumulative) {
-      graphCumulative.addEventListener('change', function() { renderGraph(lastFilteredEvents); });
-    }
   }
 
   function renderAll(events) {
