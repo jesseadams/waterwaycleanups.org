@@ -36,6 +36,17 @@ Every cleanup we've completed, mapped.
     <input type="range" id="impact-year-slider-max" class="impact-year-slider-input" step="1" aria-label="Maximum year" />
   </div>
   <div class="impact-year-slider-ticks" id="impact-year-slider-ticks"></div>
+  <button type="button" class="impact-graph-toggle" id="impact-graph-toggle" aria-expanded="false" aria-controls="impact-graph-panel">See graph</button>
+  <div class="impact-graph-panel" id="impact-graph-panel" hidden>
+    <div class="impact-graph-controls">
+      <div class="impact-graph-metrics" id="impact-graph-metrics" role="tablist" aria-label="Metric"></div>
+      <label class="impact-graph-cumulative">
+        <input type="checkbox" id="impact-graph-cumulative" /> Cumulative
+      </label>
+    </div>
+    <div class="impact-graph-chart" id="impact-graph-chart"></div>
+    <div class="impact-graph-note" id="impact-graph-note"></div>
+  </div>
 </div>
 
 <div class="impact-event-list" id="impact-event-list"></div>
@@ -168,6 +179,32 @@ Every cleanup we've completed, mapped.
   display: flex; justify-content: space-between; margin-top: 0.25rem;
   font-size: 0.75rem; color: #9ca3af;
 }
+.impact-graph-toggle {
+  margin-top: 0.75rem; font-size: 0.85rem; font-weight: 600; color: #047857;
+  background: none; border: none; padding: 0; cursor: pointer; text-decoration: underline;
+}
+.impact-graph-panel { margin-top: 1rem; border-top: 1px solid #e5e7eb; padding-top: 1rem; }
+.impact-graph-controls {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;
+}
+.impact-graph-metrics { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.impact-graph-metrics button {
+  font-size: 0.8rem; font-weight: 600; color: #374151; background: #f3f4f6;
+  border: 1px solid #e5e7eb; border-radius: 999px; padding: 0.25rem 0.75rem; cursor: pointer;
+}
+.impact-graph-metrics button[aria-selected="true"] {
+  background: #047857; border-color: #047857; color: #fff;
+}
+.impact-graph-cumulative { font-size: 0.8rem; color: #374151; display: flex; align-items: center; gap: 0.35rem; }
+.impact-graph-chart svg { width: 100%; height: auto; display: block; }
+.impact-graph-chart .bar { fill: #059669; }
+.impact-graph-chart .bar:hover { fill: #047857; }
+.impact-graph-chart .line { fill: none; stroke: #059669; stroke-width: 2.5; }
+.impact-graph-chart .dot { fill: #047857; }
+.impact-graph-chart .grid { stroke: #e5e7eb; stroke-width: 1; }
+.impact-graph-chart text { font-size: 11px; fill: #6b7280; font-family: inherit; }
+.impact-graph-note { font-size: 0.75rem; color: #9ca3af; margin-top: 0.25rem; }
 </style>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"

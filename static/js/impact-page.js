@@ -279,10 +279,199 @@
     setStat('impact-stat-litter', totals.litter_lbs);
   }
 
+  // ---- Graph: selected metric over time, for the filtered events ----
+  var GRAPH_METRICS = [
+    { key: 'cleanups', label: 'Cleanups', value: function() { return 1; } },
+    { key: 'volunteers', label: 'Volunteers', value: function(ev) { return ev.attended_count || 0; } },
+    { key: 'miles', label: 'Miles', value: function(ev) { return eventMiles(ev); }, decimals: 1 },
+    { key: 'bags', label: 'Bags of trash', value: function(ev) { return Number((ev.cleanup_metrics || {}).bags_of_trash) || 0; } },
+    { key: 'tires', label: 'Tires', value: function(ev) { return Number((ev.cleanup_metrics || {}).number_of_tires) || 0; } },
+    { key: 'litter', label: 'Litter (lbs)', value: function(ev) { return Number((ev.cleanup_metrics || {}).total_litter_lbs) || 0; }, decimals: 1 }
+  ];
+  var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  var graphToggle = document.getElementById('impact-graph-toggle');
+  var graphPanel = document.getElementById('impact-graph-panel');
+  var graphMetricsEl = document.getElementById('impact-graph-metrics');
+  var graphChartEl = document.getElementById('impact-graph-chart');
+  var graphNoteEl = document.getElementById('impact-graph-note');
+  var graphCumulative = document.getElementById('impact-graph-cumulative');
+  var graphOpen = false;
+  var graphMetricKey = 'cleanups';
+  var lastFilteredEvents = [];
+
+  function roundTo(n, decimals) {
+    var f = Math.pow(10, decimals || 0);
+    return Math.round(n * f) / f;
+  }
+
+  function svgEl(name, attrs) {
+    var el = document.createElementNS(SVG_NS, name);
+    Object.keys(attrs || {}).forEach(function(k) { el.setAttribute(k, attrs[k]); });
+    return el;
+  }
+
+  // Bucket events by month (or quarter when the span is longer than two
+  // years) from the first to the last event, filling empty periods with 0.
+  function buildBuckets(events, metric) {
+    var dated = events.filter(function(ev) {
+      return ev.start_time && !isNaN(new Date(ev.start_time).getTime());
+    });
+    if (!dated.length) return [];
+    var times = dated.map(function(ev) { return new Date(ev.start_time); });
+    var first = new Date(Math.min.apply(null, times));
+    var last = new Date(Math.max.apply(null, times));
+    var totalMonths = (last.getFullYear() - first.getFullYear()) * 12 + last.getMonth() - first.getMonth() + 1;
+    var step = totalMonths > 24 ? 3 : 1;
+
+    // Align the start to the beginning of a period
+    var startMonth = step === 3 ? Math.floor(first.getMonth() / 3) * 3 : first.getMonth();
+    var cursorYear = first.getFullYear();
+    var cursor = startMonth;
+    var buckets = [];
+    var lastIndex = last.getFullYear() * 12 + last.getMonth();
+    while (cursorYear * 12 + cursor <= lastIndex) {
+      var label = step === 3
+        ? 'Q' + (cursor / 3 + 1) + ' ' + cursorYear
+        : MONTH_NAMES[cursor] + ' ' + cursorYear;
+      buckets.push({ year: cursorYear, month: cursor, step: step, label: label, value: 0 });
+      cursor += step;
+      if (cursor >= 12) { cursor -= 12; cursorYear++; }
+    }
+
+    dated.forEach(function(ev) {
+      var d = new Date(ev.start_time);
+      var idx = d.getFullYear() * 12 + d.getMonth();
+      for (var i = buckets.length - 1; i >= 0; i--) {
+        var start = buckets[i].year * 12 + buckets[i].month;
+        if (idx >= start) { buckets[i].value += metric.value(ev); break; }
+      }
+    });
+    return buckets;
+  }
+
+  function renderGraph(events) {
+    if (!graphChartEl) return;
+    var metric = GRAPH_METRICS.filter(function(m) { return m.key === graphMetricKey; })[0] || GRAPH_METRICS[0];
+    var buckets = buildBuckets(events, metric);
+    graphChartEl.innerHTML = '';
+    if (graphNoteEl) graphNoteEl.textContent = '';
+
+    if (!buckets.length) {
+      graphChartEl.textContent = 'No cleanups in the selected years.';
+      return;
+    }
+
+    var cumulative = graphCumulative && graphCumulative.checked;
+    var running = 0;
+    var points = buckets.map(function(b) {
+      running += b.value;
+      return { label: b.label, value: roundTo(cumulative ? running : b.value, metric.decimals) };
+    });
+
+    var W = 720, H = 300, padL = 48, padR = 16, padT = 16, padB = 44;
+    var plotW = W - padL - padR, plotH = H - padT - padB;
+    var maxVal = Math.max.apply(null, points.map(function(p) { return p.value; })) || 1;
+
+    // Round the axis max up to a "nice" number
+    var mag = Math.pow(10, Math.floor(Math.log(maxVal) / Math.LN10));
+    var norm = maxVal / mag;
+    var niceMax = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10) * mag;
+
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, role: 'img',
+      'aria-label': metric.label + ' over time' });
+
+    for (var t = 0; t <= 4; t++) {
+      var y = padT + plotH - (t / 4) * plotH;
+      svg.appendChild(svgEl('line', { class: 'grid', x1: padL, x2: W - padR, y1: y, y2: y }));
+      var tickText = svgEl('text', { x: padL - 6, y: y + 4, 'text-anchor': 'end' });
+      tickText.textContent = roundTo((t / 4) * niceMax, niceMax < 10 ? 1 : 0);
+      svg.appendChild(tickText);
+    }
+
+    var slot = plotW / points.length;
+    var labelEvery = Math.ceil(points.length / 10);
+    var linePts = [];
+
+    points.forEach(function(p, i) {
+      var h = (p.value / niceMax) * plotH;
+      var x = padL + i * slot;
+      var cx = x + slot / 2;
+      var cy = padT + plotH - h;
+
+      if (cumulative) {
+        linePts.push(cx + ',' + cy);
+        var dot = svgEl('circle', { class: 'dot', cx: cx, cy: cy, r: 3.5 });
+        var dt = svgEl('title'); dt.textContent = p.label + ': ' + p.value;
+        dot.appendChild(dt);
+        svg.appendChild(dot);
+      } else {
+        var barW = Math.max(2, slot * 0.7);
+        var bar = svgEl('rect', { class: 'bar', x: cx - barW / 2, y: cy, width: barW, height: Math.max(h, 0) });
+        var bt = svgEl('title'); bt.textContent = p.label + ': ' + p.value;
+        bar.appendChild(bt);
+        svg.appendChild(bar);
+      }
+
+      if (i % labelEvery === 0) {
+        var lbl = svgEl('text', { x: cx, y: H - padB + 16, 'text-anchor': 'middle' });
+        lbl.textContent = p.label;
+        svg.appendChild(lbl);
+      }
+    });
+
+    if (cumulative && linePts.length > 1) {
+      svg.insertBefore(svgEl('polyline', { class: 'line', points: linePts.join(' ') }),
+        svg.querySelector('.dot'));
+    }
+
+    graphChartEl.appendChild(svg);
+    if (graphNoteEl) {
+      graphNoteEl.textContent = (buckets[0].step === 3 ? 'Grouped by quarter' : 'Grouped by month')
+        + ', for the years selected above.';
+    }
+  }
+
+  function setGraphOpen(open) {
+    graphOpen = open;
+    if (graphPanel) graphPanel.hidden = !open;
+    if (graphToggle) {
+      graphToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      graphToggle.textContent = open ? 'Hide graph' : 'See graph';
+    }
+    if (open) renderGraph(lastFilteredEvents);
+  }
+
+  function initGraph() {
+    if (!graphToggle || !graphPanel || !graphMetricsEl) return;
+    GRAPH_METRICS.forEach(function(m) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = m.label;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', m.key === graphMetricKey ? 'true' : 'false');
+      btn.addEventListener('click', function() {
+        graphMetricKey = m.key;
+        Array.prototype.forEach.call(graphMetricsEl.children, function(b) {
+          b.setAttribute('aria-selected', b === btn ? 'true' : 'false');
+        });
+        renderGraph(lastFilteredEvents);
+      });
+      graphMetricsEl.appendChild(btn);
+    });
+    graphToggle.addEventListener('click', function() { setGraphOpen(!graphOpen); });
+    if (graphCumulative) {
+      graphCumulative.addEventListener('change', function() { renderGraph(lastFilteredEvents); });
+    }
+  }
+
   function renderAll(events) {
+    lastFilteredEvents = events;
     renderStats(events);
     renderMap(events);
     renderList(events);
+    if (graphOpen) renderGraph(events);
   }
 
   // ---- Year range slider ----
@@ -353,8 +542,13 @@
 
   if (minInput && maxInput && filterEl) {
     if (minYear === maxYear) {
-      // Only one year of data: hide the slider, nothing to filter.
-      filterEl.style.display = 'none';
+      // Only one year of data: hide the slider controls (nothing to filter)
+      // but keep the filter box so the graph toggle stays available.
+      Array.prototype.forEach.call(filterEl.children, function(child) {
+        if (child.id !== 'impact-graph-toggle' && child.id !== 'impact-graph-panel') {
+          child.style.display = 'none';
+        }
+      });
     } else {
       minInput.min = String(minYear);
       minInput.max = String(maxYear);
@@ -380,6 +574,8 @@
       if (resetBtn) resetBtn.addEventListener('click', handleReset);
     }
   }
+
+  initGraph();
 
   // Initial render shows all years.
   renderAll(allEvents);
