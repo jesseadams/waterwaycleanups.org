@@ -45,8 +45,29 @@
       .filter(Boolean);
   }
 
+  // Cleaned locations for an event as {name, template}. Uses the per-location
+  // list from newer data (already limited to locations that had RSVPs);
+  // otherwise falls back to the bare templates with no location name.
+  function getLocationEntries(ev) {
+    if (ev.locations && ev.locations.length) {
+      return ev.locations.map(function(l) {
+        return { name: l.name, template: IMPACT_DATA.templates[l.template_key] };
+      }).filter(function(e) { return e.template; });
+    }
+    return getTemplates(ev).map(function(t) { return { name: '', template: t }; });
+  }
+
+  // Heading for an event card: the location name(s), falling back to the
+  // event title when no location has a name.
+  function eventHeading(ev) {
+    var names = getLocationEntries(ev).map(function(e) { return e.name; })
+      .filter(Boolean);
+    return names.length ? names.join(' & ') : ev.title;
+  }
+
   function eventMiles(ev) {
-    return getTemplates(ev).reduce(function(sum, t) {
+    return getLocationEntries(ev).reduce(function(sum, e) {
+      var t = e.template;
       return sum + (parseFloat(t.estimated_miles) || 0);
     }, 0);
   }
@@ -126,15 +147,17 @@
       var recency = recencyLabel(ev);
       var popupSuffix = recency ? '<br><span style="color:' + color + ';font-weight:600;">' + recency + '</span>' : '';
 
-      getTemplates(ev).forEach(function(tmpl) {
+      getLocationEntries(ev).forEach(function(entry) {
+      var tmpl = entry.template;
       if (!tmpl.features) return;
       var features = tmpl.features;
+      var placeName = entry.name || ev.title;
       if (features.zones) {
         features.zones.forEach(function(zone) {
           var layer = L.polygon(zone.coordinates, {
             color: color, weight: 3, opacity: 0.9,
             fillColor: color, fillOpacity: 0.2
-          }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (zone.label || 'Focus Area') + popupSuffix);
+          }).addTo(map).bindPopup('<strong>' + escapeHtml(placeName) + '</strong><br>' + (zone.label || 'Focus Area') + popupSuffix);
           mapLayers.push(layer);
           zone.coordinates.forEach(function(c) { bounds.push(c); });
         });
@@ -143,7 +166,7 @@
         features.paths.forEach(function(path) {
           var layer = L.polyline(path.coordinates, {
             color: color, weight: 5, opacity: 0.9
-          }).addTo(map).bindPopup('<strong>' + escapeHtml(ev.title) + '</strong><br>' + (path.label || 'Cleanup Path') + popupSuffix);
+          }).addTo(map).bindPopup('<strong>' + escapeHtml(placeName) + '</strong><br>' + (path.label || 'Cleanup Path') + popupSuffix);
           mapLayers.push(layer);
           path.coordinates.forEach(function(c) { bounds.push(c); });
         });
@@ -180,7 +203,7 @@
 
       // Ad hoc events have no event page, so render a non-linking card with a
       // small badge rather than a link to a 404.
-      var titleHtml = '<h3>' + escapeHtml(ev.title)
+      var titleHtml = '<h3>' + escapeHtml(eventHeading(ev))
         + (ev.ad_hoc ? ' <span class="event-adhoc-badge">Community Cleanup</span>' : '')
         + '</h3>';
       var innerHtml = titleHtml

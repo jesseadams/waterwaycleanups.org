@@ -99,15 +99,42 @@ async function main() {
       ? event.locations
       : (event.impact_template ? [{ impact_template: event.impact_template, impact_template_version: event.impact_template_version }] : []);
 
+    // Attended RSVPs (used for the check-in count, to dedupe volunteers by
+    // hashed email, and to tell which locations were actually cleaned up)
+    const attendedRsvps = await getAttendedRsvps(event.event_id);
+    const attendedCount = attendedRsvps.length;
+
+    // On multi-location events, a location with 0 attended RSVPs was not
+    // cleaned up and is left off the map/miles. Only apply this when RSVPs
+    // actually carry a location_id; older RSVPs predate multi-location
+    // support and can't be attributed, so all locations are kept.
+    const canAttributeByLocation = locations.length > 1 &&
+      attendedRsvps.some(r => r.location_id);
+
     const locationCacheKeys = [];
+    const cleanedLocations = [];
     let miles = 0;
 
-    for (const location of locations) {
+    for (let index = 0; index < locations.length; index++) {
+      const location = locations[index];
       const templateId = location.impact_template || null;
       const version = location.impact_template_version || 1;
       if (!templateId) continue;
+
+      // Same synthetic id scheme used by the RSVP lambdas and hugo-generator
+      const locationId = location.location_id || `loc_${event.event_id}_${index}`;
+      if (canAttributeByLocation &&
+          !attendedRsvps.some(r => r.location_id === locationId)) {
+        continue;
+      }
+
       const cacheKey = `${templateId}:${version}`;
       locationCacheKeys.push(cacheKey);
+      cleanedLocations.push({
+        location_id: locationId,
+        name: location.name || '',
+        template_key: cacheKey
+      });
 
       // Fetch template if present and not cached (used for the map + miles)
       if (!impactData.templates[cacheKey]) {
@@ -131,11 +158,6 @@ async function main() {
     // with a template, for any code still reading the old shape.
     const templateId = locationCacheKeys.length > 0 ? locationCacheKeys[0].split(':')[0] : null;
     const version = locationCacheKeys.length > 0 ? parseInt(locationCacheKeys[0].split(':')[1]) : 1;
-
-    // Get attended RSVPs (used for both the total check-in count and to
-    // dedupe volunteers across events by hashed email)
-    const attendedRsvps = await getAttendedRsvps(event.event_id);
-    const attendedCount = attendedRsvps.length;
 
     // Normalize cleanup metrics (may be absent on older completed events)
     const cm = event.cleanup_metrics || {};
@@ -168,6 +190,9 @@ async function main() {
       // All location templates for this event (cache keys into `templates`).
       // `impact_template*` above only reflects the first location.
       template_keys: [...new Set(locationCacheKeys)].filter(k => impactData.templates[k]),
+      // Cleaned locations with their display names (the location's own
+      // name, not the event title) and template reference.
+      locations: cleanedLocations.filter(l => impactData.templates[l.template_key]),
       attended_count: volunteerCount,
       volunteer_hashes: volunteerHashes,
       cleanup_metrics: {
