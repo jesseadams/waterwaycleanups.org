@@ -33,9 +33,22 @@
     return div.innerHTML;
   }
 
-  function getTemplate(ev) {
-    var cacheKey = ev.impact_template + ':' + (ev.impact_template_version || 1);
-    return IMPACT_DATA.templates[cacheKey];
+  // All templates for an event (one per location). Falls back to the legacy
+  // single-template fields for data generated before template_keys existed.
+  function getTemplates(ev) {
+    var keys = ev.template_keys;
+    if (!keys || !keys.length) {
+      if (!ev.impact_template) return [];
+      keys = [ev.impact_template + ':' + (ev.impact_template_version || 1)];
+    }
+    return keys.map(function(k) { return IMPACT_DATA.templates[k]; })
+      .filter(Boolean);
+  }
+
+  function eventMiles(ev) {
+    return getTemplates(ev).reduce(function(sum, t) {
+      return sum + (parseFloat(t.estimated_miles) || 0);
+    }, 0);
   }
 
   function getYear(ev) {
@@ -109,13 +122,12 @@
 
     var bounds = [];
     drawOrder.forEach(function(ev) {
-      var tmpl = getTemplate(ev);
-      if (!tmpl || !tmpl.features) return;
-
       var color = recencyColor(ev);
       var recency = recencyLabel(ev);
       var popupSuffix = recency ? '<br><span style="color:' + color + ';font-weight:600;">' + recency + '</span>' : '';
 
+      getTemplates(ev).forEach(function(tmpl) {
+      if (!tmpl.features) return;
       var features = tmpl.features;
       if (features.zones) {
         features.zones.forEach(function(zone) {
@@ -136,6 +148,7 @@
           path.coordinates.forEach(function(c) { bounds.push(c); });
         });
       }
+      });
     });
 
     if (bounds.length > 1) {
@@ -149,8 +162,8 @@
     if (!listEl) return;
     listEl.innerHTML = '';
     events.forEach(function(ev) {
-      var tmpl = getTemplate(ev);
-      var miles = tmpl ? tmpl.estimated_miles.toFixed(1) + ' miles' : '';
+      var evMiles = eventMiles(ev);
+      var miles = evMiles > 0 ? evMiles.toFixed(1) + ' miles' : '';
       var date = ev.start_time ? new Date(ev.start_time).toLocaleDateString('en-US', {
         year: 'numeric', month: 'short', day: 'numeric'
       }) : '';
@@ -203,10 +216,9 @@
     var uniqueVolunteerCount = 0;
     var hasHashData = false;
     events.forEach(function(ev) {
-      var tmpl = getTemplate(ev);
       var cm = ev.cleanup_metrics || {};
       totals.cleanups += 1;
-      totals.miles += tmpl ? (tmpl.estimated_miles || 0) : 0;
+      totals.miles += eventMiles(ev);
       totals.volunteers += ev.attended_count || 0;
       totals.bags_of_trash += Number(cm.bags_of_trash) || 0;
       totals.tires += Number(cm.number_of_tires) || 0;
@@ -223,6 +235,11 @@
             uniqueVolunteerCount++;
           }
         });
+        // A manually adjusted count can exceed the hashed RSVP attendees
+        // (e.g. a scout event); count the untracked remainder as unique.
+        if ((ev.attended_count || 0) > ev.volunteer_hashes.length) {
+          uniqueVolunteerCount += ev.attended_count - ev.volunteer_hashes.length;
+        }
       } else if (ev.attended_count) {
         uniqueVolunteerCount += ev.attended_count;
       }

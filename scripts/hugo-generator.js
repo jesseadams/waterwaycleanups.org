@@ -232,13 +232,14 @@ class HugoGenerator {
     }
 
     // Add volunteer count for completed events so the event page can show how
-    // many people showed up. Prefer attended RSVPs (event._attendedCount, set
-    // in generateAllFiles); fall back to a stored volunteer_count for events
-    // without RSVP records.
+    // many people showed up. A manually set volunteer_count wins (admins set
+    // it when real turnout differs from RSVPs); otherwise use attended RSVPs
+    // (event._attendedCount, set in generateAllFiles).
     if (event.status === 'completed') {
-      const volunteerCount = event._attendedCount > 0
-        ? event._attendedCount
-        : (Number(event.volunteer_count) || 0);
+      const manualCount = Number(event.volunteer_count) || 0;
+      const volunteerCount = manualCount > 0
+        ? manualCount
+        : (event._attendedCount || 0);
       if (volunteerCount > 0) {
         frontmatter.volunteer_count = volunteerCount;
       }

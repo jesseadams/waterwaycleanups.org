@@ -143,12 +143,12 @@ async function main() {
     const tires = Number(cm.number_of_tires) || 0;
     const litterLbs = Number(cm.total_litter_lbs) || 0;
 
-    // Volunteer count: prefer attended RSVPs, but ad hoc / historical events
-    // have no RSVP records, so fall back to a stored volunteer_count.
+    // Volunteer count: a manually entered volunteer_count wins, since it is
+    // set deliberately by an admin (e.g. a scout troop event with 152
+    // volunteers but only 6 formal RSVPs). Otherwise use attended RSVPs.
     const isAdHoc = event.ad_hoc === true;
-    const volunteerCount = attendedCount > 0
-      ? attendedCount
-      : (Number(event.volunteer_count) || 0);
+    const manualCount = Number(event.volunteer_count) || 0;
+    const volunteerCount = manualCount > 0 ? manualCount : attendedCount;
 
     // Hash each attendee's email so we can dedupe repeat volunteers across
     // events without ever writing PII into the public impact JSON.
@@ -165,6 +165,9 @@ async function main() {
       ad_hoc: isAdHoc,
       impact_template: templateId,
       impact_template_version: version,
+      // All location templates for this event (cache keys into `templates`).
+      // `impact_template*` above only reflects the first location.
+      template_keys: [...new Set(locationCacheKeys)].filter(k => impactData.templates[k]),
       attended_count: volunteerCount,
       volunteer_hashes: volunteerHashes,
       cleanup_metrics: {
