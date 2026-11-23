@@ -26,12 +26,12 @@ jobs:
     
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
       
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '26'
           cache: 'npm'
           cache-dependency-path: sesv2-admin/package-lock.json
       
@@ -42,7 +42,7 @@ jobs:
           sudo apt-get update && sudo apt-get install -y jq
       
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
           aws-region: us-east-1
@@ -50,9 +50,9 @@ jobs:
       
       # Step 1: Setup Terraform
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
+        uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: 1.5.7
+          terraform_version: "1.17.2"
           
       # Step 2: Apply SESv2 Admin App Terraform (from its own folder)
       - name: Terraform Init and Apply
@@ -118,7 +118,7 @@ jobs:
           
       - name: Slack Notification
         if: always()
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v4
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

@@ -22,21 +22,21 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         submodules: recursive
 
     - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
+      uses: aws-actions/configure-aws-credentials@v6
       with:
         role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
         aws-region: us-east-1
         role-session-name: github-actions-playwright
 
     - name: Setup Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v7
       with:
-        node-version: '18'
+        node-version: '26'
         cache: 'npm'
 
     - name: Install dependencies
@@ -61,7 +61,7 @@ jobs:
     - name: Setup Hugo
       uses: peaceiris/actions-hugo@v3
       with:
-        hugo-version: "0.165.0"
+        hugo-version: "0.170.1"
         extended: true
 
     - name: Build site
@@ -85,7 +85,7 @@ jobs:
         PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
 
     - name: Upload test results (JSON)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: test-results-json-${{ matrix.browser }}
@@ -93,7 +93,7 @@ jobs:
         retention-days: 30
 
     - name: Upload test results (JUnit XML)
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: test-results-xml-${{ matrix.browser }}
@@ -101,7 +101,7 @@ jobs:
         retention-days: 30
 
     - name: Upload HTML report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: playwright-report-${{ matrix.browser }}
@@ -109,7 +109,7 @@ jobs:
         retention-days: 30
 
     - name: Upload screenshots
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: playwright-screenshots-${{ matrix.browser }}
@@ -118,7 +118,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Upload videos
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: playwright-videos-${{ matrix.browser }}
@@ -127,7 +127,7 @@ jobs:
         if-no-files-found: ignore
 
     - name: Upload traces
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: playwright-traces-${{ matrix.browser }}
@@ -137,7 +137,7 @@ jobs:
 
     - name: Slack Notification
       if: always() && github.event_name != 'pull_request'
-      uses: slackapi/slack-github-action@v2.1.0
+      uses: slackapi/slack-github-action@v4
       with:
         webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
         webhook-type: incoming-webhook

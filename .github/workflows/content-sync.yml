@@ -25,21 +25,21 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::767072126027:role/github-actions-oidc
           aws-region: us-east-1
           role-session-name: github-actions-content-sync
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
-          terraform_version: "1.10.0"
+          terraform_version: "1.17.2"
           terraform_wrapper: false
 
       - name: Terraform Init
@@ -65,9 +65,9 @@ jobs:
           echo "events_api_url=$(terraform output -raw events_api_url)" >> $GITHUB_OUTPUT
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '26'
           cache: 'npm'
 
       - name: Install dependencies
@@ -115,7 +115,7 @@ jobs:
       - name: Generate GitHub App token
         if: steps.photo-pr.outputs.pr_number
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.APP_ID   }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
@@ -136,7 +136,7 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v3
         with:
-          hugo-version: "0.165.0"
+          hugo-version: "0.170.1"
           extended: true
 
       - name: Build Hugo site
@@ -167,7 +167,7 @@ jobs:
 
       - name: Slack Notification
         if: always()
-        uses: slackapi/slack-github-action@v2.1.0
+        uses: slackapi/slack-github-action@v4
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook

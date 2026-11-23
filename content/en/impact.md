@@ -51,6 +51,11 @@ Every cleanup we've completed, mapped.
 <div style="margin-top: 3rem;">
   <h2 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">📄 Impact Reports</h2>
   <div class="impact-event-list">
+    <a href="/impact-report-2026/" class="impact-event-card" style="text-decoration: none; color: inherit;">
+      <h3>2026 Annual Impact Report</h3>
+      <div class="event-date">Our second year of community waterway cleanups</div>
+      <div class="event-miles">View Report →</div>
+    </a>
     <a href="/impact-report/" class="impact-event-card" style="text-decoration: none; color: inherit;">
       <h3>2025 Annual Impact Report</h3>
       <div class="event-date">Our inaugural year of community waterway cleanups</div>
