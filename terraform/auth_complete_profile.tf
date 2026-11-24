@@ -13,7 +13,7 @@ resource "aws_lambda_function" "auth_complete_profile" {
   filename         = data.archive_file.auth_complete_profile_zip.output_path
   source_code_hash = data.archive_file.auth_complete_profile_zip.output_base64sha256
   handler          = "lambda_auth_complete_profile.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.auth_lambda_role.arn
   timeout          = 30
   memory_size      = 128

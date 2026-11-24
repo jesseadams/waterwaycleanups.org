@@ -168,7 +168,7 @@ resource "aws_lambda_function" "admin_content_sync" {
   role             = aws_iam_role.content_sync_lambda_role.arn
   handler          = "lambda_admin_content_sync.handler"
   source_code_hash = data.archive_file.admin_content_sync_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 120
 
   environment {

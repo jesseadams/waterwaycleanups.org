@@ -104,7 +104,7 @@ resource "aws_lambda_function" "minors_add" {
   role             = aws_iam_role.auth_lambda_role.arn
   handler          = "lambda_minors_add.handler"
   source_code_hash = data.archive_file.minors_add_zip.output_base64sha256
-  runtime          = "python3.11"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -127,7 +127,7 @@ resource "aws_lambda_function" "minors_list" {
   role             = aws_iam_role.auth_lambda_role.arn
   handler          = "lambda_minors_list.handler"
   source_code_hash = data.archive_file.minors_list_zip.output_base64sha256
-  runtime          = "python3.11"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -150,7 +150,7 @@ resource "aws_lambda_function" "minors_update" {
   role             = aws_iam_role.auth_lambda_role.arn
   handler          = "lambda_minors_update.handler"
   source_code_hash = data.archive_file.minors_update_zip.output_base64sha256
-  runtime          = "python3.11"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -173,7 +173,7 @@ resource "aws_lambda_function" "minors_delete" {
   role             = aws_iam_role.auth_lambda_role.arn
   handler          = "lambda_minors_delete.handler"
   source_code_hash = data.archive_file.minors_delete_zip.output_base64sha256
-  runtime          = "python3.11"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {

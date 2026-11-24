@@ -12,7 +12,7 @@ resource "aws_lambda_function" "leaderboard" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_leaderboard.handler"
   source_code_hash = data.archive_file.leaderboard_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60
   memory_size      = 128
 

@@ -87,7 +87,7 @@ resource "aws_lambda_function" "rsvp_confirmation" {
   filename         = "${path.module}/lambda_rsvp_confirmation.zip"
   source_code_hash = filemd5("${path.module}/lambda_rsvp_confirmation.py")
   handler          = "lambda_rsvp_confirmation.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.rsvp_confirmation_lambda_role.arn
   timeout          = 30
   memory_size      = 128

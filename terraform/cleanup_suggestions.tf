@@ -54,7 +54,7 @@ resource "aws_lambda_function" "cleanup_suggestions" {
   role             = aws_iam_role.cleanup_suggestions_role.arn
   handler          = "lambda_cleanup_suggestions.handler"
   source_code_hash = data.archive_file.cleanup_suggestions_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {

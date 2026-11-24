@@ -187,7 +187,7 @@ resource "aws_lambda_function" "event_rsvp_check" {
   filename         = data.archive_file.event_rsvp_check_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_check_zip.output_base64sha256
   handler          = "lambda_event_rsvp_check.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.event_rsvp_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -209,7 +209,7 @@ resource "aws_lambda_function" "event_rsvp_submit" {
   filename         = data.archive_file.event_rsvp_submit_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_submit_zip.output_base64sha256
   handler          = "lambda_event_rsvp_submit.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.event_rsvp_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -234,7 +234,7 @@ resource "aws_lambda_function" "event_rsvp_list" {
   filename         = data.archive_file.event_rsvp_list_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_list_zip.output_base64sha256
   handler          = "lambda_event_rsvp_list.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.event_rsvp_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -254,7 +254,7 @@ resource "aws_lambda_function" "event_rsvp_cancel" {
   filename         = data.archive_file.event_rsvp_cancel_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_cancel_zip.output_base64sha256
   handler          = "lambda_event_rsvp_cancel.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.event_rsvp_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -278,7 +278,7 @@ resource "aws_lambda_function" "event_rsvp_noshow" {
   filename         = data.archive_file.event_rsvp_noshow_zip.output_path
   source_code_hash = data.archive_file.event_rsvp_noshow_zip.output_base64sha256
   handler          = "lambda_event_rsvp_noshow.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.event_rsvp_lambda_role.arn
   timeout          = 30
   memory_size      = 128
