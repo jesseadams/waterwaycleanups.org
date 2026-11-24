@@ -160,20 +160,27 @@ jobs:
       - name: Comment PR with Terraform Plan
         if: env.IS_PR == 'true'
         uses: actions/github-script@v9
+        env:
+          # Passed as data, not pasted into the script: plan text contains
+          # `${...}` and backticks that break (or inject into) the JS.
+          PLAN_OUTPUT: ${{ steps.plan.outputs.plan_output }}
         with:
           script: |
-            const output = `#### Terraform Plan 📖
-            
-            <details><summary>Show Plan</summary>
-            
-            \`\`\`
-            ${{ steps.plan.outputs.plan_output }}
-            \`\`\`
-            
-            </details>
-            
-            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-            
+            const fence = '`'.repeat(3);
+            const output = [
+              '#### Terraform Plan 📖',
+              '',
+              '<details><summary>Show Plan</summary>',
+              '',
+              fence,
+              process.env.PLAN_OUTPUT.slice(-60000),
+              fence,
+              '',
+              '</details>',
+              '',
+              `*Pushed by: @${context.actor}, Action: \`${context.eventName}\`*`,
+            ].join('\n');
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
