@@ -39,7 +39,7 @@ resource "aws_lambda_function" "admin_send_reminder" {
   role             = aws_iam_role.auth_lambda_role.arn
   handler          = "lambda_admin_send_reminder.handler"
   source_code_hash = data.archive_file.admin_send_reminder_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60
   memory_size      = 128
 

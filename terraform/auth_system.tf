@@ -200,7 +200,7 @@ resource "aws_lambda_function" "auth_send_code" {
   filename         = data.archive_file.auth_send_code_zip.output_path
   source_code_hash = data.archive_file.auth_send_code_zip.output_base64sha256
   handler          = "lambda_auth_send_code.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.auth_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -217,7 +217,7 @@ resource "aws_lambda_function" "auth_verify_code" {
   filename         = data.archive_file.auth_verify_code_zip.output_path
   source_code_hash = data.archive_file.auth_verify_code_zip.output_base64sha256
   handler          = "lambda_auth_verify_code.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.auth_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -236,7 +236,7 @@ resource "aws_lambda_function" "auth_validate_session" {
   filename         = data.archive_file.auth_validate_session_zip.output_path
   source_code_hash = data.archive_file.auth_validate_session_zip.output_base64sha256
   handler          = "lambda_auth_validate_session.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.auth_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -254,7 +254,7 @@ resource "aws_lambda_function" "user_dashboard" {
   filename         = data.archive_file.user_dashboard_zip.output_path
   source_code_hash = data.archive_file.user_dashboard_zip.output_base64sha256
   handler          = "lambda_user_dashboard.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.auth_lambda_role.arn
   timeout          = 30
   memory_size      = 128

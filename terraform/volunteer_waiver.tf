@@ -126,7 +126,7 @@ resource "aws_lambda_function" "volunteer_waiver_check" {
   filename         = data.archive_file.volunteer_waiver_check_zip.output_path
   source_code_hash = data.archive_file.volunteer_waiver_check_zip.output_base64sha256
   handler          = "lambda_volunteer_waiver_check.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.volunteer_waiver_lambda_role.arn
   timeout          = 30
   memory_size      = 128
@@ -144,7 +144,7 @@ resource "aws_lambda_function" "volunteer_waiver_submit" {
   filename         = data.archive_file.volunteer_waiver_submit_zip.output_path
   source_code_hash = data.archive_file.volunteer_waiver_submit_zip.output_base64sha256
   handler          = "lambda_volunteer_waiver_submit.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   role             = aws_iam_role.volunteer_waiver_lambda_role.arn
   timeout          = 30
   memory_size      = 128

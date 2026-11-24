@@ -62,7 +62,7 @@ resource "aws_lambda_function" "volunteer_lambda" {
   function_name    = "volunteer_form_handler${local.resource_suffix}"
   role             = aws_iam_role.lambda_role.arn
   handler          = "lambda.handler"
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {

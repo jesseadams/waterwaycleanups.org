@@ -95,7 +95,7 @@ resource "aws_lambda_function" "process_scheduled_newsletters" {
   function_name = "waterway-cleanups-process-scheduled-newsletters${local.resource_suffix}"
   role          = aws_iam_role.scheduled_newsletters_lambda.arn
   handler       = "lambda_process_scheduled_newsletters.handler"
-  runtime       = "python3.9"
+  runtime       = "python3.15"
   timeout       = 300 # 5 minutes
   memory_size   = 512
 
@@ -265,7 +265,7 @@ resource "aws_lambda_function" "scheduled_newsletters_api" {
   function_name = "waterway-cleanups-scheduled-newsletters-api${local.resource_suffix}"
   role          = aws_iam_role.scheduled_newsletters_api.arn
   handler       = "lambda_scheduled_newsletters_api.handler"
-  runtime       = "python3.9"
+  runtime       = "python3.15"
   timeout       = 30
 
   environment {

@@ -124,7 +124,7 @@ resource "aws_lambda_function" "impact_templates" {
   role             = aws_iam_role.impact_templates_lambda_role.arn
   handler          = "lambda_impact_templates.handler"
   source_code_hash = data.archive_file.impact_templates_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {

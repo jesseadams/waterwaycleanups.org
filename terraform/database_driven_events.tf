@@ -301,7 +301,7 @@ resource "aws_lambda_layer_version" "events_api_layer" {
   layer_name       = "events-api-utils${local.resource_suffix}"
   source_code_hash = data.archive_file.events_api_layer_zip.output_base64sha256
 
-  compatible_runtimes = ["python3.9"]
+  compatible_runtimes = ["python3.15"]
   description         = "Shared utilities for Events API Lambda functions"
 }
 
@@ -321,7 +321,7 @@ resource "aws_lambda_function" "events_authorizer" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_authorizer.handler"
   source_code_hash = data.archive_file.events_authorizer_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -445,7 +445,7 @@ resource "aws_lambda_function" "events_create" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_create.handler"
   source_code_hash = data.archive_file.events_create_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
   layers           = [aws_lambda_layer_version.events_api_layer.arn]
 
@@ -469,7 +469,7 @@ resource "aws_lambda_function" "events_get" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_get.handler"
   source_code_hash = data.archive_file.events_get_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -493,7 +493,7 @@ resource "aws_lambda_function" "events_update" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_update.handler"
   source_code_hash = data.archive_file.events_update_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
   layers           = [aws_lambda_layer_version.events_api_layer.arn]
 
@@ -519,7 +519,7 @@ resource "aws_lambda_function" "events_delete" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_delete.handler"
   source_code_hash = data.archive_file.events_delete_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
   layers           = [aws_lambda_layer_version.events_api_layer.arn]
 
@@ -544,7 +544,7 @@ resource "aws_lambda_function" "events_list_rsvps" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_list_rsvps.handler"
   source_code_hash = data.archive_file.events_list_rsvps_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -573,7 +573,7 @@ resource "aws_lambda_function" "volunteers_get" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_volunteers_get.handler"
   source_code_hash = data.archive_file.volunteers_get_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -598,7 +598,7 @@ resource "aws_lambda_function" "volunteers_update" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_volunteers_update.handler"
   source_code_hash = data.archive_file.volunteers_update_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -621,7 +621,7 @@ resource "aws_lambda_function" "volunteers_rsvps" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_volunteers_rsvps.handler"
   source_code_hash = data.archive_file.volunteers_rsvps_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -646,7 +646,7 @@ resource "aws_lambda_function" "volunteers_export" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_volunteers_export.handler"
   source_code_hash = data.archive_file.volunteers_export_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60 # Longer timeout for export operations
 
   environment {
@@ -670,7 +670,7 @@ resource "aws_lambda_function" "admin_volunteers" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_admin_volunteers.handler"
   source_code_hash = data.archive_file.admin_volunteers_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60
 
   environment {
@@ -698,7 +698,7 @@ resource "aws_lambda_function" "events_lifecycle" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_lifecycle.handler"
   source_code_hash = data.archive_file.events_lifecycle_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60 # Longer timeout for lifecycle operations
 
   environment {
@@ -730,7 +730,7 @@ resource "aws_lambda_function" "events_lifecycle_scheduler" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_lifecycle_scheduler.handler"
   source_code_hash = data.archive_file.events_lifecycle_scheduler_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -1123,7 +1123,7 @@ resource "aws_lambda_function" "events_attendance" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_attendance.handler"
   source_code_hash = data.archive_file.events_attendance_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 30
 
   environment {
@@ -1789,7 +1789,7 @@ resource "aws_lambda_function" "events_export" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_events_export.handler"
   source_code_hash = data.archive_file.events_export_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60 # Longer timeout for export operations
 
   environment {
@@ -1813,7 +1813,7 @@ resource "aws_lambda_function" "analytics" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_analytics.handler"
   source_code_hash = data.archive_file.analytics_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60 # Longer timeout for analytics calculations
 
   environment {
@@ -1838,7 +1838,7 @@ resource "aws_lambda_function" "volunteer_metrics" {
   role             = aws_iam_role.events_lambda_role.arn
   handler          = "lambda_volunteer_metrics.handler"
   source_code_hash = data.archive_file.volunteer_metrics_zip.output_base64sha256
-  runtime          = "python3.9"
+  runtime          = "python3.15"
   timeout          = 60 # Longer timeout for metrics calculations
 
   environment {
